@@ -1,0 +1,3 @@
+[submodule "BodyModel/Kore"]
+	path = BodyModel/Kore
+	url = git@github.com:Kode/Kore.git
