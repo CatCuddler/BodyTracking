@@ -1,6 +1,8 @@
 #include "pch.h"
 
+#include <Kore/IO/FileReader.h>
 #include <Kore/Graphics/Graphics.h>
+#include <Kore/Graphics/Color.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/System.h>
 #include <Kore/Log.h>
@@ -11,6 +13,19 @@ using namespace Kore;
 
 namespace {
 	
+	const int width = 1024;
+	const int height = 768;
+	
+	Shader* vertexShader;
+	Shader* fragmentShader;
+	Program* program;
+	
+	// Uniform locations
+	TextureUnit tex;
+	ConstantLocation pLocation;
+	ConstantLocation vLocation;
+	ConstantLocation mLocation;
+	
 	bool left;
 	bool right;
 	bool down;
@@ -18,8 +33,33 @@ namespace {
 	
 	MeshObject* cube;
 	
+	vec3 playerPosition = vec3(0, 0, 0);
+	vec3 globe = vec3(0, Kore::pi, 0);
+	
 	void update() {
 		Graphics::begin();
+		Graphics::clear(Graphics::ClearColorFlag | Graphics::ClearDepthFlag, Color::Black, 1.0f, 0);
+		
+		program->set();
+		
+		// projection matrix
+		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.1f, 100);
+		
+		// view matrix
+		vec3 lookAt = playerPosition + vec3(0, 0, -1);
+		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
+		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+		
+		// model matrix
+		mat4 M = mat4::Identity();
+		
+		cube->render(tex);
+
+		
+		Graphics::setMatrix(vLocation, V);
+		Graphics::setMatrix(pLocation, P);
+		Graphics::setMatrix(mLocation, M);
+
 		
 		Graphics::end();
 		Graphics::swapBuffers();
@@ -62,20 +102,49 @@ namespace {
 				break;
 		}
 	}
+	
+	void init() {
+		FileReader vs("shader.vert");
+		FileReader fs("shader.frag");
+		vertexShader = new Shader(vs.readAll(), vs.size(), VertexShader);
+		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
+		
+		// This defines the structure of your Vertex Buffer
+		VertexStructure structure;
+		structure.add("pos", Float3VertexData);
+		structure.add("tex", Float2VertexData);
+		structure.add("nor", Float3VertexData);
+		
+		program = new Program;
+		program->setVertexShader(vertexShader);
+		program->setFragmentShader(fragmentShader);
+		program->link(structure);
+		
+		tex = program->getTextureUnit("tex");
+		
+		pLocation = program->getConstantLocation("P");
+		vLocation = program->getConstantLocation("V");
+		mLocation = program->getConstantLocation("M");
+		
+		cube = new MeshObject("cube.ogex", "", structure);
+		
+		Graphics::setRenderState(DepthTest, true);
+		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
+		
+		Graphics::setTextureAddressing(tex, Kore::U, Repeat);
+		Graphics::setTextureAddressing(tex, Kore::V, Repeat);
+	}
+
 }
 
 int kore(int argc, char** argv) {
-	int w = 1024;
-	int h = 512;
-	
-	System::init("BodyTracking", w, h);
+	System::init("BodyTracking", width, height);
+	init();
 	
 	System::setCallback(update);
 	
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;
-	
-	cube = new MeshObject("cube.ogex");
 	
 	System::start();
 	

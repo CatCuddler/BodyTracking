@@ -1,12 +1,50 @@
 #include "pch.h"
 #include "MeshObject.h"
-#include "OpenGEX/OpenGEX.h"
 
 #include <Kore/IO/FileReader.h>
+#include <Kore/Log.h>
+
+#include <cstring>
 
 using namespace Kore;
 
-MeshObject::MeshObject(const char* filename) {
+MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) {
+	
+	LoadObj(meshFile);
+	
+	// Mesh Vertex Buffer
+	vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+	float* vertices = vertexBuffer->lock();
+	for (int i = 0; i < mesh->numVertices; ++i) {
+		vertices[i * 8 + 0] = mesh->vertices[i * 8 + 0] * scale;
+		vertices[i * 8 + 1] = mesh->vertices[i * 8 + 1] * scale;
+		vertices[i * 8 + 2] = mesh->vertices[i * 8 + 2] * scale;
+		vertices[i * 8 + 3] = mesh->vertices[i * 8 + 3];
+		vertices[i * 8 + 4] = 1.0f - mesh->vertices[i * 8 + 4];
+		vertices[i * 8 + 5] = mesh->vertices[i * 8 + 5];
+		vertices[i * 8 + 6] = mesh->vertices[i * 8 + 6];
+		vertices[i * 8 + 7] = mesh->vertices[i * 8 + 7];
+	}
+	vertexBuffer->unlock();
+	
+	/*indexBuffer = new IndexBuffer(mesh->numFaces * 3);
+	int* indices = indexBuffer->lock();
+	for (int i = 0; i < mesh->numFaces * 3; ++i) {
+		indices[i] = mesh->indices[i];
+	}
+	indexBuffer->unlock();
+	*/
+}
+
+
+void MeshObject::render(TextureUnit tex) {
+	//Graphics::setTexture(tex, image);
+	Graphics::setVertexBuffer(*vertexBuffer);
+	Graphics::setIndexBuffer(*indexBuffer);
+	Graphics::drawIndexedVertices();
+}
+
+void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);
 	void* data = fileReader.readAll();
 	int size = fileReader.size() + 1;
@@ -24,13 +62,133 @@ MeshObject::MeshObject(const char* filename) {
 			// This loops over all top-level structures in the file.
 			
 			// Do something with the data...
+			ConvertObjectStructure(*structure);
 			
 			structure = structure->Next();
 		}
+	} else {
+		log(Info, "Failed to load OpenGEX file");
 	}
 	
 	delete[] buffer;
+}
+
+void MeshObject::ConvertObjectStructure(const Structure& structure) {
+	switch (structure.GetStructureType()) {
+		case OGEX::kStructureGeometryObject:
+			mesh = ConvertGeometryObject(static_cast<const OGEX::GeometryObjectStructure&>(structure));
+			break;
+			
+		case OGEX::kStructureLightObject:
+			break;
+			
+		case OGEX::kStructureCameraObject:
+			break;
+			
+		case OGEX::kStructureMaterial:
+			break;
+			
+		default:
+			log(Info, "Invalid object structure type");
+			break;
+	}
+}
+
+Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure) {
+	const Map<OGEX::MeshStructure>* meshMap = structure.GetMeshMap();
 	
+	if (meshMap == nullptr) {
+		log(Info, "Invalid geometry mesh structure");
+		return nullptr;
+	}
+	// TODO: Handle morph structures.
+	const OGEX::MeshStructure* meshStructure = meshMap->First();
+	while (meshStructure) {
+		// The geometry structure may contain a mesh for each LOD, but we only care
+		// about the first/highest LOD.
+		if (meshStructure->GetKey() == 0) break;
+		meshStructure = meshStructure->Next();
+	}
+	
+	return ConvertMesh(*meshStructure);
+}
+
+namespace {
+	void setPosition(Mesh* mesh, int index, float x, float y, float z) {
+		log(Info, "Position %i \t x=%f \t y=%f \t z=%f", index, x, y, z);
+		mesh->vertices[(index * 8) + 0] = x;
+		mesh->vertices[(index * 8) + 1] = y;
+		mesh->vertices[(index * 8) + 2] = z;
+	}
+	
+	void setUV(Mesh* mesh, int index, float u, float v) {
+		log(Info, "Texcoord %i \t u=%f \t v=%f", index, u, v);
+		mesh->vertices[(index * 8) + 3] = u;
+		mesh->vertices[(index * 8) + 4] = v;
+	}
+	
+	void setNormal(Mesh* mesh, int index, float x, float y, float z) {
+		log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", index, x, y, z);
+		mesh->vertices[(index * 8) + 5] = x;
+		mesh->vertices[(index * 8) + 6] = y;
+		mesh->vertices[(index * 8) + 7] = z;
+	}
+}
+
+Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
+	Mesh* mesh = new Mesh();
+	mesh->vertices = nullptr;
+	
+	const Structure *subStructure = structure.GetFirstSubnode();
+	while (subStructure) {
+		switch (subStructure->GetStructureType()) {
+			case OGEX::kStructureVertexArray: {
+				const OGEX::VertexArrayStructure& vertexArrayStructure = *static_cast<const OGEX::VertexArrayStructure *>(subStructure);
+				const String& arrayAttrib = vertexArrayStructure.GetArrayAttrib();
+				
+				int arraySize = vertexArrayStructure.GetArraySize();
+				const float* data = vertexArrayStructure.GetData();
+				int numVertices = vertexArrayStructure.GetVertexCount();
+				
+				if (mesh->vertices == nullptr) {
+					mesh->vertices = new float[numVertices];
+				}
+				
+				if (arrayAttrib == "position") {
+					for (int i = 0; i < numVertices; i++) {
+						setPosition(mesh, i, data[0], data[1], data[2]);
+						data += arraySize;
+					}
+					mesh->numVertices = numVertices;
+				} else if (arrayAttrib == "normal") {
+					for (int i = 0; i < numVertices; i++) {
+						setNormal(mesh, i, data[0], data[1], data[2]);
+						data += arraySize;
+					}
+					mesh->numNormals = numVertices;
+				} else if (arrayAttrib == "texcoord") {
+					for (int i = 0; i < numVertices; i++) {
+						setUV(mesh, i, data[0], data[1]);
+						data += arraySize;
+					}
+					mesh->numUVs = numVertices;
+				}
+			} break;
+				
+			case OGEX::kStructureIndexArray: {
+				const OGEX::IndexArrayStructure& indexArrayStructure = *static_cast<const OGEX::IndexArrayStructure *>(subStructure);
+				
+			} break;
+				
+			default: break;
+		}
+		subStructure = subStructure->Next();
+	}
+	
+	
+	// TODO: Handle skin structure.
+	
+	return mesh;
 }
 
 /*
