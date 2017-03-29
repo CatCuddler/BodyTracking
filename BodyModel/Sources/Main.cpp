@@ -37,8 +37,8 @@ namespace {
 	
 	MeshObject* cube;
 	
-	vec3 playerPosition = vec3(0, 0, 50);
-	vec3 globe = vec3(0, Kore::pi, 0);
+	vec3 playerPosition = vec3(30, 0, 250);
+	vec3 globe = vec3(1.7f*Kore::pi, Kore::pi, 0);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -69,7 +69,7 @@ namespace {
 		program->set();
 		
 		// projection matrix
-		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.1f, 1000);
+		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
 		
 		// view matrix
 		vec3 lookAt = playerPosition + vec3(0, 0, -1);
@@ -192,7 +192,7 @@ namespace {
 		vLocation = program->getConstantLocation("V");
 		mLocation = program->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "earth.png", structure);
+		cube = new MeshObject("cube.ogex", "image.png", structure);
 		
 		Graphics::setRenderState(DepthTest, true);
 		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
