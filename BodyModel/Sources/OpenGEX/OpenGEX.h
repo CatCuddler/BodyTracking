@@ -515,6 +515,11 @@ namespace OGEX
 
 			String				arrayAttrib;
 			unsigned_int32		morphIndex;
+		
+			int					arraySize;
+			int					elementCount;
+			int					vertexCount;
+			const float*		data;
 
 		public:
 
@@ -529,6 +534,22 @@ namespace OGEX
 			unsigned_int32 GetMorphIndex(void) const
 			{
 				return (morphIndex);
+			}
+		
+			int GetArraySize() const {
+				return arraySize;
+			}
+		
+			int GetElementCount() const {
+				return elementCount;
+			}
+		
+			int GetVertexCount() const {
+				return vertexCount;
+			}
+		
+			const float* GetData() const {
+				return data;
 			}
 
 			bool ValidateProperty(const DataDescription *dataDescription, const String& identifier, DataType *type, void **value);

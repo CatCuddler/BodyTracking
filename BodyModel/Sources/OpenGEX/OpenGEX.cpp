@@ -1182,10 +1182,10 @@ DataResult VertexArrayStructure::ProcessData(DataDescription *dataDescription)
 
 	const DataStructure<FloatDataType> *dataStructure = static_cast<const DataStructure<FloatDataType> *>(structure);
 
-	int32 arraySize = dataStructure->GetArraySize();
-	int32 elementCount = dataStructure->GetDataElementCount();
-	int32 vertexCount = elementCount / arraySize;
-	const float *data = &dataStructure->GetDataElement(0);
+	arraySize = dataStructure->GetArraySize();
+	elementCount = dataStructure->GetDataElementCount();
+	vertexCount = elementCount / arraySize;
+	data = &dataStructure->GetDataElement(0);
 
 	// Do something with the vertex data here.
 
@@ -1261,6 +1261,7 @@ DataResult IndexArrayStructure::ProcessData(DataDescription *dataDescription)
 	}
 
 	// Do something with the index array here.
+	
 
 	return (kDataOkay);
 }
