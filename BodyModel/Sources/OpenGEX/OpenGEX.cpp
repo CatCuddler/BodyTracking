@@ -1262,7 +1262,17 @@ DataResult IndexArrayStructure::ProcessData(DataDescription *dataDescription)
 
 	// Do something with the index array here.
 	
-
+	StructureType type = primitiveStructure->GetStructureType();
+	if (type == kDataUnsignedInt32)
+	{
+		const DataStructure<UnsignedInt32DataType> *dataStructure = static_cast<const DataStructure<UnsignedInt32DataType> *>(primitiveStructure);
+		arraySize = dataStructure->GetArraySize();
+		elementCount = dataStructure->GetDataElementCount();
+		faceCount = elementCount / arraySize;
+		data = &dataStructure->GetDataElement(0);
+	}
+	
+	
 	return (kDataOkay);
 }
 

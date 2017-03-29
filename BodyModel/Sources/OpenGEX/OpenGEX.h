@@ -566,6 +566,10 @@ namespace OGEX
 			unsigned_int64			restartIndex;
 			String					frontFace;
 
+			int						arraySize;
+			int						elementCount;
+			int						faceCount;
+			const unsigned_int32*	data;
 		public:
 
 			IndexArrayStructure();
@@ -585,8 +589,24 @@ namespace OGEX
 			{
 				return (frontFace);
 			}
-
-			bool ValidateProperty(const DataDescription *dataDescription, const String& identifier, DataType *type, void **value);
+		
+			int GetArraySize() const {
+				return arraySize;
+			}
+		
+			int GetElementCount() const {
+				return elementCount;
+			}
+		
+			int GetFaceCount() const {
+				return faceCount;
+			}
+		
+			const unsigned_int32* GetData() const {
+				return data;
+			}
+		
+		bool ValidateProperty(const DataDescription *dataDescription, const String& identifier, DataType *type, void **value);
 			bool ValidateSubstructure(const DataDescription *dataDescription, const Structure *structure) const;
 			DataResult ProcessData(DataDescription *dataDescription);
 	};
