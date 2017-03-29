@@ -6,13 +6,13 @@
 #include <Kore/Graphics/Texture.h>
 
 struct Mesh {
-	//int numFaces;
+	int numFaces;
 	int numVertices;
 	int numUVs;
 	int numNormals;
 	
 	float* vertices;
-	//int* indices;
+	int* indices;
 	//float* uvs;
 	float* normals;
 	float* texcoord;
@@ -35,6 +35,7 @@ private:
 	Kore::VertexBuffer* vertexBuffer;
 	Kore::IndexBuffer* indexBuffer;
 	
+	Kore::Texture* image;
 	Mesh* mesh;
 	
 	void LoadObj(const char* filename);

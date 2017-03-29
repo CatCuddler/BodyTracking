@@ -12,6 +12,8 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	
 	LoadObj(meshFile);
 	
+	image = new Texture(textureFile, true);
+	
 	// Mesh Vertex Buffer
 	vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
 	float* vertices = vertexBuffer->lock();
@@ -20,25 +22,24 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		vertices[i * 8 + 1] = mesh->vertices[i * 8 + 1] * scale;
 		vertices[i * 8 + 2] = mesh->vertices[i * 8 + 2] * scale;
 		vertices[i * 8 + 3] = mesh->vertices[i * 8 + 3];
-		vertices[i * 8 + 4] = 1.0f - mesh->vertices[i * 8 + 4];
+		vertices[i * 8 + 4] = /*1.0f -*/ mesh->vertices[i * 8 + 4];
 		vertices[i * 8 + 5] = mesh->vertices[i * 8 + 5];
 		vertices[i * 8 + 6] = mesh->vertices[i * 8 + 6];
 		vertices[i * 8 + 7] = mesh->vertices[i * 8 + 7];
 	}
 	vertexBuffer->unlock();
 	
-	/*indexBuffer = new IndexBuffer(mesh->numFaces * 3);
+	indexBuffer = new IndexBuffer(mesh->numFaces);
 	int* indices = indexBuffer->lock();
-	for (int i = 0; i < mesh->numFaces * 3; ++i) {
+	for (int i = 0; i < mesh->numFaces; ++i) {
 		indices[i] = mesh->indices[i];
 	}
 	indexBuffer->unlock();
-	*/
+	
 }
 
-
 void MeshObject::render(TextureUnit tex) {
-	//Graphics::setTexture(tex, image);
+	Graphics::setTexture(tex, image);
 	Graphics::setVertexBuffer(*vertexBuffer);
 	Graphics::setIndexBuffer(*indexBuffer);
 	Graphics::drawIndexedVertices();
@@ -70,7 +71,7 @@ void MeshObject::LoadObj(const char* filename) {
 		log(Info, "Failed to load OpenGEX file");
 	}
 	
-	delete[] buffer;
+	//delete[] buffer;
 }
 
 void MeshObject::ConvertObjectStructure(const Structure& structure) {
@@ -133,6 +134,13 @@ namespace {
 		mesh->vertices[(index * 8) + 6] = y;
 		mesh->vertices[(index * 8) + 7] = z;
 	}
+	
+	void setIndex(Mesh* mesh, int index, int x, int y, int z) {
+		log(Info, "Index %i \t x=%i \t y=%i \t z=%i", index, x, y, z);
+		mesh->indices[(index * 3) + 0] = x;
+		mesh->indices[(index * 3) + 1] = y;
+		mesh->indices[(index * 3) + 2] = z;
+	}
 }
 
 Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
@@ -177,6 +185,17 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
 				
 			case OGEX::kStructureIndexArray: {
 				const OGEX::IndexArrayStructure& indexArrayStructure = *static_cast<const OGEX::IndexArrayStructure *>(subStructure);
+				
+				int arraySize = indexArrayStructure.GetArraySize();
+				int faces = indexArrayStructure.GetFaceCount();
+				const unsigned_int32* data = indexArrayStructure.GetData();
+				
+				mesh->numFaces = faces;
+				mesh->indices = new int[faces * 3];
+				for (int i = 0; i < faces; i++) {
+					setIndex(mesh, i, data[0], data[1], data[2]);
+					data += arraySize;
+				}
 				
 			} break;
 				
