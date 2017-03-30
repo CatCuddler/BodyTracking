@@ -1131,7 +1131,12 @@ const ObjectStructure *CameraNodeStructure::GetObjectStructure(void) const
 
 VertexArrayStructure::VertexArrayStructure() : OpenGexStructure(kStructureVertexArray)
 {
+	arrayAttrib = "";
 	morphIndex = 0;
+	arraySize = 0;
+	elementCount = 0;
+	vertexCount = 0;
+	data = nullptr;
 }
 
 VertexArrayStructure::~VertexArrayStructure()
@@ -1198,6 +1203,11 @@ IndexArrayStructure::IndexArrayStructure() : OpenGexStructure(kStructureIndexArr
 	materialIndex = 0;
 	restartIndex = 0;
 	frontFace = "ccw";
+	
+	arraySize = 0;
+	elementCount = 0;
+	faceCount = 0;
+	data = nullptr;
 }
 
 IndexArrayStructure::~IndexArrayStructure()
