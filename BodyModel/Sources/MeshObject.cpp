@@ -53,8 +53,6 @@ void MeshObject::LoadObj(const char* filename) {
 	for (int i = 0; i < size; ++i) buffer[i] = reinterpret_cast<char*>(data)[i];
 	buffer[size] = 0;
 	
-	//Mesh* mesh = new Mesh;
-	
 	OGEX::OpenGexDataDescription openGexDataDescription;
 	DataResult result = openGexDataDescription.ProcessText(buffer);
 	if (result == kDataOkay) {
@@ -71,7 +69,7 @@ void MeshObject::LoadObj(const char* filename) {
 		log(Info, "Failed to load OpenGEX file");
 	}
 	
-	//delete[] buffer;
+	delete[] buffer;
 }
 
 void MeshObject::ConvertObjectStructure(const Structure& structure) {
@@ -90,7 +88,7 @@ void MeshObject::ConvertObjectStructure(const Structure& structure) {
 			break;
 			
 		default:
-			log(Info, "Invalid object structure type");
+			log(Info, "Unknown object structure type");
 			break;
 	}
 }
@@ -115,31 +113,39 @@ Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& str
 }
 
 namespace {
-	void setPosition(Mesh* mesh, int index, float x, float y, float z) {
-		log(Info, "Position %i \t x=%f \t y=%f \t z=%f", index, x, y, z);
-		mesh->vertices[(index * 8) + 0] = x;
-		mesh->vertices[(index * 8) + 1] = y;
-		mesh->vertices[(index * 8) + 2] = z;
+	void setPosition(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->vertices[(i * 8) + 0] = data[i * 3 + 0];
+			mesh->vertices[(i * 8) + 1] = data[i * 3 + 1];
+			mesh->vertices[(i * 8) + 2] = data[i * 3 + 2];
+			//log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 8) + 0], mesh->vertices[(i * 8) + 1], mesh->vertices[(i * 8) + 2]);
+		}
 	}
 	
-	void setUV(Mesh* mesh, int index, float u, float v) {
-		log(Info, "Texcoord %i \t u=%f \t v=%f", index, u, v);
-		mesh->vertices[(index * 8) + 3] = u;
-		mesh->vertices[(index * 8) + 4] = v;
+	void setUV(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->vertices[(i * 8) + 3] = data[i * 2 + 0];
+			mesh->vertices[(i * 8) + 4] = data[i * 2 + 1];
+			//log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->vertices[(i * 8) + 3], mesh->vertices[(i * 8) + 4]);
+		}
 	}
 	
-	void setNormal(Mesh* mesh, int index, float x, float y, float z) {
-		log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", index, x, y, z);
-		mesh->vertices[(index * 8) + 5] = x;
-		mesh->vertices[(index * 8) + 6] = y;
-		mesh->vertices[(index * 8) + 7] = z;
+	void setNormal(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->vertices[(i * 8) + 5] = data[i * 3 + 0];
+			mesh->vertices[(i * 8) + 6] = data[i * 3 + 1];
+			mesh->vertices[(i * 8) + 7] = data[i * 3 + 2];
+			//log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 8) + 5], mesh->vertices[(i * 8) + 6], mesh->vertices[(i * 8) + 7]);
+		}
 	}
 	
-	void setIndex(Mesh* mesh, int index, int x, int y, int z) {
-		log(Info, "Index %i \t x=%i \t y=%i \t z=%i", index, x, y, z);
-		mesh->indices[(index * 3) + 0] = x;
-		mesh->indices[(index * 3) + 1] = y;
-		mesh->indices[(index * 3) + 2] = z;
+	void setIndex(Mesh* mesh, int size, const unsigned_int32* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
+			mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
+			mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
+			//log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
+		}
 	}
 }
 
@@ -154,48 +160,39 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
 				const OGEX::VertexArrayStructure& vertexArrayStructure = *static_cast<const OGEX::VertexArrayStructure *>(subStructure);
 				const String& arrayAttrib = vertexArrayStructure.GetArrayAttrib();
 				
-				int arraySize = vertexArrayStructure.GetArraySize();
+				//int arraySize = vertexArrayStructure.GetArraySize();
 				const float* data = vertexArrayStructure.GetData();
 				int numVertices = vertexArrayStructure.GetVertexCount();
 				
 				if (mesh->vertices == nullptr) {
-					mesh->vertices = new float[numVertices];
+					mesh->vertices = new float[numVertices * 8];
 				}
 				
 				if (arrayAttrib == "position") {
-					for (int i = 0; i < numVertices; i++) {
-						setPosition(mesh, i, data[0], data[1], data[2]);
-						data += arraySize;
-					}
+					setPosition(mesh, numVertices, data);
 					mesh->numVertices = numVertices;
 				} else if (arrayAttrib == "normal") {
-					for (int i = 0; i < numVertices; i++) {
-						setNormal(mesh, i, data[0], data[1], data[2]);
-						data += arraySize;
-					}
+					setNormal(mesh, numVertices, data);
 					mesh->numNormals = numVertices;
 				} else if (arrayAttrib == "texcoord") {
-					for (int i = 0; i < numVertices; i++) {
-						setUV(mesh, i, data[0], data[1]);
-						data += arraySize;
-					}
+					setUV(mesh, numVertices, data);
 					mesh->numUVs = numVertices;
 				}
+				
+				//delete[] data;
+				//data = nullptr;
 			} break;
 				
 			case OGEX::kStructureIndexArray: {
 				const OGEX::IndexArrayStructure& indexArrayStructure = *static_cast<const OGEX::IndexArrayStructure *>(subStructure);
 				
-				int arraySize = indexArrayStructure.GetArraySize();
+				//int arraySize = indexArrayStructure.GetArraySize();
 				int faces = indexArrayStructure.GetFaceCount();
 				const unsigned_int32* data = indexArrayStructure.GetData();
 				
 				mesh->numFaces = faces;
 				mesh->indices = new int[faces * 3];
-				for (int i = 0; i < faces; i++) {
-					setIndex(mesh, i, data[0], data[1], data[2]);
-					data += arraySize;
-				}
+				setIndex(mesh, faces, data);
 				
 			} break;
 				
