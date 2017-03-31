@@ -36,9 +36,10 @@ namespace {
 	int mousePressX, mousePressY = 0;
 	
 	MeshObject* cube;
+    MeshObject* avatar;
 	
-	vec3 playerPosition = vec3(0, 0, 5);
-	vec3 globe = vec3(1.7f*Kore::pi, Kore::pi, 0);
+	vec3 playerPosition = vec3(0, 0, 50);
+	vec3 globe = vec3(0, Kore::pi, Kore::pi);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -77,14 +78,17 @@ namespace {
 		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
 		
 		// model matrix
-		mat4 M = mat4::Identity();
+		//mat4 M = mat4::Identity();
 		
 		cube->render(tex);
-
+        Graphics::setMatrix(mLocation, cube->M);
+        
+        avatar->render(tex);
+        Graphics::setMatrix(mLocation, avatar->M);
 		
 		Graphics::setMatrix(vLocation, V);
 		Graphics::setMatrix(pLocation, P);
-		Graphics::setMatrix(mLocation, M);
+		//Graphics::setMatrix(mLocation, M);
 
 		
 		Graphics::end();
@@ -193,6 +197,9 @@ namespace {
 		mLocation = program->getConstantLocation("M");
 		
 		cube = new MeshObject("cube.ogex", "Crate.jpg", structure);
+        cube->M = mat4::Translation(5, 0, 0);
+        avatar = new MeshObject("avatar.ogex", "Crate.jpg", structure);
+        avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics::setRenderState(DepthTest, true);
 		Graphics::setRenderState(DepthTestCompare, ZCompareLess);

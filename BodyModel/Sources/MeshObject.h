@@ -5,6 +5,8 @@
 #include <Kore/Graphics/Graphics.h>
 #include <Kore/Graphics/Texture.h>
 
+#include <vector>
+
 struct Mesh {
 	int numFaces;
 	int numVertices;
@@ -13,15 +15,8 @@ struct Mesh {
 	
 	float* vertices;
 	int* indices;
-	//float* uvs;
 	float* normals;
 	float* texcoord;
-	
-	// very private
-	//float* curVertex;
-	//int* curIndex;
-	//float* curUV;
-	//float* curNormal;
 };
 
 class MeshObject {
@@ -29,6 +24,8 @@ class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::TextureUnit tex);
+    
+    Kore::mat4 M;
 	
 	
 private:
@@ -36,7 +33,7 @@ private:
 	Kore::IndexBuffer* indexBuffer;
 	
 	Kore::Texture* image;
-	Mesh* mesh;
+    std::vector<Mesh*> meshes;
 	
 	void LoadObj(const char* filename);
 	void ConvertObjectStructure(const Structure& structure);
