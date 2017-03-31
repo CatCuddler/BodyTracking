@@ -37,13 +37,13 @@ namespace {
 	
 	MeshObject* cube;
 	
-	vec3 playerPosition = vec3(30, 0, 250);
+	vec3 playerPosition = vec3(0, 0, 5);
 	vec3 globe = vec3(1.7f*Kore::pi, Kore::pi, 0);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		
-		const float speed = 2;
+		const float speed = 1;
 		if (left) {
 			playerPosition.x() -= speed;
 		}
@@ -192,7 +192,7 @@ namespace {
 		vLocation = program->getConstantLocation("V");
 		mLocation = program->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "image.png", structure);
+		cube = new MeshObject("cube.ogex", "Crate.jpg", structure);
 		
 		Graphics::setRenderState(DepthTest, true);
 		Graphics::setRenderState(DepthTestCompare, ZCompareLess);

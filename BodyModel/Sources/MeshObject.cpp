@@ -26,13 +26,17 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		vertices[i * 8 + 5] = mesh->vertices[i * 8 + 5];
 		vertices[i * 8 + 6] = mesh->vertices[i * 8 + 6];
 		vertices[i * 8 + 7] = mesh->vertices[i * 8 + 7];
+        
+        //log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
 	}
 	vertexBuffer->unlock();
 	
-	indexBuffer = new IndexBuffer(mesh->numFaces);
+	indexBuffer = new IndexBuffer(mesh->numFaces * 3);
 	int* indices = indexBuffer->lock();
-	for (int i = 0; i < mesh->numFaces; ++i) {
+	for (int i = 0; i < mesh->numFaces * 3; ++i) {
 		indices[i] = mesh->indices[i];
+        
+        //log(Info, "%i", indices[i]);
 	}
 	indexBuffer->unlock();
 	
