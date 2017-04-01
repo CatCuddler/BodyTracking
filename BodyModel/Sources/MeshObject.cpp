@@ -4,11 +4,48 @@
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
-#include <cstring>
+#include <string.h>
 
 using namespace Kore;
 
-MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) {
+namespace {
+    void setPosition(Mesh* mesh, int size, const float* data) {
+        for (int i = 0; i < size; ++i) {
+            mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
+            mesh->vertices[(i * 3) + 1] = data[i * 3 + 1];
+            mesh->vertices[(i * 3) + 2] = data[i * 3 + 2];
+            //log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 8) + 0], mesh->vertices[(i * 8) + 1], mesh->vertices[(i * 8) + 2]);
+        }
+    }
+    
+    void setTexcoord(Mesh* mesh, int size, const float* data) {
+        for (int i = 0; i < size; ++i) {
+            mesh->texcoord[(i * 2) + 0] = data[i * 2 + 0];
+            mesh->texcoord[(i * 2) + 1] = data[i * 2 + 1];
+            //log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->uvs[(i * 2) + 0], mesh->uvs[(i * 2) + 1]);
+        }
+    }
+    
+    void setNormal(Mesh* mesh, int size, const float* data) {
+        for (int i = 0; i < size; ++i) {
+            mesh->normals[(i * 3) + 0] = data[i * 3 + 0];
+            mesh->normals[(i * 3) + 1] = data[i * 3 + 1];
+            mesh->normals[(i * 3) + 2] = data[i * 3 + 2];
+            //log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->normals[(i * 3) + 0], mesh->normals[(i * 3) + 1], mesh->normals[(i * 3) + 2]);
+        }
+    }
+    
+    void setIndex(Mesh* mesh, int size, const unsigned_int32* data) {
+        for (int i = 0; i < size; ++i) {
+            mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
+            mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
+            mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
+            //log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
+        }
+    }
+}
+
+MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) {
 	
 	LoadObj(meshFile);
     
@@ -48,8 +85,12 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
         }
         indexBuffer->unlock();
         
-        Texture* image = new Texture(textureFile, true);
-        images.push_back(image);
+        /*const char* textureName = textureNames.at(j);
+        log(Info, "textureName3 %s", textureNames.back());
+        char* texturePath = strcat(texturePath, textureName);
+        log(Info, "Texture path %s", texturePath);
+        Texture* image = new Texture(texturePath, true);
+        images.push_back(image);*/
         
         vertexBuffers.push_back(vertexBuffer);
         indexBuffers.push_back(indexBuffer);
@@ -111,8 +152,18 @@ void MeshObject::ConvertObjectStructure(const Structure& structure) {
 		case OGEX::kStructureCameraObject:
 			break;
 			
-		case OGEX::kStructureMaterial:
-			break;
+        case OGEX::kStructureMaterial: {
+            const char* textureName = ConvertMaterial(static_cast<const OGEX::MaterialStructure&>(structure));
+            char temp[80];
+            strcpy (temp, textureDir);
+            std::strcat(temp, (char*)textureName);
+            //std::strcat(temp, "colors.png");
+            log(Info, "Load Texture %s", temp);
+            Texture* image = new Texture(temp, true);
+            images.push_back(image);
+            
+            break;
+        }
 			
 		default:
 			//log(Info, "Unknown object structure type");
@@ -137,43 +188,6 @@ Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& str
 	}
 	
 	return ConvertMesh(*meshStructure);
-}
-
-namespace {
-	void setPosition(Mesh* mesh, int size, const float* data) {
-		for (int i = 0; i < size; ++i) {
-			mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
-			mesh->vertices[(i * 3) + 1] = data[i * 3 + 1];
-			mesh->vertices[(i * 3) + 2] = data[i * 3 + 2];
-			//log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 8) + 0], mesh->vertices[(i * 8) + 1], mesh->vertices[(i * 8) + 2]);
-		}
-	}
-	
-	void setTexcoord(Mesh* mesh, int size, const float* data) {
-		for (int i = 0; i < size; ++i) {
-			mesh->texcoord[(i * 2) + 0] = data[i * 2 + 0];
-			mesh->texcoord[(i * 2) + 1] = data[i * 2 + 1];
-			//log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->uvs[(i * 2) + 0], mesh->uvs[(i * 2) + 1]);
-		}
-	}
-	
-	void setNormal(Mesh* mesh, int size, const float* data) {
-		for (int i = 0; i < size; ++i) {
-            mesh->normals[(i * 3) + 0] = data[i * 3 + 0];
-            mesh->normals[(i * 3) + 1] = data[i * 3 + 1];
-            mesh->normals[(i * 3) + 2] = data[i * 3 + 2];
-            //log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->normals[(i * 3) + 0], mesh->normals[(i * 3) + 1], mesh->normals[(i * 3) + 2]);
-		}
-	}
-	
-	void setIndex(Mesh* mesh, int size, const unsigned_int32* data) {
-		for (int i = 0; i < size; ++i) {
-			mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
-			mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
-			mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
-			//log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
-		}
-	}
 }
 
 Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
@@ -229,4 +243,40 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
 	// TODO: Handle skin structure.
 	
 	return mesh;
+}
+
+const char* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
+    
+    const char* textureName = "";
+    
+    const Structure* subStructure = materialStructure.GetFirstSubnode();
+    while (subStructure) {
+        
+        switch (subStructure->GetStructureType()) {
+                
+            case OGEX::kStructureColor:
+                break;
+                
+            case OGEX::kStructureParam:
+                break;
+                
+            case OGEX::kStructureTexture: {
+                const OGEX::TextureStructure& textureStructure = *static_cast<const OGEX::TextureStructure *>(subStructure);
+                
+                //const char* attrib = static_cast<const char*>(textureStructure.GetAttribString());
+                textureName = static_cast<const char*>(textureStructure.GetTextureName());
+                textureName += 2;
+                
+                break;
+            }
+                
+            default: break;
+                
+                
+        }
+        
+        subStructure = subStructure->Next();
+    }
+    
+    return textureName;
 }

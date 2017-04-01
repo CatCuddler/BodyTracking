@@ -196,9 +196,9 @@ namespace {
 		vLocation = program->getConstantLocation("V");
 		mLocation = program->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "Crate.jpg", structure);
+		cube = new MeshObject("cube.ogex", "", structure);
         cube->M = mat4::Translation(5, 0, 0);
-        avatar = new MeshObject("avatar/avatar.ogex", "avatar/textures/male_casualsuit01_diffuse.png", structure);
+        avatar = new MeshObject("avatar/avatar.ogex", "avatar/", structure);
         avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics::setRenderState(DepthTest, true);

@@ -33,6 +33,7 @@ private:
     std::vector<Kore::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::IndexBuffer*> indexBuffers;
 	
+    const char* textureDir;
     std::vector<Kore::Texture*> images;
     std::vector<Mesh*> meshes;
 	
@@ -41,4 +42,5 @@ private:
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure);
 	
+    const char* ConvertMaterial(const OGEX::MaterialStructure& structure) ;
 };
