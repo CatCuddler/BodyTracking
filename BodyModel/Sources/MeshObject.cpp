@@ -11,25 +11,15 @@ using namespace Kore;
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) {
 	
 	LoadObj(meshFile);
-	
-	image = new Texture(textureFile, true);
     
-    long meshesCount = meshes.size();
+    meshesCount = meshes.size();
     log(Info, "Meshes length %i", meshesCount);
     
-    int numVertices = 0;
-    int numFaces = 0;
-    for(int i = 0; i < meshes.size(); ++i) {
-        Mesh* mesh = meshes.at(i);
-        numVertices += mesh->numVertices;
-        numFaces += mesh->numFaces * 3;
-    }
-    
-    vertexBuffer = new VertexBuffer(numVertices, structure, 0);
-    indexBuffer = new IndexBuffer(numFaces);
     
     for(int j = 0; j < meshes.size(); ++j) {
         Mesh* mesh = meshes.at(j);
+        VertexBuffer * vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+        IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces*3);
         
         // Mesh Vertex Buffer
         float* vertices = vertexBuffer->lock();
@@ -57,15 +47,27 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
             //log(Info, "%i", indices[i]);
         }
         indexBuffer->unlock();
+        
+        Texture* image = new Texture(textureFile, true);
+        images.push_back(image);
+        
+        vertexBuffers.push_back(vertexBuffer);
+        indexBuffers.push_back(indexBuffer);
     }
 	
 }
 
 void MeshObject::render(TextureUnit tex) {
-	Graphics::setTexture(tex, image);
-	Graphics::setVertexBuffer(*vertexBuffer);
-	Graphics::setIndexBuffer(*indexBuffer);
-	Graphics::drawIndexedVertices();
+    for (int i = 0; i < meshesCount; ++i) {
+        VertexBuffer* vertexBuffer = vertexBuffers.at(i);
+        IndexBuffer* indexBuffer = indexBuffers.at(i);
+        Texture* image = images.at(i);
+        
+        Graphics::setTexture(tex, image);
+        Graphics::setVertexBuffer(*vertexBuffer);
+        Graphics::setIndexBuffer(*indexBuffer);
+        Graphics::drawIndexedVertices();
+    }
 }
 
 void MeshObject::LoadObj(const char* filename) {

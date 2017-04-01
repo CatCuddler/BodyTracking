@@ -29,10 +29,11 @@ public:
 	
 	
 private:
-	Kore::VertexBuffer* vertexBuffer;
-	Kore::IndexBuffer* indexBuffer;
+    long meshesCount;
+    std::vector<Kore::VertexBuffer*> vertexBuffers;
+	std::vector<Kore::IndexBuffer*> indexBuffers;
 	
-	Kore::Texture* image;
+    std::vector<Kore::Texture*> images;
     std::vector<Mesh*> meshes;
 	
 	void LoadObj(const char* filename);

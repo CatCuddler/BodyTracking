@@ -198,7 +198,7 @@ namespace {
 		
 		cube = new MeshObject("cube.ogex", "Crate.jpg", structure);
         cube->M = mat4::Translation(5, 0, 0);
-        avatar = new MeshObject("avatar.ogex", "Crate.jpg", structure);
+        avatar = new MeshObject("avatar/avatar.ogex", "avatar/textures/male_casualsuit01_diffuse.png", structure);
         avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics::setRenderState(DepthTest, true);
