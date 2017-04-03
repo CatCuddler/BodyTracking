@@ -4,7 +4,7 @@
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
-#include <string.h>
+#include <sstream>
 
 using namespace Kore;
 
@@ -84,19 +84,22 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
             //log(Info, "%i", indices[i]);
         }
         indexBuffer->unlock();
-        
-        /*const char* textureName = textureNames.at(j);
-        log(Info, "textureName3 %s", textureNames.back());
-        char* texturePath = strcat(texturePath, textureName);
-        log(Info, "Texture path %s", texturePath);
-        Texture* image = new Texture(texturePath, true);
-        images.push_back(image);*/
-        
+		
+		Material* material = materials.at(j);
+		char temp[200];
+		strcpy (temp, textureDir);
+		std::strcat(temp, material->textureName);
+		log(Info, "Load Texture %s at pos %i", temp, material->materialIndex - 1);
+		Texture* image = new Texture(temp, true);
+		if (material->materialIndex - 1 >= images.size()) {
+			images.insert(images.begin() + material->materialIndex - 1, image);
+		} else {
+			images.at(material->materialIndex - 1) = image;
+		}
+		
         vertexBuffers.push_back(vertexBuffer);
         indexBuffers.push_back(indexBuffer);
     }
-	
-	
 	
 }
 
@@ -104,14 +107,8 @@ void MeshObject::render(TextureUnit tex) {
     for (int i = 0; i < meshesCount; ++i) {
         VertexBuffer* vertexBuffer = vertexBuffers.at(i);
         IndexBuffer* indexBuffer = indexBuffers.at(i);
-        Texture* image = images.at(i);
+		Texture* image = images.at(i);
 		
-		mat4 transform = geometries.at(i)->transform;
-		const char* name = geometries.at(i)->name;
-		//log(Info, "name %s", name);
-		//M = transform;
-		
-        
         Graphics::setTexture(tex, image);
         Graphics::setVertexBuffer(*vertexBuffer);
         Graphics::setIndexBuffer(*indexBuffer);
@@ -163,13 +160,7 @@ void MeshObject::ConvertObjectStructure(const Structure& structure) {
 			
         case OGEX::kStructureMaterial: {
             Material* material = ConvertMaterial(static_cast<const OGEX::MaterialStructure&>(structure));
-            char temp[80];
-            strcpy (temp, textureDir);
-            std::strcat(temp, material->textureName);
-            log(Info, "Load Texture %s", temp);
-            Texture* image = new Texture(temp, true);
-            images.push_back(image);
-            
+			materials.push_back(material);
             break;
         }
 			
@@ -285,6 +276,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 	for (int i = 0; i < strlen(name); ++i) {
 		geometry->name[i] = name[i];
 	}
+	//log(Info, "Geometry name %s", name);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
 	while (subStructure) {
@@ -320,6 +312,15 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 	for (int i = 0; i < strlen(name); ++i) {
 		material->materialName[i] = name[i];
 	}
+	//log(Info, "Material name %s", name);
+	
+	// Convert material index
+	const char* num = name + 8;
+	std::stringstream strValue;
+	strValue << num;
+	unsigned int intValue;
+	strValue >> intValue;
+	material->materialIndex = intValue;
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
 	while (subStructure) {
@@ -338,10 +339,12 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 				//const char* attrib = static_cast<const char*>(textureStructure.GetAttribString());
 				const char* textureName = static_cast<const char*>(textureStructure.GetTextureName());
 				textureName += 2;
-				material->textureName = new char[strlen(textureName)];
-				for (int i = 0; i < strlen(textureName); ++i) {
+				int length = (int)strlen(textureName) + 1;
+				material->textureName = new char[length]();
+				for (int i = 0; i < length; ++i) {
 					material->textureName[i] = textureName[i];
 				}
+				//log(Info, "Texture name %s", material->textureName);
 				
 				break;
 			}

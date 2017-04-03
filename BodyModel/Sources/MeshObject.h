@@ -30,6 +30,7 @@ struct Geometry {
 struct Material {
 	char* materialName;
 	char* textureName;
+	unsigned int materialIndex;
 };
 
 class MeshObject {
@@ -47,9 +48,10 @@ private:
 	std::vector<Kore::IndexBuffer*> indexBuffers;
 	
     const char* textureDir;
-    std::vector<Kore::Texture*> images;
+	std::vector<Kore::Texture*> images;
     std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
+	std::vector<Material*> materials;
 	
 	void LoadObj(const char* filename);
 	

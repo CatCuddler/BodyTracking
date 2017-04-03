@@ -88,7 +88,6 @@ namespace {
 		
 		Graphics::setMatrix(vLocation, V);
 		Graphics::setMatrix(pLocation, P);
-		//Graphics::setMatrix(mLocation, M);
 
 		
 		Graphics::end();
