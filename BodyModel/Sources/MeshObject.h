@@ -19,6 +19,19 @@ struct Mesh {
 	float* texcoord;
 };
 
+struct Geometry {
+	Kore::mat4 transform;
+	char* name;
+	const char* objectRef;
+	const char* materialRef;
+	
+};
+
+struct Material {
+	char* materialName;
+	char* textureName;
+};
+
 class MeshObject {
 
 public:
@@ -36,11 +49,16 @@ private:
     const char* textureDir;
     std::vector<Kore::Texture*> images;
     std::vector<Mesh*> meshes;
+	std::vector<Geometry*> geometries;
 	
 	void LoadObj(const char* filename);
+	
 	void ConvertObjectStructure(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure);
 	
-    const char* ConvertMaterial(const OGEX::MaterialStructure& structure) ;
+	void ConvertNodeStructure(const Structure& structure);
+	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
+	
+    Material* ConvertMaterial(const OGEX::MaterialStructure& structure) ;
 };

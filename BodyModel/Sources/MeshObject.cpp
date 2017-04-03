@@ -45,7 +45,7 @@ namespace {
     }
 }
 
-MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) {
+MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) , M(mat4::Identity()) {
 	
 	LoadObj(meshFile);
     
@@ -96,6 +96,8 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
         indexBuffers.push_back(indexBuffer);
     }
 	
+	
+	
 }
 
 void MeshObject::render(TextureUnit tex) {
@@ -103,6 +105,12 @@ void MeshObject::render(TextureUnit tex) {
         VertexBuffer* vertexBuffer = vertexBuffers.at(i);
         IndexBuffer* indexBuffer = indexBuffers.at(i);
         Texture* image = images.at(i);
+		
+		mat4 transform = geometries.at(i)->transform;
+		const char* name = geometries.at(i)->name;
+		//log(Info, "name %s", name);
+		//M = transform;
+		
         
         Graphics::setTexture(tex, image);
         Graphics::setVertexBuffer(*vertexBuffer);
@@ -128,6 +136,7 @@ void MeshObject::LoadObj(const char* filename) {
 			
 			// Do something with the data...
 			ConvertObjectStructure(*structure);
+			ConvertNodeStructure(*structure);
 			
 			structure = structure->Next();
 		}
@@ -153,11 +162,10 @@ void MeshObject::ConvertObjectStructure(const Structure& structure) {
 			break;
 			
         case OGEX::kStructureMaterial: {
-            const char* textureName = ConvertMaterial(static_cast<const OGEX::MaterialStructure&>(structure));
+            Material* material = ConvertMaterial(static_cast<const OGEX::MaterialStructure&>(structure));
             char temp[80];
             strcpy (temp, textureDir);
-            std::strcat(temp, (char*)textureName);
-            //std::strcat(temp, "colors.png");
+            std::strcat(temp, material->textureName);
             log(Info, "Load Texture %s", temp);
             Texture* image = new Texture(temp, true);
             images.push_back(image);
@@ -170,6 +178,30 @@ void MeshObject::ConvertObjectStructure(const Structure& structure) {
 			break;
 	}
 }
+
+void MeshObject::ConvertNodeStructure(const Structure& structure) {
+	switch (structure.GetStructureType()) {
+		case OGEX::kStructureNode:
+			//return ConvertNode(static_cast<const OGEX::NodeStructure&>(structure));
+		case OGEX::kStructureBoneNode:
+			//return ConvertBoneNode(static_cast<const OGEX::BoneNodeStructure&>(structure));
+		case OGEX::kStructureGeometryNode: {
+			Geometry* geometry = ConvertGeometryNode(static_cast<const OGEX::GeometryNodeStructure&>(structure));
+			geometries.push_back(geometry);
+			break;
+		}
+			
+		case OGEX::kStructureLightNode:
+			//return ConvertLightNode(static_cast<const OGEX::LightNodeStructure&>(structure));
+		case OGEX::kStructureCameraNode:
+			//return ConvertCameraNode(static_cast<const CameraNodeStructure&>(nodeStructure));
+		default:
+			//log(Info, "Unknown node structure type");
+			break;
+	}
+	
+}
+
 
 Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure) {
 	const Map<OGEX::MeshStructure>* meshMap = structure.GetMeshMap();
@@ -245,38 +277,81 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
 	return mesh;
 }
 
-const char* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
-    
-    const char* textureName = "";
-    
-    const Structure* subStructure = materialStructure.GetFirstSubnode();
-    while (subStructure) {
-        
-        switch (subStructure->GetStructureType()) {
-                
-            case OGEX::kStructureColor:
-                break;
-                
-            case OGEX::kStructureParam:
-                break;
-                
-            case OGEX::kStructureTexture: {
-                const OGEX::TextureStructure& textureStructure = *static_cast<const OGEX::TextureStructure *>(subStructure);
-                
-                //const char* attrib = static_cast<const char*>(textureStructure.GetAttribString());
-                textureName = static_cast<const char*>(textureStructure.GetTextureName());
-                textureName += 2;
-                
-                break;
-            }
-                
-            default: break;
-                
-                
-        }
-        
-        subStructure = subStructure->Next();
-    }
-    
-    return textureName;
+Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure) {
+	Geometry* geometry = new Geometry();
+	
+	const char* name = structure.GetNodeName();
+	geometry->name = new char[strlen(name)];
+	for (int i = 0; i < strlen(name); ++i) {
+		geometry->name[i] = name[i];
+	}
+	
+	const Structure *subStructure = structure.GetFirstSubnode();
+	while (subStructure) {
+		switch (subStructure->GetStructureType()) {
+			case OGEX::kStructureTransform: {
+				const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
+				const float* transform = transformStructure.GetTransform();
+				mat4 transMat = mat4::Identity();
+				for (int i = 0; i < 4; ++i) {
+					for (int j = 0; j < 4; ++j) {
+						transMat.Set(i, j, transform[i + 4 * j]);
+					}
+				}
+				geometry->transform = transMat;
+				
+				break;
+			}
+				
+			default:
+				break;
+		}
+		subStructure = subStructure->Next();
+	}
+	
+	return geometry;
+}
+
+Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
+	Material* material = new Material();
+	
+	const char* name = materialStructure.GetStructureName();
+	material->materialName = new char[strlen(name)];
+	for (int i = 0; i < strlen(name); ++i) {
+		material->materialName[i] = name[i];
+	}
+	
+	const Structure* subStructure = materialStructure.GetFirstSubnode();
+	while (subStructure) {
+		
+		switch (subStructure->GetStructureType()) {
+				
+			case OGEX::kStructureColor:
+				break;
+				
+			case OGEX::kStructureParam:
+				break;
+				
+			case OGEX::kStructureTexture: {
+				const OGEX::TextureStructure& textureStructure = *static_cast<const OGEX::TextureStructure *>(subStructure);
+				
+				//const char* attrib = static_cast<const char*>(textureStructure.GetAttribString());
+				const char* textureName = static_cast<const char*>(textureStructure.GetTextureName());
+				textureName += 2;
+				material->textureName = new char[strlen(textureName)];
+				for (int i = 0; i < strlen(textureName); ++i) {
+					material->textureName[i] = textureName[i];
+				}
+				
+				break;
+			}
+				
+			default:
+				break;
+		}
+		
+		subStructure = subStructure->Next();
+	}
+	
+	return material;
 }
