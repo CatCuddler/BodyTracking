@@ -1,8 +1,8 @@
 #include "pch.h"
 
 #include <Kore/IO/FileReader.h>
-#include <Kore/Graphics/Graphics.h>
-#include <Kore/Graphics/Color.h>
+#include <Kore/Graphics4/Graphics.h>
+#include <Kore/Graphics1/Color.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
 #include <Kore/System.h>
@@ -11,6 +11,7 @@
 #include "MeshObject.h"
 
 using namespace Kore;
+using namespace Kore::Graphics4;
 
 namespace {
 	
@@ -64,8 +65,8 @@ namespace {
 			playerPosition.y() -= speed;
 		}
 		
-		Graphics::begin();
-		Graphics::clear(Graphics::ClearColorFlag | Graphics::ClearDepthFlag, Color::Black, 1.0f, 0);
+		Graphics4::begin();
+		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
 		program->set();
 		
@@ -81,17 +82,17 @@ namespace {
 		//mat4 M = mat4::Identity();
 		
 		cube->render(tex);
-        Graphics::setMatrix(mLocation, cube->M);
+        Graphics4::setMatrix(mLocation, cube->M);
         
         avatar->render(tex);
-        Graphics::setMatrix(mLocation, avatar->M);
+        Graphics4::setMatrix(mLocation, avatar->M);
 		
-		Graphics::setMatrix(vLocation, V);
-		Graphics::setMatrix(pLocation, P);
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
 
 		
-		Graphics::end();
-		Graphics::swapBuffers();
+		Graphics4::end();
+		Graphics4::swapBuffers();
 	}
 	
 	void keyDown(KeyCode code, wchar_t character) {
@@ -200,11 +201,11 @@ namespace {
         avatar = new MeshObject("avatar/avatar.ogex", "avatar/", structure);
         avatar->M = mat4::Translation(-5, 0, 0);
 		
-		Graphics::setRenderState(DepthTest, true);
-		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
+		Graphics4::setRenderState(DepthTest, true);
+		Graphics4::setRenderState(DepthTestCompare, ZCompareLess);
 		
-		Graphics::setTextureAddressing(tex, Kore::U, Repeat);
-		Graphics::setTextureAddressing(tex, Kore::V, Repeat);
+		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
+		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
 	}
 
 }
