@@ -7,6 +7,7 @@
 #include <string.h>
 
 using namespace Kore;
+using namespace Kore::Graphics4;
 
 namespace {
     void setPosition(Mesh* mesh, int size, const float* data) {
@@ -104,10 +105,10 @@ void MeshObject::render(TextureUnit tex) {
         IndexBuffer* indexBuffer = indexBuffers.at(i);
         Texture* image = images.at(i);
         
-        Graphics::setTexture(tex, image);
-        Graphics::setVertexBuffer(*vertexBuffer);
-        Graphics::setIndexBuffer(*indexBuffer);
-        Graphics::drawIndexedVertices();
+        Graphics4::setTexture(tex, image);
+        Graphics4::setVertexBuffer(*vertexBuffer);
+        Graphics4::setIndexBuffer(*indexBuffer);
+        Graphics4::drawIndexedVertices();
     }
 }
 

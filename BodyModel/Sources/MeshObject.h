@@ -2,8 +2,8 @@
 
 #include "OpenGEX/OpenGEX.h"
 
-#include <Kore/Graphics/Graphics.h>
-#include <Kore/Graphics/Texture.h>
+#include <Kore/Graphics4/Graphics.h>
+#include <Kore/Graphics4/Texture.h>
 
 #include <vector>
 
@@ -22,19 +22,19 @@ struct Mesh {
 class MeshObject {
 
 public:
-	MeshObject(const char* meshFile, const char* textureFile, const Kore::VertexStructure& structure, float scale = 1.0f);
-	void render(Kore::TextureUnit tex);
+	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
+	void render(Kore::Graphics4::TextureUnit tex);
     
     Kore::mat4 M;
 	
 	
 private:
     long meshesCount;
-    std::vector<Kore::VertexBuffer*> vertexBuffers;
-	std::vector<Kore::IndexBuffer*> indexBuffers;
+    std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
+	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
 	
     const char* textureDir;
-    std::vector<Kore::Texture*> images;
+    std::vector<Kore::Graphics4::Texture*> images;
     std::vector<Mesh*> meshes;
 	
 	void LoadObj(const char* filename);
