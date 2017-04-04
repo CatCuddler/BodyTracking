@@ -274,6 +274,14 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				
 			} break;
 				
+			case OGEX::kStructureSkin : {
+				const OGEX::SkinStructure& skinStructure = *static_cast<const OGEX::SkinStructure *>(subStructure);
+
+				// TODO: Handle skin structure.
+				// setAnimations und render
+
+			}
+				
 			default: break;
 		}
 		subStructure = subStructure->Next();
@@ -352,15 +360,17 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 			case OGEX::kStructureTexture: {
 				const OGEX::TextureStructure& textureStructure = *static_cast<const OGEX::TextureStructure *>(subStructure);
 				
-				//const char* attrib = static_cast<const char*>(textureStructure.GetAttribString());
-				const char* textureName = static_cast<const char*>(textureStructure.GetTextureName());
-				textureName += 2;
-				int length = (int)strlen(textureName) + 1;
-				material->textureName = new char[length]();
-				for (int i = 0; i < length; ++i) {
-					material->textureName[i] = textureName[i];
+				const String& attrib = textureStructure.GetAttribString();
+				if (attrib == "diffuse") {
+					const char* textureName = static_cast<const char*>(textureStructure.GetTextureName());
+					textureName += 2;
+					int length = (int)strlen(textureName) + 1;
+					material->textureName = new char[length]();
+					for (int i = 0; i < length; ++i) {
+						material->textureName[i] = textureName[i];
+					}
+					//log(Info, "Texture name %s, texture", material->textureName);
 				}
-				//log(Info, "Texture name %s", material->textureName);
 				
 				break;
 			}
