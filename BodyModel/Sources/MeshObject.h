@@ -17,6 +17,14 @@ struct Mesh {
 	int* indices;
 	float* normals;
 	float* texcoord;
+	
+	unsigned int meshIndex;
+};
+
+struct CompareMesh {
+	bool const operator()(Mesh* mesh1, Mesh* mesh2) const {
+		return (mesh1->meshIndex) < (mesh2->meshIndex);
+	}
 };
 
 struct Geometry {
@@ -24,13 +32,25 @@ struct Geometry {
 	char* name;
 	const char* objectRef;
 	const char* materialRef;
-	
+	unsigned int geometryIndex;
+};
+
+struct CompareGeometry {
+	bool const operator()(Geometry* geo1, Geometry* geo2) const {
+		return (geo1->geometryIndex) < (geo2->geometryIndex);
+	}
 };
 
 struct Material {
 	char* materialName;
 	char* textureName;
 	unsigned int materialIndex;
+};
+
+struct CompareMaterials {
+	bool const operator()(Material* material1, Material* material2) const {
+		return (material1->materialIndex) < (material2->materialIndex);
+	}
 };
 
 class MeshObject {
@@ -57,10 +77,10 @@ private:
 	
 	void ConvertObjectStructure(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
-	Mesh* ConvertMesh(const OGEX::MeshStructure& structure);
+	Mesh* ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName);
 	
 	void ConvertNodeStructure(const Structure& structure);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
 	
-    Material* ConvertMaterial(const OGEX::MaterialStructure& structure) ;
+    Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
 };

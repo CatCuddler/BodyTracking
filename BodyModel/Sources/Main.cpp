@@ -39,13 +39,13 @@ namespace {
 	MeshObject* cube;
     MeshObject* avatar;
 	
-	vec3 playerPosition = vec3(0, 0, 50);
-	vec3 globe = vec3(0, Kore::pi, Kore::pi);
+	vec3 playerPosition = vec3(0, 10, 30);
+	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		
-		const float speed = 1;
+		const float speed = 0.5;
 		if (left) {
 			playerPosition.x() -= speed;
 		}
@@ -78,17 +78,14 @@ namespace {
 		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
 		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
 		
-		// model matrix
-		//mat4 M = mat4::Identity();
-		
-		cube->render(tex);
-        Graphics4::setMatrix(mLocation, cube->M);
-        
-        avatar->render(tex);
-        Graphics4::setMatrix(mLocation, avatar->M);
-		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
+		
+		Graphics4::setMatrix(mLocation, cube->M);
+		cube->render(tex);
+		
+		Graphics4::setMatrix(mLocation, avatar->M);
+        avatar->render(tex);
 
 		
 		Graphics4::end();
@@ -197,9 +194,9 @@ namespace {
 		mLocation = program->getConstantLocation("M");
 		
 		cube = new MeshObject("cube.ogex", "", structure);
-        cube->M = mat4::Translation(5, 0, 0);
+		cube->M = mat4::Translation(5, 0, 0);
         avatar = new MeshObject("avatar/avatar.ogex", "avatar/", structure);
-        avatar->M = mat4::Translation(-5, 0, 0);
+		avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics4::setRenderState(DepthTest, true);
 		Graphics4::setRenderState(DepthTestCompare, ZCompareLess);

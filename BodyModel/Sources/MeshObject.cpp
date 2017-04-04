@@ -5,6 +5,8 @@
 #include <Kore/Log.h>
 
 #include <sstream>
+#include <algorithm>
+#include <functional>
 
 using namespace Kore;
 using namespace Kore::Graphics4;
@@ -15,7 +17,8 @@ namespace {
             mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
             mesh->vertices[(i * 3) + 1] = data[i * 3 + 1];
             mesh->vertices[(i * 3) + 2] = data[i * 3 + 2];
-            //log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 8) + 0], mesh->vertices[(i * 8) + 1], mesh->vertices[(i * 8) + 2]);
+            //if (i < 5 || i > size-5)
+			//	log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 3) + 0], mesh->vertices[(i * 3) + 1], mesh->vertices[(i * 3) + 2]);
         }
     }
     
@@ -23,7 +26,8 @@ namespace {
         for (int i = 0; i < size; ++i) {
             mesh->texcoord[(i * 2) + 0] = data[i * 2 + 0];
             mesh->texcoord[(i * 2) + 1] = data[i * 2 + 1];
-            //log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->uvs[(i * 2) + 0], mesh->uvs[(i * 2) + 1]);
+			//if (i < 5 || i > size-5)
+			//	log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->texcoord[(i * 2) + 0], mesh->texcoord[(i * 2) + 1]);
         }
     }
     
@@ -32,7 +36,8 @@ namespace {
             mesh->normals[(i * 3) + 0] = data[i * 3 + 0];
             mesh->normals[(i * 3) + 1] = data[i * 3 + 1];
             mesh->normals[(i * 3) + 2] = data[i * 3 + 2];
-            //log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->normals[(i * 3) + 0], mesh->normals[(i * 3) + 1], mesh->normals[(i * 3) + 2]);
+            //if (i < 5 || i > size-5)
+			//	log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->normals[(i * 3) + 0], mesh->normals[(i * 3) + 1], mesh->normals[(i * 3) + 2]);
         }
     }
     
@@ -41,9 +46,19 @@ namespace {
             mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
             mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
             mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
-            //log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
+			//if (i < 5 || i > size-5)
+			//	log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
         }
     }
+	
+	int getIndexFromString(const char* name, int ignore) {
+		const char* num = name + ignore;
+		std::stringstream strValue;
+		strValue << num;
+		unsigned int intValue;
+		strValue >> intValue;
+		return intValue;
+	}
 }
 
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) , M(mat4::Identity()) {
@@ -52,9 +67,13 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
     
     meshesCount = meshes.size();
     log(Info, "Meshes length %i", meshesCount);
+	
+	std::sort(meshes.begin(), meshes.end(), CompareMesh());
+	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
+	std::sort(materials.begin(), materials.end(), CompareMaterials());
     
     
-    for(int j = 0; j < meshes.size(); ++j) {
+    for(int j = 0; j < meshesCount; ++j) {
         Mesh* mesh = meshes.at(j);
         VertexBuffer * vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
         IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces*3);
@@ -68,7 +87,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
             vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
             // texCoord
             vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
-            vertices[i * 8 + 4] = /*1.0f -*/ mesh->texcoord[i * 2 + 1];
+            vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
             // normal
             vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
             vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
@@ -90,13 +109,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		char temp[200];
 		strcpy (temp, textureDir);
 		std::strcat(temp, material->textureName);
-		log(Info, "Load Texture %s at pos %i", temp, material->materialIndex - 1);
+		log(Info, "Load Texture %s", temp);
 		Texture* image = new Texture(temp, true);
-		if (material->materialIndex - 1 >= images.size()) {
-			images.insert(images.begin() + material->materialIndex - 1, image);
-		} else {
-			images.at(material->materialIndex - 1) = image;
-		}
+		images.push_back(image);
 		
         vertexBuffers.push_back(vertexBuffer);
         indexBuffers.push_back(indexBuffer);
@@ -105,7 +120,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 }
 
 void MeshObject::render(TextureUnit tex) {
-    for (int i = 0; i < meshesCount; ++i) {
+	for (int i = 0; i < meshesCount; ++i) {
         VertexBuffer* vertexBuffer = vertexBuffers.at(i);
         IndexBuffer* indexBuffer = indexBuffers.at(i);
         Texture* image = images.at(i);
@@ -198,6 +213,8 @@ void MeshObject::ConvertNodeStructure(const Structure& structure) {
 Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure) {
 	const Map<OGEX::MeshStructure>* meshMap = structure.GetMeshMap();
 	
+	const char* geometryName = structure.GetStructureName();
+	
 	if (meshMap == nullptr) {
 		log(Info, "Invalid geometry mesh structure");
 		return nullptr;
@@ -205,20 +222,19 @@ Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& str
 	// TODO: Handle morph structures.
 	const OGEX::MeshStructure* meshStructure = meshMap->First();
 	while (meshStructure) {
-		// The geometry structure may contain a mesh for each LOD, but we only care
-		// about the first/highest LOD.
 		if (meshStructure->GetKey() == 0) break;
 		meshStructure = meshStructure->Next();
 	}
 	
-	return ConvertMesh(*meshStructure);
+	return ConvertMesh(*meshStructure, geometryName);
 }
 
-Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure) {
+Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName) {
 	Mesh* mesh = new Mesh();
-	mesh->vertices = nullptr;
+	mesh->meshIndex = getIndexFromString(geometryName, 8);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
+
 	while (subStructure) {
 		switch (subStructure->GetStructureType()) {
 			case OGEX::kStructureVertexArray: {
@@ -273,11 +289,15 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 	Geometry* geometry = new Geometry();
 	
 	const char* name = structure.GetNodeName();
-	geometry->name = new char[strlen(name)];
-	for (int i = 0; i < strlen(name); ++i) {
+	int length = (int)strlen(name) + 1;
+	geometry->name = new char[length]();
+	for (int i = 0; i < length; ++i) {
 		geometry->name[i] = name[i];
 	}
 	//log(Info, "Geometry name %s", name);
+	
+	const char* nodeName = structure.GetStructureName();
+	geometry->geometryIndex = getIndexFromString(nodeName, 4);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
 	while (subStructure) {
@@ -309,19 +329,14 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 	Material* material = new Material();
 	
 	const char* name = materialStructure.GetStructureName();
-	material->materialName = new char[strlen(name)];
-	for (int i = 0; i < strlen(name); ++i) {
+	int length = (int)strlen(name) + 1;
+	material->materialName = new char[length]();
+	for (int i = 0; i < length; ++i) {
 		material->materialName[i] = name[i];
 	}
 	//log(Info, "Material name %s", name);
 	
-	// Convert material index
-	const char* num = name + 8;
-	std::stringstream strValue;
-	strValue << num;
-	unsigned int intValue;
-	strValue >> intValue;
-	material->materialIndex = intValue;
+	material->materialIndex = getIndexFromString(name, 8);
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
 	while (subStructure) {

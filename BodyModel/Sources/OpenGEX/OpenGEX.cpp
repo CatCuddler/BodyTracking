@@ -1907,6 +1907,17 @@ DataResult MeshStructure::ProcessData(DataDescription *dataDescription)
 	{
 		return (result);
 	}
+	
+	const Structure *structure2 = GetFirstSubstructure(kStructureName);
+	if (structure2)
+	{
+		if (GetLastSubstructure(kStructureName) != structure2)
+		{
+			return (kDataExtraneousSubstructure);
+		}
+		const char* name = static_cast<const NameStructure *>(structure2)->GetName();
+		int a = 0;
+	}
 
 	Structure *structure = GetFirstSubnode();
 	while (structure)
