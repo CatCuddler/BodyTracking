@@ -80,7 +80,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
         
         // Mesh Vertex Buffer
         float* vertices = vertexBuffer->lock();
-        for (int i = j; i < mesh->numVertices; ++i) {
+        for (int i = 0; i < mesh->numVertices; ++i) {
             // position
             vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
             vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
