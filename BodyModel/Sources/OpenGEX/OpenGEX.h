@@ -458,8 +458,6 @@ namespace OGEX
 			Array<const MaterialStructure *, 4>		materialStructureArray;
 
 			const ObjectStructure *GetObjectStructure(void) const;
-		
-			const char *geometryName;
 
 		public:
 
