@@ -40,7 +40,7 @@ namespace {
     MeshObject* avatar;
 	
 	vec3 playerPosition = vec3(0, 10, 30);
-	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi);
+	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi/2);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -195,7 +195,7 @@ namespace {
 		
 		cube = new MeshObject("cube.ogex", "", structure);
 		cube->M = mat4::Translation(5, 0, 0);
-        avatar = new MeshObject("avatar/avatar.ogex", "avatar/", structure);
+        avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics4::setRenderState(DepthTest, true);
