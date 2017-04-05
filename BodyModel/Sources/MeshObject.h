@@ -21,7 +21,8 @@ struct Mesh {
 	// Skin
 	float* weight;
 	int weightCount;
-	float* index;
+	int* boneIndices;
+	int boneIndexCount;
 	
 	unsigned int meshIndex;
 };

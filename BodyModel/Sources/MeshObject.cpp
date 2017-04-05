@@ -55,7 +55,15 @@ namespace {
 		for (int i = 0; i < size; ++i) {
 			mesh->weight[i] = data[i];
 			//if (i < 5 || i > size-5)
-			//	log(Info, "Index %i \t w=%f", i, mesh->weight[i]);
+			//	log(Info, "Weight %i \t w=%f", i, mesh->weight[i]);
+		}
+	}
+	
+	void setBoneIndices(Mesh* mesh, int size, const unsigned_int16* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->boneIndices[i] = data[i];
+			//if (i < 5 || i > size-5)
+			//	log(Info, "Bone Index %i \t i=%i", i, mesh->boneIndices[i]);
 		}
 	}
 	
@@ -330,13 +338,23 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				const Structure *subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneWeightArray);
 				const OGEX::BoneWeightArrayStructure& weightStructure = *static_cast<const OGEX::BoneWeightArrayStructure *>(subStructure);
 				const float* weights = weightStructure.GetBoneWeightArray();
-				
 				int weightCount = weightStructure.GetBoneWeightCount();
-				mesh->weightCount = weightCount;
-				//log(Info, "Weight count %i", mesh->weightCount);
 				
+				mesh->weightCount = weightCount;
 				mesh->weight = new float[weightCount];
 				setWeight(mesh, weightCount, weights);
+				//log(Info, "Weight Count %i", weightCount);
+				
+				// Get index array
+				subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneIndexArray);
+				const OGEX::BoneIndexArrayStructure& boneIndexStructure = *static_cast<const OGEX::BoneIndexArrayStructure *>(subStructure);
+				const unsigned_int16* indices = boneIndexStructure.GetBoneIndexArray();
+				int boneIndexCount = boneIndexStructure.GetBoneIndexCount();
+				
+				mesh->boneIndexCount = boneIndexCount;
+				mesh->boneIndices = new int[boneIndexCount];
+				setBoneIndices(mesh, boneIndexCount, indices);
+				//log(Info, "Bone Index Count %i", boneIndexCount);
 			}
 				
 			default: break;
