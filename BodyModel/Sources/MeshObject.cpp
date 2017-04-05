@@ -59,6 +59,22 @@ namespace {
 		strValue >> intValue;
 		return intValue;
 	}
+	
+	void copyString(const char* from, char* to, int length) {
+		for (int i = 0; i < length; ++i) {
+			to[i] = from[i];
+		}
+	}
+	
+	mat4 getMatrix4x4(const float* matrix) {
+		mat4 mat = mat4::Identity();
+		for (int i = 0; i < 4; ++i) {
+			for (int j = 0; j < 4; ++j) {
+				mat.Set(i, j, matrix[i + 4 * j]);
+			}
+		}
+		return mat;
+	}
 }
 
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) , M(mat4::Identity()) {
@@ -69,7 +85,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
     log(Info, "Meshes length %i", meshesCount);
 	
 	std::sort(meshes.begin(), meshes.end(), CompareMesh());
-	//std::sort(geometries.begin(), geometries.end(), CompareGeometry());
+	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
     
     
@@ -209,12 +225,13 @@ void MeshObject::ConvertNodeStructure(const OGEX::NodeStructure& nodeStructure) 
 			
 		case OGEX::kStructureBoneNode: {
 			BoneNode* bone = ConvertBoneNode(static_cast<const OGEX::BoneNodeStructure&>(nodeStructure));
+			bones.push_back(bone);
 			break;
 		}
 			
 		case OGEX::kStructureGeometryNode: {
-			//Geometry* geometry = ConvertGeometryNode(static_cast<const OGEX::GeometryNodeStructure&>(nodeStructure));
-			//geometries.push_back(geometry);
+			Geometry* geometry = ConvertGeometryNode(static_cast<const OGEX::GeometryNodeStructure&>(nodeStructure));
+			geometries.push_back(geometry);
 			break;
 		}
 			
@@ -320,9 +337,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 	const char* name = structure.GetNodeName();
 	int length = (int)strlen(name) + 1;
 	geometry->name = new char[length]();
-	for (int i = 0; i < length; ++i) {
-		geometry->name[i] = name[i];
-	}
+	copyString(name, geometry->name, length);
 	//log(Info, "Geometry name %s", name);
 	
 	const char* nodeName = structure.GetStructureName();
@@ -334,13 +349,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 			case OGEX::kStructureTransform: {
 				const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 				const float* transform = transformStructure.GetTransform();
-				mat4 transMat = mat4::Identity();
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						transMat.Set(i, j, transform[i + 4 * j]);
-					}
-				}
-				geometry->transform = transMat;
+				geometry->transform = getMatrix4x4(transform);
 				
 				break;
 			}
@@ -360,9 +369,7 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 	const char* name = materialStructure.GetStructureName();
 	int length = (int)strlen(name) + 1;
 	material->materialName = new char[length]();
-	for (int i = 0; i < length; ++i) {
-		material->materialName[i] = name[i];
-	}
+	copyString(name, material->materialName, length);
 	//log(Info, "Material name %s", name);
 	
 	material->materialIndex = getIndexFromString(name, 8);
@@ -387,10 +394,8 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 					textureName += 2;
 					int length = (int)strlen(textureName) + 1;
 					material->textureName = new char[length]();
-					for (int i = 0; i < length; ++i) {
-						material->textureName[i] = textureName[i];
-					}
-					//log(Info, "Texture name %s, texture", material->textureName);
+					copyString(textureName, material->textureName, length);
+					//log(Info, "Texture name %s", material->textureName);
 				}
 				
 				break;
@@ -409,12 +414,32 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) {
 	BoneNode* bone = new BoneNode();
 	
-	bone->boneName = structure.GetNodeName();
+	const char* name = structure.GetNodeName();
+	int length = (int)strlen(name) + 1;
+	bone->boneName = new char[length]();
+	copyString(structure.GetNodeName(), bone->boneName, length);
 	
 	const char* nodeName = structure.GetStructureName();
 	bone->nodeIndex = getIndexFromString(nodeName, 4);
 	
-	log(Info, "%s with index %i", bone->boneName, bone->nodeIndex);
+	//log(Info, "Bone %s with index %i", bone->boneName, bone->nodeIndex);
+	
+	const Structure *subStructure = structure.GetFirstSubnode();
+	while (subStructure) {
+		switch (subStructure->GetStructureType()) {
+			case OGEX::kStructureTransform: {
+				const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
+				const float* transform = transformStructure.GetTransform();
+				bone->local = getMatrix4x4(transform);
+				
+				break;
+			}
+				
+			default:
+				break;
+		}
+		subStructure = subStructure->Next();
+	}
 	
 	return bone;
 }

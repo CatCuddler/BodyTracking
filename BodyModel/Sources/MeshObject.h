@@ -54,7 +54,7 @@ struct CompareMaterials {
 };
 
 struct BoneNode {
-	const char* boneName;
+	char* boneName;
 	int nodeIndex;
 	
 	int dadindex;
@@ -63,16 +63,6 @@ struct BoneNode {
 	
 	Kore::mat4 local, combined, combinedinv, final;
 	Kore::mat4 localStart, localStartInverse;
-	
-	float h;
-	float p;
-	float b;
-	float sx;
-	float sy;
-	float sz;
-	float x;
-	float y;
-	float z;
 	
 	BoneNode() : parent(nullptr), dadindex(-1) { }
 };
@@ -96,6 +86,7 @@ private:
     std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;
+	std::vector<BoneNode*> bones;
 	
 	void LoadObj(const char* filename);
 	
