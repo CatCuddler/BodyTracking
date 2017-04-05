@@ -18,6 +18,11 @@ struct Mesh {
 	float* normals;
 	float* texcoord;
 	
+	// Skin
+	float* weight;
+	int weightCount;
+	float* index;
+	
 	unsigned int meshIndex;
 };
 

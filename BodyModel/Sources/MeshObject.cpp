@@ -51,6 +51,14 @@ namespace {
         }
     }
 	
+	void setWeight(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->weight[i] = data[i];
+			//if (i < 5 || i > size-5)
+			//	log(Info, "Index %i \t w=%f", i, mesh->weight[i]);
+		}
+	}
+	
 	int getIndexFromString(const char* name, int ignore) {
 		const char* num = name + ignore;
 		std::stringstream strValue;
@@ -317,7 +325,18 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 
 				// TODO: Handle skin structure.
 				// setAnimations und render
-
+				
+				// Get weight array
+				const Structure *subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneWeightArray);
+				const OGEX::BoneWeightArrayStructure& weightStructure = *static_cast<const OGEX::BoneWeightArrayStructure *>(subStructure);
+				const float* weights = weightStructure.GetBoneWeightArray();
+				
+				int weightCount = weightStructure.GetBoneWeightCount();
+				mesh->weightCount = weightCount;
+				//log(Info, "Weight count %i", mesh->weightCount);
+				
+				mesh->weight = new float[weightCount];
+				setWeight(mesh, weightCount, weights);
 			}
 				
 			default: break;
@@ -424,22 +443,10 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	
 	//log(Info, "Bone %s with index %i", bone->boneName, bone->nodeIndex);
 	
-	const Structure *subStructure = structure.GetFirstSubnode();
-	while (subStructure) {
-		switch (subStructure->GetStructureType()) {
-			case OGEX::kStructureTransform: {
-				const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
-				const float* transform = transformStructure.GetTransform();
-				bone->local = getMatrix4x4(transform);
-				
-				break;
-			}
-				
-			default:
-				break;
-		}
-		subStructure = subStructure->Next();
-	}
+	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
+	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
+	const float* transform = transformStructure.GetTransform();
+	bone->local = getMatrix4x4(transform);
 	
 	return bone;
 }
