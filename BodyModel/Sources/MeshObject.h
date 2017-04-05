@@ -53,6 +53,30 @@ struct CompareMaterials {
 	}
 };
 
+struct BoneNode {
+	const char* boneName;
+	int nodeIndex;
+	
+	int dadindex;
+	BoneNode* parent;
+	//List<Bone*> children;
+	
+	Kore::mat4 local, combined, combinedinv, final;
+	Kore::mat4 localStart, localStartInverse;
+	
+	float h;
+	float p;
+	float b;
+	float sx;
+	float sy;
+	float sz;
+	float x;
+	float y;
+	float z;
+	
+	BoneNode() : parent(nullptr), dadindex(-1) { }
+};
+
 class MeshObject {
 
 public:
@@ -75,12 +99,15 @@ private:
 	
 	void LoadObj(const char* filename);
 	
-	void ConvertObjectStructure(const Structure& structure);
+	void ConvertObjects(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName);
 	
-	void ConvertNodeStructure(const Structure& structure);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
 	
     Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
+	
+	void ConvertNodes(const Structure& structure);
+	void ConvertNodeStructure(const OGEX::NodeStructure& nodeStructure);
+	BoneNode* ConvertBoneNode(const OGEX::BoneNodeStructure& structure);
 };
