@@ -137,6 +137,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
         }
         indexBuffer->unlock();
 		
+		vertexBuffers.push_back(vertexBuffer);
+		indexBuffers.push_back(indexBuffer);
+		
 		Material* material = materials.at(j);
 		char temp[200];
 		strcpy (temp, textureDir);
@@ -144,9 +147,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		log(Info, "Load Texture %s", temp);
 		Texture* image = new Texture(temp, true);
 		images.push_back(image);
-		
-        vertexBuffers.push_back(vertexBuffer);
-        indexBuffers.push_back(indexBuffer);
     }
 	
 }
@@ -164,6 +164,14 @@ void MeshObject::render(TextureUnit tex) {
     }
 }
 
+void MeshObject::setAnimation() {
+
+}
+
+void MeshObject::animate() {
+
+}
+
 void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);
 	void* data = fileReader.readAll();
@@ -175,16 +183,10 @@ void MeshObject::LoadObj(const char* filename) {
 	OGEX::OpenGexDataDescription openGexDataDescription;
 	DataResult result = openGexDataDescription.ProcessText(buffer);
 	if (result == kDataOkay) {
-		//const Structure* structure = openGexDataDescription.GetRootStructure()->GetFirstSubnode();
-		//while (structure) {
-			// This loops over all top-level structures in the file.
-			
-			// Do something with the data...
-			ConvertObjects(*openGexDataDescription.GetRootStructure());
-			ConvertNodes(*openGexDataDescription.GetRootStructure());
-			
-			//structure = structure->Next();
-		//}
+		ConvertObjects(*openGexDataDescription.GetRootStructure());
+		BoneNode* bone = new BoneNode();
+		bone->boneName = "";
+		ConvertNodes(*openGexDataDescription.GetRootStructure(), *bone);
 	} else {
 		log(Info, "Failed to load OpenGEX file");
 	}
@@ -223,46 +225,55 @@ void MeshObject::ConvertObjects(const Structure& rootStructure) {
 	}
 }
 
-void MeshObject::ConvertNodes(const Structure& rootStructure) {
+void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNode) {
+
 	const Structure* structure = rootStructure.GetFirstSubnode();
 	while (structure) {
+		const OGEX::NodeStructure& nodeStructure = *static_cast<const OGEX::NodeStructure*>(structure);
 		
-		ConvertNodeStructure(*static_cast<const OGEX::NodeStructure*>(structure));
-		ConvertNodes(*structure);
-		
+		switch (nodeStructure.GetStructureType()) {
+			case OGEX::kStructureNode:
+				//return ConvertNode(static_cast<const OGEX::NodeStructure&>(structure));
+				
+			case OGEX::kStructureBoneNode: {
+				BoneNode* bone = ConvertBoneNode(static_cast<const OGEX::BoneNodeStructure&>(nodeStructure));
+				bone->parent = &parentNode;
+				bones.push_back(bone);
+				
+				ConvertNodes(*structure, *bone);
+				
+				children.push_back(bone);
+				
+				/*log(Info, "Children of node %s", parentNode.boneName);
+				for (int i = 0; i < children.size(); ++i) {
+					log(Info, "\t Child name %s", children.at(i)->boneName);
+				}*/
+				
+				parentNode.children = children;
+				
+				break;
+			}
+				
+			case OGEX::kStructureGeometryNode: {
+				Geometry* geometry = ConvertGeometryNode(static_cast<const OGEX::GeometryNodeStructure&>(nodeStructure));
+				geometries.push_back(geometry);
+				break;
+			}
+				
+			case OGEX::kStructureLightNode:
+				//return ConvertLightNode(static_cast<const OGEX::LightNodeStructure&>(structure));
+				
+			case OGEX::kStructureCameraNode:
+				//return ConvertCameraNode(static_cast<const CameraNodeStructure&>(nodeStructure));
+				
+			default:
+				//log(Info, "Unknown node structure type");
+				break;
+		}
 		structure = structure->Next();
 	}
+	
 }
-
-void MeshObject::ConvertNodeStructure(const OGEX::NodeStructure& nodeStructure) {
-	switch (nodeStructure.GetStructureType()) {
-		case OGEX::kStructureNode:
-			//return ConvertNode(static_cast<const OGEX::NodeStructure&>(structure));
-			
-		case OGEX::kStructureBoneNode: {
-			BoneNode* bone = ConvertBoneNode(static_cast<const OGEX::BoneNodeStructure&>(nodeStructure));
-			bones.push_back(bone);
-			break;
-		}
-			
-		case OGEX::kStructureGeometryNode: {
-			Geometry* geometry = ConvertGeometryNode(static_cast<const OGEX::GeometryNodeStructure&>(nodeStructure));
-			geometries.push_back(geometry);
-			break;
-		}
-			
-		case OGEX::kStructureLightNode:
-			//return ConvertLightNode(static_cast<const OGEX::LightNodeStructure&>(structure));
-			
-		case OGEX::kStructureCameraNode:
-			//return ConvertCameraNode(static_cast<const CameraNodeStructure&>(nodeStructure));
-			
-		default:
-			//log(Info, "Unknown node structure type");
-			break;
-	}
-}
-
 
 Mesh* MeshObject::ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure) {
 	const Map<OGEX::MeshStructure>* meshMap = structure.GetMeshMap();
@@ -355,6 +366,7 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				mesh->boneIndices = new int[boneIndexCount];
 				setBoneIndices(mesh, boneIndexCount, indices);
 				//log(Info, "Bone Index Count %i", boneIndexCount);
+				
 			}
 				
 			default: break;
@@ -464,7 +476,10 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
-	bone->local = getMatrix4x4(transform);
+	bone->transform = getMatrix4x4(transform);
+	bone->invTransform = bone->transform.Invert();
+	
+	children.clear();
 	
 	return bone;
 }

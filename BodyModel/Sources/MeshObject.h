@@ -62,15 +62,11 @@ struct CompareMaterials {
 struct BoneNode {
 	char* boneName;
 	int nodeIndex;
-	
-	int dadindex;
 	BoneNode* parent;
-	//List<Bone*> children;
 	
-	Kore::mat4 local, combined, combinedinv, final;
-	Kore::mat4 localStart, localStartInverse;
+	Kore::mat4 transform, invTransform;
 	
-	BoneNode() : parent(nullptr), dadindex(-1) { }
+	std::vector<BoneNode*> children;
 };
 
 class MeshObject {
@@ -78,6 +74,9 @@ class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
+	
+	void setAnimation();
+	void animate();
     
     Kore::mat4 M;
 	
@@ -93,6 +92,7 @@ private:
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;
 	std::vector<BoneNode*> bones;
+	std::vector<BoneNode*> children;
 	
 	void LoadObj(const char* filename);
 	
@@ -100,11 +100,9 @@ private:
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName);
 	
-	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
-	
     Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
 	
-	void ConvertNodes(const Structure& structure);
-	void ConvertNodeStructure(const OGEX::NodeStructure& nodeStructure);
+	void ConvertNodes(const Structure& structure, BoneNode& parentNode);
+	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
 	BoneNode* ConvertBoneNode(const OGEX::BoneNodeStructure& structure);
 };
