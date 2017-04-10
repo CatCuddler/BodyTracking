@@ -51,7 +51,13 @@ namespace {
 		}
 	}
 	
-	void setBoneCountArray(Mesh* mesh, int size, const unsigned_int16* data) {
+	template <typename T>
+	void cloneArray(const T* source, int size, T** dest) {
+		*dest = new T[size];
+		std::copy(source, source + size, *dest);
+	}
+	
+	/*void setBoneCountArray(Mesh* mesh, int size, const unsigned_int16* data) {
 		for (int i = 0; i < size; ++i) {
 			mesh->boneCountArray[i] = data[i];
 			//if (i < 5 || i > size-5)
@@ -73,7 +79,7 @@ namespace {
 			//if (i < 5 || i > size-5)
 			//	log(Info, "Bone Index %i \t i=%i", i, mesh->boneIndices[i]);
 		}
-	}
+	}*/
 	
 	int getIndexFromString(const char* name, int ignore) {
 		const char* num = name + ignore;
@@ -100,16 +106,8 @@ namespace {
 		return mat;
 	}
 	
-	void updatebone(BoneNode* bone, const mat4& m, bool updateinverse = false) {
-		bone->combined = m * bone->local;
-		
-		if (updateinverse) {
-			bone->combinedInv = bone->combined.Invert();
-			bone->localStart = bone->local;
-			bone->localStartInv = bone->localStart.Invert();
-		}
-		bone->finalTrans = bone->combined * bone->combinedInv;
-		for (int i = 0; i < bone->children.size(); ++i) updatebone(bone->children[i], bone->combined, updateinverse);
+	void updateBone(BoneNode* bone) {
+		bone->transform = bone->transform * mat4::Identity();//bone->transformInv;
 	}
 	
 }
@@ -185,11 +183,71 @@ void MeshObject::render(TextureUnit tex) {
 }
 
 void MeshObject::setAnimation() {
-	
+	for(int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		
+		// TODO
+	}
 }
 
 void MeshObject::animate(TextureUnit tex) {
 	
+	// Update bones
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+	
+	for(int j = 0; j < meshesCount; ++j) {
+		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
+
+		Mesh* mesh = meshes.at(j);
+		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+		
+		// Mesh Vertex Buffer
+		float* vertices = vertexBuffer->lock();
+		for (int i = 0; i < mesh->numVertices; ++i) {
+			vec4 startPos(0, 0, 0, 1);
+			vec4 startNormal(0, 0, 0, 1);
+			
+			// For each vertex belonging to a mesh, the bone count array specifies the number of bones the influence the vertex
+			int numOfBones = mesh->boneCountArray[i];
+			
+			for (int b = 0; b < numOfBones; ++b) {
+				vec4 posVec(mesh->vertices[i * 3 + 0], mesh->vertices[i * 3 + 1], mesh->vertices[i * 3 + 2], 1);
+				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
+				
+				int boneIndex = currentBoneCountIndex + b;
+				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex]);
+				float boneWeight = mesh->boneWeight[boneIndex];
+				
+				startPos += (/*bone->transform * bone->transformInv * */posVec) * boneWeight;
+				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
+			}
+			
+			currentBoneCountIndex += numOfBones;
+			
+			// position
+			vertices[i * 8 + 0] = startPos.x() * scale;
+			vertices[i * 8 + 1] = startPos.y() * scale;
+			vertices[i * 8 + 2] = startPos.z() * scale;
+			// texCoord
+			vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
+			vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
+			// normal
+			vertices[i * 8 + 5] = startNormal.x();
+			vertices[i * 8 + 6] = startNormal.y();
+			vertices[i * 8 + 7] = startNormal.z();
+			
+			//log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
+		}
+		vertexBuffer->unlock();
+		
+		IndexBuffer* indexBuffer = indexBuffers.at(j);
+		Texture* image = images.at(j);
+		
+		Graphics4::setTexture(tex, image);
+		Graphics4::setVertexBuffer(*vertexBuffer);
+		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::drawIndexedVertices();
+	}
 }
 
 void MeshObject::LoadObj(const char* filename) {
@@ -362,9 +420,6 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 			case OGEX::kStructureSkin : {
 				const OGEX::SkinStructure& skinStructure = *static_cast<const OGEX::SkinStructure *>(subStructure);
 				
-				// TODO: Handle skin structure.
-				// setAnimations und render
-				
 				// Get bone count array
 				const Structure *subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneCountArray);
 				const OGEX::BoneCountArrayStructure& boneCountStructure = *static_cast<const OGEX::BoneCountArrayStructure *>(subStructure);
@@ -372,8 +427,9 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				int boneCount = boneCountStructure.GetVertexCount();
 				
 				mesh->boneCount = boneCount;
-				mesh->boneCountArray = new int[boneCount];
-				setBoneCountArray(mesh, boneCount, boneCountArray);
+				//mesh->boneCountArray = new int[boneCount];
+				//setBoneCountArray(mesh, boneCount, boneCountArray);
+				cloneArray(boneCountArray, boneCount, &mesh->boneCountArray);
 				//log(Info, "Bone Count %i", boneCount);
 				
 				// Get weight array
@@ -383,8 +439,9 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				int weightCount = weightStructure.GetBoneWeightCount();
 				
 				mesh->weightCount = weightCount;
-				mesh->boneWeight = new float[weightCount];
-				setWeight(mesh, weightCount, weights);
+//				mesh->boneWeight = new float[weightCount];
+//				setWeight(mesh, weightCount, weights);
+				cloneArray(weights, weightCount, &mesh->boneWeight);
 				//log(Info, "Weight Count %i", weightCount);
 				
 				// Get index array
@@ -394,8 +451,9 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				int boneIndexCount = boneIndexStructure.GetBoneIndexCount();
 				
 				mesh->boneIndexCount = boneIndexCount;
-				mesh->boneIndices = new int[boneIndexCount];
-				setBoneIndices(mesh, boneIndexCount, indices);
+				cloneArray(indices, boneIndexCount, &mesh->boneIndices);
+//				mesh->boneIndices = new int[boneIndexCount];
+//				setBoneIndices(mesh, boneIndexCount, indices);
 				//log(Info, "Bone Index Count %i", boneIndexCount);
 				
 			}
@@ -404,9 +462,6 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 		}
 		subStructure = subStructure->Next();
 	}
-	
-	
-	// TODO: Handle skin structure.
 	
 	return mesh;
 }
@@ -507,8 +562,12 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
-	bone->local = getMatrix4x4(transform);
-	bone->localInv = bone->local.Invert();
+	bone->transform = getMatrix4x4(transform);
+	bone->transformInv = bone->transform.Invert();
+	//bone->combined = mat4::Identity();
+	//bone->combinedInv = mat4::Identity();
+	//bone->localStart = mat4::Identity();
+	//bone->localStartInv = mat4::Identity();
 	
 	children.clear();
 	

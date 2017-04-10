@@ -19,9 +19,9 @@ struct Mesh {
 	float* texcoord;
 	
 	// Skin
-	int* boneCountArray;
+	unsigned_int16* boneCountArray;
 	int boneCount;
-	int* boneIndices;
+	unsigned_int16* boneIndices;
 	int boneIndexCount;
 	float* boneWeight;
 	int weightCount;
@@ -66,10 +66,9 @@ struct BoneNode {
 	int nodeIndex;
 	BoneNode* parent;
 	
-	Kore::mat4 local, localInv;
-	Kore::mat4 combined, combinedInv;
-	Kore::mat4 localStart, localStartInv;
-	Kore::mat4 finalTrans;
+	Kore::mat4 transform, transformInv;
+	//Kore::mat4 combined, combinedInv;
+	//Kore::mat4 localStart, localStartInv;
 	
 	std::vector<BoneNode*> children;
 };
@@ -83,7 +82,6 @@ public:
 	void animate(Kore::Graphics4::TextureUnit tex);
 	
 	Kore::mat4 M;
-	
 	
 private:
 	long meshesCount;

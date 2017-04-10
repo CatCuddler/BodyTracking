@@ -38,7 +38,7 @@ namespace {
 	int mousePressX, mousePressY = 0;
 	
 	MeshObject* cube;
-    MeshObject* avatar;
+	MeshObject* avatar;
 	
 	vec3 playerPosition = vec3(0, 10, 30);
 	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi/2);
@@ -86,10 +86,9 @@ namespace {
 		cube->render(tex);
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
-        //avatar->render(tex);
-		//avatar->setAnimation();
+		//avatar->render(tex);
+		avatar->setAnimation();
 		avatar->animate(tex);
-
 		
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -197,7 +196,7 @@ namespace {
 		
 		cube = new MeshObject("cube.ogex", "", structure);
 		cube->M = mat4::Translation(5, 0, 0);
-        avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		avatar->M = mat4::Translation(-5, 0, 0);
 		
 		Graphics4::setRenderState(DepthTest, true);
@@ -206,7 +205,7 @@ namespace {
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
 	}
-
+	
 }
 
 int kore(int argc, char** argv) {
