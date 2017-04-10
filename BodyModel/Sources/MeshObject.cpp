@@ -12,48 +12,56 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 namespace {
-    void setPosition(Mesh* mesh, int size, const float* data) {
-        for (int i = 0; i < size; ++i) {
-            mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
-            mesh->vertices[(i * 3) + 1] = data[i * 3 + 1];
-            mesh->vertices[(i * 3) + 2] = data[i * 3 + 2];
-            //if (i < 5 || i > size-5)
+	void setPosition(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
+			mesh->vertices[(i * 3) + 1] = data[i * 3 + 1];
+			mesh->vertices[(i * 3) + 2] = data[i * 3 + 2];
+			//if (i < 5 || i > size-5)
 			//	log(Info, "Position %i \t x=%f \t y=%f \t z=%f", i, mesh->vertices[(i * 3) + 0], mesh->vertices[(i * 3) + 1], mesh->vertices[(i * 3) + 2]);
-        }
-    }
-    
-    void setTexcoord(Mesh* mesh, int size, const float* data) {
-        for (int i = 0; i < size; ++i) {
-            mesh->texcoord[(i * 2) + 0] = data[i * 2 + 0];
-            mesh->texcoord[(i * 2) + 1] = data[i * 2 + 1];
+		}
+	}
+	
+	void setTexcoord(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->texcoord[(i * 2) + 0] = data[i * 2 + 0];
+			mesh->texcoord[(i * 2) + 1] = data[i * 2 + 1];
 			//if (i < 5 || i > size-5)
 			//	log(Info, "Texcoord %i \t u=%f \t v=%f", i, mesh->texcoord[(i * 2) + 0], mesh->texcoord[(i * 2) + 1]);
-        }
-    }
-    
-    void setNormal(Mesh* mesh, int size, const float* data) {
-        for (int i = 0; i < size; ++i) {
-            mesh->normals[(i * 3) + 0] = data[i * 3 + 0];
-            mesh->normals[(i * 3) + 1] = data[i * 3 + 1];
-            mesh->normals[(i * 3) + 2] = data[i * 3 + 2];
-            //if (i < 5 || i > size-5)
+		}
+	}
+	
+	void setNormal(Mesh* mesh, int size, const float* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->normals[(i * 3) + 0] = data[i * 3 + 0];
+			mesh->normals[(i * 3) + 1] = data[i * 3 + 1];
+			mesh->normals[(i * 3) + 2] = data[i * 3 + 2];
+			//if (i < 5 || i > size-5)
 			//	log(Info, "Normal %i \t x=%f \t y=%f \t z=%f", i, mesh->normals[(i * 3) + 0], mesh->normals[(i * 3) + 1], mesh->normals[(i * 3) + 2]);
-        }
-    }
-    
-    void setIndex(Mesh* mesh, int size, const unsigned_int32* data) {
-        for (int i = 0; i < size; ++i) {
-            mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
-            mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
-            mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
+		}
+	}
+	
+	void setIndex(Mesh* mesh, int size, const unsigned_int32* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->indices[(i * 3) + 0] = data[i * 3 + 0];
+			mesh->indices[(i * 3) + 1] = data[i * 3 + 1];
+			mesh->indices[(i * 3) + 2] = data[i * 3 + 2];
 			//if (i < 5 || i > size-5)
 			//	log(Info, "Index %i \t x=%i \t y=%i \t z=%i", i, mesh->indices[(i * 3) + 0], mesh->indices[(i * 3) + 1], mesh->indices[(i * 3) + 2]);
-        }
-    }
+		}
+	}
+	
+	void setBoneCountArray(Mesh* mesh, int size, const unsigned_int16* data) {
+		for (int i = 0; i < size; ++i) {
+			mesh->boneCountArray[i] = data[i];
+			//if (i < 5 || i > size-5)
+			//	log(Info, "Bone Count %i \t w=%i", i, mesh->boneCountArray[i]);
+		}
+	}
 	
 	void setWeight(Mesh* mesh, int size, const float* data) {
 		for (int i = 0; i < size; ++i) {
-			mesh->weight[i] = data[i];
+			mesh->boneWeight[i] = data[i];
 			//if (i < 5 || i > size-5)
 			//	log(Info, "Weight %i \t w=%f", i, mesh->weight[i]);
 		}
@@ -91,51 +99,63 @@ namespace {
 		}
 		return mat;
 	}
+	
+	void updatebone(BoneNode* bone, const mat4& m, bool updateinverse = false) {
+		bone->combined = m * bone->local;
+		
+		if (updateinverse) {
+			bone->combinedInv = bone->combined.Invert();
+			bone->localStart = bone->local;
+			bone->localStartInv = bone->localStart.Invert();
+		}
+		bone->finalTrans = bone->combined * bone->combinedInv;
+		for (int i = 0; i < bone->children.size(); ++i) updatebone(bone->children[i], bone->combined, updateinverse);
+	}
+	
 }
 
-MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile) , M(mat4::Identity()) {
+MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile), structure(structure), scale(scale), M(mat4::Identity()) {
 	
 	LoadObj(meshFile);
-    
-    meshesCount = meshes.size();
-    log(Info, "Meshes length %i", meshesCount);
+	
+	meshesCount = meshes.size();
+	log(Info, "Meshes length %i", meshesCount);
 	
 	std::sort(meshes.begin(), meshes.end(), CompareMesh());
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
-    
-    
-    for(int j = 0; j < meshesCount; ++j) {
-        Mesh* mesh = meshes.at(j);
-        VertexBuffer * vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
-        IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces*3);
-        
-        // Mesh Vertex Buffer
-        float* vertices = vertexBuffer->lock();
-        for (int i = 0; i < mesh->numVertices; ++i) {
-            // position
-            vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
-            vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
-            vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
-            // texCoord
-            vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
-            vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
-            // normal
-            vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
-            vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
-            vertices[i * 8 + 7] = mesh->normals[i * 3 + 2];
-            
-            //log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
-        }
-        vertexBuffer->unlock();
-        
-        int* indices = indexBuffer->lock();
-        for (int i = j; i < mesh->numFaces * 3; ++i) {
-            indices[i] = mesh->indices[i];
-            
-            //log(Info, "%i", indices[i]);
-        }
-        indexBuffer->unlock();
+	
+	for(int j = 0; j < meshesCount; ++j) {
+		Mesh* mesh = meshes.at(j);
+		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+		IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces * 3);
+		
+		// Mesh Vertex Buffer
+		float* vertices = vertexBuffer->lock();
+		for (int i = 0; i < mesh->numVertices; ++i) {
+			// position
+			vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
+			vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
+			vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
+			// texCoord
+			vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
+			vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
+			// normal
+			vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
+			vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
+			vertices[i * 8 + 7] = mesh->normals[i * 3 + 2];
+			
+			//log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
+		}
+		vertexBuffer->unlock();
+		
+		int* indices = indexBuffer->lock();
+		for (int i = 0; i < mesh->numFaces * 3; ++i) {
+			indices[i] = mesh->indices[i];
+			
+			//log(Info, "%i", indices[i]);
+		}
+		indexBuffer->unlock();
 		
 		vertexBuffers.push_back(vertexBuffer);
 		indexBuffers.push_back(indexBuffer);
@@ -147,29 +167,29 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		log(Info, "Load Texture %s", temp);
 		Texture* image = new Texture(temp, true);
 		images.push_back(image);
-    }
+	}
 	
 }
 
 void MeshObject::render(TextureUnit tex) {
 	for (int i = 0; i < meshesCount; ++i) {
-        VertexBuffer* vertexBuffer = vertexBuffers.at(i);
-        IndexBuffer* indexBuffer = indexBuffers.at(i);
-        Texture* image = images.at(i);
-        
-        Graphics4::setTexture(tex, image);
-        Graphics4::setVertexBuffer(*vertexBuffer);
-        Graphics4::setIndexBuffer(*indexBuffer);
-        Graphics4::drawIndexedVertices();
-    }
+		VertexBuffer* vertexBuffer = vertexBuffers.at(i);
+		IndexBuffer* indexBuffer = indexBuffers.at(i);
+		Texture* image = images.at(i);
+		
+		Graphics4::setTexture(tex, image);
+		Graphics4::setVertexBuffer(*vertexBuffer);
+		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::drawIndexedVertices();
+	}
 }
 
 void MeshObject::setAnimation() {
-
+	
 }
 
-void MeshObject::animate() {
-
+void MeshObject::animate(TextureUnit tex) {
+	
 }
 
 void MeshObject::LoadObj(const char* filename) {
@@ -226,7 +246,7 @@ void MeshObject::ConvertObjects(const Structure& rootStructure) {
 }
 
 void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNode) {
-
+	
 	const Structure* structure = rootStructure.GetFirstSubnode();
 	while (structure) {
 		const OGEX::NodeStructure& nodeStructure = *static_cast<const OGEX::NodeStructure*>(structure);
@@ -245,9 +265,9 @@ void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNo
 				children.push_back(bone);
 				
 				/*log(Info, "Children of node %s", parentNode.boneName);
-				for (int i = 0; i < children.size(); ++i) {
+				 for (int i = 0; i < children.size(); ++i) {
 					log(Info, "\t Child name %s", children.at(i)->boneName);
-				}*/
+				 }*/
 				
 				parentNode.children = children;
 				
@@ -299,7 +319,7 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 	mesh->meshIndex = getIndexFromString(geometryName, 8);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
-
+	
 	while (subStructure) {
 		switch (subStructure->GetStructureType()) {
 			case OGEX::kStructureVertexArray: {
@@ -311,15 +331,15 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				int numVertices = vertexArrayStructure.GetVertexCount();
 				
 				if (arrayAttrib == "position") {
-                    mesh->vertices = new float[numVertices * arraySize];
+					mesh->vertices = new float[numVertices * arraySize];
 					setPosition(mesh, numVertices, data);
 					mesh->numVertices = numVertices;
 				} else if (arrayAttrib == "normal") {
-                    mesh->normals = new float[numVertices * arraySize];
+					mesh->normals = new float[numVertices * arraySize];
 					setNormal(mesh, numVertices, data);
 					mesh->numNormals = numVertices;
 				} else if (arrayAttrib == "texcoord") {
-                    mesh->texcoord = new float[numVertices * arraySize];
+					mesh->texcoord = new float[numVertices * arraySize];
 					setTexcoord(mesh, numVertices, data);
 					mesh->numUVs = numVertices;
 				}
@@ -341,18 +361,29 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				
 			case OGEX::kStructureSkin : {
 				const OGEX::SkinStructure& skinStructure = *static_cast<const OGEX::SkinStructure *>(subStructure);
-
+				
 				// TODO: Handle skin structure.
 				// setAnimations und render
 				
+				// Get bone count array
+				const Structure *subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneCountArray);
+				const OGEX::BoneCountArrayStructure& boneCountStructure = *static_cast<const OGEX::BoneCountArrayStructure *>(subStructure);
+				const unsigned_int16* boneCountArray = boneCountStructure.GetBoneCountArray();
+				int boneCount = boneCountStructure.GetVertexCount();
+				
+				mesh->boneCount = boneCount;
+				mesh->boneCountArray = new int[boneCount];
+				setBoneCountArray(mesh, boneCount, boneCountArray);
+				//log(Info, "Bone Count %i", boneCount);
+				
 				// Get weight array
-				const Structure *subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneWeightArray);
+				subStructure = skinStructure.GetFirstSubstructure(OGEX::kStructureBoneWeightArray);
 				const OGEX::BoneWeightArrayStructure& weightStructure = *static_cast<const OGEX::BoneWeightArrayStructure *>(subStructure);
 				const float* weights = weightStructure.GetBoneWeightArray();
 				int weightCount = weightStructure.GetBoneWeightCount();
 				
 				mesh->weightCount = weightCount;
-				mesh->weight = new float[weightCount];
+				mesh->boneWeight = new float[weightCount];
 				setWeight(mesh, weightCount, weights);
 				//log(Info, "Weight Count %i", weightCount);
 				
@@ -476,8 +507,8 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
-	bone->transform = getMatrix4x4(transform);
-	bone->invTransform = bone->transform.Invert();
+	bone->local = getMatrix4x4(transform);
+	bone->localInv = bone->local.Invert();
 	
 	children.clear();
 	

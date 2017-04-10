@@ -19,10 +19,12 @@ struct Mesh {
 	float* texcoord;
 	
 	// Skin
-	float* weight;
-	int weightCount;
+	int* boneCountArray;
+	int boneCount;
 	int* boneIndices;
 	int boneIndexCount;
+	float* boneWeight;
+	int weightCount;
 	
 	unsigned int meshIndex;
 };
@@ -64,31 +66,35 @@ struct BoneNode {
 	int nodeIndex;
 	BoneNode* parent;
 	
-	Kore::mat4 transform, invTransform;
+	Kore::mat4 local, localInv;
+	Kore::mat4 combined, combinedInv;
+	Kore::mat4 localStart, localStartInv;
+	Kore::mat4 finalTrans;
 	
 	std::vector<BoneNode*> children;
 };
 
 class MeshObject {
-
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
 	
 	void setAnimation();
-	void animate();
-    
-    Kore::mat4 M;
+	void animate(Kore::Graphics4::TextureUnit tex);
+	
+	Kore::mat4 M;
 	
 	
 private:
-    long meshesCount;
-    std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
+	long meshesCount;
+	float scale;
+	const Kore::Graphics4::VertexStructure& structure;
+	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
 	
-    const char* textureDir;
+	const char* textureDir;
 	std::vector<Kore::Graphics4::Texture*> images;
-    std::vector<Mesh*> meshes;
+	std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;
 	std::vector<BoneNode*> bones;
@@ -100,7 +106,7 @@ private:
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName);
 	
-    Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
+	Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
 	
 	void ConvertNodes(const Structure& structure, BoneNode& parentNode);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);

@@ -20,6 +20,7 @@ namespace {
 	
 	double startTime;
 	
+	VertexStructure structure;
 	Shader* vertexShader;
 	Shader* fragmentShader;
 	Program* program;
@@ -85,7 +86,9 @@ namespace {
 		cube->render(tex);
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
-        avatar->render(tex);
+        //avatar->render(tex);
+		//avatar->setAnimation();
+		avatar->animate(tex);
 
 		
 		Graphics4::end();
@@ -177,7 +180,6 @@ namespace {
 		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
 		
 		// This defines the structure of your Vertex Buffer
-		VertexStructure structure;
 		structure.add("pos", Float3VertexData);
 		structure.add("tex", Float2VertexData);
 		structure.add("nor", Float3VertexData);
