@@ -100,13 +100,13 @@ namespace {
 		mat4 mat = mat4::Identity();
 		for (int i = 0; i < 4; ++i) {
 			for (int j = 0; j < 4; ++j) {
-				mat.Set(i, j, matrix[i + 4 * j]);
+				mat.Set(j, i, matrix[i + 4 * j]);
 			}
 		}
 		return mat;
 	}
 	
-	void updateBone(BoneNode* bone) {
+	void updateBone(BoneNode* bone, const mat4 m) {
 		bone->transform = bone->transform * mat4::Identity();//bone->transformInv;
 	}
 	
@@ -193,7 +193,7 @@ void MeshObject::setAnimation() {
 void MeshObject::animate(TextureUnit tex) {
 	
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i), mat4::Identity());
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
@@ -218,7 +218,7 @@ void MeshObject::animate(TextureUnit tex) {
 				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex]);
 				float boneWeight = mesh->boneWeight[boneIndex];
 				
-				startPos += (/*bone->transform * bone->transformInv * */posVec) * boneWeight;
+				startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
 				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
 			}
 			
@@ -564,10 +564,9 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const float* transform = transformStructure.GetTransform();
 	bone->transform = getMatrix4x4(transform);
 	bone->transformInv = bone->transform.Invert();
-	//bone->combined = mat4::Identity();
-	//bone->combinedInv = mat4::Identity();
-	//bone->localStart = mat4::Identity();
-	//bone->localStartInv = mat4::Identity();
+	bone->combined = mat4::Identity();
+	bone->combinedInv = mat4::Identity();
+	bone->local = mat4::Identity();
 	
 	children.clear();
 	

@@ -66,9 +66,9 @@ struct BoneNode {
 	int nodeIndex;
 	BoneNode* parent;
 	
-	Kore::mat4 transform, transformInv;
-	//Kore::mat4 combined, combinedInv;
-	//Kore::mat4 localStart, localStartInv;
+	Kore::mat4 transform, transformInv;		// bind matrix, inverse bind matrix
+	Kore::mat4 local;
+	Kore::mat4 combined, combinedInv;
 	
 	std::vector<BoneNode*> children;
 };
