@@ -2775,6 +2775,10 @@ DataResult KeyStructure::ProcessData(DataDescription *dataDescription)
 	{
 		return (kDataOpenGexInvalidKeyKind);
 	}
+	
+	arraySize = dataStructure->GetArraySize();
+	elementCount = dataStructure->GetDataElementCount();
+	data = &dataStructure->GetDataElement(0);
 
 	return (kDataOkay);
 }

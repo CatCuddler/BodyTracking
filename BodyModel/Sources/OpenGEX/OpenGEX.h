@@ -1193,6 +1193,9 @@ namespace OGEX
 			String			keyKind;
 			bool			scalarFlag;
 
+			int				arraySize;
+			int				elementCount;
+			const float*	data;
 		public:
 
 			KeyStructure();
@@ -1206,6 +1209,17 @@ namespace OGEX
 			bool GetScalarFlag(void) const
 			{
 				return (scalarFlag);
+			}
+		
+			int GetArraySize() const {
+				return arraySize;
+			}
+		
+			int GetElementCount() const {
+				return elementCount;
+			}
+			const float* GetData() const {
+				return data;
 			}
 
 			bool ValidateProperty(const DataDescription *dataDescription, const String& identifier, DataType *type, void **value);
