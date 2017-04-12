@@ -59,27 +59,27 @@ namespace {
 	
 	/*void setBoneCountArray(Mesh* mesh, int size, const unsigned_int16* data) {
 		for (int i = 0; i < size; ++i) {
-			mesh->boneCountArray[i] = data[i];
-			//if (i < 5 || i > size-5)
-			//	log(Info, "Bone Count %i \t w=%i", i, mesh->boneCountArray[i]);
+	 mesh->boneCountArray[i] = data[i];
+	 //if (i < 5 || i > size-5)
+	 //	log(Info, "Bone Count %i \t w=%i", i, mesh->boneCountArray[i]);
 		}
-	}
-	
-	void setWeight(Mesh* mesh, int size, const float* data) {
+	 }
+	 
+	 void setWeight(Mesh* mesh, int size, const float* data) {
 		for (int i = 0; i < size; ++i) {
-			mesh->boneWeight[i] = data[i];
-			//if (i < 5 || i > size-5)
-			//	log(Info, "Weight %i \t w=%f", i, mesh->weight[i]);
+	 mesh->boneWeight[i] = data[i];
+	 //if (i < 5 || i > size-5)
+	 //	log(Info, "Weight %i \t w=%f", i, mesh->weight[i]);
 		}
-	}
-	
-	void setBoneIndices(Mesh* mesh, int size, const unsigned_int16* data) {
+	 }
+	 
+	 void setBoneIndices(Mesh* mesh, int size, const unsigned_int16* data) {
 		for (int i = 0; i < size; ++i) {
-			mesh->boneIndices[i] = data[i];
-			//if (i < 5 || i > size-5)
-			//	log(Info, "Bone Index %i \t i=%i", i, mesh->boneIndices[i]);
+	 mesh->boneIndices[i] = data[i];
+	 //if (i < 5 || i > size-5)
+	 //	log(Info, "Bone Index %i \t i=%i", i, mesh->boneIndices[i]);
 		}
-	}*/
+	 }*/
 	
 	int getIndexFromString(const char* name, int ignore) {
 		const char* num = name + ignore;
@@ -106,8 +106,23 @@ namespace {
 		return mat;
 	}
 	
-	void updateBone(BoneNode* bone, const mat4 m) {
-		bone->transform = bone->transform * mat4::Identity();//bone->transformInv;
+	void updateBone(BoneNode* bone, mat4 globalInverse, bool updateinverse = false) {
+		if (bone->computed) return;
+		
+		//log(Info, "%i Update bone %s", bone->nodeIndex, bone->boneName);
+		bone->computed = true;
+		bone->combined = bone->parent->combined * bone->local;
+		
+		if (!bone->initialized) {
+			//log(Info, "%i Init bone %s", bone->nodeIndex, bone->boneName);
+			bone->initialized = true;
+			bone->combinedInv = bone->combined.Invert();
+			bone->localStart = bone->local;
+			bone->localStartInv = bone->localStart.Invert();
+		}
+		
+		bone->finalTransform = bone->combined * bone->combinedInv;
+		for (int i = 0; i < bone->children.size(); ++i) updateBone(bone->children[i], globalInverse, updateinverse);
 	}
 	
 }
@@ -122,6 +137,20 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	std::sort(meshes.begin(), meshes.end(), CompareMesh());
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
+	
+	// Check bone children
+	for (int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		std::sort(bone->children.begin(), bone->children.end(), CompareBones());
+		/*log(Info, "Children for %s", bone->boneName);
+		for (int i2 = 0; i2 < bone->children.size(); ++i2) {
+			BoneNode* child = bone->children.at(i2);
+			log(Info, "\t Child name %s", child->boneName);
+		}*/
+	}
+	
+	//if (bones.size() > 0)
+	//	updateBone(bones.at(1), mat4::Identity(), true);
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes.at(j);
@@ -182,22 +211,41 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::setAnimation() {
+void MeshObject::setAnimation(int frame) {
+	
+	for(int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		bone->computed = false;
+	}
+	
 	for(int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		
+		if (strcmp(bone->boneName, "Root") == 0) {
+			bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
+			updateBone(bone, bones.at(1)->transformInv);
+			//log(Info, "====");
+		}
 		// TODO
 	}
+	
+	/*for (int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
+			bone->local = bone->aniTransformations.at(frame);
+			updateBone(bone, bones.at(1)->transform);
+		}
+	}*/
 }
 
 void MeshObject::animate(TextureUnit tex) {
 	
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i), mat4::Identity());
+	//for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i), mat4::Identity());
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
-
+		
 		Mesh* mesh = meshes.at(j);
 		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
 		
@@ -218,7 +266,8 @@ void MeshObject::animate(TextureUnit tex) {
 				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex]);
 				float boneWeight = mesh->boneWeight[boneIndex];
 				
-				startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
+				//startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
+				startPos += (bone->finalTransform * /*bone->transformInv **/ posVec) * boneWeight;
 				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
 			}
 			
@@ -318,16 +367,15 @@ void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNo
 				bone->parent = &parentNode;
 				bones.push_back(bone);
 				
+				//log(Info, "Bone %s with index %i", bone->boneName, bone->nodeIndex);
+				
+				children.clear();
 				ConvertNodes(*structure, *bone);
 				
 				children.push_back(bone);
-				
-				/*log(Info, "Children of node %s", parentNode.boneName);
-				 for (int i = 0; i < children.size(); ++i) {
-					log(Info, "\t Child name %s", children.at(i)->boneName);
-				 }*/
-				
-				parentNode.children = children;
+
+				// Append children to parent
+				parentNode.children.insert(parentNode.children.end(), children.begin(), children.end());
 				
 				break;
 			}
@@ -377,7 +425,6 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 	mesh->meshIndex = getIndexFromString(geometryName, 8);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
-	
 	while (subStructure) {
 		switch (subStructure->GetStructureType()) {
 			case OGEX::kStructureVertexArray: {
@@ -439,8 +486,8 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				int weightCount = weightStructure.GetBoneWeightCount();
 				
 				mesh->weightCount = weightCount;
-//				mesh->boneWeight = new float[weightCount];
-//				setWeight(mesh, weightCount, weights);
+				//mesh->boneWeight = new float[weightCount];
+				//setWeight(mesh, weightCount, weights);
 				cloneArray(weights, weightCount, &mesh->boneWeight);
 				//log(Info, "Weight Count %i", weightCount);
 				
@@ -452,13 +499,15 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 				
 				mesh->boneIndexCount = boneIndexCount;
 				cloneArray(indices, boneIndexCount, &mesh->boneIndices);
-//				mesh->boneIndices = new int[boneIndexCount];
-//				setBoneIndices(mesh, boneIndexCount, indices);
+				//mesh->boneIndices = new int[boneIndexCount];
+				//setBoneIndices(mesh, boneIndexCount, indices);
 				//log(Info, "Bone Index Count %i", boneIndexCount);
 				
+				break;
 			}
 				
-			default: break;
+			default:
+				break;
 		}
 		subStructure = subStructure->Next();
 	}
@@ -557,6 +606,8 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const char* nodeName = structure.GetStructureName();
 	bone->nodeIndex = getIndexFromString(nodeName, 4);
 	
+	bone->nodeDepth = structure.GetNodeDepth();
+	
 	//log(Info, "Bone %s with index %i", bone->boneName, bone->nodeIndex);
 	
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
@@ -566,9 +617,38 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	bone->transformInv = bone->transform.Invert();
 	bone->combined = mat4::Identity();
 	bone->combinedInv = mat4::Identity();
-	bone->local = mat4::Identity();
+	bone->local = bone->transform;
+	bone->finalTransform = bone->transform;
 	
-	children.clear();
 	
+	// Get node animation
+	subStructure = structure.GetFirstSubstructure(OGEX::kStructureAnimation);
+	if (subStructure != nullptr) {
+		const OGEX::AnimationStructure& animationStructure = *static_cast<const OGEX::AnimationStructure *>(subStructure);
+		const OGEX::TrackStructure& trackStructure = *static_cast<const OGEX::TrackStructure *>(animationStructure.GetFirstSubstructure(OGEX::kStructureTrack));
+		const OGEX::TimeStructure* timeStructure = trackStructure.GetTimeStructure();
+		const OGEX::KeyStructure* keyStructureTime = timeStructure->GetKeyValueStructure();
+		
+		const OGEX::ValueStructure* valueStructure = trackStructure.GetValueStructure();
+		const OGEX::KeyStructure* keyStructureVal = valueStructure->GetKeyValueStructure();
+		const float* data = keyStructureVal->GetData();
+		int size = keyStructureVal->GetArraySize();
+		int elementCount = keyStructureVal->GetElementCount();
+		
+		int i = 0;
+		while (i < elementCount) {
+			float* trans = new float[size];
+			
+			for (int j = 0; j < size; ++j) {
+				trans[j] = data[i];
+				i++;
+				//log(Info, "pos %i data[%f]", j, trans[j]);
+			}
+			
+			mat4 transMat = getMatrix4x4(trans);
+			bone->aniTransformations.push_back(transMat);
+		}
+	
+	}
 	return bone;
 }

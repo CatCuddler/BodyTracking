@@ -64,13 +64,26 @@ struct CompareMaterials {
 struct BoneNode {
 	char* boneName;
 	int nodeIndex;
+	int nodeDepth;
 	BoneNode* parent;
 	
 	Kore::mat4 transform, transformInv;		// bind matrix, inverse bind matrix
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
+	Kore::mat4 finalTransform;
+	Kore::mat4 localStart, localStartInv;
+	bool computed = false;
+	bool initialized = false;
 	
 	std::vector<BoneNode*> children;
+	
+	std::vector<Kore::mat4> aniTransformations;
+};
+
+struct CompareBones {
+	bool const operator()(BoneNode* bone1, BoneNode* bone2) const {
+		return (bone1->nodeDepth) < (bone2->nodeDepth);
+	}
 };
 
 class MeshObject {
@@ -78,7 +91,7 @@ public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
 	
-	void setAnimation();
+	void setAnimation(int frame);
 	void animate(Kore::Graphics4::TextureUnit tex);
 	
 	Kore::mat4 M;
