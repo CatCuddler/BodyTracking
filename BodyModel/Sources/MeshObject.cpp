@@ -106,11 +106,11 @@ namespace {
 		return mat;
 	}
 	
-	void updateBone(BoneNode* bone, mat4 globalInverse, bool updateinverse = false) {
-		if (bone->computed) return;
+	void updateBone(BoneNode* bone) {
+		//if (bone->computed) return;
 		
 		//log(Info, "%i Update bone %s", bone->nodeIndex, bone->boneName);
-		bone->computed = true;
+		//bone->computed = true;
 		bone->combined = bone->parent->combined * bone->local;
 		
 		if (!bone->initialized) {
@@ -122,7 +122,20 @@ namespace {
 		}
 		
 		bone->finalTransform = bone->combined * bone->combinedInv;
-		for (int i = 0; i < bone->children.size(); ++i) updateBone(bone->children[i], globalInverse, updateinverse);
+		//for (int i = 0; i < bone->children.size(); ++i) updateBone(bone->children[i]);
+	}
+	
+	vec2 convert(vec4 pos, const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight) {
+		vec4 nPos = modelMatrix * pos;
+		nPos = viewMatrix * nPos;
+		nPos = projectionMatrix * nPos;
+		
+		nPos.x() = nPos.x() / nPos.z();
+		nPos.y() = nPos.y() / nPos.z();
+		nPos.x() = screenWidth * (nPos.x() + 1.0) / 2.0;
+		nPos.y() = screenHeight * (1.0 - ((nPos.y() + 1.0) / 2.0));
+		
+		return vec2(nPos.x(), nPos.y());
 	}
 	
 }
@@ -196,6 +209,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		images.push_back(image);
 	}
 	
+	g2 = new Graphics2::Graphics2(1024, 768);
+	redDot = new Texture("redDot.png");
+	
 }
 
 void MeshObject::render(TextureUnit tex) {
@@ -211,6 +227,39 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
+void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight) {
+	g2->begin(false);
+	
+	for(int i = 1; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		
+		if (strcmp(bone->boneName, "upperarm_r") != 0) continue;
+		
+		//vec4 pos = vec4(bone->combined.get(3, 0), bone->combined.get(3, 1), bone->combined.get(3, 2), bone->combined.get(3, 3));
+		vec4 pos = vec4(bone->bonePos.x(), bone->bonePos.y(), bone->bonePos.z(), 1);
+		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+		g2->drawImage(redDot, nPos.x(), nPos.y());
+	}
+	
+	g2->end();
+}
+
+void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight) {
+	g2->begin(false);
+	
+	for (int i = 0; i < meshesCount; ++i) {
+		Mesh* mesh = meshes.at(i);
+		for (int i2 = 0; i2 < mesh->numVertices; ++i2) {
+			vec4 pos = vec4(mesh->vertices[i2 * 3 + 0] * scale, mesh->vertices[i2 * 3 + 1] * scale, mesh->vertices[i2 * 3 + 2] * scale, 1);
+			vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+			g2->drawImage(redDot, nPos.x(), nPos.y());
+		
+		}
+	}
+	
+	g2->end();
+}
+
 void MeshObject::setAnimation(int frame) {
 	
 	for(int i = 0; i < bones.size(); ++i) {
@@ -222,26 +271,22 @@ void MeshObject::setAnimation(int frame) {
 		BoneNode* bone = bones.at(i);
 		
 		if (strcmp(bone->boneName, "Root") == 0) {
-			bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
-			updateBone(bone, bones.at(1)->transformInv);
-			//log(Info, "====");
+			//bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
 		}
-		// TODO
 	}
 	
-	/*for (int i = 0; i < bones.size(); ++i) {
+	for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
 			bone->local = bone->aniTransformations.at(frame);
-			updateBone(bone, bones.at(1)->transform);
 		}
-	}*/
+	}
 }
 
 void MeshObject::animate(TextureUnit tex) {
 	
 	// Update bones
-	//for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i), mat4::Identity());
+	for (int i = 1; i < bones.size(); ++i) updateBone(bones.at(i));
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
@@ -269,6 +314,8 @@ void MeshObject::animate(TextureUnit tex) {
 				//startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
 				startPos += (bone->finalTransform * /*bone->transformInv **/ posVec) * boneWeight;
 				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
+				
+				bone->bonePos = startPos;
 			}
 			
 			currentBoneCountIndex += numOfBones;

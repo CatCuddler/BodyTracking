@@ -3,6 +3,7 @@
 #include "OpenGEX/OpenGEX.h"
 
 #include <Kore/Graphics4/Graphics.h>
+#include <Kore/Graphics2/Graphics.h>
 #include <Kore/Graphics4/Texture.h>
 
 #include <vector>
@@ -67,6 +68,8 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
+	Kore::vec3 bonePos;
+	
 	Kore::mat4 transform, transformInv;		// bind matrix, inverse bind matrix
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
@@ -93,6 +96,8 @@ public:
 	
 	void setAnimation(int frame);
 	void animate(Kore::Graphics4::TextureUnit tex);
+	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
+	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	
 	Kore::mat4 M;
 	
@@ -102,6 +107,9 @@ private:
 	const Kore::Graphics4::VertexStructure& structure;
 	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
+	
+	Kore::Graphics2::Graphics2* g2;
+	Kore::Graphics4::Texture* redDot;
 	
 	const char* textureDir;
 	std::vector<Kore::Graphics4::Texture*> images;

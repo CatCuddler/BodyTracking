@@ -42,6 +42,7 @@ namespace {
 	
 	vec3 playerPosition = vec3(0, 10, 30);
 	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi/2);
+	int frame = 0;
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -87,8 +88,16 @@ namespace {
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
 		//avatar->render(tex);
-		avatar->setAnimation();
+		avatar->setAnimation(frame);
+		frame++;
+		if (frame > 200) frame = 0;
 		avatar->animate(tex);
+		
+		cube->drawVertices(cube->M, V, P, width, height);
+		avatar->drawVertices(avatar->M, V, P, width, height);
+		avatar->drawJoints(avatar->M, V, P, width, height);
+		
+		Graphics4::setRenderState(Graphics4::DepthTest, true);
 		
 		Graphics4::end();
 		Graphics4::swapBuffers();
