@@ -349,7 +349,7 @@ void MeshObject::animate(TextureUnit tex) {
 void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);
 	void* data = fileReader.readAll();
-	int size = fileReader.size() + 1;
+	int size = fileReader.size();
 	char* buffer = new char[size + 1];
 	for (int i = 0; i < size; ++i) buffer[i] = reinterpret_cast<char*>(data)[i];
 	buffer[size] = 0;
