@@ -100,7 +100,7 @@ namespace {
 		mat4 mat = mat4::Identity();
 		for (int i = 0; i < 4; ++i) {
 			for (int j = 0; j < 4; ++j) {
-				mat.Set(j, i, matrix[i + 4 * j]);
+				mat.Set(i, j, matrix[i + 4 * j]);
 			}
 		}
 		return mat;
@@ -232,11 +232,7 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 	
 	for(int i = 1; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
-		
-		if (strcmp(bone->boneName, "upperarm_r") != 0) continue;
-		
-		//vec4 pos = vec4(bone->combined.get(3, 0), bone->combined.get(3, 1), bone->combined.get(3, 2), bone->combined.get(3, 3));
-		vec4 pos = vec4(bone->bonePos.x(), bone->bonePos.y(), bone->bonePos.z(), 1);
+		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
 		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 		g2->drawImage(redDot, nPos.x(), nPos.y());
 	}
@@ -349,7 +345,7 @@ void MeshObject::animate(TextureUnit tex) {
 void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);
 	void* data = fileReader.readAll();
-	int size = fileReader.size() + 1;
+	int size = fileReader.size();
 	char* buffer = new char[size + 1];
 	for (int i = 0; i < size; ++i) buffer[i] = reinterpret_cast<char*>(data)[i];
 	buffer[size] = 0;
