@@ -95,7 +95,7 @@ namespace {
 		
 		cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawVertices(avatar->M, V, P, width, height);
-		avatar->drawJoints(avatar->M, V, P, width, height);
+		//avatar->drawJoints(avatar->M, V, P, width, height);
 		
 		Graphics4::setRenderState(Graphics4::DepthTest, true);
 		

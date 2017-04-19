@@ -116,7 +116,6 @@ namespace {
 		}
 		
 		bone->finalTransform = bone->combined * bone->combinedInv;
-		//for (int i = 0; i < bone->children.size(); ++i) updateBone(bone->children[i]);
 	}
 	
 	vec2 convert(vec4 pos, const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight) {
@@ -155,9 +154,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 			log(Info, "\t Child name %s", child->boneName);
 		}*/
 	}
-	
-	//if (bones.size() > 0)
-	//	updateBone(bones.at(1), mat4::Identity(), true);
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes.at(j);
@@ -205,6 +201,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	
 	g2 = new Graphics2::Graphics2(1024, 768);
 	redDot = new Texture("redDot.png");
+	yellowDot = new Texture("yellowDot.png");
 	
 }
 
@@ -228,7 +225,11 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 		BoneNode* bone = bones.at(i);
 		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
 		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
-		g2->drawImage(redDot, nPos.x(), nPos.y());
+		if (bone->aniTransformations.size() > 0) {
+			g2->drawImage(yellowDot, nPos.x(), nPos.y());
+		} else {
+			g2->drawImage(redDot, nPos.x(), nPos.y());
+		}
 	}
 	
 	g2->end();
@@ -243,7 +244,6 @@ void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMat
 			vec4 pos = vec4(mesh->vertices[i2 * 3 + 0] * scale, mesh->vertices[i2 * 3 + 1] * scale, mesh->vertices[i2 * 3 + 2] * scale, 1);
 			vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 			g2->drawImage(redDot, nPos.x(), nPos.y());
-		
 		}
 	}
 	
@@ -252,16 +252,17 @@ void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMat
 
 void MeshObject::setAnimation(int frame) {
 	
-	for(int i = 0; i < bones.size(); ++i) {
+	/*for(int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		
 		if (strcmp(bone->boneName, "Root") == 0) {
-			//bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
+			bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
 		}
-	}
+	}*/
 	
 	for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
+		
 		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
 			bone->local = bone->aniTransformations.at(frame);
 		}
@@ -272,7 +273,6 @@ void MeshObject::animate(TextureUnit tex) {
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
-	//updateBone(bones.at(1));
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
@@ -289,17 +289,24 @@ void MeshObject::animate(TextureUnit tex) {
 			// For each vertex belonging to a mesh, the bone count array specifies the number of bones the influence the vertex
 			int numOfBones = mesh->boneCountArray[i];
 			
+			float totalJointsWeight = 0;
 			for (int b = 0; b < numOfBones; ++b) {
 				vec4 posVec(mesh->vertices[i * 3 + 0], mesh->vertices[i * 3 + 1], mesh->vertices[i * 3 + 2], 1);
 				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
 				
 				int boneIndex = currentBoneCountIndex + b;
-				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex]);
+				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex] + 1);
 				float boneWeight = mesh->boneWeight[boneIndex];
+				totalJointsWeight += boneWeight;
 				
-				//startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
-				startPos += (bone->finalTransform * /*bone->transformInv **/ posVec) * boneWeight;
+				startPos += (bone->finalTransform * posVec) * boneWeight;
 				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
+			}
+			
+			if (totalJointsWeight != 1.0f) {
+				float normalizedWeight = 1.0f / totalJointsWeight;
+				startPos *= normalizedWeight;
+				startNormal *= normalizedWeight;
 			}
 			
 			currentBoneCountIndex += numOfBones;
@@ -646,7 +653,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	bone->transform = getMatrix4x4(transform);
 	bone->transformInv = bone->transform.Invert();
 	bone->local = bone->transform;
-	
 	
 	// Get node animation
 	subStructure = structure.GetFirstSubstructure(OGEX::kStructureAnimation);

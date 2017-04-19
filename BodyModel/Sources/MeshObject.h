@@ -110,6 +110,7 @@ private:
 	
 	Kore::Graphics2::Graphics2* g2;
 	Kore::Graphics4::Texture* redDot;
+	Kore::Graphics4::Texture* yellowDot;
 	
 	const char* textureDir;
 	std::vector<Kore::Graphics4::Texture*> images;
