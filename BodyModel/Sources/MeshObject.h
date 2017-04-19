@@ -75,8 +75,6 @@ struct BoneNode {
 	
 	bool initialized = false;
 	
-	std::vector<BoneNode*> children;
-	
 	std::vector<Kore::mat4> aniTransformations;
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),

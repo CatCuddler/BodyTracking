@@ -144,17 +144,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
 	
-	// Check bone children
-	for (int i = 0; i < bones.size(); ++i) {
-		BoneNode* bone = bones.at(i);
-		std::sort(bone->children.begin(), bone->children.end(), CompareBones());
-		/*log(Info, "Children for %s", bone->boneName);
-		for (int i2 = 0; i2 < bone->children.size(); ++i2) {
-			BoneNode* child = bone->children.at(i2);
-			log(Info, "\t Child name %s", child->boneName);
-		}*/
-	}
-	
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes.at(j);
 		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
@@ -404,15 +393,7 @@ void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNo
 				bone->parent = &parentNode;
 				bones.push_back(bone);
 				
-				//log(Info, "Bone %s with index %i", bone->boneName, bone->nodeIndex);
-				
-				children.clear();
 				ConvertNodes(*structure, *bone);
-				
-				children.push_back(bone);
-
-				// Append children to parent
-				parentNode.children.insert(parentNode.children.end(), children.begin(), children.end());
 				
 				break;
 			}
