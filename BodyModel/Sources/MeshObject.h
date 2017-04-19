@@ -68,19 +68,19 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
-	Kore::vec3 bonePos;
-	
 	Kore::mat4 transform, transformInv;		// bind matrix, inverse bind matrix
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
-	Kore::mat4 localStart, localStartInv;
-	bool computed = false;
+	
 	bool initialized = false;
 	
 	std::vector<BoneNode*> children;
 	
 	std::vector<Kore::mat4> aniTransformations;
+	
+	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
+				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()) {}
 };
 
 struct CompareBones {

@@ -107,18 +107,12 @@ namespace {
 	}
 	
 	void updateBone(BoneNode* bone) {
-		//if (bone->computed) return;
-		
 		//log(Info, "%i Update bone %s", bone->nodeIndex, bone->boneName);
-		//bone->computed = true;
 		bone->combined = bone->parent->combined * bone->local;
 		
 		if (!bone->initialized) {
-			//log(Info, "%i Init bone %s", bone->nodeIndex, bone->boneName);
 			bone->initialized = true;
 			bone->combinedInv = bone->combined.Invert();
-			bone->localStart = bone->local;
-			bone->localStartInv = bone->localStart.Invert();
 		}
 		
 		bone->finalTransform = bone->combined * bone->combinedInv;
@@ -260,11 +254,6 @@ void MeshObject::setAnimation(int frame) {
 	
 	for(int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
-		bone->computed = false;
-	}
-	
-	for(int i = 0; i < bones.size(); ++i) {
-		BoneNode* bone = bones.at(i);
 		
 		if (strcmp(bone->boneName, "Root") == 0) {
 			//bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
@@ -282,7 +271,8 @@ void MeshObject::setAnimation(int frame) {
 void MeshObject::animate(TextureUnit tex) {
 	
 	// Update bones
-	for (int i = 1; i < bones.size(); ++i) updateBone(bones.at(i));
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+	//updateBone(bones.at(1));
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
@@ -310,8 +300,6 @@ void MeshObject::animate(TextureUnit tex) {
 				//startPos += (bone->transform * bone->transformInv * posVec) * boneWeight;
 				startPos += (bone->finalTransform * /*bone->transformInv **/ posVec) * boneWeight;
 				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
-				
-				bone->bonePos = startPos;
 			}
 			
 			currentBoneCountIndex += numOfBones;
@@ -355,7 +343,6 @@ void MeshObject::LoadObj(const char* filename) {
 	if (result == kDataOkay) {
 		ConvertObjects(*openGexDataDescription.GetRootStructure());
 		BoneNode* bone = new BoneNode();
-		bone->boneName = "";
 		ConvertNodes(*openGexDataDescription.GetRootStructure(), *bone);
 	} else {
 		log(Info, "Failed to load OpenGEX file");
@@ -658,10 +645,7 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const float* transform = transformStructure.GetTransform();
 	bone->transform = getMatrix4x4(transform);
 	bone->transformInv = bone->transform.Invert();
-	bone->combined = mat4::Identity();
-	bone->combinedInv = mat4::Identity();
 	bone->local = bone->transform;
-	bone->finalTransform = bone->transform;
 	
 	
 	// Get node animation
