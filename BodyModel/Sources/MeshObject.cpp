@@ -267,7 +267,8 @@ void MeshObject::animate(TextureUnit tex) {
 		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
 		
 		Mesh* mesh = meshes.at(j);
-		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
+		
+		VertexBuffer* vertexBuffer = vertexBuffers.at(j);
 		
 		// Mesh Vertex Buffer
 		float* vertices = vertexBuffer->lock();
