@@ -6,6 +6,8 @@
 #include <Kore/Graphics2/Graphics.h>
 #include <Kore/Graphics4/Texture.h>
 
+#include "InverseKinematics.h"
+
 #include <vector>
 
 struct Mesh {
@@ -77,6 +79,8 @@ struct BoneNode {
 	
 	std::vector<Kore::mat4> aniTransformations;
 	
+	//TODO add constraints
+	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()) {}
 };
@@ -86,6 +90,8 @@ struct CompareBones {
 		return (bone1->nodeDepth) < (bone2->nodeDepth);
 	}
 };
+
+class InverseKinematics;
 
 class MeshObject {
 public:
@@ -100,11 +106,15 @@ public:
 	Kore::mat4 M;
 	
 private:
+	vec4 desiredPos;
+	
 	long meshesCount;
 	float scale;
 	const Kore::Graphics4::VertexStructure& structure;
 	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
+	
+	InverseKinematics* invKin;
 	
 	Kore::Graphics2::Graphics2* g2;
 	Kore::Graphics4::Texture* redDot;

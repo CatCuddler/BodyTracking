@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "MeshObject.h"
+#include "InverseKinematics.h"
 
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
 #include <sstream>
-#include <algorithm>
-#include <functional>
+
 
 using namespace Kore;
 using namespace Kore::Graphics4;
@@ -188,6 +188,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		images.push_back(image);
 	}
 	
+	invKin = new InverseKinematics();
+	desiredPos = vec4(0, 0, 0, 0);
+	
 	g2 = new Graphics2::Graphics2(1024, 768);
 	redDot = new Texture("redDot.png");
 	yellowDot = new Texture("yellowDot.png");
@@ -215,11 +218,19 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
 		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 		if (bone->aniTransformations.size() > 0) {
-			g2->drawImage(yellowDot, nPos.x(), nPos.y());
+			//g2->drawImage(yellowDot, nPos.x(), nPos.y());
 		} else {
-			g2->drawImage(redDot, nPos.x(), nPos.y());
+			//g2->drawImage(redDot, nPos.x(), nPos.y());
 		}
 	}
+	
+	BoneNode* foot = bones.at(54 - 1);
+	vec4 pos = foot->combined * vec4(0, 0, 0, 1);
+	vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+	g2->drawImage(redDot, nPos.x(), nPos.y());
+	
+	nPos = convert(desiredPos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+	g2->drawImage(yellowDot, nPos.x(), nPos.y());
 	
 	g2->end();
 }
@@ -253,9 +264,14 @@ void MeshObject::setAnimation(int frame) {
 		BoneNode* bone = bones.at(i);
 		
 		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
-			bone->local = bone->aniTransformations.at(frame);
+			//bone->local = bone->aniTransformations.at(frame);
 		}
 	}
+	
+	// Test: animate hand_r
+	BoneNode* foot = bones.at(54 - 1);
+	desiredPos = vec4(-2, -4, 3, 1);
+	invKin->inverseKinematics(desiredPos, foot);
 }
 
 void MeshObject::animate(TextureUnit tex) {
