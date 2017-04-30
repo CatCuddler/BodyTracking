@@ -1,10 +1,12 @@
-attribute vec3 pos;
-attribute vec2 tex;
-attribute vec3 nor;
+#version 450
 
-varying vec3 position;
-varying vec2 texCoord;
-varying vec3 normal;
+in vec3 pos;
+in vec2 tex;
+in vec3 nor;
+
+out vec3 position;
+out vec2 texCoord;
+out vec3 normal;
 
 uniform mat4 P;
 uniform mat4 V;
