@@ -75,6 +75,8 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
+	Kore::vec3 angle;
+	
 	bool initialized = false;
 	
 	std::vector<Kore::mat4> aniTransformations;
@@ -82,7 +84,8 @@ struct BoneNode {
 	//TODO add constraints
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
-				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()) {}
+				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),
+				 angle(Kore::vec3(0, 0, 0)) {}
 };
 
 struct CompareBones {

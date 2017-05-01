@@ -24,7 +24,7 @@ private:
 	typedef Matrix<6, maxBones, float> mat6x;
 	typedef Matrix<6, 1, float> mat6x1;
 	
-	mat6x calcJacobian(BoneNode* targetBone);
+	mat6x calcJacobian(BoneNode* targetBone, Kore::vec4 angle);
 	mat6x getPsevdoInverse(mat6x jacobian);
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
