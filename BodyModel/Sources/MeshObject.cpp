@@ -195,7 +195,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	}
 	
 	invKin = new InverseKinematics(bones);
-	desiredPos = vec4(0, 0, 0, 0);
 	
 	g2 = new Graphics2::Graphics2(1024, 768);
 	redDot = new Texture("redDot.png");
@@ -223,19 +222,11 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 		BoneNode* bone = bones.at(i);
 		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
 		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
-		if (bone->aniTransformations.size() > 0) {
-			//g2->drawImage(yellowDot, nPos.x(), nPos.y());
-		} else {
-			//g2->drawImage(redDot, nPos.x(), nPos.y());
-		}
+		g2->drawImage(redDot, nPos.x(), nPos.y());
 	}
 	
-	BoneNode* foot = bones.at(54 - 1);
-	vec4 pos = foot->combined * vec4(0, 0, 0, 1);
-	vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
-	g2->drawImage(redDot, nPos.x(), nPos.y());
-	
-	nPos = convert(desiredPos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+	// Draw desired position
+	vec2 nPos = convert(desiredPos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 	g2->drawImage(yellowDot, nPos.x(), nPos.y());
 	
 	g2->end();
@@ -257,27 +248,19 @@ void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMat
 }
 
 void MeshObject::setAnimation(int frame) {
-	
-	/*for(int i = 0; i < bones.size(); ++i) {
-		BoneNode* bone = bones.at(i);
-		
-		if (strcmp(bone->boneName, "Root") == 0) {
-			bone->local *= mat4::Rotation(0, 0, Kore::pi * 0.01f);
-		}
-	}*/
-	
 	for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		
 		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
-			//bone->local = bone->aniTransformations.at(frame);
+			bone->local = bone->aniTransformations.at(frame);
 		}
 	}
-	
-	// Test: animate hand_r
-	BoneNode* foot = bones.at(54 - 1);
-	desiredPos = vec4(-2, -4, 3, 1);
-	invKin->inverseKinematics(desiredPos, foot);
+}
+
+void MeshObject::setDesiredPosition(int boneIndex, Kore::vec4 position) {
+	BoneNode* bone = bones.at(boneIndex - 1);
+	desiredPos = position;
+	invKin->inverseKinematics(position, bone);
 }
 
 void MeshObject::animate(TextureUnit tex) {

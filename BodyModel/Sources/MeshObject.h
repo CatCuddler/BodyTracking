@@ -102,6 +102,7 @@ public:
 	void render(Kore::Graphics4::TextureUnit tex);
 	
 	void setAnimation(int frame);
+	void setDesiredPosition(int boneIndex, Kore::vec4 desiredPos);
 	void animate(Kore::Graphics4::TextureUnit tex);
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
@@ -109,7 +110,7 @@ public:
 	Kore::mat4 M;
 	
 private:
-	vec4 desiredPos;
+	Kore::vec4 desiredPos;
 	
 	long meshesCount;
 	float scale;

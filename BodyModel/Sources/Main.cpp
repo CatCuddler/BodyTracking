@@ -87,14 +87,13 @@ namespace {
 		cube->render(tex);
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
-		//avatar->render(tex);
-		avatar->setAnimation(frame);
+		/*avatar->setAnimation(frame);
 		frame++;
-		if (frame > 200) frame = 0;
+		if (frame > 200) frame = 0;*/
 		avatar->animate(tex);
+		avatar->setDesiredPosition(50, vec4(2, -4, 3, 1));	// Left foot
 		
-		//cube->drawVertices(cube->M, V, P, width, height);
-		//avatar->drawVertices(avatar->M, V, P, width, height);
+		cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height);
 		
 		Graphics4::setRenderState(Graphics4::DepthTest, true);
