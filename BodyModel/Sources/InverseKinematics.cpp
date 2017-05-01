@@ -117,10 +117,10 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 	while (targetBone->nodeIndex > lastIndex) {
 		BoneNode* bone = targetBone;
 		
-		float radX = theta.at(2*boneCount-i-2);
+		float radX = theta.at(i);
 		radX = getRadians(radX);
 		
-		float radZ = theta.at(2*boneCount-i-1);
+		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
 		Kore::vec4 rot(radX, 0, radZ);
