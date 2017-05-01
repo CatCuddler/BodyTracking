@@ -108,7 +108,13 @@ namespace {
 	
 	void updateBone(BoneNode* bone) {
 		//log(Info, "%i Update bone %s", bone->nodeIndex, bone->boneName);
+		//Kore::vec4 oldPos = bone->combined * Kore::vec4(0, 0, 0, 1);
+		
 		bone->combined = bone->parent->combined * bone->local;
+		
+		//Kore::vec4 newPos = bone->combined * Kore::vec4(0, 0, 0, 1);
+		//if (bone->nodeIndex > 50 && bone->nodeIndex < 55)
+		//	Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", bone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
 		
 		if (!bone->initialized) {
 			bone->initialized = true;
@@ -188,7 +194,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		images.push_back(image);
 	}
 	
-	invKin = new InverseKinematics();
+	invKin = new InverseKinematics(bones);
 	desiredPos = vec4(0, 0, 0, 0);
 	
 	g2 = new Graphics2::Graphics2(1024, 768);
