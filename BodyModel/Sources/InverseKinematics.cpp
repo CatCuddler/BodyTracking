@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(1), maxError(0.1f) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.1f) {
 	bones = boneVec;
 }
 
@@ -27,7 +27,7 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		Kore::vec4 currentPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 		Kore::vec4 dif = desiredPos - currentPos;
 		
-		log(Info, "Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
+		//log(Info, "Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
 		float err = dif.getLength();
 		if (err < maxError) {
@@ -55,7 +55,6 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		}
 		
 		applyChanges(theta, targetBone);
-		//updateBonePosition(targetBone);
 		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones.at(i));
 	}
 	return false;
@@ -82,8 +81,6 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 			isEndEffector = false;
 		}
 		
-		//Kore::log(Info, "Bone %s", bone->boneName);
-		
 		Kore::vec4 cross = ai.cross(orn - ri);
 		
 		jacobian[i][0] = cross.x();
@@ -101,7 +98,6 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 }
 
 InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::mat6x jacobian) {
-	
 	// Left pseudo inverse: (J^T * J ) ^-1 * J^T
 	//InverseKinematics::mat6x inv = ((jacobian.Transpose() * jacobian).Invert() * jacobian.Transpose()).Transpose();
 	
@@ -119,17 +115,13 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		
 		float radX = theta.at(i);
 		radX = getRadians(radX);
-		
 		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
 		Kore::vec4 rot(radX, 0, radZ);
-
 		bone->angle += rot;
-		Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->angle.x(), bone->angle.y(), bone->angle.z());
-		//bone->local *= bone->local.Rotation(angleX, 0, angleZ);
-		
 		bone->local *= bone->local.Rotation(rot.z(), rot.y(), rot.x());
+		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->angle.x(), bone->angle.y(), bone->angle.z());
 		
 		targetBone = targetBone->parent;
 		i = i + 2;
@@ -138,29 +130,12 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 }
 
 void InverseKinematics::updateBonePosition(BoneNode *targetBone) {
-	
-	/*while (targetBone->nodeIndex > lastIndex) {
-		Kore::vec4 oldPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-		
-		targetBone->combined = targetBone->parent->combined * targetBone->local;
-		
-		Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-		Kore::log(Info, "1Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
-		
-		//targetBone->finalTransform = targetBone->combined * targetBone->combinedInv;
-		
-		targetBone = targetBone->parent;
-	}*/
-	
-	Kore::vec4 oldPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
+	//Kore::vec4 oldPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 	
 	targetBone->combined = targetBone->parent->combined * targetBone->local;
 	
-	Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-	if (targetBone->nodeIndex > 50 && targetBone->nodeIndex < 55)
-		Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
-	
-	targetBone->finalTransform = targetBone->combined * targetBone->combinedInv;
+	//Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
+	//Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());	
 }
 
 float InverseKinematics::getRadians(float degree) {
