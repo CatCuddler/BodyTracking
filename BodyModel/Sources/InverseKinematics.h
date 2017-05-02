@@ -16,7 +16,7 @@ private:
 	int boneCount;
 	int maxSteps;
 	float maxError;
-	int lastIndex = 3;
+	int lastIndex = 7;
 	
 	std::vector<BoneNode*> bones;
 	

@@ -91,9 +91,10 @@ namespace {
 		frame++;
 		if (frame > 200) frame = 0;*/
 		avatar->animate(tex);
-		avatar->setDesiredPosition(50, vec4(2, -4, 3, 1));	// Left foot
+		avatar->setDesiredPosition(50, vec4(2, -4, 3, 1));		// Left foot
+		avatar->setDesiredPosition(29, vec4(-4, -3, 11, 1));	// Right hand
 		
-		cube->drawVertices(cube->M, V, P, width, height);
+		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height);
 		
 		Graphics4::setRenderState(Graphics4::DepthTest, true);

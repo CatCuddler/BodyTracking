@@ -75,7 +75,8 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	Kore::vec3 angle;
+	Kore::vec3 rotation;
+	Kore::vec4 desiredPos;
 	
 	bool initialized = false;
 	
@@ -85,7 +86,7 @@ struct BoneNode {
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),
-				 angle(Kore::vec3(0, 0, 0)) {}
+				 rotation(Kore::vec3(0, 0, 0)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
 };
 
 struct CompareBones {

@@ -13,6 +13,9 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(
 bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targetBone) {
 	
 	if (!targetBone->initialized) return false;
+	if (desiredPos == targetBone->desiredPos) return false;
+	
+	targetBone->desiredPos = desiredPos;
 	
 	boneCount = 0;
 	BoneNode* bone = targetBone;
@@ -27,10 +30,10 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		Kore::vec4 currentPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 		Kore::vec4 dif = desiredPos - currentPos;
 		
-		//log(Info, "Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
+		//Kore::log(Info, "It: %i, Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", i, currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
-		float err = dif.getLength();
-		if (err < maxError) {
+		float error = dif.getLength();
+		if (error < maxError) {
 			return true;
 		}
 		
@@ -118,10 +121,27 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
+		// Constraints
+		/*if (bone->nodeIndex == 48 || bone->nodeIndex == 52) {
+			// Knee
+			if (radX < 0) radX = 0;
+			radZ = 0;
+		}
+		if (bone->nodeIndex == 49 || bone->nodeIndex == 53) {
+			// Foot
+			if (radX < -0.8) radX = -0.8;
+			if (radX > 0.8) radX = 0.8;
+			radZ = 0;
+		}*/
+		
 		Kore::vec4 rot(radX, 0, radZ);
-		bone->angle += rot;
+		bone->rotation += rot;
+		
+		bone->rotation.x() = Kore::mod(bone->rotation.x() + Kore::pi, 2 * Kore::pi) - Kore::pi;
+		bone->rotation.z() = Kore::mod(bone->rotation.z() + Kore::pi, 2 * Kore::pi) - Kore::pi;
+		
 		bone->local *= bone->local.Rotation(rot.z(), rot.y(), rot.x());
-		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->angle.x(), bone->angle.y(), bone->angle.z());
+		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
 		targetBone = targetBone->parent;
 		i = i + 2;
