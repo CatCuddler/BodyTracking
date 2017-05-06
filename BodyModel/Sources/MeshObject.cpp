@@ -2,6 +2,7 @@
 #include "MeshObject.h"
 #include "InverseKinematics.h"
 
+#include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
@@ -215,14 +216,23 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight) {
+void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton) {
 	g2->begin(false);
 	
 	for(int i = 1; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
-		vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
-		g2->drawImage(redDot, nPos.x(), nPos.y());
+		vec2 bonePos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+		g2->drawImage(redDot, bonePos.x(), bonePos.y());
+		
+		BoneNode* parent = bone->parent;
+		if (parent->nodeIndex > 2) {
+			pos = parent->combined * vec4(0, 0, 0, 1);
+			vec2 parentPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+			g2->setColor(Kore::Graphics1::Color::Red);
+			g2->drawLine(bonePos.x(), bonePos.y(), parentPos.x(), parentPos.y(), 5);
+			g2->drawRect(0, 0, 0, 0);
+		}
 	}
 	
 	// Draw desired position
@@ -231,6 +241,7 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 	
 	g2->end();
 }
+
 
 void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight) {
 	g2->begin(false);

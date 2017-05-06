@@ -105,7 +105,7 @@ public:
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec4 desiredPos);
 	void animate(Kore::Graphics4::TextureUnit tex);
-	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
+	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	
 	Kore::mat4 M;
