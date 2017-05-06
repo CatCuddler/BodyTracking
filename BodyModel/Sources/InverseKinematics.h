@@ -17,14 +17,16 @@ private:
 	int maxSteps;
 	float maxError;
 	int lastIndex = 7;
+	int rootIndex;
 	
 	std::vector<BoneNode*> bones;
 	
 	static const int maxBones = 10;
-	typedef Matrix<6, maxBones, float> mat6x;
-	typedef Matrix<6, 1, float> mat6x1;
+	typedef Matrix<3, maxBones, float> mat6x;
+	typedef Matrix<3, 1, float> mat6x1;
 	
 	mat6x calcJacobian(BoneNode* targetBone, Kore::vec4 angle);
+	Kore::mat4 relPose(int i, int j);
 	mat6x getPsevdoInverse(mat6x jacobian);
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);

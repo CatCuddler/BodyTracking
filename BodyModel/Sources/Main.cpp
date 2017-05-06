@@ -44,6 +44,9 @@ namespace {
 	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi/2);
 	int frame = 0;
 	
+	float angle = 0;
+	vec4 desPos = vec4(0, 0, 0, 0);
+	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		
@@ -91,7 +94,11 @@ namespace {
 		frame++;
 		if (frame > 200) frame = 0;*/
 		avatar->animate(tex);
-		avatar->setDesiredPosition(50, vec4(2, -4, 3, 1));		// Left foot
+		
+		angle += 0.05f;
+		float radius = 2;
+		desPos = vec4(2 + radius * cos(angle), -4, 3 + radius * sin(angle), 1);
+		avatar->setDesiredPosition(49, desPos);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
 		//avatar->setDesiredPosition(29, vec4(-4, -3, 11, 1));	// Right hand
 		
 		//cube->drawVertices(cube->M, V, P, width, height);

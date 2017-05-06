@@ -229,7 +229,6 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 		if (parent->nodeIndex > 2) {
 			pos = parent->combined * vec4(0, 0, 0, 1);
 			vec2 parentPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
-			g2->setColor(Kore::Graphics1::Color::Red);
 			g2->drawLine(bonePos.x(), bonePos.y(), parentPos.x(), parentPos.y(), 5);
 			g2->drawRect(0, 0, 0, 0);
 		}
@@ -651,6 +650,11 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	bone->transform = getMatrix4x4(transform);
 	bone->transformInv = bone->transform.Invert();
 	bone->local = bone->transform;
+	
+	/*float roll = Kore::atan2(bone->local.get(2,1), bone->local.get(2,2));
+	float pitch = Kore::atan2(-bone->local.get(2,0), sqrt(bone->local.get(2,1)*bone->local.get(2,1) + bone->local.get(2,2)*bone->local.get(2,2)));
+	float yaw = Kore::atan2(bone->local.get(1,0), bone->local.get(0,0));
+	bone->rotation = vec3(roll, pitch, yaw);*/
 	
 	// Get node animation
 	subStructure = structure.GetFirstSubstructure(OGEX::kStructureAnimation);

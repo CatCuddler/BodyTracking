@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.1f) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.1f), rootIndex(2) {
 	bones = boneVec;
 }
 
@@ -25,7 +25,6 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 	}
 	
 	for (int i = 0; i < maxSteps; ++i) {
-		
 		// Calculate error between desired position and actual position of the end effector
 		Kore::vec4 currentPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 		Kore::vec4 dif = desiredPos - currentPos;
@@ -47,7 +46,7 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		
 		mat6x1 V;
 		V.Set(0, 0, dif.x()); V.Set(1, 0, dif.y()); V.Set(2, 0, dif.z());
-		V.Set(3, 0, 0); V.Set(4, 0, 0); V.Set(5, 0, 0);
+		//V.Set(3, 0, 0); V.Set(4, 0, 0); V.Set(5, 0, 0);
 		auto aThetaX = pseudoInvX * V.Transpose();
 		auto aThetaZ = pseudoInvZ * V.Transpose();
 		
@@ -67,37 +66,42 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 	
 	InverseKinematics::mat6x jacobian;
 	
-	Kore::vec4 orn = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-	
-	bool isEndEffector = true;
+	Kore::mat4 T = relPose(rootIndex, targetBone->nodeIndex);
+	Kore::vec4 orn = T * Kore::vec4(0, 0, 0, 1);
 	
 	int i = 0;
 	while (targetBone->nodeIndex > lastIndex) {
 		BoneNode* bone = targetBone;
 		
-		Kore::vec4 ai = bone->combined * angle;
-		Kore::vec4 ri = bone->combined * Kore::vec4(0, 0, 0, 1);
+		T = relPose(rootIndex, bone->nodeIndex);
 		
-		if (isEndEffector) {
-			ai = angle;
-			ri = vec4(0, 0, 0, 1);
-			isEndEffector = false;
-		}
+		Kore::vec4 ai = T * angle;
+		Kore::vec4 ri = T * Kore::vec4(0, 0, 0, 1);
 		
 		Kore::vec4 cross = ai.cross(orn - ri);
 		
 		jacobian[i][0] = cross.x();
 		jacobian[i][1] = cross.y();
 		jacobian[i][2] = cross.z();
-		jacobian[i][3] = ai.x();
-		jacobian[i][4] = ai.y();
-		jacobian[i][5] = ai.z();
 		
 		targetBone = targetBone->parent;
 		++i;
 	}
 	
 	return jacobian;
+}
+
+Kore::mat4 InverseKinematics::relPose(int i, int j) {
+	
+	Kore::mat4 oTi, oTj;
+	if (i == rootIndex) oTi = mat4::Identity();
+	else oTi = bones.at(i-1)->combined;
+	
+	if (j == rootIndex) oTj = mat4::Identity();
+	else oTj = bones.at(j-1)->combined;
+	
+	Kore::mat4 result = oTi.Invert() * oTj;
+	return result;
 }
 
 InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::mat6x jacobian) {
@@ -121,26 +125,23 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
+		Kore::vec4 rot(radX, 0, radZ, 0);
+		
 		// Constraints
-		/*if (bone->nodeIndex == 48 || bone->nodeIndex == 52) {
-			// Knee
-			if (radX < 0) radX = 0;
-			radZ = 0;
+		if (bone->nodeIndex == 47 || bone->nodeIndex == 51) {
+			// Thigh
+			//if (radX < 0) radX = 0;
+			//if (radX > 2) radX = 2;
+			//if (bone->rotation.z() > 0.3) rot.z() = 0.0;
 		}
-		if (bone->nodeIndex == 49 || bone->nodeIndex == 53) {
-			// Foot
-			if (radX < -0.8) radX = -0.8;
-			if (radX > 0.8) radX = 0.8;
-			radZ = 0;
-		}*/
-		
-		Kore::vec4 rot(radX, 0, radZ);
+		if (bone->nodeIndex == 48 || bone->nodeIndex == 52) {
+			// Knee
+			if (bone->rotation.x() < -0.1) rot.x() = 0;
+			rot.z() = 0;
+		}
 		bone->rotation += rot;
-		
-		bone->rotation.x() = Kore::mod(bone->rotation.x() + Kore::pi, 2 * Kore::pi) - Kore::pi;
-		bone->rotation.z() = Kore::mod(bone->rotation.z() + Kore::pi, 2 * Kore::pi) - Kore::pi;
-		
-		bone->local *= bone->local.Rotation(rot.z(), rot.y(), rot.x());
+
+		bone->local *= bone->local.RotationX(rot.x()) * bone->local.RotationZ(rot.z());;
 		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
 		targetBone = targetBone->parent;
@@ -155,7 +156,7 @@ void InverseKinematics::updateBonePosition(BoneNode *targetBone) {
 	targetBone->combined = targetBone->parent->combined * targetBone->local;
 	
 	//Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-	//Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());	
+	//Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
 }
 
 float InverseKinematics::getRadians(float degree) {
@@ -169,9 +170,9 @@ Kore::vec3 InverseKinematics::getAngles(Kore::mat4 rot) {
 	float yaw = Kore::atan2(rot.get(1,0), rot.get(0,0));
 	
 	/*float s = 0.5f * (rMat.Trace() + 1);
-	float roll = s * (rMat.get(2, 1) - rMat.get(1, 2));
-	float pitch = s * (rMat.get(0, 2) - rMat.get(2, 0));
-	float yaw = s * (rMat.get(1, 0) - rMat.get(0, 1));*/
+	 float roll = s * (rMat.get(2, 1) - rMat.get(1, 2));
+	 float pitch = s * (rMat.get(0, 2) - rMat.get(2, 0));
+	 float yaw = s * (rMat.get(1, 0) - rMat.get(0, 1));*/
 	
 	return vec3(roll, pitch, yaw);
 }
