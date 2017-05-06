@@ -125,23 +125,39 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
-		Kore::vec4 rot(radX, 0, radZ, 0);
+		Kore::vec3 rot(radX, 0, radZ);
+		vec3 newRot = bone->rotation + rot;
 		
 		// Constraints
-		if (bone->nodeIndex == 47 || bone->nodeIndex == 51) {
+		if (bone->nodeIndex == 47 ) {
 			// Thigh
 			//if (radX < 0) radX = 0;
 			//if (radX > 2) radX = 2;
-			//if (bone->rotation.z() > 0.3) rot.z() = 0.0;
+			//if (newRot.z() > 0.3) rot.z() = 0.0;
 		}
-		if (bone->nodeIndex == 48 || bone->nodeIndex == 52) {
+		else if (bone->nodeIndex == 48) {
 			// Knee
-			if (bone->rotation.x() < -0.1) rot.x() = 0;
+			if (newRot.x() < -0.1) rot.x() = 0;
+			rot.z() = 0;
+		}
+		else if (bone->nodeIndex == 26) {
+			// Clavicle
+			rot.x() = 0;
+			rot.z() = 0;
+		}
+		else if (bone->nodeIndex == 27) {
+			// Upperarm
+			//rot.x() = 0;
+			if (newRot.z() > 0.1) rot.z() = 0;
+		}
+		else if (bone->nodeIndex == 28) {
+			// Lowerarm
+			if (newRot.x() < -0.1) rot.x() = 0;
 			rot.z() = 0;
 		}
 		bone->rotation += rot;
 
-		bone->local *= bone->local.RotationX(rot.x()) * bone->local.RotationZ(rot.z());;
+		bone->local *= bone->local.RotationX(rot.x()) * bone->local.RotationZ(rot.z());
 		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
 		targetBone = targetBone->parent;
