@@ -45,7 +45,8 @@ namespace {
 	int frame = 0;
 	
 	float angle = 0;
-	vec4 desPos = vec4(0, 0, 0, 0);
+	vec4 desPos1 = vec4(0, 0, 0, 0);
+	vec4 desPos2 = vec4(0, 0, 0, 0);
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -97,9 +98,10 @@ namespace {
 		
 		angle += 0.05f;
 		float radius = 2;
-		desPos = vec4(2 + radius * cos(angle), -4, 3 + radius * sin(angle), 1);
-		avatar->setDesiredPosition(49, desPos);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
-		//avatar->setDesiredPosition(29, vec4(-4, -3, 11, 1));	// Right hand
+		desPos1 = vec4(2 + radius * cos(angle), -4, 3 + radius * sin(angle), 1);
+		desPos2 = vec4(-4 + radius * cos(angle), -3, 11 + radius * sin(angle), 1);
+		avatar->setDesiredPosition(49, desPos1);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
+		avatar->setDesiredPosition(29, desPos2);		// Right hand, vec4(-4, -3, 11, 1)
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
