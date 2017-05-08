@@ -141,8 +141,7 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		float radZ = theta.at(i+1);
 		radZ = getRadians(radZ);
 		
-		
-		Kore::vec4 rot(radX, 0, radZ, 1);
+		Kore::vec4 rot(radX, 0, radZ, 0);
 		vec3 newRot = bone->rotation + rot;
 		
 		// Constraints
@@ -170,12 +169,10 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		}
 		bone->rotation += rot;
 		
-
 		// T * R * S
-		rot = bone->rotation;
-		//Kore::mat4 rot1 = quaternionToMatrix(rot);
-		Kore::mat4 rot2 = mat4::Identity().RotationX(rot.x()) * mat4::Identity().RotationZ(rot.z());
-		bone->local = bone->transform * rot2;
+		Kore::mat4 rotation = quaternionToMatrix(bone->rotation);
+		//Kore::mat4 rotation = mat4::Identity().RotationX(bone->rotation.x()) * mat4::Identity().RotationZ(bone->rotation.z());
+		bone->local = bone->transform * rotation;
 		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
 		targetBone = targetBone->parent;
@@ -201,17 +198,23 @@ Kore::mat4 InverseKinematics::quaternionToMatrix(Kore::vec4 quat) {
 	float qz = quat.z();
 	float qw = quat.w();
 	
-	rot.Set(0, 0, 1 - 2*qy*qy - 2*qz*qz);
-	rot.Set(0, 1, 2*qx*qy - 2*qz*qw);
-	rot.Set(0, 2, 2*qx*qz + 2*qy*qw);
+	vec3 term = vec3(1 - 2*qy*qy - 2*qz*qz, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw);
+	term = term.normalize();
+	rot.Set(0, 0, term.x());
+	rot.Set(0, 1, term.y());
+	rot.Set(0, 2, term.z());
 	
-	rot.Set(1, 0, 2*qx*qy + 2*qz*qw);
-	rot.Set(1, 1, 1 - 2*qx*qx - 2*qz*qz);
-	rot.Set(1, 2, 2*qy*qz - 2*qx*qw);
+	term = vec3(2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw);
+	term = term.normalize();
+	rot.Set(1, 0, term.x());
+	rot.Set(1, 1, term.y());
+	rot.Set(1, 2, term.z());
 	
-	rot.Set(2, 0, 2*qx*qz - 2*qy*qw);
-	rot.Set(2, 1, 2*qy*qz + 2*qx*qw);
-	rot.Set(2, 2, 1 - 2*qx*qx - 2*qy*qy);
+	term = vec3(2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy);
+	term = term.normalize();
+	rot.Set(2, 0, term.x());
+	rot.Set(2, 1, term.y());
+	rot.Set(2, 2, term.z());
 	
 	return rot;
 }
