@@ -82,7 +82,9 @@ struct BoneNode {
 	
 	std::vector<Kore::mat4> aniTransformations;
 	
-	//TODO add constraints
+	// Constraints
+	Kore::vec4 axes;
+	std::vector<Kore::vec2> constrain;	// <min, max>
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),

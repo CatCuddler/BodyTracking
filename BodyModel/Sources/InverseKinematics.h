@@ -24,7 +24,7 @@ private:
 	typedef Matrix<3, maxBones, float> mat3x;
 	typedef Matrix<3, 1, float> mat3x1;
 	
-	bool checkBoneIndex(int boneIndex);
+	void setJointConstraints();
 	
 	mat3x calcJacobian(BoneNode* targetBone, Kore::vec4 angle);
 	Kore::mat4 relPose(int i, int j);

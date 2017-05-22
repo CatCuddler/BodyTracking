@@ -99,6 +99,7 @@ namespace {
 		angle += 0.05f;
 		float radius = 2;
 		desPos1 = vec4(2 + radius * cos(angle), -4, 3 + radius * sin(angle), 1);
+		radius = 1;
 		desPos2 = vec4(-4 + radius * cos(angle), -3, 11 + radius * sin(angle), 1);
 		avatar->setDesiredPosition(49, desPos1);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
 		avatar->setDesiredPosition(29, desPos2);		// Right hand, vec4(-4, -3, 11, 1)

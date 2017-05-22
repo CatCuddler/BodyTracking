@@ -195,7 +195,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		images.push_back(image);
 	}
 	
-	invKin = new InverseKinematics(bones);
+	if (bones.size() > 0) {
+		invKin = new InverseKinematics(bones);
+	}
 	
 	g2 = new Graphics2::Graphics2(1024, 768);
 	redDot = new Texture("redDot.png");
