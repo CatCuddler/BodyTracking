@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.1f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(5), maxError(0.1f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -23,6 +23,11 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 	while (bone->nodeIndex != rootIndex) {
 		bone = bone->parent;
 		++boneCount;
+	}
+	
+	//Kore::log(Kore::Info, "Max bone number %i", boneCount);
+	if (boneCount > maxBones) {
+		Kore::log(Kore::Error, "Increase the max bone number");
 	}
 	
 	for (int i = 0; i < maxSteps; ++i) {
@@ -42,12 +47,13 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		InverseKinematics::mat3x jacobianY = calcJacobian(targetBone, Kore::vec4(0, 1, 0, 0));
 		InverseKinematics::mat3x jacobianZ = calcJacobian(targetBone, Kore::vec4(0, 0, 1, 0));
 		
-		// Get pseude inverse
+		// Get Pseude Inverse
 		InverseKinematics::mat3x pseudoInvX = getPsevdoInverse(jacobianX);
 		InverseKinematics::mat3x pseudoInvY = getPsevdoInverse(jacobianY);
 		InverseKinematics::mat3x pseudoInvZ = getPsevdoInverse(jacobianZ);
 		
-		mat3x1 V;
+		// Calculate the angles
+		InverseKinematics::mat3x1 V;
 		V.Set(0, 0, dif.x()); V.Set(1, 0, dif.y()); V.Set(2, 0, dif.z());
 		auto aThetaX = pseudoInvX * V.Transpose();
 		auto aThetaY = pseudoInvY * V.Transpose();
@@ -66,27 +72,26 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 	return false;
 }
 
-InverseKinematics::mat3x InverseKinematics::calcJacobian(BoneNode* targetBone, Kore::vec4 angle) {
+InverseKinematics::mat3x InverseKinematics::calcJacobian(BoneNode* targetBone, Kore::vec4 rotAxis) {
 	
 	InverseKinematics::mat3x jacobian;
 	
-	Kore::mat4 T = relPose(rootIndex, targetBone->nodeIndex);
-	Kore::vec4 orn = T * Kore::vec4(0, 0, 0, 1);
+	Kore::vec4 orn = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 	
 	int i = 0;
 	while (targetBone->nodeIndex != rootIndex) {
 		BoneNode* bone = targetBone;
 		
-		T = relPose(rootIndex, bone->nodeIndex);
-		
+		// Get rotation and position vector
 		Kore::vec4 ai = Kore::vec4(0, 0, 0, 0);
-		Kore::vec4 ri = T * Kore::vec4(0, 0, 0, 1);
+		Kore::vec4 ri = bone->combined * Kore::vec4(0, 0, 0, 1);
 		
 		Kore::vec4 axes = bone->axes;
-		if ((axes.x() == 1 && axes.x() == angle.x()) || (axes.y() == 1 && axes.y() == angle.y()) || (axes.z() == 1 && axes.z() == angle.z())) {
-			ai = T * angle;
+		if ((axes.x() == 1 && axes.x() == rotAxis.x()) || (axes.y() == 1 && axes.y() == rotAxis.y()) || (axes.z() == 1 && axes.z() == rotAxis.z())) {
+			ai = bone->combined * rotAxis;
 		}
 		
+		// Calculate cross product
 		Kore::vec4 cross = ai.cross(orn - ri);
 		
 		jacobian[i][0] = cross.x();
@@ -98,18 +103,6 @@ InverseKinematics::mat3x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 	}
 	
 	return jacobian;
-}
-
-Kore::mat4 InverseKinematics::relPose(int i, int j) {
-	Kore::mat4 oTi, oTj;
-	if (i == rootIndex) oTi = mat4::Identity();
-	else oTi = bones.at(i-1)->combined;
-	
-	if (j == rootIndex) oTj = mat4::Identity();
-	else oTj = bones.at(j-1)->combined;
-	
-	Kore::mat4 result = oTi.Invert() * oTj;
-	return result;
 }
 
 InverseKinematics::mat3x InverseKinematics::getPsevdoInverse(InverseKinematics::mat3x jacobian) {

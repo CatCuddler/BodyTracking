@@ -20,14 +20,13 @@ private:
 	
 	std::vector<BoneNode*> bones;
 	
-	static const int maxBones = 10;
+	static const int maxBones = 8;
 	typedef Matrix<3, maxBones, float> mat3x;
 	typedef Matrix<3, 1, float> mat3x1;
 	
 	void setJointConstraints();
 	
-	mat3x calcJacobian(BoneNode* targetBone, Kore::vec4 angle);
-	Kore::mat4 relPose(int i, int j);
+	mat3x calcJacobian(BoneNode* targetBone, Kore::vec4 rotAxis);
 	mat3x getPsevdoInverse(mat3x jacobian);
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
