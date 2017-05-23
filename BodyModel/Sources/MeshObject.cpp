@@ -300,7 +300,7 @@ void MeshObject::animate(TextureUnit tex) {
 				totalJointsWeight += boneWeight;
 				
 				startPos += (bone->finalTransform * posVec) * boneWeight;
-				startNormal += (bone->transform * bone->transformInv * norVec) * boneWeight;
+				startNormal += (bone->finalTransform * norVec) * boneWeight;
 			}
 			
 			if (totalJointsWeight != 1.0f) {

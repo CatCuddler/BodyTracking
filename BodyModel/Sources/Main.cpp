@@ -194,6 +194,8 @@ namespace {
 	void init() {
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
+		//FileReader vs("shader_lighting.vert");
+		//FileReader fs("shader_lighting.frag");
 		vertexShader = new Shader(vs.readAll(), vs.size(), VertexShader);
 		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
 		
