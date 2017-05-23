@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Kore/Graphics2/Graphics.h>
+#include <Kore/Math/Quaternion.h>
 
 struct BoneNode;
 
@@ -31,9 +32,6 @@ private:
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
 	void updateBonePosition(BoneNode* targetBone);
-	
-	Kore::mat4 quaternionToMatrix(Kore::vec4 quat);
-	Kore::vec3 getAngles(Kore::mat4 rotationMat);
 	
 	float getRadians(float degree);
 

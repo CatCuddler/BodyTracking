@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(5), maxError(0.1f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.1f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -129,26 +129,28 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		radZ = getRadians(radZ);
 		
 		Kore::vec4 rot(radX, radY, radZ, 0);
+		bone->quaternion.x += radX;
+		bone->quaternion.y += radY;
+		bone->quaternion.z += radZ;
 		
 		Kore::vec4 axis = bone->axes;
-		bone->rotation += rot;
 		if (axis.x() == 1) {
-			if (bone->rotation.x() < bone->constrain.at(0).x()) bone->rotation.x() = bone->constrain.at(0).x();
-			if (bone->rotation.x() > bone->constrain.at(0).y()) bone->rotation.x() = bone->constrain.at(0).y();
+			if (bone->quaternion.x < bone->constrain.at(0).x()) bone->quaternion.x = bone->constrain.at(0).x();
+			if (bone->quaternion.x > bone->constrain.at(0).y()) bone->quaternion.x = bone->constrain.at(0).y();
 		}
 		if (axis.y() == 1) {
-			if (bone->rotation.y() < bone->constrain.at(1).x()) bone->rotation.y() = bone->constrain.at(1).x();
-			if (bone->rotation.y() > bone->constrain.at(1).y()) bone->rotation.y() = bone->constrain.at(1).y();
+			if (bone->quaternion.y < bone->constrain.at(1).x()) bone->quaternion.y = bone->constrain.at(1).x();
+			if (bone->quaternion.y > bone->constrain.at(1).y()) bone->quaternion.y = bone->constrain.at(1).y();
 		}
 		if (axis.z() == 1) {
-			if (bone->rotation.z() < bone->constrain.at(2).x()) bone->rotation.z() = bone->constrain.at(2).x();
-			if (bone->rotation.z() > bone->constrain.at(2).y()) bone->rotation.z() = bone->constrain.at(2).y();
+			if (bone->quaternion.z < bone->constrain.at(2).x()) bone->quaternion.z = bone->constrain.at(2).x();
+			if (bone->quaternion.z > bone->constrain.at(2).y()) bone->quaternion.z = bone->constrain.at(2).y();
 		}
 		
 		// T * R * S
-		Kore::mat4 rotation = quaternionToMatrix(bone->rotation);
-		//Kore::mat4 rotation = mat4::Identity().RotationX(bone->rotation.x()) * mat4::Identity().RotationZ(bone->rotation.z());
-		bone->local = bone->transform * rotation;
+		bone->quaternion.normalize();
+		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
+		bone->local = bone->transform * rotMat;
 		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
 		targetBone = targetBone->parent;
@@ -164,35 +166,6 @@ void InverseKinematics::updateBonePosition(BoneNode *targetBone) {
 	
 	//Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 	//Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
-}
-
-Kore::mat4 InverseKinematics::quaternionToMatrix(Kore::vec4 quat) {
-	Kore::mat4 rot = Kore::mat4::Identity();
-	
-	float qx = quat.x();
-	float qy = quat.y();
-	float qz = quat.z();
-	float qw = quat.w();
-	
-	vec3 term = vec3(1 - 2*qy*qy - 2*qz*qz, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw);
-	term = term.normalize();
-	rot.Set(0, 0, term.x());
-	rot.Set(0, 1, term.y());
-	rot.Set(0, 2, term.z());
-	
-	term = vec3(2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw);
-	term = term.normalize();
-	rot.Set(1, 0, term.x());
-	rot.Set(1, 1, term.y());
-	rot.Set(1, 2, term.z());
-	
-	term = vec3(2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy);
-	term = term.normalize();
-	rot.Set(2, 0, term.x());
-	rot.Set(2, 1, term.y());
-	rot.Set(2, 2, term.z());
-	
-	return rot;
 }
 
 float InverseKinematics::getRadians(float degree) {
@@ -259,17 +232,4 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;
 	
-}
-
-Kore::vec3 InverseKinematics::getAngles(Kore::mat4 rot) {
-	float roll = Kore::atan2(rot.get(2,1), rot.get(2,2));
-	float pitch = Kore::atan2(-rot.get(2,0), sqrt(rot.get(2,1)*rot.get(2,1) + rot.get(2,2)*rot.get(2,2)));
-	float yaw = Kore::atan2(rot.get(1,0), rot.get(0,0));
-	
-	/*float s = 0.5f * (rMat.Trace() + 1);
-	 float roll = s * (rMat.get(2, 1) - rMat.get(1, 2));
-	 float pitch = s * (rMat.get(0, 2) - rMat.get(2, 0));
-	 float yaw = s * (rMat.get(1, 0) - rMat.get(0, 1));*/
-	
-	return vec3(roll, pitch, yaw);
 }

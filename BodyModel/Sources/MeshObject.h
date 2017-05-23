@@ -5,6 +5,7 @@
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Graphics2/Graphics.h>
 #include <Kore/Graphics4/Texture.h>
+#include <Kore/Math/Quaternion.h>
 
 #include "InverseKinematics.h"
 
@@ -75,7 +76,7 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	Kore::vec4 rotation;
+	Kore::Quaternion quaternion;
 	Kore::vec4 desiredPos;
 	
 	bool initialized = false;
@@ -88,7 +89,7 @@ struct BoneNode {
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),
-				 rotation(Kore::vec4(0, 0, 0, 1)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
+				quaternion(Kore::Quaternion(0, 0, 0, 1)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
 };
 
 struct CompareBones {
