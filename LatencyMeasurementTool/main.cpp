@@ -14,7 +14,7 @@ using namespace std;
 ( std::ostringstream() << std::dec << x ) ).str()
 
 vector<Point2f> getPositions(vector<Rect2d> objects) {
-	vector<Point2f> positions(2);
+	vector<Point2f> positions;
 	
 	for(unsigned i = 0; i < objects.size(); ++i) {
 		Rect2d obj = objects[i];
@@ -31,9 +31,6 @@ vector<Point2f> getPositions(vector<Rect2d> objects) {
 
 int main(int argc, const char * argv[]) {
 	
-	// Initialise Latency Tool
-	LatencyTool* latency = new LatencyTool();
-	
 	// List of tracker types in OpenCV 3.2
 	const char *types[] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW"};
 	vector <string> trackerTypes(types, std::end(types));
@@ -47,6 +44,11 @@ int main(int argc, const char * argv[]) {
 	
 	// Read video
 	VideoCapture video("videos/video1.mov");
+	
+	double fps = video.get(CV_CAP_PROP_FPS);
+	
+	// Initialise Latency Tool
+	LatencyTool* latency = new LatencyTool(fps);
 	
 	// Exit if video is not opened
 	if(!video.isOpened()) {
@@ -86,11 +88,14 @@ int main(int argc, const char * argv[]) {
 				rectangle(frame, trackers.objects[i], Scalar( 255, 0, 0 ), 2, 1 );
 			
 			// Retrieve a vector of points with the (x,y) location of the objects
-			vector<Point2f> points = getPositions(trackers.objects);
+			vector<Point2f> positions = getPositions(trackers.objects);
 			
 			// Draw the center of the bounding boxes
-			for(unsigned i = 0; i < points.size(); ++i)
-				circle(frame, points[i], 1, Scalar( 0, 0, 255 ), 2, 1 );
+			for(unsigned i = 0; i < positions.size(); ++i)
+				circle(frame, positions[i], 1, Scalar( 0, 0, 255 ), 2, 1 );
+			
+			//int currentFrameNum = video.get(CV_CAP_PROP_POS_FRAMES);
+			latency->updatePositions(positions);
 			
 		} else {
 			// Tracking failure detected.
@@ -106,11 +111,23 @@ int main(int argc, const char * argv[]) {
 		// Display frame.
 		imshow("Tracking", frame);
 		
-		// Exit if ESC pressed.
 		int k = waitKey(1);
+		
 		if(k == 27) {
+			// Exit if ESC pressed.
 			break;
 		}
+		
+		if(k == 112) {
+			// P
+			latency->plotPositionsGraph();
+		}
+		if(k == 118) {
+			// V
+			latency->plotVelocityGraph();
+		}
+		
+		if (k != 255) cout << "Key pressed " << k << endl;
 		
 	}
  
