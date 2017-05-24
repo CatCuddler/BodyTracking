@@ -24,6 +24,7 @@ private:
 	static const int maxBones = 8;
 	typedef Matrix<3, maxBones, float> mat3x;
 	typedef Matrix<3, 1, float> mat3x1;
+	typedef Matrix<1, maxBones, float> mat1x;
 	
 	void setJointConstraints();
 	

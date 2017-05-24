@@ -76,7 +76,10 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
+	float time = 0;
+	
 	Kore::Quaternion quaternion;
+	Kore::Quaternion desQuaternion;
 	Kore::vec4 desiredPos;
 	
 	bool initialized = false;
@@ -89,7 +92,7 @@ struct BoneNode {
 	
 	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),
-				quaternion(Kore::Quaternion(0, 0, 0, 1)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
+				quaternion(Kore::Quaternion(0, 0, 0, 1)), desQuaternion(Kore::Quaternion(0, 0, 0, 1)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
 };
 
 struct CompareBones {
@@ -107,7 +110,8 @@ public:
 	
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec4 desiredPos);
-	void animate(Kore::Graphics4::TextureUnit tex);
+	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
+	void quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res);
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	

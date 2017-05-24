@@ -19,6 +19,7 @@ namespace {
 	const int height = 768;
 	
 	double startTime;
+	double lastTime;
 	
 	VertexStructure structure;
 	Shader* vertexShader;
@@ -50,6 +51,8 @@ namespace {
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
+		double deltaT = t - lastTime;
+		lastTime = t;
 		
 		const float speed = 0.5;
 		if (left) {
@@ -94,7 +97,7 @@ namespace {
 		/*avatar->setAnimation(frame);
 		frame++;
 		if (frame > 200) frame = 0;*/
-		avatar->animate(tex);
+		avatar->animate(tex, deltaT);
 		
 		angle += 0.05f;
 		float radius = 2;

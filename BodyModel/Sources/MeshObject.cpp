@@ -268,7 +268,24 @@ void MeshObject::setDesiredPosition(int boneIndex, Kore::vec4 position) {
 	invKin->inverseKinematics(position, bone);
 }
 
-void MeshObject::animate(TextureUnit tex) {
+void MeshObject::animate(TextureUnit tex, float deltaTime) {
+	
+	// Interpolate
+	/*for (int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones.at(i);
+		
+		if (bone->quaternion != bone->desQuaternion) {
+			bone->time += deltaTime;
+			if (bone->time > 1) bone->time = 0;
+			
+			Kore::Quaternion resQuat;
+			quatSlerp(&bone->quaternion, &bone->desQuaternion, bone->time, &resQuat);
+			bone->quaternion = resQuat;
+			
+			Kore::mat4 rotMat = resQuat.matrix().Transpose();
+			bone->local = bone->transform * rotMat;
+		}
+	}*/
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
@@ -335,6 +352,43 @@ void MeshObject::animate(TextureUnit tex) {
 		Graphics4::setIndexBuffer(*indexBuffer);
 		Graphics4::drawIndexedVertices();
 	}
+}
+
+void MeshObject::quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res) {
+	float to1[4];
+	double omega, cosom, sinom, scale0, scale1;
+	// calc cosine
+	cosom = from->x * to->x + from->y * to->y + from->z * to->z + from->w * to->w;
+	// adjust signs (if necessary)
+	if ( cosom <0.0 ){ cosom = -cosom; to1[0] = - to->x;
+		to1[1] = - to->y;
+		to1[2] = - to->z;
+		to1[3] = - to->w;
+	} else  {
+		to1[0] = to->x;
+		to1[1] = to->y;
+		to1[2] = to->z;
+		to1[3] = to->w;
+	}
+	// calculate coefficients
+	float DELTA = 0.9995;
+	if ( (1.0 - cosom) > DELTA ) {
+		// standard case (slerp)
+		omega = acos(cosom);
+		sinom = sin(omega);
+		scale0 = sin((1.0 - t) * omega) / sinom;
+		scale1 = sin(t * omega) / sinom;
+	} else {
+		// "from" and "to" quaternions are very close
+		//  ... so we can do a linear interpolation
+		scale0 = 1.0 - t;
+		scale1 = t;
+	}
+	// calculate final values
+	res->x = scale0 * from->x + scale1 * to1[0];
+	res->y = scale0 * from->y + scale1 * to1[1];
+	res->z = scale0 * from->z + scale1 * to1[2];
+	res->w = scale0 * from->w + scale1 * to1[3];
 }
 
 void MeshObject::LoadObj(const char* filename) {
@@ -645,11 +699,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	bone->transform = getMatrix4x4(transform);
 	bone->transformInv = bone->transform.Invert();
 	bone->local = bone->transform;
-	
-	/*float roll = Kore::atan2(bone->local.get(2,1), bone->local.get(2,2));
-	float pitch = Kore::atan2(-bone->local.get(2,0), sqrt(bone->local.get(2,1)*bone->local.get(2,1) + bone->local.get(2,2)*bone->local.get(2,2)));
-	float yaw = Kore::atan2(bone->local.get(1,0), bone->local.get(0,0));
-	bone->rotation = vec3(roll, pitch, yaw);*/
 	
 	// Get node animation
 	subStructure = structure.GetFirstSubstructure(OGEX::kStructureAnimation);

@@ -55,9 +55,9 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		// Calculate the angles
 		InverseKinematics::mat3x1 V;
 		V.Set(0, 0, dif.x()); V.Set(1, 0, dif.y()); V.Set(2, 0, dif.z());
-		auto aThetaX = pseudoInvX * V.Transpose();
-		auto aThetaY = pseudoInvY * V.Transpose();
-		auto aThetaZ = pseudoInvZ * V.Transpose();
+		InverseKinematics::mat1x aThetaX = pseudoInvX * V.Transpose();
+		InverseKinematics::mat1x aThetaY = pseudoInvY * V.Transpose();
+		InverseKinematics::mat1x aThetaZ = pseudoInvZ * V.Transpose();
 		
 		std::vector<float> theta;
 		for (int i = 0; i < maxBones; ++i) {
@@ -76,30 +76,31 @@ InverseKinematics::mat3x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 	
 	InverseKinematics::mat3x jacobian;
 	
-	Kore::vec4 orn = targetBone->combined * Kore::vec4(0, 0, 0, 1);
+	// Get current position of the end-effector
+	Kore::vec4 opn = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 	
-	int i = 0;
+	int j = 0;
 	while (targetBone->nodeIndex != rootIndex) {
 		BoneNode* bone = targetBone;
 		
-		// Get rotation and position vector
-		Kore::vec4 ai = Kore::vec4(0, 0, 0, 0);
-		Kore::vec4 ri = bone->combined * Kore::vec4(0, 0, 0, 1);
+		// Get rotation and position vector of the current bone
+		Kore::vec4 oaj = Kore::vec4(0, 0, 0, 0);
+		Kore::vec4 opj = bone->combined * Kore::vec4(0, 0, 0, 1);
 		
 		Kore::vec4 axes = bone->axes;
 		if ((axes.x() == 1 && axes.x() == rotAxis.x()) || (axes.y() == 1 && axes.y() == rotAxis.y()) || (axes.z() == 1 && axes.z() == rotAxis.z())) {
-			ai = bone->combined * rotAxis;
+			oaj = bone->combined * rotAxis;
 		}
 		
 		// Calculate cross product
-		Kore::vec4 cross = ai.cross(orn - ri);
+		Kore::vec4 cross = oaj.cross(opn - opj);
 		
-		jacobian[i][0] = cross.x();
-		jacobian[i][1] = cross.y();
-		jacobian[i][2] = cross.z();
+		jacobian[j][0] = cross.x();
+		jacobian[j][1] = cross.y();
+		jacobian[j][2] = cross.z();
 		
 		targetBone = targetBone->parent;
-		++i;
+		++j;
 	}
 	
 	return jacobian;
@@ -129,27 +130,27 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		radZ = getRadians(radZ);
 		
 		Kore::vec4 rot(radX, radY, radZ, 0);
-		bone->quaternion.x += radX;
-		bone->quaternion.y += radY;
-		bone->quaternion.z += radZ;
+		bone->desQuaternion.x += radX;
+		bone->desQuaternion.y += radY;
+		bone->desQuaternion.z += radZ;
 		
 		Kore::vec4 axis = bone->axes;
 		if (axis.x() == 1) {
-			if (bone->quaternion.x < bone->constrain.at(0).x()) bone->quaternion.x = bone->constrain.at(0).x();
-			if (bone->quaternion.x > bone->constrain.at(0).y()) bone->quaternion.x = bone->constrain.at(0).y();
+			if (bone->desQuaternion.x < bone->constrain.at(0).x()) bone->desQuaternion.x = bone->constrain.at(0).x();
+			if (bone->desQuaternion.x > bone->constrain.at(0).y()) bone->desQuaternion.x = bone->constrain.at(0).y();
 		}
 		if (axis.y() == 1) {
-			if (bone->quaternion.y < bone->constrain.at(1).x()) bone->quaternion.y = bone->constrain.at(1).x();
-			if (bone->quaternion.y > bone->constrain.at(1).y()) bone->quaternion.y = bone->constrain.at(1).y();
+			if (bone->desQuaternion.y < bone->constrain.at(1).x()) bone->desQuaternion.y = bone->constrain.at(1).x();
+			if (bone->desQuaternion.y > bone->constrain.at(1).y()) bone->desQuaternion.y = bone->constrain.at(1).y();
 		}
 		if (axis.z() == 1) {
-			if (bone->quaternion.z < bone->constrain.at(2).x()) bone->quaternion.z = bone->constrain.at(2).x();
-			if (bone->quaternion.z > bone->constrain.at(2).y()) bone->quaternion.z = bone->constrain.at(2).y();
+			if (bone->desQuaternion.z < bone->constrain.at(2).x()) bone->desQuaternion.z = bone->constrain.at(2).x();
+			if (bone->desQuaternion.z > bone->constrain.at(2).y()) bone->desQuaternion.z = bone->constrain.at(2).y();
 		}
 		
 		// T * R * S
-		bone->quaternion.normalize();
-		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
+		bone->desQuaternion.normalize();
+		Kore::mat4 rotMat = bone->desQuaternion.matrix().Transpose();
 		bone->local = bone->transform * rotMat;
 		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
 		
