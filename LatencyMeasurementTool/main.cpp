@@ -2,6 +2,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 
+#include "LatencyTool.h"
+
 #include <iostream>
 
 using namespace cv;
@@ -11,7 +13,27 @@ using namespace std;
 #define SSTR( x ) static_cast< std::ostringstream & >( \
 ( std::ostringstream() << std::dec << x ) ).str()
 
+vector<Point2f> getPositions(vector<Rect2d> objects) {
+	vector<Point2f> positions(2);
+	
+	for(unsigned i = 0; i < objects.size(); ++i) {
+		Rect2d obj = objects[i];
+		float xPos = obj.x + obj.width/2.0f;
+		float yPos = obj.y + obj.height/2.0f;
+		Point2f pos(xPos, yPos);
+		
+		//cout << "Pos of the object " << i << ": (" << pos.x << "," << pos.y << ")" << endl;
+		positions.push_back(pos);
+	}
+	
+	return positions;
+}
+
 int main(int argc, const char * argv[]) {
+	
+	// Initialise Latency Tool
+	LatencyTool* latency = new LatencyTool();
+	
 	// List of tracker types in OpenCV 3.2
 	const char *types[] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW"};
 	vector <string> trackerTypes(types, std::end(types));
@@ -62,6 +84,14 @@ int main(int argc, const char * argv[]) {
 			// Tracking success : Draw the tracked object
 			for(unsigned i = 0; i < trackers.objects.size(); ++i)
 				rectangle(frame, trackers.objects[i], Scalar( 255, 0, 0 ), 2, 1 );
+			
+			// Retrieve a vector of points with the (x,y) location of the objects
+			vector<Point2f> points = getPositions(trackers.objects);
+			
+			// Draw the center of the bounding boxes
+			for(unsigned i = 0; i < points.size(); ++i)
+				circle(frame, points[i], 1, Scalar( 0, 0, 255 ), 2, 1 );
+			
 		} else {
 			// Tracking failure detected.
 			putText(frame, "Tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,255),2);
