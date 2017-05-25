@@ -8,7 +8,6 @@ using namespace std;
 class LatencyTool {
 
 private:
-	
 	int fps;
 	float width;
 	float height;
@@ -16,17 +15,16 @@ private:
 	Mat posDataObj0;
 	Mat posDataObj1;
 	
-	void plot(Mat data);
-
+	void plotLine(Mat& image, const Mat& mat, Scalar color);
+	void plotCircle(Mat& image, const vector<Point2f>& vector);
 	
 public:
 	LatencyTool(int fps, float width, float height);
 	void updatePositions(Point2f point0, Point2f point1);
 	
-	vector<Point2i> findPositionPeaks(Mat posDataObj);
+	vector<Point2f> findPositionPeaks(Mat posDataObj);
 	
 	// Plot functions
 	void plotPositionsGraph();
-	void plotVelocityGraph();
 	
 };

@@ -12,38 +12,35 @@ LatencyTool::LatencyTool(int fps, float width, float height) : fps(fps), width(w
 
 void LatencyTool::updatePositions(Point2f point0, Point2f point1) {
 
-	Mat row0 = (Mat_<double>(1,2) << point0.x, point0.y);
+	Mat row0 = (Mat_<float>(1,2) << point0.x, point0.y);
 	posDataObj0.push_back(row0);
 	
-	Mat row1 = (Mat_<double>(1,2) << point1.x, point1.y);
+	Mat row1 = (Mat_<float>(1,2) << point1.x, point1.y);
 	posDataObj1.push_back(row1);
 	
 }
 
-vector<Point2i> LatencyTool::findPositionPeaks(Mat posDataObj) {
-	
+vector<Point2f> LatencyTool::findPositionPeaks(Mat posDataObj) {
 	Mat data;
 	for (int i = 0; i < posDataObj.rows; ++i) {
-		Mat row = (Mat_<float>(1,1,CV_32F) << posDataObj.at<double>(i, 0));
+		Mat row = (Mat_<float>(1,1,CV_32F) << posDataObj.at<float>(i, 0));
 		data.push_back(row);
 		//cout << " " << row << endl;
 	}
 	
-	//Mat data = (Mat_<float>(1,10,CV_32F) << 0, -1, -20, -1, 0, 1, 2, 30, 2, 0, -1);
-
 	Peak* peak = new Peak();
 	Mat minMax;
 	peak->findPeaks(data, minMax);
 	
-	vector<Point2i> peakPos;
+	vector<Point2f> peaks;
 	cout << "Peak count: " << minMax.rows << endl;
 	for (int i = 0; i < minMax.rows; ++i) {
 		Point2i pos(minMax.at<int>(i, 0), minMax.at<int>(i, 1));
-		cout << "peak " << minMax.row(i) << endl;
-		peakPos.push_back(pos);
+		Point2f peak(pos.y, posDataObj.at<float>(pos.y, 0));
+		//cout << "Peak pos" << minMax.row(i) << " Peak " << peak << endl;
+		peaks.push_back(peak);
 	}
-	return peakPos;
-
+	return peaks;
 }
 
 
@@ -65,140 +62,38 @@ void LatencyTool::plotPositionsGraph() {
 	
 	
 	// Plot positions for the first object
-	for (int i = 1; i < posDataObj0.rows; ++i) {
-		Point2d lastPosition(i-1, posDataObj0.at<double>(i-1, 0));
-		Point2d currentPosition(i, posDataObj0.at<double>(i, 0));
-		
-		//cout << "Last Pos: " << lastPosition << " Current Pos: " << currentPosition << endl;
-		line(image, lastPosition, currentPosition, Scalar(0,0,255), 1, 1);
-	}
+	plotLine(image, posDataObj0, Scalar(0,0,255));
 	
 	// Get peaks for the first object
-	vector<Point2i> peakPos = findPositionPeaks(posDataObj0);
-	
-	for (int i = 0; i < peakPos.size(); ++i) {
-		Point2i pos = peakPos.at(i);
-		Point2d peak(pos.y, posDataObj0.at<double>(pos.y, 0));
-		cout << "pos " << pos << " peak " << peak << endl;
-		
-		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
-	}
+	vector<Point2f> peaks = findPositionPeaks(posDataObj0);
+	plotCircle(image, peaks);
 	
 	
 	// Plot positions for the second object
-	for (int i = 1; i < posDataObj1.rows; ++i) {
-		Point2d lastPosition(i-1, posDataObj1.at<double>(i-1, 0));
-		Point2d currentPosition(i, posDataObj1.at<double>(i, 0));
-		
-		//cout << "Last Pos: " << lastPosition << " Current Pos: " << currentPosition << endl;
-		line(image, lastPosition, currentPosition, Scalar(0,255,0), 1, 1);
-	}
+	plotLine(image, posDataObj1, Scalar(0,255,0));
 	
 	// Get peaks for the second object
-	peakPos = findPositionPeaks(posDataObj1);
-	
-	for (int i = 0; i < peakPos.size(); ++i) {
-		Point2i pos = peakPos.at(i);
-		Point2d peak(pos.y, posDataObj1.at<double>(pos.y, 0));
-		cout << "pos " << pos << " peak " << peak << endl;
-		
-		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
-	}
+	peaks = findPositionPeaks(posDataObj1);
+	plotCircle(image, peaks);
 	
 	
 	imshow("plot0", image);
 }
 
-
-/*void LatencyTool::plotPositionsGraph() {
-	
-	// Plot positions for the first object
-	Mat data;
-	for (int i = 0; i < posDataObj0.rows; ++i) {
-		Mat row = (Mat_<double>(1,2,CV_64F) << i, posDataObj0.at<double>(i, 0));
-		data.push_back(row);
-		cout << "row " << row << endl;
-	}
-	
-	Mat plot_result0;
-	Ptr<plot::Plot2d> plot;
-	plot = plot::createPlot2d(data.col(0), data.col(1));
-	plot->setNeedPlotLine(true);
-	plot->setPlotLineColor(Scalar(0,0,255));
-	plot->render(plot_result0);
-	
-	// Get peaks for the first object
-	vector<Point2i> peakPos = findPositionPeaks();
-	
-	// Create black empty images
-	Mat peaks;
-	cout << "Peaks detected: " << peakPos.size() << endl;
-	for (int i = 0; i < peakPos.size(); ++i) {
-		Point2i pos = peakPos.at(i);
-		Mat row = data.row(pos.y);
-		Point2f peak(row.at<double>(0,0), row.at<double>(0,1));
-		cout << "peak " << peak << endl;
-		//drawMarker(peak_result, peak, Scalar(0,0,255), MARKER_STAR, 10, 1);
-		
-		peaks.push_back(row);
-	}
-	
-	//plot = plot::createPlot2d(peaks.col(1));
-	//plot->setPlotLineColor(Scalar(255,0,0));
-	//plot->render(plot_result0);
-	
-	
-	// Plot positions for the second object
-	data.release();
-	for (int i = 0; i < posDataObj1.rows; ++i) {
-		Mat row = (Mat_<double>(1,2,CV_64F) << i, posDataObj1.at<double>(i, 0));
-		data.push_back(row);
-	}
-	
-	Mat plot_result1;
-	plot = plot::createPlot2d(data.col(0), data.col(1));
-	plot->render(plot_result1);
-	
-	//for (int i = 0; i < data.rows; ++i) {
-	//	cout << " " << data.row(i) << endl;
-	//}
-
-	// Show the plot
-	imshow("plot0", plot_result0);
-	//imshow("plot1", plot_result1);
-	
-	
-}*/
-
-void LatencyTool::plotVelocityGraph() {
-	
-	Mat data;
-	
-	for (int i = 1; i < posDataObj0.rows; ++i) {
-		Point2d lastPosition(posDataObj0.at<double>(i-1, 0), posDataObj0.at<double>(i-1, 1));
-		Point2d currentPosition(posDataObj0.at<double>(i, 0), posDataObj0.at<double>(i, 1));
+void LatencyTool::plotLine(Mat& image, const Mat& mat, Scalar color) {
+	for (int i = 1; i < mat.rows; ++i) {
+		Point2d lastPosition(i-1, mat.at<float>(i-1, 0));
+		Point2d currentPosition(i, mat.at<float>(i, 0));
 		
 		//cout << "Last Pos: " << lastPosition << " Current Pos: " << currentPosition << endl;
-		
-		float dist = sqrt((lastPosition.x - currentPosition.x) * (lastPosition.x - currentPosition.x) + (lastPosition.y - currentPosition.y) * (lastPosition.y - currentPosition.y));
-		float velocity = dist/fps;
-		
-		Mat row;
-		row.create(1, 1, CV_64F);
-		row.at<double>(0) = velocity;
-		data.push_back(row);
+		line(image, lastPosition, currentPosition, color, 1, 1);
 	}
-	
-	plot(data);
 }
 
-void LatencyTool::plot(Mat data) {
-	Mat plot_result;
-	
-	Ptr<plot::Plot2d> plot;
-	plot = plot::createPlot2d(data);
-	plot->render(plot_result);
-	
-	// Show the plot
-	imshow("plot", plot_result);
+void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
+	for (int i = 0; i < vector.size(); ++i) {
+		Point2f peak = vector.at(i);
+		//cout << " Peak " << peak << endl;
+		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
+	}
 }

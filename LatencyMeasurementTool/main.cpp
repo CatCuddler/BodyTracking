@@ -125,10 +125,6 @@ int main(int argc, const char * argv[]) {
 			// P
 			latency->plotPositionsGraph();
 		}
-		if(k == 118) {
-			// V
-			latency->plotVelocityGraph();
-		}
 		
 		if (k != 255) cout << "Key pressed " << k << endl;
 		
