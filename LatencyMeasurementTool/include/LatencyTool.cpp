@@ -6,7 +6,7 @@
 
 #include "Peak.h"
 
-LatencyTool::LatencyTool(int fps) : fps(fps) {
+LatencyTool::LatencyTool(int fps, float width, float height) : fps(fps), width(width), height(height) {
 	
 }
 
@@ -20,12 +20,11 @@ void LatencyTool::updatePositions(Point2f point0, Point2f point1) {
 	
 }
 
-vector<Point2i> LatencyTool::findPositionPeaks() {
+vector<Point2i> LatencyTool::findPositionPeaks(Mat posDataObj) {
 	
 	Mat data;
-	for (int i = 0; i < posDataObj0.rows; ++i) {
-		Mat row = (Mat_<float>(1,1,CV_32F) << posDataObj0.at<double>(i, 0));
-		//Mat row = (Mat_<float>(1,2,CV_32F) << i, posDataObj0.at<double>(i, 0));
+	for (int i = 0; i < posDataObj.rows; ++i) {
+		Mat row = (Mat_<float>(1,1,CV_32F) << posDataObj.at<double>(i, 0));
 		data.push_back(row);
 		//cout << " " << row << endl;
 	}
@@ -33,14 +32,14 @@ vector<Point2i> LatencyTool::findPositionPeaks() {
 	//Mat data = (Mat_<float>(1,10,CV_32F) << 0, -1, -20, -1, 0, 1, 2, 30, 2, 0, -1);
 
 	Peak* peak = new Peak();
-	Mat maxima;
-	peak->findPeaks(data, maxima);
+	Mat minMax;
+	peak->findPeaks(data, minMax);
 	
 	vector<Point2i> peakPos;
-	cout << "peak num " << maxima.rows << endl;
-	for (int i = 0; i < maxima.rows; ++i) {
-		Point2i pos(maxima.at<int>(i, 0), maxima.at<int>(i, 1));
-		cout << "peak " << maxima.row(i) << " " << pos.x << " " << pos.y << endl;
+	cout << "Peak count: " << minMax.rows << endl;
+	for (int i = 0; i < minMax.rows; ++i) {
+		Point2i pos(minMax.at<int>(i, 0), minMax.at<int>(i, 1));
+		cout << "peak " << minMax.row(i) << endl;
 		peakPos.push_back(pos);
 	}
 	return peakPos;
@@ -49,11 +48,8 @@ vector<Point2i> LatencyTool::findPositionPeaks() {
 
 
 void LatencyTool::plotPositionsGraph() {
-	
-	// Plot positions for the first object
-	
 	// Create black empty images
-	Mat image(500, 500, CV_8UC3, Scalar(255,255,255));
+	Mat image(height, width, CV_8UC3, Scalar(255,255,255));
 	
 	// Draw grid
 	int dist = 100;
@@ -68,6 +64,7 @@ void LatencyTool::plotPositionsGraph() {
 		line(image, Point(i,0), Point(i,height), Scalar(0,0,0), 1, 1);
 	
 	
+	// Plot positions for the first object
 	for (int i = 1; i < posDataObj0.rows; ++i) {
 		Point2d lastPosition(i-1, posDataObj0.at<double>(i-1, 0));
 		Point2d currentPosition(i, posDataObj0.at<double>(i, 0));
@@ -77,10 +74,8 @@ void LatencyTool::plotPositionsGraph() {
 	}
 	
 	// Get peaks for the first object
-	vector<Point2i> peakPos = findPositionPeaks();
+	vector<Point2i> peakPos = findPositionPeaks(posDataObj0);
 	
-	// Create black empty images
-	cout << "Peaks detected: " << peakPos.size() << endl;
 	for (int i = 0; i < peakPos.size(); ++i) {
 		Point2i pos = peakPos.at(i);
 		Point2d peak(pos.y, posDataObj0.at<double>(pos.y, 0));
@@ -88,6 +83,28 @@ void LatencyTool::plotPositionsGraph() {
 		
 		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
 	}
+	
+	
+	// Plot positions for the second object
+	for (int i = 1; i < posDataObj1.rows; ++i) {
+		Point2d lastPosition(i-1, posDataObj1.at<double>(i-1, 0));
+		Point2d currentPosition(i, posDataObj1.at<double>(i, 0));
+		
+		//cout << "Last Pos: " << lastPosition << " Current Pos: " << currentPosition << endl;
+		line(image, lastPosition, currentPosition, Scalar(0,255,0), 1, 1);
+	}
+	
+	// Get peaks for the second object
+	peakPos = findPositionPeaks(posDataObj1);
+	
+	for (int i = 0; i < peakPos.size(); ++i) {
+		Point2i pos = peakPos.at(i);
+		Point2d peak(pos.y, posDataObj1.at<double>(pos.y, 0));
+		cout << "pos " << pos << " peak " << peak << endl;
+		
+		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
+	}
+	
 	
 	imshow("plot0", image);
 }

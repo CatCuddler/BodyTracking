@@ -45,17 +45,19 @@ int main(int argc, const char * argv[]) {
 	// Read video
 	VideoCapture video("videos/video1.mov");
 	
-	double fps = video.get(CV_CAP_PROP_FPS);
-	
-	// Initialise Latency Tool
-	LatencyTool* latency = new LatencyTool(fps);
-	//vector<Point2i> peakPos = latency->findPositionPeaks();
-	
 	// Exit if video is not opened
 	if(!video.isOpened()) {
 		cout << "Could not read video file" << endl;
 		return 1;
 	}
+	
+	float width = video.get(CV_CAP_PROP_FRAME_WIDTH);
+	float height = video.get(CV_CAP_PROP_FRAME_HEIGHT);
+	double fps = video.get(CV_CAP_PROP_FPS);
+	
+	// Initialise Latency Tool
+	LatencyTool* latency = new LatencyTool(fps, width, height);
+	//vector<Point2i> peakPos = latency->findPositionPeaks();
 	
 	// Read first frame
 	Mat frame;

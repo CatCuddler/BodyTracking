@@ -55,7 +55,6 @@ void Peak::findPeaks(InputArray _src, OutputArray _idx, const float scale, const
 	
 	Mat mask;
 	compare(maxMask, minMask, mask, CMP_NE);
-	cout << " " << maxMask << " " << minMask << " " << mask << endl;
 	
 	vector<Point> maxima;   // output, locations of non-zero pixels
 	cv::findNonZero(mask, maxima);
@@ -65,7 +64,7 @@ void Peak::findPeaks(InputArray _src, OutputArray _idx, const float scale, const
 		float val = hist.at<float>(/*pnt.x, */pnt.y);
 		//float val = hist.at<float>(/*pnt.x, */pnt.x);
 		
-		cout << " pnt " << pnt<< " val " << val << " max_val*scale " << max_val * scale << endl;
+		//cout << " pnt " << pnt<< " val " << val << " max_val*scale " << max_val * scale << endl;
 		
 		// filter peaks
 		if (val > max_val * scale)
