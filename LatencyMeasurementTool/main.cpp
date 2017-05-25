@@ -126,9 +126,20 @@ int main(int argc, const char * argv[]) {
 			latency->plotPositionsGraph();
 		}
 		
+		if (k == 108) {
+			// L
+			int frames = latency->countFrames();
+			float ms = frames*1/fps;
+			cout << "Frames: " << frames << " ms: " << ms << endl;
+		}
+		
 		if (k != 255) cout << "Key pressed " << k << endl;
 		
 	}
+	
+	int frames = latency->countFrames();
+	float ms = frames*1/fps;
+	cout << "Frames: " << frames << " ms: " << ms << endl;
  
 	return 0;
 }

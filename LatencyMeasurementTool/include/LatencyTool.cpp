@@ -97,3 +97,29 @@ void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
 		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
 	}
 }
+
+int LatencyTool::countFrames() {
+	vector<Point2f> peaks0 = findPositionPeaks(posDataObj0);
+	vector<Point2f> peaks1 = findPositionPeaks(posDataObj1);
+	
+	CV_Assert(peaks0.size() == peaks1.size());
+	
+	int avrFrames = 0;
+	
+	for (int i = 0; i < peaks0.size(); ++i) {
+		Point2f peak = peaks0.at(i);
+		int frame0 = peak.x;
+		
+		peak = peaks1.at(i);
+		int frame1 = peak.x;
+		
+		//cout << "frame0: " << frame0 << " frame1: " << frame1 << endl;
+		
+		int diff = frame1 - frame0;
+		avrFrames += diff;
+	}
+	
+	avrFrames = avrFrames/peaks0.size();
+	
+	return avrFrames;
+}

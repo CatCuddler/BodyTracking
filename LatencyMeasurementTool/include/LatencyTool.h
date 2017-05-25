@@ -27,4 +27,6 @@ public:
 	// Plot functions
 	void plotPositionsGraph();
 	
+	int countFrames();
+	
 };
