@@ -98,13 +98,13 @@ void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
 	}
 }
 
-int LatencyTool::countFrames() {
+float LatencyTool::countFrames() {
 	vector<Point2f> peaks0 = findPositionPeaks(posDataObj0);
 	vector<Point2f> peaks1 = findPositionPeaks(posDataObj1);
 	
 	CV_Assert(peaks0.size() == peaks1.size());
 	
-	int avrFrames = 0;
+	float avrFrames = 0;
 	
 	for (int i = 0; i < peaks0.size(); ++i) {
 		Point2f peak = peaks0.at(i);

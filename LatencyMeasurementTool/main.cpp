@@ -137,9 +137,13 @@ int main(int argc, const char * argv[]) {
 		
 	}
 	
-	int frames = latency->countFrames();
+	float frames = latency->countFrames();
 	float ms = frames*1/fps;
 	cout << "Frames: " << frames << " ms: " << ms << endl;
+	
+	latency->plotPositionsGraph();
+	
+	waitKey(0);
  
 	return 0;
 }
