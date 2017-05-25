@@ -95,7 +95,7 @@ int main(int argc, const char * argv[]) {
 				circle(frame, positions[i], 1, Scalar( 0, 0, 255 ), 2, 1 );
 			
 			//int currentFrameNum = video.get(CV_CAP_PROP_POS_FRAMES);
-			latency->updatePositions(positions);
+			latency->updatePositions(positions[0], positions[1]);
 			
 		} else {
 			// Tracking failure detected.

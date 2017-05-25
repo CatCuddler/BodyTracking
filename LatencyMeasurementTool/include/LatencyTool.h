@@ -11,18 +11,15 @@ private:
 	
 	int fps;
 	
-	vector<Point2f> positionsObj0;
-	vector<Point2f> positionsObj1;
-	
-	Mat posDataX;
-	Mat posDataY;
+	Mat posDataObj0;
+	Mat posDataObj1;
 	
 	void plot(Mat data);
 
 	
 public:
 	LatencyTool(int fps);
-	void updatePositions(vector<Point2f> positions);
+	void updatePositions(Point2f point0, Point2f point1);
 	
 	// Plot functions
 	void plotPositionsGraph();
