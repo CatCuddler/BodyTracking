@@ -21,6 +21,8 @@ public:
 	LatencyTool(int fps);
 	void updatePositions(Point2f point0, Point2f point1);
 	
+	vector<Point2i> findPositionPeaks();
+	
 	// Plot functions
 	void plotPositionsGraph();
 	void plotVelocityGraph();

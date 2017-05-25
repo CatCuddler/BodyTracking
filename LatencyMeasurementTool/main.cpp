@@ -49,6 +49,7 @@ int main(int argc, const char * argv[]) {
 	
 	// Initialise Latency Tool
 	LatencyTool* latency = new LatencyTool(fps);
+	//vector<Point2i> peakPos = latency->findPositionPeaks();
 	
 	// Exit if video is not opened
 	if(!video.isOpened()) {
