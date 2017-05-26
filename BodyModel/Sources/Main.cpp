@@ -105,6 +105,9 @@ namespace {
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
 
+			// Set initial position
+			avatar->M *= mat4::Translation(hmdPos.x(), -hmdPos.y(), 0);
+
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
 			scaleCharacter = true;
