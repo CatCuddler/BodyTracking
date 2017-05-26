@@ -115,6 +115,8 @@ public:
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	
+	float getHeight();
+	void setScale(float scaleFactor);
 	Kore::mat4 M;
 	
 private:
@@ -122,6 +124,7 @@ private:
 	
 	long meshesCount;
 	float scale;
+	float currentHeight;
 	const Kore::Graphics4::VertexStructure& structure;
 	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;

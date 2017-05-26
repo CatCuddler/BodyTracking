@@ -82,7 +82,7 @@ namespace {
 		}
 	 }*/
 	
-	int getIndexFromString(const char* name, int ignore) {
+	unsigned int getIndexFromString(const char* name, int ignore) {
 		const char* num = name + ignore;
 		std::stringstream strValue;
 		strValue << num;
@@ -130,6 +130,7 @@ namespace {
 		
 		return vec2(nPos.x(), nPos.y());
 	}
+
 	
 }
 
@@ -143,6 +144,18 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	std::sort(meshes.begin(), meshes.end(), CompareMesh());
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
+
+	// Update bones
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+
+	if (bones.size() > 0) {
+		// Get the highest position
+		BoneNode* head = bones.at(46 - 1);
+		vec4 position = head->combined *vec4(0, 0, 0, 1);
+		currentHeight = position.z();
+		
+		invKin = new InverseKinematics(bones);
+	}
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes.at(j);
@@ -186,10 +199,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		log(Info, "Load Texture %s", temp);
 		Texture* image = new Texture(temp, true);
 		images.push_back(image);
-	}
-	
-	if (bones.size() > 0) {
-		invKin = new InverseKinematics(bones);
 	}
 	
 	g2 = new Graphics2::Graphics2(1024, 768);
@@ -730,4 +739,12 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	
 	}
 	return bone;
+}
+
+float MeshObject::getHeight() {
+	return currentHeight;
+}
+
+void MeshObject::setScale(float scaleFactor) {
+	scale = scaleFactor;
 }

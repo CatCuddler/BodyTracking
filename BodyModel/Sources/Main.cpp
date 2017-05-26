@@ -11,6 +11,11 @@
 
 #include "MeshObject.h"
 
+#ifdef KORE_STEAMVR
+#include <Kore/Vr/VrInterface.h>
+#include <Kore/Vr/SensorState.h>
+#endif
+
 using namespace Kore;
 using namespace Kore::Graphics4;
 
@@ -50,6 +55,8 @@ namespace {
 	vec4 desPos1 = vec4(0, 0, 0, 0);
 	vec4 desPos2 = vec4(0, 0, 0, 0);
 	
+	bool scaleCharacter = false;
+
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -78,8 +85,64 @@ namespace {
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
-		Graphics4::setPipeline(pipeline);
+		//Graphics4::setPipeline(pipeline);
+
+#ifdef KORE_STEAMVR
+
+		VrInterface::begin();
+		SensorState state;
+
+		// Get controller position
+		VrPoseState controller = VrInterface::getController(0);
+
+		if (!scaleCharacter) {
+			float currentAvatarHeight = avatar->getHeight();
+
+			state = VrInterface::getSensorState(0);
+			vec3 hmdPos = state.pose.vrPose.position;
+			float currentUserHeight = hmdPos.y();
+
+			float scale = currentUserHeight / currentAvatarHeight;
+			avatar->setScale(scale);
+
+			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+
+			scaleCharacter = true;
+		}
+
+		for (int eye = 0; eye < 2; ++eye) {
+			VrInterface::beginRender(eye);
+
+			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
+
+			Graphics4::setPipeline(pipeline);
+
+			state = VrInterface::getSensorState(eye);
+			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
+			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+
+			// Render avatar
+			Graphics4::setMatrix(mLocation, avatar->M);
+			avatar->animate(tex, deltaT);
+
+			VrInterface::endRender(eye);
+		}
+
+		VrInterface::warpSwap();
+
+		Graphics4::restoreRenderTarget();
+		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
+
 		
+		Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
+		Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+
+		// Render avatar
+		Graphics4::setMatrix(mLocation, avatar->M);
+		avatar->animate(tex, deltaT);
+
+
+#else
 		// projection matrix
 		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
 		
@@ -110,7 +173,9 @@ namespace {
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
-		
+#endif
+
+
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
@@ -137,7 +202,11 @@ namespace {
 			case Kore::Key_S:
 				backward = true;
 				break;
-				
+			case Kore::Key_R:
+#ifdef KORE_STEAMVR
+				VrInterface::resetHmdPose();
+#endif
+				break;
 			case Key_L:
 				Kore::log(Kore::LogLevel::Info, "Position: (%.2f, %.2f, %.2f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
 				Kore::log(Kore::LogLevel::Info, "Rotation: (%.2f, %.2f, %.2f)", globe.x(), globe.y(), globe.z());
@@ -224,10 +293,13 @@ namespace {
 		cube = new MeshObject("cube.ogex", "", structure);
 		cube->M = mat4::Translation(5, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		avatar->M = mat4::Translation(-5, 0, 0);
+		//avatar->M = mat4::Translation(-5, 0, 0);
+		avatar->M = mat4::RotationX(-Kore::pi/2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
+
+		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 	}
 	
 }
