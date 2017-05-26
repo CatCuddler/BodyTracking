@@ -2,6 +2,7 @@
 
 #include <Kore/IO/FileReader.h>
 #include <Kore/Graphics4/Graphics.h>
+#include <Kore/Graphics4/PipelineState.h>
 #include <Kore/Graphics1/Color.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
@@ -24,7 +25,7 @@ namespace {
 	VertexStructure structure;
 	Shader* vertexShader;
 	Shader* fragmentShader;
-	Program* program;
+	PipelineState* pipeline;
 	
 	// Uniform locations
 	TextureUnit tex;
@@ -77,7 +78,7 @@ namespace {
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
-		program->set();
+		Graphics4::setPipeline(pipeline);
 		
 		// projection matrix
 		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
@@ -101,16 +102,14 @@ namespace {
 		
 		angle += 0.05f;
 		float radius = 2;
-		desPos1 = vec4(2 + radius * cos(angle), -4, 3 + radius * sin(angle), 1);
+		desPos1 = vec4(2 + radius * Kore::cos(angle), -4, 3 + radius * Kore::sin(angle), 1);
 		radius = 1;
-		desPos2 = vec4(-4 + radius * cos(angle), -3, 11 + radius * sin(angle), 1);
+		desPos2 = vec4(-4 + radius * Kore::cos(angle), -3, 11 + radius * Kore::sin(angle), 1);
 		avatar->setDesiredPosition(49, desPos1);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
 		avatar->setDesiredPosition(29, desPos2);		// Right hand, vec4(-4, -3, 11, 1)
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
-		
-		Graphics4::setRenderState(Graphics4::DepthTest, true);
 		
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -207,24 +206,25 @@ namespace {
 		structure.add("tex", Float2VertexData);
 		structure.add("nor", Float3VertexData);
 		
-		program = new Program;
-		program->setVertexShader(vertexShader);
-		program->setFragmentShader(fragmentShader);
-		program->link(structure);
+		pipeline = new PipelineState;
+		pipeline->inputLayout[0] = &structure;
+		pipeline->inputLayout[1] = nullptr;
+		pipeline->vertexShader = vertexShader;
+		pipeline->fragmentShader = fragmentShader;
+		pipeline->depthMode = ZCompareLess;
+		pipeline->depthWrite = true;
+		pipeline->compile();
 		
-		tex = program->getTextureUnit("tex");
+		tex = pipeline->getTextureUnit("tex");
 		
-		pLocation = program->getConstantLocation("P");
-		vLocation = program->getConstantLocation("V");
-		mLocation = program->getConstantLocation("M");
+		pLocation = pipeline->getConstantLocation("P");
+		vLocation = pipeline->getConstantLocation("V");
+		mLocation = pipeline->getConstantLocation("M");
 		
 		cube = new MeshObject("cube.ogex", "", structure);
 		cube->M = mat4::Translation(5, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		avatar->M = mat4::Translation(-5, 0, 0);
-		
-		Graphics4::setRenderState(DepthTest, true);
-		Graphics4::setRenderState(DepthTestCompare, ZCompareLess);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
