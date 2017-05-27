@@ -271,10 +271,10 @@ void MeshObject::setAnimation(int frame) {
 	}
 }
 
-void MeshObject::setDesiredPosition(int boneIndex, Kore::vec4 position) {
+void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
-	desiredPos = position;
-	invKin->inverseKinematics(position, bone);
+	desiredPos = vec4(position.x(), position.y(), position.z(), 1.0);
+	invKin->inverseKinematics(desiredPos, bone);
 }
 
 void MeshObject::animate(TextureUnit tex, float deltaTime) {

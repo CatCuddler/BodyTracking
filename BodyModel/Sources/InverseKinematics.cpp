@@ -180,10 +180,10 @@ void InverseKinematics::setJointConstraints() {
 	
 	// clavicle
 	/*nodeLeft = bones.at(7-1);
-	nodeLeft->axes = Kore::vec4(1, 0, 1, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-0.3, 0.3));
+	nodeLeft->axes = Kore::vec4(0, 0, 0, 0);
+	nodeLeft->constrain.push_back(Kore::vec2(-0.05, 0.05));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0.2));
+	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	
 	nodeRight = bones.at(26-1);
 	nodeRight->axes = nodeLeft->axes;
@@ -192,9 +192,9 @@ void InverseKinematics::setJointConstraints() {
 	// upperarm
 	nodeLeft = bones.at(8-1);
 	nodeLeft->axes = Kore::vec4(1, 0, 1, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-0.3, 1.5));
+	nodeLeft->constrain.push_back(Kore::vec2(-0.5, 1.5));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(-0.4, 0.3));
+	nodeLeft->constrain.push_back(Kore::vec2(-0.4, 0.6));
 	
 	nodeRight = bones.at(27-1);
 	nodeRight->axes = nodeLeft->axes;
@@ -202,7 +202,7 @@ void InverseKinematics::setJointConstraints() {
 	
 	// lowerarm
 	nodeLeft = bones.at(9-1);
-	nodeLeft->axes = Kore::vec4(1, 0, 0, 0);
+	nodeLeft->axes = Kore::vec4(1, 1, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-0.3, 1));
 	nodeLeft->constrain.push_back(Kore::vec2(-0.05, 0.05));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));

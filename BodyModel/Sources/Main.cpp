@@ -41,7 +41,8 @@ namespace {
 	bool left, right = false;
 	bool down, up = false;
 	bool forward, backward = false;
-	bool rotate = false;
+	bool rotateX = false;
+	bool rotateZ = false;
 	int mousePressX, mousePressY = 0;
 	
 	MeshObject* cube;
@@ -52,8 +53,8 @@ namespace {
 	int frame = 0;
 	
 	float angle = 0;
-	vec4 desPos1 = vec4(0, 0, 0, 0);
-	vec4 desPos2 = vec4(0, 0, 0, 0);
+	vec3 desPos1 = vec4(0, 0, 0);
+	vec3 desPos2 = vec4(0, 0, 0);
 	
 	bool scaleCharacter = false;
 
@@ -173,10 +174,11 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		angle += 0.05f;
-		float radius = 0.1;
-		desPos1 = vec4(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle), 1);
-		desPos2 = vec4(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle), 1);
+		float radius = 0.2;
+		desPos1 = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle));
 		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
+		desPos2 = vec3(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle));
+		//desPos2 = vec3(0.3, 0, 1.5);
 		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
@@ -209,6 +211,12 @@ namespace {
 				break;
 			case Kore::Key_S:
 				backward = true;
+				break;
+			case Kore::Key_X:
+				rotateX = true;
+				break;
+			case Kore::Key_Z:
+				rotateZ = true;
 				break;
 			case Kore::Key_R:
 #ifdef KORE_STEAMVR
@@ -245,6 +253,12 @@ namespace {
 			case Kore::Key_S:
 				backward = false;
 				break;
+			case Kore::Key_X:
+				rotateX = false;
+				break;
+			case Kore::Key_Z:
+				rotateZ = false;
+				break;
 			default:
 				break;
 		}
@@ -252,22 +266,26 @@ namespace {
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
 		float rotationSpeed = 0.01;
-		if (rotate) {
+		if (rotateX) {
 			globe.x() += (float)((mousePressX - x) * rotationSpeed);
-			globe.z() += (float)((mousePressY - y) * rotationSpeed);
 			mousePressX = x;
+		} else if (rotateZ) {
+			globe.z() += (float)((mousePressY - y) * rotationSpeed);
 			mousePressY = y;
 		}
+				   
 	}
 	
 	void mousePress(int windowId, int button, int x, int y) {
-		rotate = true;
+		rotateX = true;
+		rotateZ = true;
 		mousePressX = x;
 		mousePressY = y;
 	}
 	
 	void mouseRelease(int windowId, int button, int x, int y) {
-		rotate = false;
+		rotateX = false;
+		rotateZ = false;
 	}
 	
 	void init() {
