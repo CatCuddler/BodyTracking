@@ -47,8 +47,8 @@ namespace {
 	MeshObject* cube;
 	MeshObject* avatar;
 	
-	vec3 playerPosition = vec3(0, 10, 30);
-	vec3 globe = vec3(Kore::pi, Kore::pi, Kore::pi/2);
+	vec3 playerPosition = vec3(0, 1, 3);
+	vec3 globe = vec3(0, 0, 0);
 	int frame = 0;
 	
 	float angle = 0;
@@ -85,7 +85,7 @@ namespace {
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
-		//Graphics4::setPipeline(pipeline);
+		Graphics4::setPipeline(pipeline);
 
 #ifdef KORE_STEAMVR
 
@@ -118,7 +118,7 @@ namespace {
 
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 
-			Graphics4::setPipeline(pipeline);
+			//Graphics4::setPipeline(pipeline);
 
 			state = VrInterface::getSensorState(eye);
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
@@ -167,12 +167,12 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		angle += 0.05f;
-		float radius = 2;
-		desPos1 = vec4(2 + radius * Kore::cos(angle), -4, 3 + radius * Kore::sin(angle), 1);
-		radius = 1;
-		desPos2 = vec4(-4 + radius * Kore::cos(angle), -3, 11 + radius * Kore::sin(angle), 1);
-		avatar->setDesiredPosition(49, desPos1);		// Left foot 49, right foot 53, vec4(2, -4, 3, 1)
-		avatar->setDesiredPosition(29, desPos2);		// Right hand, vec4(-4, -3, 11, 1)
+		float radius = 0.2;
+		desPos1 = vec4(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle), 1);
+		radius = 0.15;
+		desPos2 = vec4(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle), 1);
+		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
+		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
@@ -293,16 +293,18 @@ namespace {
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "", structure);
-		cube->M = mat4::Translation(5, 0, 0);
+		cube = new MeshObject("cube.ogex", "", structure, 0.1f);
+		cube->M = mat4::Translation(2, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		//avatar->M = mat4::Translation(-5, 0, 0);
+		avatar->M = mat4::Translation(-2, 0, 0);
 		avatar->M = mat4::RotationX(-Kore::pi/2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
-
+		
+#ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
+#endif
 	}
 	
 }

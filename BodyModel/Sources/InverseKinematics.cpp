@@ -202,7 +202,7 @@ void InverseKinematics::setJointConstraints() {
 	
 	// lowerarm
 	nodeLeft = bones.at(9-1);
-	nodeLeft->axes = Kore::vec4(1, 1, 0, 0);
+	nodeLeft->axes = Kore::vec4(1, 0, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-0.3, 1));
 	nodeLeft->constrain.push_back(Kore::vec2(-0.05, 0.05));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
