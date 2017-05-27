@@ -18,6 +18,8 @@ private:
 	void plotLine(Mat& image, const Mat& mat, Scalar color);
 	void plotCircle(Mat& image, const vector<Point2f>& vector);
 	
+	void savePositionData();
+	
 public:
 	LatencyTool(int fps, float width, float height);
 	void updatePositions(Point2f point0, Point2f point1);

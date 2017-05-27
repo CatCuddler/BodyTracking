@@ -50,15 +50,25 @@ void LatencyTool::plotPositionsGraph() {
 	
 	// Draw grid
 	int dist = 100;
+	int smallDist = 10;
 	
 	int width = image.size().width;
 	int height = image.size().height;
 	
-	for(int i = 0; i < height; i+=dist)
-		line(image, Point(0,i), Point(width,i), Scalar(0,0,0), 1, 1);
+	for(int i = 0; i < height; i += dist) {
+		for (int j = 0; j < width; j += smallDist) {
+			line(image, Point(j,i), Point(j + smallDist,i), Scalar(0,0,0), 1, 1);
+			j += smallDist;
+		}
+  
+	}
 	
-	for(int i = 0; i < width; i+=dist)
-		line(image, Point(i,0), Point(i,height), Scalar(0,0,0), 1, 1);
+	for(int i = 0; i < width; i += dist) {
+		for (int j = 0; j < height; j += smallDist) {
+			line(image, Point(i,j), Point(i,j + smallDist), Scalar(0,0,0), 1, 1);
+			j += smallDist;
+		}
+	}
 	
 	
 	// Plot positions for the first object
@@ -76,7 +86,8 @@ void LatencyTool::plotPositionsGraph() {
 	peaks = findPositionPeaks(posDataObj1);
 	plotCircle(image, peaks);
 	
-	
+	savePositionData();
+	imwrite("results/positionPlot.png", image);
 	imshow("plot0", image);
 }
 
@@ -102,7 +113,10 @@ float LatencyTool::countFrames() {
 	vector<Point2f> peaks0 = findPositionPeaks(posDataObj0);
 	vector<Point2f> peaks1 = findPositionPeaks(posDataObj1);
 	
-	CV_Assert(peaks0.size() == peaks1.size());
+	if (peaks0.size() != peaks1.size()) {
+		cout << "Assertion failed: peaks0.size() != peaks1.size()" << endl;
+		return -1;
+	}
 	
 	float avrFrames = 0;
 	
@@ -122,4 +136,32 @@ float LatencyTool::countFrames() {
 	avrFrames = avrFrames/peaks0.size();
 	
 	return avrFrames;
+}
+
+void LatencyTool::savePositionData() {
+	std::fstream outputFile;
+	outputFile.open("results/positionData.csv", std::ios::out);
+	
+	Mat mat0;
+	Mat mat1;
+	posDataObj0.col(0).copyTo(mat0);
+	posDataObj1.col(0).copyTo(mat1);
+	
+	const Size& ksize = Size(9, 9);
+	GaussianBlur(mat0, mat0, ksize, 0);
+	GaussianBlur(mat1, mat1, ksize, 0);
+	
+	normalize(mat0, mat0, 0, 1, NORM_MINMAX);
+	normalize(mat1, mat1, 0, 1, NORM_MINMAX);
+	
+	outputFile << "x0, x1" << endl;
+	
+	for (int i = 0; i < posDataObj0.rows-1; i++) {
+		outputFile << mat0.at<float>(i,1) << ", ";
+		outputFile << mat1.at<float>(i,1) << ", ";
+		outputFile << endl;
+		
+	}
+	outputFile.close( );
+
 }
