@@ -47,7 +47,7 @@ namespace {
 	MeshObject* cube;
 	MeshObject* avatar;
 	
-	vec3 playerPosition = vec3(0, 1, 3);
+	vec3 playerPosition = vec3(0, 0.7, 1.5);
 	vec3 globe = vec3(0, 0, 0);
 	int frame = 0;
 	
@@ -62,7 +62,7 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 		
-		const float speed = 0.5;
+		const float speed = 0.05f;
 		if (left) {
 			playerPosition.x() -= speed;
 		}
@@ -146,6 +146,12 @@ namespace {
 
 
 #else
+		// Scale test
+		if (!scaleCharacter) {
+			avatar->setScale(0.8);
+			scaleCharacter = true;
+		}
+		
 		// projection matrix
 		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
 		
@@ -167,9 +173,8 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		angle += 0.05f;
-		float radius = 0.2;
+		float radius = 0.1;
 		desPos1 = vec4(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle), 1);
-		radius = 0.15;
 		desPos2 = vec4(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle), 1);
 		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
 		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29

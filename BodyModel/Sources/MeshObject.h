@@ -71,7 +71,7 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
-	Kore::mat4 transform, transformInv;		// bind matrix, inverse bind matrix
+	Kore::mat4 transform;		// bind matrix
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
@@ -90,9 +90,11 @@ struct BoneNode {
 	Kore::vec4 axes;
 	std::vector<Kore::vec2> constrain;	// <min, max>
 	
-	BoneNode() : transform(Kore::mat4::Identity()), transformInv(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
-				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()), finalTransform(Kore::mat4::Identity()),
-				quaternion(Kore::Quaternion(0, 0, 0, 1)), desQuaternion(Kore::Quaternion(0, 0, 0, 1)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
+	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
+				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
+				 finalTransform(Kore::mat4::Identity()),
+				 quaternion(Kore::Quaternion(0, 0, 0, 1)), desQuaternion(Kore::Quaternion(0, 0, 0, 1)),
+				 desiredPos(Kore::vec4(0, 0, 0, 0)) {}
 };
 
 struct CompareBones {
@@ -144,6 +146,8 @@ private:
 	std::vector<BoneNode*> children;
 	
 	void LoadObj(const char* filename);
+	
+	BoneNode* getBoneWithIndex(int index);
 	
 	void ConvertObjects(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);

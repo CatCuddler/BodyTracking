@@ -150,7 +150,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 
 	if (bones.size() > 0) {
 		// Get the highest position
-		BoneNode* head = bones.at(46 - 1);
+		BoneNode* head = getBoneWithIndex(46);
 		vec4 position = head->combined *vec4(0, 0, 0, 1);
 		currentHeight = position.z();
 		
@@ -272,7 +272,7 @@ void MeshObject::setAnimation(int frame) {
 }
 
 void MeshObject::setDesiredPosition(int boneIndex, Kore::vec4 position) {
-	BoneNode* bone = bones.at(boneIndex - 1);
+	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPos = position;
 	invKin->inverseKinematics(position, bone);
 }
@@ -300,7 +300,7 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
 	
 	for(int j = 0; j < meshesCount; ++j) {
-		int currentBoneCountIndex = 0;	// Iterate over BoneCountArray
+		int currentBoneIndex = 0;	// Iterate over BoneCountArray
 		
 		Mesh* mesh = meshes.at(j);
 		
@@ -320,27 +320,30 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 				vec4 posVec(mesh->vertices[i * 3 + 0], mesh->vertices[i * 3 + 1], mesh->vertices[i * 3 + 2], 1);
 				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
 				
-				int boneIndex = currentBoneCountIndex + b;
-				BoneNode* bone = bones.at(mesh->boneIndices[boneIndex] + 1);
-				float boneWeight = mesh->boneWeight[boneIndex];
+				int index = mesh->boneIndices[currentBoneIndex] + 2;
+				//BoneNode* bone = bones.at(mesh->boneIndices[currentBoneIndex] + 1);
+				BoneNode* bone = getBoneWithIndex(index);
+				float boneWeight = mesh->boneWeight[currentBoneIndex];
 				totalJointsWeight += boneWeight;
 				
 				startPos += (bone->finalTransform * posVec) * boneWeight;
 				startNormal += (bone->finalTransform * norVec) * boneWeight;
+				
+				currentBoneIndex ++;
 			}
 			
-			if (totalJointsWeight != 1.0f) {
+			/*if (totalJointsWeight != 1.0f) {
 				float normalizedWeight = 1.0f / totalJointsWeight;
 				startPos *= normalizedWeight;
 				startNormal *= normalizedWeight;
-			}
+			}*/
 			
-			currentBoneCountIndex += numOfBones;
+			//currentBoneCountIndex += numOfBones;
 			
 			// position
-			vertices[i * 8 + 0] = startPos.x() * scale;
-			vertices[i * 8 + 1] = startPos.y() * scale;
-			vertices[i * 8 + 2] = startPos.z() * scale;
+			vertices[i * 8 + 0] = startPos.x();
+			vertices[i * 8 + 1] = startPos.y();
+			vertices[i * 8 + 2] = startPos.z();
 			// texCoord
 			vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
 			vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
@@ -419,6 +422,11 @@ void MeshObject::LoadObj(const char* filename) {
 	}
 	
 	delete[] buffer;
+}
+
+BoneNode* MeshObject::getBoneWithIndex(int boneIndex) {
+	BoneNode* bone = bones.at(boneIndex - 1);
+	return bone;
 }
 
 void MeshObject::ConvertObjects(const Structure& rootStructure) {
@@ -706,7 +714,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
 	bone->transform = getMatrix4x4(transform);
-	bone->transformInv = bone->transform.Invert();
 	bone->local = bone->transform;
 	
 	// Get node animation
@@ -746,5 +753,12 @@ float MeshObject::getHeight() {
 }
 
 void MeshObject::setScale(float scaleFactor) {
-	scale = scaleFactor;
+	// Scale root bone
+	BoneNode* root = bones.at(0);
+	root->transform = root->transform * mat4::Scale(scaleFactor); //T * R * S
+	root->local = root->transform;
+	
 }
+
+
+
