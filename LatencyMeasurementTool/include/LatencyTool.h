@@ -23,6 +23,7 @@ private:
 	Mat normaliseMat(const Mat& mat);
 	
 	void savePositionData(Mat pos0, Mat pos1);
+	void savePeaks(vector<Point2f> peaks);
 	
 public:
 	LatencyTool(int fps, float width, float height);

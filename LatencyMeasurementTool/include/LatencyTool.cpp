@@ -75,7 +75,9 @@ void LatencyTool::plotPositionsGraph() {
 	plotLine(image, normPos0, Scalar(0,0,255));
 	
 	// Get peaks for the first object
+	vector<Point2f> allPeaks;
 	vector<Point2f> peaks = findPositionPeaks(normPos0);
+	allPeaks.insert(allPeaks.end(), peaks.begin(), peaks.end());
 	plotCircle(image, peaks);
 	
 	// Plot positions for the second object
@@ -84,9 +86,11 @@ void LatencyTool::plotPositionsGraph() {
 	
 	// Get peaks for the second object
 	peaks = findPositionPeaks(normPos1);
+	allPeaks.insert(allPeaks.end(), peaks.begin(), peaks.end());
 	plotCircle(image, peaks);
 	
 	savePositionData(normPos0, normPos1);
+	savePeaks(allPeaks);
 	imwrite("results/positionPlot.png", image);
 	imshow("plot0", image);
 }
@@ -157,10 +161,23 @@ void LatencyTool::savePositionData(Mat pos0, Mat pos1) {
 	
 	outputFile << "x0, x1" << endl;
 	
-	for (int i = 0; i < pos0.rows-1; i++) {
+	for (int i = 0; i < pos0.rows - 1; i++) {
 		outputFile << pos0.at<float>(i,1) << ", ";
 		outputFile << pos1.at<float>(i,1) << ", ";
 		outputFile << endl;
+	}
+	outputFile.close();
+}
+
+void LatencyTool::savePeaks(vector<Point2f> peaks) {
+	std::fstream outputFile;
+	outputFile.open("results/peaksData.csv", std::ios::out);
+	
+	outputFile << "x, y" << endl;
+	
+	for (int i = 0; i < peaks.size(); ++i) {
+		Point2f peak = peaks.at(i);
+		outputFile << peak.x << ", " << peak.y << endl;
 	}
 	outputFile.close();
 }
