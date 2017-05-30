@@ -93,41 +93,48 @@ namespace {
 		VrInterface::begin();
 		SensorState state;
 
-		// Get controller position
-		VrPoseState controller = VrInterface::getController(0);
-
 		if (!scaleCharacter) {
 			float currentAvatarHeight = avatar->getHeight();
 
 			state = VrInterface::getSensorState(0);
-			vec3 hmdPos = state.pose.vrPose.position;
+			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
 
 			// Set initial position
-			avatar->M *= mat4::Translation(hmdPos.x(), -hmdPos.y(), 0);
+			//avatar->M *= mat4::Translation(hmdPos.x(), -hmdPos.y(), 0);
 
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
 			scaleCharacter = true;
 		}
 
+		// Get controller position
+		VrPoseState controller = VrInterface::getController(3);
+		vec3 desPosition = controller.vrPose.position;
+
+		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
+
+		desPosition.y() = -desPosition.y();
+		avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
+		//avatar->setDesiredPosition(29, desPosition);		// Left hand 10, right hand 29
+		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
 
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 
-			//Graphics4::setPipeline(pipeline);
-
 			state = VrInterface::getSensorState(eye);
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 
-			// Render avatar
+			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
+			Graphics4::setMatrix(mLocation, cube->M);
+			cube->render(tex);
 
 			VrInterface::endRender(eye);
 		}
@@ -137,14 +144,17 @@ namespace {
 		Graphics4::restoreRenderTarget();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 
-		
 		Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 		Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 
-		// Render avatar
+		// Render
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
+		Graphics4::setMatrix(mLocation, cube->M);
+		cube->render(tex);
 
+		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
+		avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 
 #else
 		// Scale test
@@ -170,7 +180,7 @@ namespace {
 		Graphics4::setMatrix(mLocation, avatar->M);
 		/*avatar->setAnimation(frame);
 		frame++;
-		if (frame > 200) frame = 0;*/
+		if (frame > 200) frame = 0;*/                                                                                                                                                            
 		avatar->animate(tex, deltaT);
 		
 		angle += 0.05f;
@@ -316,10 +326,10 @@ namespace {
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "", structure, 0.1f);
-		cube->M = mat4::Translation(2, 0, 0);
+		cube = new MeshObject("cube.ogex", "", structure, 0.01f);
+		//cube->M = mat4::Translation(2, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		avatar->M = mat4::Translation(-2, 0, 0);
+		//avatar->M = mat4::Translation(-2, 0, 0);
 		avatar->M = mat4::RotationX(-Kore::pi/2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
