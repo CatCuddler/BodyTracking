@@ -55,8 +55,12 @@ namespace {
 	float angle = 0;
 	vec3 desPos1 = vec4(0, 0, 0);
 	vec3 desPos2 = vec4(0, 0, 0);
+
+	mat4 T = mat4::Identity();
+	mat4 initTrans = mat4::Identity();
+	mat4 initRot = mat4::Identity();
 	
-	bool scaleCharacter = false;
+	bool initCharacter = false;
 
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -93,7 +97,7 @@ namespace {
 		VrInterface::begin();
 		SensorState state;
 
-		if (!scaleCharacter) {
+		if (!initCharacter) {
 			float currentAvatarHeight = avatar->getHeight();
 
 			state = VrInterface::getSensorState(0);
@@ -101,25 +105,33 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
+//			avatar->setScale(scale);
 
-			// Set initial position
-			//avatar->M *= mat4::Translation(hmdPos.x(), -hmdPos.y(), 0);
+			// Set initial transformation
+			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+			
+			// Set initial orientation
+			state = VrInterface::getSensorState(0);
+			Quaternion hmdOrient = state.pose.vrPose.orientation;
+			float zAngle = 2 * Kore::acos(hmdOrient.y);
+			initRot *= mat4::RotationZ(-zAngle);
+
+			avatar->M = initTrans * initRot;
+			T = (initTrans * initRot).Invert();
 
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
-			scaleCharacter = true;
+			initCharacter = true;
 		}
 
 		// Get controller position
 		VrPoseState controller = VrInterface::getController(3);
 		vec3 desPosition = controller.vrPose.position;
-
 		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
 
-		desPosition.y() = -desPosition.y();
-		avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
-		//avatar->setDesiredPosition(29, desPosition);		// Left hand 10, right hand 29
+		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		avatar->setDesiredPosition(53, vec3(finalPos.x(), finalPos.y(), finalPos.z()));		// Left foot 49, right foot 53
+		//avatar->setDesiredPosition(29, vec3(finalPos.x(), finalPos.y(), finalPos.z()));			// Left hand 10, right hand 29
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
@@ -158,9 +170,9 @@ namespace {
 
 #else
 		// Scale test
-		if (!scaleCharacter) {
+		if (!initCharacter) {
 			avatar->setScale(0.8);
-			scaleCharacter = true;
+			initCharacter = true;
 		}
 		
 		// projection matrix
@@ -330,7 +342,7 @@ namespace {
 		//cube->M = mat4::Translation(2, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		//avatar->M = mat4::Translation(-2, 0, 0);
-		avatar->M = mat4::RotationX(-Kore::pi/2.0);
+		initRot = mat4::RotationX(-Kore::pi / 2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
