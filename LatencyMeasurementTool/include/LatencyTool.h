@@ -20,7 +20,7 @@ private:
 	void plotLine(Mat& image, const Mat& mat, Scalar color);
 	void plotCircle(Mat& image, const vector<Point2f>& vector);
 	
-	Mat normaliseMat(const Mat& mat);
+	Mat smoothAndNormaliseMat(const Mat& mat);
 	
 	void savePositionData(Mat pos0, Mat pos1);
 	void savePeaks(vector<Point2f> peaks);

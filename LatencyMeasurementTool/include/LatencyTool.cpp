@@ -71,7 +71,7 @@ void LatencyTool::plotPositionsGraph() {
 	}
 	
 	// Plot normalised positions for the first object
-	Mat normPos0 = normaliseMat(posDataObj0);
+	Mat normPos0 = smoothAndNormaliseMat(posDataObj0);
 	plotLine(image, normPos0, Scalar(0,0,255));
 	
 	// Get peaks for the first object
@@ -81,7 +81,7 @@ void LatencyTool::plotPositionsGraph() {
 	plotCircle(image, peaks);
 	
 	// Plot positions for the second object
-	Mat normPos1 = normaliseMat(posDataObj1);
+	Mat normPos1 = smoothAndNormaliseMat(posDataObj1);
 	plotLine(image, normPos1, Scalar(0,255,0));
 	
 	// Get peaks for the second object
@@ -115,9 +115,9 @@ void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
 }
 
 float LatencyTool::countFrames() {
-	Mat normPos0 = normaliseMat(posDataObj0);
+	Mat normPos0 = smoothAndNormaliseMat(posDataObj0);
 	vector<Point2f> peaks0 = findPositionPeaks(normPos0);
-	Mat normPos1 = normaliseMat(posDataObj1);
+	Mat normPos1 = smoothAndNormaliseMat(posDataObj1);
 	vector<Point2f> peaks1 = findPositionPeaks(normPos1);
 	
 	if (peaks0.size() != peaks1.size()) {
@@ -126,16 +126,18 @@ float LatencyTool::countFrames() {
 	}
 	
 	float avrFrames = 0;
-	
 	for (int i = 0; i < peaks0.size(); ++i) {
+		// Extract the frame number of the first object
 		Point2f peak = peaks0.at(i);
 		int frame0 = peak.x;
 		
+		// Extract the frame number of the second object
 		peak = peaks1.at(i);
 		int frame1 = peak.x;
 		
 		//cout << "frame0: " << frame0 << " frame1: " << frame1 << endl;
 		
+		// Calculate the difference
 		int diff = frame1 - frame0;
 		avrFrames += diff;
 	}
@@ -145,7 +147,7 @@ float LatencyTool::countFrames() {
 	return avrFrames;
 }
 
-Mat LatencyTool::normaliseMat(const Mat& mat) {
+Mat LatencyTool::smoothAndNormaliseMat(const Mat& mat) {
 	Mat cMat;
 	mat.col(0).copyTo(cMat);		// Copy x Positions
 	
