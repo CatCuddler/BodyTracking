@@ -41,7 +41,7 @@ void Peak::findPeaks(InputArray input, OutputArray output, const float scale, co
 	minMaxLoc(mat, &min_val, &max_val);
 	
 	Mat minMask, maxMask;
-	GaussianBlur(mat, mat, ksize, 0); // Smooth a bit in order to obtain better result
+	//GaussianBlur(mat, mat, ksize, 0); // Smooth a bit in order to obtain better result
 	nonMinimaSuppression(mat, minMask, remove_plateus); // Extract local minima
 	nonMaximaSuppression(mat, maxMask, remove_plateus); // Extract local maxima
 	
@@ -58,7 +58,7 @@ void Peak::findPeaks(InputArray input, OutputArray output, const float scale, co
 		// Filter peaks
 		if (val > max_val * scale)
 			++it;
-		else if (val < -(min_val * scale))
+		else if (val < scale)
 			++it;
 		else
 			it = maxima.erase(it);

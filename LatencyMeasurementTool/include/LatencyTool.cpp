@@ -6,7 +6,7 @@
 
 #include "Peak.h"
 
-LatencyTool::LatencyTool(int fps, float width, float height) : fps(fps), width(width), height(height) {
+LatencyTool::LatencyTool(int fps, float width, float height) : fps(fps), width(width), height(height), scale(100) {
 	
 }
 
@@ -46,10 +46,10 @@ vector<Point2f> LatencyTool::findPositionPeaks(Mat posDataObj) {
 
 void LatencyTool::plotPositionsGraph() {
 	// Create black empty images
-	Mat image(height, width, CV_8UC3, Scalar(255,255,255));
+	Mat image(scale, width, CV_8UC3, Scalar(255,255,255));
 	
 	// Draw grid
-	int dist = 100;
+	int dist = 50;
 	int smallDist = 10;
 	
 	int width = image.size().width;
@@ -70,31 +70,31 @@ void LatencyTool::plotPositionsGraph() {
 		}
 	}
 	
-	
-	// Plot positions for the first object
-	plotLine(image, posDataObj0, Scalar(0,0,255));
+	// Plot normalised positions for the first object
+	Mat normPos0 = normaliseMat(posDataObj0);
+	plotLine(image, normPos0, Scalar(0,0,255));
 	
 	// Get peaks for the first object
-	vector<Point2f> peaks = findPositionPeaks(posDataObj0);
+	vector<Point2f> peaks = findPositionPeaks(normPos0);
 	plotCircle(image, peaks);
-	
 	
 	// Plot positions for the second object
-	plotLine(image, posDataObj1, Scalar(0,255,0));
+	Mat normPos1 = normaliseMat(posDataObj1);
+	plotLine(image, normPos1, Scalar(0,255,0));
 	
 	// Get peaks for the second object
-	peaks = findPositionPeaks(posDataObj1);
+	peaks = findPositionPeaks(normPos1);
 	plotCircle(image, peaks);
 	
-	savePositionData();
+	savePositionData(normPos0, normPos1);
 	imwrite("results/positionPlot.png", image);
 	imshow("plot0", image);
 }
 
 void LatencyTool::plotLine(Mat& image, const Mat& mat, Scalar color) {
 	for (int i = 1; i < mat.rows; ++i) {
-		Point2d lastPosition(i-1, mat.at<float>(i-1, 0));
-		Point2d currentPosition(i, mat.at<float>(i, 0));
+		Point2d lastPosition(i-1, mat.at<float>(i-1, 0) * scale);
+		Point2d currentPosition(i, mat.at<float>(i, 0) * scale);
 		
 		//cout << "Last Pos: " << lastPosition << " Current Pos: " << currentPosition << endl;
 		line(image, lastPosition, currentPosition, color, 1, 1);
@@ -104,6 +104,7 @@ void LatencyTool::plotLine(Mat& image, const Mat& mat, Scalar color) {
 void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
 	for (int i = 0; i < vector.size(); ++i) {
 		Point2f peak = vector.at(i);
+		peak.y = peak.y * scale;
 		//cout << " Peak " << peak << endl;
 		circle(image, peak, 2, Scalar(255,0,0), 2, 8);
 	}
@@ -138,30 +139,28 @@ float LatencyTool::countFrames() {
 	return avrFrames;
 }
 
-void LatencyTool::savePositionData() {
+Mat LatencyTool::normaliseMat(const Mat& mat) {
+	Mat cMat;
+	mat.col(0).copyTo(cMat);		// Copy x Positions
+	
+	const Size& ksize = Size(9, 9);
+	GaussianBlur(cMat, cMat, ksize, 0);
+
+	normalize(cMat, cMat, 0, 1, NORM_MINMAX);
+	
+	return cMat;
+}
+
+void LatencyTool::savePositionData(Mat pos0, Mat pos1) {
 	std::fstream outputFile;
 	outputFile.open("results/positionData.csv", std::ios::out);
 	
-	Mat mat0;
-	Mat mat1;
-	posDataObj0.col(0).copyTo(mat0);
-	posDataObj1.col(0).copyTo(mat1);
-	
-	const Size& ksize = Size(9, 9);
-	GaussianBlur(mat0, mat0, ksize, 0);
-	GaussianBlur(mat1, mat1, ksize, 0);
-	
-	normalize(mat0, mat0, 0, 1, NORM_MINMAX);
-	normalize(mat1, mat1, 0, 1, NORM_MINMAX);
-	
 	outputFile << "x0, x1" << endl;
 	
-	for (int i = 0; i < posDataObj0.rows-1; i++) {
-		outputFile << mat0.at<float>(i,1) << ", ";
-		outputFile << mat1.at<float>(i,1) << ", ";
+	for (int i = 0; i < pos0.rows-1; i++) {
+		outputFile << pos0.at<float>(i,1) << ", ";
+		outputFile << pos1.at<float>(i,1) << ", ";
 		outputFile << endl;
-		
 	}
-	outputFile.close( );
-
+	outputFile.close();
 }
