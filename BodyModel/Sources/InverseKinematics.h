@@ -35,5 +35,6 @@ private:
 	void updateBonePosition(BoneNode* targetBone);
 	
 	float getRadians(float degree);
+	void eulerToQuat(float roll, float pitch, float yaw, Kore::Quaternion* quat);
 
 };
