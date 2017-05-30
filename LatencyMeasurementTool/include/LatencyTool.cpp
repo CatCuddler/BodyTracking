@@ -115,8 +115,10 @@ void LatencyTool::plotCircle(Mat& image, const vector<Point2f>& vector) {
 }
 
 float LatencyTool::countFrames() {
-	vector<Point2f> peaks0 = findPositionPeaks(posDataObj0);
-	vector<Point2f> peaks1 = findPositionPeaks(posDataObj1);
+	Mat normPos0 = normaliseMat(posDataObj0);
+	vector<Point2f> peaks0 = findPositionPeaks(normPos0);
+	Mat normPos1 = normaliseMat(posDataObj1);
+	vector<Point2f> peaks1 = findPositionPeaks(normPos1);
 	
 	if (peaks0.size() != peaks1.size()) {
 		cout << "Assertion failed: peaks0.size() != peaks1.size()" << endl;
