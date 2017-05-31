@@ -280,21 +280,23 @@ void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	
 	// Interpolate
-	/*for (int i = 0; i < bones.size(); ++i) {
+	for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones.at(i);
 		
-		if (bone->quaternion != bone->desQuaternion) {
-			bone->time += deltaTime;
-			if (bone->time > 1) bone->time = 0;
+		if (bone->quaternion != bone->desQuaternion && bone->time < 1) {
+			bone->time += deltaTime * 0.1f;
 			
-			Kore::Quaternion resQuat;
-			quatSlerp(&bone->quaternion, &bone->desQuaternion, bone->time, &resQuat);
-			bone->quaternion = resQuat;
+			quatSlerp(&bone->quaternion, &bone->desQuaternion, bone->time, &bone->quaternion);
 			
-			Kore::mat4 rotMat = resQuat.matrix().Transpose();
+			bone->quaternion.normalize();
+			Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
 			bone->local = bone->transform * rotMat;
+
+			//log(Info, "interpolate %s %t %f %f %f %f desired %f %f %f %f", bone->boneName, bone->time, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z, bone->quaternion.w, bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z, bone->quaternion.w);
+		} else {
+			bone->time = 0;
 		}
-	}*/
+	}
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
@@ -372,7 +374,7 @@ void MeshObject::quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t
 	// calc cosine
 	cosom = from->x * to->x + from->y * to->y + from->z * to->z + from->w * to->w;
 	// adjust signs (if necessary)
-	if ( cosom <0.0 ){ cosom = -cosom; to1[0] = - to->x;
+	if ( cosom < 0.0 ){ cosom = -cosom; to1[0] = - to->x;
 		to1[1] = - to->y;
 		to1[2] = - to->z;
 		to1[3] = - to->w;
@@ -383,8 +385,8 @@ void MeshObject::quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t
 		to1[3] = to->w;
 	}
 	// calculate coefficients
-	float DELTA = 0.9995;
-	if ( (1.0 - cosom) > DELTA ) {
+	float DELTA = 0.001f;
+	if ((1.0 - cosom) > DELTA) {
 		// standard case (slerp)
 		omega = acos(cosom);
 		sinom = sin(omega);

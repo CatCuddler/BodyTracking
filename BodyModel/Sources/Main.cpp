@@ -202,9 +202,9 @@ namespace {
 		//desPos1 = vec3(-0.2, -1, 0.3);
 		//desPos1 = vec3(-0.08, 0, 1);
 		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
-		//desPos2 = vec3(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle));
-		desPos2 = vec3(0.3 + radius * Kore::cos(angle), -1, 1.1 + radius * Kore::sin(angle));
-		//avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
+		desPos2 = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
+		//desPos2 = vec3(0.2, -0.2, 1.1 + radius * Kore::sin(angle));
+		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
