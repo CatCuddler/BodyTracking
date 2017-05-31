@@ -125,13 +125,13 @@ namespace {
 		}
 
 		// Get controller position
-		VrPoseState controller = VrInterface::getController(3);
+		VrPoseState controller = VrInterface::getController(4);
 		vec3 desPosition = controller.vrPose.position;
 		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
 
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, vec3(finalPos.x(), finalPos.y(), finalPos.z()));		// Left foot 49, right foot 53
-		//avatar->setDesiredPosition(29, vec3(finalPos.x(), finalPos.y(), finalPos.z()));			// Left hand 10, right hand 29
+		//avatar->setDesiredPosition(53, vec3(finalPos.x(), finalPos.y(), finalPos.z()));		// Left foot 49, right foot 53
+		avatar->setDesiredPosition(29, vec3(finalPos.x(), finalPos.y(), finalPos.z()));			// Left hand 10, right hand 29
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
@@ -199,11 +199,12 @@ namespace {
 		angle += 0.05f;
 		float radius = 0.2;
 		desPos1 = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle));
-		//desPos1 = vec3(-0.2, -0.2, 0.3);
+		//desPos1 = vec3(-0.2, -1, 0.3);
 		//desPos1 = vec3(-0.08, 0, 1);
 		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
-		desPos2 = vec3(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle));
-		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
+		//desPos2 = vec3(0.3 + radius * Kore::cos(angle), -0.2, 1.1 + radius * Kore::sin(angle));
+		desPos2 = vec3(0.3 + radius * Kore::cos(angle), -1, 1.1 + radius * Kore::sin(angle));
+		//avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);

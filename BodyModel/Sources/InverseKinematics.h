@@ -37,4 +37,5 @@ private:
 	float getRadians(float degree);
 	void eulerToQuat(float roll, float pitch, float yaw, Kore::Quaternion* quat);
 
+	void clampValue(float minVal, float maxVal, float* value);
 };
