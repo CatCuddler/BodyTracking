@@ -53,8 +53,8 @@ namespace {
 	int frame = 0;
 	
 	float angle = 0;
-	vec3 desPos1 = vec4(0, 0, 0);
-	vec3 desPos2 = vec4(0, 0, 0);
+	vec3 desPos1 = vec3(0, 0, 0);
+	vec3 desPos2 = vec3(0, 0, 0);
 
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -105,13 +105,12 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
-//			avatar->setScale(scale);
+			avatar->setScale(scale);
 
 			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+			initTrans = mat4::Translation(hmdPos.x() + 0.1f, 0, hmdPos.z() );
 			
 			// Set initial orientation
-			state = VrInterface::getSensorState(0);
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
 			initRot *= mat4::RotationZ(-zAngle);
@@ -199,12 +198,10 @@ namespace {
 		angle += 0.05f;
 		float radius = 0.2;
 		desPos1 = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle));
-		//desPos1 = vec3(-0.2, -1, 0.3);
-		//desPos1 = vec3(-0.08, 0, 1);
-		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
+		//avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
+		
 		desPos2 = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		//desPos2 = vec3(0.2, -0.2, 1.1 + radius * Kore::sin(angle));
-		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
+		//avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		avatar->drawJoints(avatar->M, V, P, width, height, true);
@@ -333,6 +330,10 @@ namespace {
 		pipeline->fragmentShader = fragmentShader;
 		pipeline->depthMode = ZCompareLess;
 		pipeline->depthWrite = true;
+		pipeline->blendSource = Graphics4::SourceAlpha;
+		pipeline->blendDestination = Graphics4::InverseSourceAlpha;
+		pipeline->alphaBlendSource = Graphics4::SourceAlpha;
+		pipeline->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline->compile();
 		
 		tex = pipeline->getTextureUnit("tex");
