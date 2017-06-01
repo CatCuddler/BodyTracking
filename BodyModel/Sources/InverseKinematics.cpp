@@ -32,6 +32,8 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 	}
 	
 	for (int i = 0; i < maxSteps; ++i) {
+		//log(Info, "Iteration %i", i);
+		
 		// Calculate error between desired position and actual position of the end effector
 		Kore::vec4 currentPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 		Kore::vec4 dif = desiredPos - currentPos;
@@ -39,6 +41,7 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		//Kore::log(Info, "It: %i, Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", i, currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
 		float error = dif.getLength();
+		//log(Info, "error %f", error);
 		if (error < maxError) {
 			return true;
 		}
@@ -130,6 +133,11 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		radY = getRadians(radY);
 		radZ = getRadians(radZ);*/
 		
+		// Interpolate between two quaternions if the angle is too big
+		float delta = 10.f;
+		if (radX > delta || radX < -delta || radY > delta || radY < -delta || radZ > delta || radZ < -delta)
+			bone->interpolate = true;
+		
 		bone->rotation.x() += radX;
 		bone->rotation.y() += radY;
 		bone->rotation.z() += radZ;
@@ -148,7 +156,7 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		Kore::mat4 rotMat = quat.matrix().Transpose();
 		//Kore::mat4 rotMat = mat4::Rotation(bone->rotation.z(), bone->rotation.y(), bone->rotation.x());
 		bone->local = bone->transform * rotMat;
-		//Kore::log(Info, "Bone %s -> angle %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z());
+		//Kore::log(Info, "Bone %s -> angle: %f %f %f quaterion: %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z(),  bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
 		
 		targetBone = targetBone->parent;
 		i = i + 3;
@@ -210,8 +218,8 @@ void InverseKinematics::setJointConstraints() {
 	// upperarm
 	nodeLeft = bones.at(8-1);
 	nodeLeft->axes = Kore::vec4(1, 1, 1, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-60, 130));
-	nodeLeft->constrain.push_back(Kore::vec2(-45, 45));
+	nodeLeft->constrain.push_back(Kore::vec2(-90, 150));
+	nodeLeft->constrain.push_back(Kore::vec2(-60, 60));
 	nodeLeft->constrain.push_back(Kore::vec2(-20, 60));
 	
 	nodeRight = bones.at(27-1);
@@ -222,7 +230,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft = bones.at(9-1);
 	nodeLeft->axes = Kore::vec4(1, 1, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-30, 90));
-	nodeLeft->constrain.push_back(Kore::vec2(-45, 45));
+	nodeLeft->constrain.push_back(Kore::vec2(-60, 60));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	
 	nodeRight = bones.at(28-1);

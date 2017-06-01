@@ -108,7 +108,7 @@ namespace {
 			avatar->setScale(scale);
 
 			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x() + 0.1f, 0, hmdPos.z() );
+			initTrans = mat4::Translation(hmdPos.x() + 0.1f, 0, hmdPos.z());
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
@@ -198,13 +198,14 @@ namespace {
 		angle += 0.05f;
 		float radius = 0.2;
 		desPos1 = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle));
-		//avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
+		avatar->setDesiredPosition(53, desPos1);		// Left foot 49, right foot 53
 		
-		desPos2 = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		//avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
+		//desPos2 = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
+		desPos2 = vec3(-0.1 + radius * Kore::cos(angle), -0.2, 0.9);
+		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
-		avatar->drawJoints(avatar->M, V, P, width, height, true);
+		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 #endif
 
 
@@ -299,15 +300,15 @@ namespace {
 	}
 	
 	void mousePress(int windowId, int button, int x, int y) {
-		rotateX = true;
-		rotateZ = true;
+		//rotateX = true;
+		//rotateZ = true;
 		mousePressX = x;
 		mousePressY = y;
 	}
 	
 	void mouseRelease(int windowId, int button, int x, int y) {
-		rotateX = false;
-		rotateZ = false;
+		//rotateX = false;
+		//rotateZ = false;
 	}
 	
 	void init() {

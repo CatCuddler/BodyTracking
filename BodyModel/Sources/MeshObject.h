@@ -83,6 +83,8 @@ struct BoneNode {
 	Kore::vec3 rotation;
 	Kore::vec4 desiredPos;
 	
+	bool interpolate = false;
+	
 	bool initialized = false;
 	
 	std::vector<Kore::mat4> aniTransformations;
@@ -114,7 +116,9 @@ public:
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
-	void quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res);
+	//void quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res);
+	void quatSlerp(BoneNode* bone, float deltaTime);
+
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	
