@@ -30,6 +30,12 @@ vector<Point2f> getPositions(vector<Rect2d> objects) {
 	return positions;
 }
 
+void displayLatency(LatencyTool* latency, float videoFPS) {
+	float frames = latency->countFrames();
+	float ms = frames * 1000 / videoFPS;
+	cout << "Frames: " << frames << " ms: " << ms << endl;
+}
+
 int main(int argc, const char * argv[]) {
 	
 	// List of tracker types in OpenCV 3.2
@@ -55,13 +61,13 @@ int main(int argc, const char * argv[]) {
 		return 1;
 	}
 	
-	float width = video.get(CV_CAP_PROP_FRAME_WIDTH);
-	float height = video.get(CV_CAP_PROP_FRAME_HEIGHT);
-	double fps = video.get(CV_CAP_PROP_FPS);
-	cout << "width " << width << " height " << height << " fps " << fps << endl;
+	float videoWidth = video.get(CV_CAP_PROP_FRAME_WIDTH);
+	float videoHeight = video.get(CV_CAP_PROP_FRAME_HEIGHT);
+	double videoFPS = video.get(CV_CAP_PROP_FPS);
+	cout << "width " << videoWidth << " height " << videoHeight << " fps " << videoFPS << endl;
 	
 	// Initialise Latency Tool
-	LatencyTool* latency = new LatencyTool(fps, width, height);
+	LatencyTool* latency = new LatencyTool(videoFPS, videoWidth, videoHeight);
 	//vector<Point2i> peakPos = latency->findPositionPeaks();
 	
 	// Read first frame
@@ -133,18 +139,14 @@ int main(int argc, const char * argv[]) {
 		
 		if (k == 108) {
 			// L
-			int frames = latency->countFrames();
-			float ms = frames*1/fps;
-			cout << "Frames: " << frames << " ms: " << ms << endl;
+			displayLatency(latency, videoFPS);
 		}
 		
 		if (k != 255) cout << "Key pressed " << k << endl;
 		
 	}
 	
-	float frames = latency->countFrames();
-	float ms = frames*1000/fps;
-	cout << "Frames: " << frames << " ms: " << ms << endl;
+	displayLatency(latency, videoFPS);
 	
 	latency->plotPositionsGraph();
 	
