@@ -5,6 +5,7 @@
 #include "LatencyTool.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace cv;
 using namespace std;
@@ -43,7 +44,10 @@ int main(int argc, const char * argv[]) {
 	vector<Rect2d> objects;
 	
 	// Read video
-	VideoCapture video("videos/video1.mov");
+	std::stringstream videoName; // Name of the video
+	videoName << "videos/" << argv[1];
+	cout << "video name: " << videoName.str() << endl;
+	VideoCapture video(videoName.str());
 	
 	// Exit if video is not opened
 	if(!video.isOpened()) {
@@ -54,6 +58,7 @@ int main(int argc, const char * argv[]) {
 	float width = video.get(CV_CAP_PROP_FRAME_WIDTH);
 	float height = video.get(CV_CAP_PROP_FRAME_HEIGHT);
 	double fps = video.get(CV_CAP_PROP_FPS);
+	cout << "width " << width << " height " << height << " fps " << fps << endl;
 	
 	// Initialise Latency Tool
 	LatencyTool* latency = new LatencyTool(fps, width, height);
