@@ -277,6 +277,12 @@ void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 	invKin->inverseKinematics(desiredPos, bone);
 }
 
+vec3 MeshObject::getBonePosition(int boneIndex) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	vec4 pos = bone->combined * vec4(0, 0, 0, 1);
+	return vec3(pos.x(), pos.y(), pos.z());
+}
+
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	
 	// Interpolate
@@ -287,14 +293,14 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 			
 			//if (bone->quaternion != bone->desQuaternion && bone->time < 1) {
 			if (bone->interpolate && bone->time < 1) {
-				quatSlerp(bone, deltaTime);
+				bone->time += deltaTime;// *0.1f;
+				quatSlerp(&bone->quaternion, &bone->desQuaternion, bone->time, &bone->quaternion);
 				
 				bone->quaternion.normalize();
 				Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
 				bone->local = bone->transform * rotMat;
 				
-				//log(Info, "interpolate %s %t %f %f %f %f desired %f %f %f %f", bone->boneName, bone->time, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z, bone->quaternion.w, bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z, bone->quaternion.w);
-				
+				//log(Info, "interpolate %s %t %f %f %f %f desired %f %f %f %f", bone->boneName, bone->time, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z, bone->quaternion.w, bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z, bone->desQuaternion.w);
 			} else {
 				bone->interpolate = false;
 				bone->time = 0;
@@ -372,7 +378,47 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	}
 }
 
-void MeshObject::quatSlerp(BoneNode* bone, float deltaTime) {
+
+void MeshObject::quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res) {
+	float to1[4];
+	double omega, cosom, sinom, scale0, scale1;
+	// calc cosine
+	cosom = from->x * to->x + from->y * to->y + from->z * to->z + from->w * to->w;
+	// adjust signs (if necessary)
+	if (cosom < 0.0) {
+		cosom = -cosom; to1[0] = -to->x;
+		to1[1] = -to->y;
+		to1[2] = -to->z;
+		to1[3] = -to->w;
+	}
+	else {
+		to1[0] = to->x;
+		to1[1] = to->y;
+		to1[2] = to->z;
+		to1[3] = to->w;
+	}
+	// calculate coefficients
+	float DELTA = 0.001f;
+	if ((1.0 - cosom) > DELTA) {
+		// standard case (slerp)
+		omega = acos(cosom);
+		sinom = sin(omega);
+		scale0 = sin((1.0 - t) * omega) / sinom;
+		scale1 = sin(t * omega) / sinom;
+	}
+	else {
+		// "from" and "to" quaternions are very close
+		//  ... so we can do a linear interpolation
+		scale0 = 1.0 - t;
+		scale1 = t;
+	}
+	// calculate final values
+	res->x = scale0 * from->x + scale1 * to1[0];
+	res->y = scale0 * from->y + scale1 * to1[1];
+	res->z = scale0 * from->z + scale1 * to1[2];
+	res->w = scale0 * from->w + scale1 * to1[3];
+}
+/*void MeshObject::quatSlerp(BoneNode* bone, float deltaTime) {
 	Kore::Quaternion* from = &bone->quaternion;
 	Kore::Quaternion* to = &bone->desQuaternion;
 	
@@ -396,10 +442,10 @@ void MeshObject::quatSlerp(BoneNode* bone, float deltaTime) {
 	bone->time += bone->time * deltaTime;
 	if ((1.0 - cosom) > DELTA) {
 		// standard case (slerp)
-		omega = acos(cosom);
-		sinom = sin(omega);
-		scale0 = sin((1.0 - bone->time) * omega) / sinom;
-		scale1 = sin(bone->time * omega) / sinom;
+		omega = Kore::acos(cosom);
+		sinom = Kore::sin(omega);
+		scale0 = Kore::sin((1.0 - bone->time) * omega) / sinom;
+		scale1 = Kore::sin(bone->time * omega) / sinom;
 	} else {
 		// "from" and "to" quaternions are very close
 		//  ... so we can do a linear interpolation
@@ -411,7 +457,7 @@ void MeshObject::quatSlerp(BoneNode* bone, float deltaTime) {
 	from->y = scale0 * from->y + scale1 * to1[1];
 	from->z = scale0 * from->z + scale1 * to1[2];
 	from->w = scale0 * from->w + scale1 * to1[3];
-}
+}*/
 
 void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);

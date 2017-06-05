@@ -21,8 +21,8 @@ using namespace Kore::Graphics4;
 
 namespace {
 	
-	const int width = 1024;
-	const int height = 768;
+	const int width = 2048;// 1024
+	const int height = 1024;// 768;
 	
 	double startTime;
 	double lastTime;
@@ -31,6 +31,7 @@ namespace {
 	Shader* vertexShader;
 	Shader* fragmentShader;
 	PipelineState* pipeline;
+	PipelineState* pipeline2;
 	
 	// Uniform locations
 	TextureUnit tex;
@@ -48,8 +49,13 @@ namespace {
 	MeshObject* cube;
 	MeshObject* avatar;
 	
-	vec3 playerPosition = vec3(0, 0.7, 1.5);
+#ifdef KORE_STEAMVR
+	vec3 globe = vec3(Kore::pi, 0, 0);
+	vec3 playerPosition = vec3(0, 0, 0);
+#else
 	vec3 globe = vec3(0, 0, 0);
+	vec3 playerPosition = vec3(0, 0.7, 1.5);
+#endif
 	int frame = 0;
 	
 	float angle = 0;
@@ -58,6 +64,7 @@ namespace {
 
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
+	mat4 hmsOffset = mat4::Translation(0, 0.2, 0);
 	mat4 initRot = mat4::Identity();
 	
 	bool initCharacter = false;
@@ -94,6 +101,9 @@ namespace {
 
 #ifdef KORE_STEAMVR
 
+		bool firstPersonVR = true;
+		bool firstPersonMonitor = false;
+
 		VrInterface::begin();
 		SensorState state;
 
@@ -104,19 +114,23 @@ namespace {
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 
+			playerPosition.x() = -currentUserHeight * 0.5;
+			playerPosition.y() = currentUserHeight * 0.5;
+			playerPosition.z() = -currentUserHeight * 1.5;
+
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
 
 			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x() + 0.1f, 0, hmdPos.z());
+			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
 			initRot *= mat4::RotationZ(-zAngle);
 
-			avatar->M = initTrans * initRot;
-			T = (initTrans * initRot).Invert();
+			avatar->M = initTrans * initRot * hmsOffset;
+			T = (initTrans * initRot * hmsOffset).Invert();
 
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
@@ -124,13 +138,20 @@ namespace {
 		}
 
 		// Get controller position
-		VrPoseState controller = VrInterface::getController(4);
+		VrPoseState controller;
+		for (int i = 0; i < 16; ++i) {
+			controller = VrInterface::getController(i);
+			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
+		}
 		vec3 desPosition = controller.vrPose.position;
 		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
-
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		//avatar->setDesiredPosition(53, vec3(finalPos.x(), finalPos.y(), finalPos.z()));		// Left foot 49, right foot 53
-		avatar->setDesiredPosition(29, vec3(finalPos.x(), finalPos.y(), finalPos.z()));			// Left hand 10, right hand 29
+		int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
+		avatar->setDesiredPosition(targetBoneIndex, vec3(finalPos.x(), finalPos.y(), finalPos.z()));
+
+		vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
+		finalPos = vec4(-targetPosition.x(), targetPosition.z(), targetPosition.y(), 1) + avatar->M * vec4(0, 0, 0, 1);
+		//cube->M = mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z());
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
@@ -155,17 +176,32 @@ namespace {
 		Graphics4::restoreRenderTarget();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 
-		Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
-		Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
-
 		// Render
+		if (!firstPersonMonitor) {
+			mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
+			P.Set(0, 0, -P.get(0, 0));
+
+			// view matrix
+			vec3 lookAt = playerPosition + vec3(0, 0, -1);
+			mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
+			V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+
+			Graphics4::setMatrix(vLocation, V);
+			Graphics4::setMatrix(pLocation, P);
+		}
+		else {
+			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
+			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
 		Graphics4::setMatrix(mLocation, cube->M);
+		Graphics4::setPipeline(pipeline2);
 		cube->render(tex);
+		Graphics4::setPipeline(pipeline);
 
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
-		avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
+		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 
 #else
 		// Scale test
@@ -336,6 +372,19 @@ namespace {
 		pipeline->alphaBlendSource = Graphics4::SourceAlpha;
 		pipeline->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline->compile();
+
+		pipeline2 = new PipelineState;
+		pipeline2->inputLayout[0] = &structure;
+		pipeline2->inputLayout[1] = nullptr;
+		pipeline2->vertexShader = vertexShader;
+		pipeline2->fragmentShader = fragmentShader;
+		pipeline2->depthMode = ZCompareAlways;
+		pipeline2->depthWrite = false;
+		pipeline2->blendSource = Graphics4::SourceAlpha;
+		pipeline2->blendDestination = Graphics4::InverseSourceAlpha;
+		pipeline2->alphaBlendSource = Graphics4::SourceAlpha;
+		pipeline2->alphaBlendDestination = Graphics4::InverseSourceAlpha;
+		pipeline2->compile();
 		
 		tex = pipeline->getTextureUnit("tex");
 		
@@ -343,7 +392,7 @@ namespace {
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "", structure, 0.01f);
+		cube = new MeshObject("cube.ogex", "", structure, 0.05f);
 		//cube->M = mat4::Translation(2, 0, 0);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		//avatar->M = mat4::Translation(-2, 0, 0);
