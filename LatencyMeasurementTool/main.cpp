@@ -36,7 +36,7 @@ void displayLatency(LatencyTool* latency, float videoFPS) {
 	cout << "Frames: " << frames << " ms: " << ms << endl;
 }
 
-int main(int argc, const char * argv[]) {
+int main(int argc, const char* argv[]) {
 	
 	// List of tracker types in OpenCV 3.2
 	const char *types[] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW"};
@@ -50,10 +50,11 @@ int main(int argc, const char * argv[]) {
 	vector<Rect2d> objects;
 	
 	// Read video
-	std::stringstream videoName; // Name of the video
-	videoName << "videos/" << argv[1];
-	cout << "video name: " << videoName.str() << endl;
-	VideoCapture video(videoName.str());
+	std::stringstream videoPath; // Name of the video
+	const char* videoName = argv[1];
+	videoPath  << "videos/" << videoName;
+	cout << "video name: " << videoPath.str() << endl;
+	VideoCapture video(videoPath.str());
 	
 	// Exit if video is not opened
 	if(!video.isOpened()) {
@@ -66,8 +67,11 @@ int main(int argc, const char * argv[]) {
 	double videoFPS = video.get(CV_CAP_PROP_FPS);
 	cout << "width " << videoWidth << " height " << videoHeight << " fps " << videoFPS << endl;
 	
+	int len = strlen(videoName);
+	string name(videoName, len - 4);
+	
 	// Initialise Latency Tool
-	LatencyTool* latency = new LatencyTool(videoFPS, videoWidth, videoHeight);
+	LatencyTool* latency = new LatencyTool(videoFPS, videoWidth, videoHeight, name);
 	//vector<Point2i> peakPos = latency->findPositionPeaks();
 	
 	// Read first frame

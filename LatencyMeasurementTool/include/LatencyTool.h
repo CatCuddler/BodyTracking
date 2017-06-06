@@ -11,6 +11,7 @@ private:
 	int fps;
 	float width;
 	float height;
+	string videoName;
 	
 	float scale;
 	
@@ -26,7 +27,7 @@ private:
 	void savePeaks(vector<Point2f> peaks);
 	
 public:
-	LatencyTool(int fps, float width, float height);
+	LatencyTool(int fps, float width, float height, string videoName);
 	void updatePositions(Point2f point0, Point2f point1);
 	
 	vector<Point2f> findPositionPeaks(Mat posDataObj);

@@ -6,7 +6,7 @@
 
 #include "Peak.h"
 
-LatencyTool::LatencyTool(int fps, float width, float height) : fps(fps), width(width), height(height), scale(100) {
+LatencyTool::LatencyTool(int fps, float width, float height, string videoName) : fps(fps), width(width), height(height), videoName(videoName), scale(100) {
 	
 }
 
@@ -151,7 +151,7 @@ Mat LatencyTool::smoothAndNormaliseMat(const Mat& mat) {
 	Mat cMat;
 	mat.col(0).copyTo(cMat);		// Copy x Positions
 	
-	const Size& ksize = Size(9, 9);
+	const Size& ksize = Size(15, 15);
 	GaussianBlur(cMat, cMat, ksize, 0);
 
 	normalize(cMat, cMat, 0, 1, NORM_MINMAX);
@@ -161,7 +161,10 @@ Mat LatencyTool::smoothAndNormaliseMat(const Mat& mat) {
 
 void LatencyTool::savePositionData(Mat pos0, Mat pos1) {
 	std::fstream outputFile;
-	outputFile.open("results/positionData.csv", std::ios::out);
+	
+	std::stringstream fileName;
+	fileName << "results/positionData_" << videoName << ".csv";
+	outputFile.open(fileName.str(), std::ios::out);
 	
 	outputFile << "x0, x1" << endl;
 	
