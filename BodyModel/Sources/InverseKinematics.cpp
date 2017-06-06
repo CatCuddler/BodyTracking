@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(10), maxError(0.01f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(5), maxError(0.05f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -21,7 +21,7 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 	boneCount = 0;
 	BoneNode* bone = targetBone;
 	while (bone->nodeIndex != rootIndex) {
-		//if (bone->interpolating) return false; 
+		//if (bone->interpolate) return false;
 		bone = bone->parent;
 		++boneCount;
 	}
@@ -134,7 +134,7 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		radZ = getRadians(radZ);*/
 		
 		// Interpolate between two quaternions if the angle is too big
-		float delta = 10.f;
+		float delta = 50.f;
 		if (radX > delta || radX < -delta || radY > delta || radY < -delta || radZ > delta || radZ < -delta)
 			bone->interpolate = true;
 		

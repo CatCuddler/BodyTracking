@@ -21,8 +21,13 @@ using namespace Kore::Graphics4;
 
 namespace {
 	
-	const int width = 2048;// 1024
-	const int height = 1024;// 768;
+#ifdef KORE_STEAMVR
+	const int width = 2048;
+	const int height = 1024;
+#else
+	const int width = 1024;
+	const int height = 768;
+#endif
 	
 	double startTime;
 	double lastTime;
@@ -242,6 +247,8 @@ namespace {
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
+		cube->M = mat4::Translation(desPos2.x(), desPos2.z(), -desPos2.y());
+
 #endif
 
 
@@ -392,10 +399,8 @@ namespace {
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "", structure, 0.05f);
-		//cube->M = mat4::Translation(2, 0, 0);
+		cube = new MeshObject("cube.ogex", "", structure, 0.05);
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		//avatar->M = mat4::Translation(-2, 0, 0);
 		initRot = mat4::RotationX(-Kore::pi / 2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);

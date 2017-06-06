@@ -76,8 +76,6 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	float time = 0;
-	
 	Kore::Quaternion quaternion;
 	Kore::Quaternion desQuaternion;
 	Kore::vec3 rotation;
@@ -116,7 +114,7 @@ public:
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
-	void quatSlerp(Kore::Quaternion* from, Kore::Quaternion* to, float t, Kore::Quaternion* res);
+	void quatSlerp(const Kore::Quaternion* from, const Kore::Quaternion* to, const float t, Kore::Quaternion* res);
 
 	vec3 getBonePosition(int boneIndex);
 
