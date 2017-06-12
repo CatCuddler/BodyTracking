@@ -6,22 +6,21 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(5), maxError(0.05f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.01f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targetBone) {
-	
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition) {
+
 	if (!targetBone->initialized) return false;
-	if (desiredPos == targetBone->desiredPos) return false;
+	if (desiredPosition == targetBone->desiredPos) return false;
 	
 	//targetBone->desiredPos = desiredPos;
 	
 	boneCount = 0;
 	BoneNode* bone = targetBone;
 	while (bone->nodeIndex != rootIndex) {
-		//if (bone->interpolate) return false;
 		bone = bone->parent;
 		++boneCount;
 	}
@@ -35,8 +34,8 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		//log(Info, "Iteration %i", i);
 		
 		// Calculate error between desired position and actual position of the end effector
-		Kore::vec4 currentPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-		Kore::vec4 dif = desiredPos - currentPos;
+		Kore::vec4 currentPosition = targetBone->combined * Kore::vec4(0, 0, 0, 1);
+		Kore::vec4 dif = desiredPosition - currentPosition;
 		
 		//Kore::log(Info, "It: %i, Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", i, currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
@@ -59,6 +58,7 @@ bool InverseKinematics::inverseKinematics(Kore::vec4 desiredPos, BoneNode* targe
 		// Calculate the angles
 		InverseKinematics::mat3x1 V;
 		V.Set(0, 0, dif.x()); V.Set(1, 0, dif.y()); V.Set(2, 0, dif.z());
+		V.Set(3, 0, 0); V.Set(4, 0, 0); V.Set(5, 0, 0);
 		InverseKinematics::mat1x aThetaX = pseudoInvX * V.Transpose();
 		InverseKinematics::mat1x aThetaY = pseudoInvY * V.Transpose();
 		InverseKinematics::mat1x aThetaZ = pseudoInvZ * V.Transpose();
@@ -102,6 +102,10 @@ InverseKinematics::mat3x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 		jacobian[j][0] = cross.x();
 		jacobian[j][1] = cross.y();
 		jacobian[j][2] = cross.z();
+
+		jacobian[j][3] = oaj.x();
+		jacobian[j][4] = oaj.y();
+		jacobian[j][5] = oaj.z();
 		
 		targetBone = targetBone->parent;
 		++j;

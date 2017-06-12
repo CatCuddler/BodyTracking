@@ -11,7 +11,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
-	bool inverseKinematics(Kore::vec4 desiredPos, BoneNode* targetBone);
+	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition);
 	
 private:
 	int boneCount;
@@ -22,8 +22,8 @@ private:
 	std::vector<BoneNode*> bones;
 	
 	static const int maxBones = 8;
-	typedef Matrix<3, maxBones, float> mat3x;
-	typedef Matrix<3, 1, float> mat3x1;
+	typedef Matrix<6, maxBones, float> mat3x;
+	typedef Matrix<6, 1, float> mat3x1;
 	typedef Matrix<1, maxBones, float> mat1x;
 	
 	void setJointConstraints();

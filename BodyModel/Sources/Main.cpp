@@ -74,6 +74,8 @@ namespace {
 	
 	bool initCharacter = false;
 
+	bool renderDesiredPosition = false;
+
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -119,9 +121,9 @@ namespace {
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 
-			playerPosition.x() = -currentUserHeight * 0.5;
-			playerPosition.y() = currentUserHeight * 0.5;
-			playerPosition.z() = -currentUserHeight * 1.5;
+			//playerPosition.x() = -currentUserHeight * 0.5;
+			playerPosition.y() = currentUserHeight * 1.5;
+			playerPosition.z() = currentUserHeight * 0.5;
 
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
@@ -170,8 +172,10 @@ namespace {
 			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
-			Graphics4::setMatrix(mLocation, cube->M);
-			cube->render(tex);
+			if (renderDesiredPosition) {
+				Graphics4::setMatrix(mLocation, cube->M);
+				cube->render(tex);
+			}
 
 			VrInterface::endRender(eye);
 		}
@@ -200,9 +204,11 @@ namespace {
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
-		Graphics4::setMatrix(mLocation, cube->M);
-		Graphics4::setPipeline(pipeline2);
-		cube->render(tex);
+		if (renderDesiredPosition) {
+			Graphics4::setMatrix(mLocation, cube->M);
+			Graphics4::setPipeline(pipeline2);
+			cube->render(tex);
+		}
 		Graphics4::setPipeline(pipeline);
 
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
@@ -400,7 +406,7 @@ namespace {
 		mLocation = pipeline->getConstantLocation("M");
 		
 		cube = new MeshObject("cube.ogex", "", structure, 0.05);
-		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 		initRot = mat4::RotationX(-Kore::pi / 2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);

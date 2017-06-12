@@ -239,7 +239,7 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 	}
 	
 	// Draw desired position
-	vec2 nPos = convert(desiredPos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
+	vec2 nPos = convert(desiredPosition, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 	g2->drawImage(yellowDot, nPos.x(), nPos.y());
 	
 	g2->end();
@@ -273,8 +273,8 @@ void MeshObject::setAnimation(int frame) {
 
 void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
-	desiredPos = vec4(position.x(), position.y(), position.z(), 1.0);
-	invKin->inverseKinematics(desiredPos, bone);
+	desiredPosition = vec4(position.x(), position.y(), position.z(), 1.0);
+	invKin->inverseKinematics(bone, desiredPosition);
 }
 
 vec3 MeshObject::getBonePosition(int boneIndex) {
@@ -286,7 +286,7 @@ vec3 MeshObject::getBonePosition(int boneIndex) {
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	
 	// Interpolate
-	bool interpolate = true;
+	/*bool interpolate = true;
 	if (interpolate) {
 		for (int i = 0; i < bones.size(); ++i) {
 			BoneNode* bone = bones.at(i);
@@ -302,7 +302,7 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 				bone->interpolate = false;
 			}
 		}
-	}
+	}*/
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));

@@ -126,7 +126,7 @@ public:
 	Kore::mat4 M;
 	
 private:
-	Kore::vec4 desiredPos;
+	Kore::vec4 desiredPosition;
 	
 	long meshesCount;
 	float scale;
