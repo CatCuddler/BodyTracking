@@ -233,8 +233,10 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
-		Graphics4::setMatrix(mLocation, cube->M);
-		cube->render(tex);
+		if (renderDesiredPosition) {
+			Graphics4::setMatrix(mLocation, cube->M);
+			cube->render(tex);
+		}
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
 		/*avatar->setAnimation(frame);
@@ -406,7 +408,11 @@ namespace {
 		mLocation = pipeline->getConstantLocation("M");
 		
 		cube = new MeshObject("cube.ogex", "", structure, 0.05);
+#ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+#else
+		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
+#endif
 		initRot = mat4::RotationX(-Kore::pi / 2.0);
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
