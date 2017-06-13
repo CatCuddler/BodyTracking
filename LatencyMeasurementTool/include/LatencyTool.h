@@ -23,7 +23,7 @@ private:
 	
 	Mat smoothAndNormaliseMat(const Mat& mat);
 	
-	void savePositionData(Mat pos0, Mat pos1);
+	void savePositionData(Mat pos0, Mat pos1, string extension);
 	void savePeaks(vector<Point2f> peaks);
 	
 public:

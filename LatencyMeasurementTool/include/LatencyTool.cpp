@@ -89,7 +89,8 @@ void LatencyTool::plotPositionsGraph() {
 	allPeaks.insert(allPeaks.end(), peaks.begin(), peaks.end());
 	plotCircle(image, peaks);
 	
-	savePositionData(normPos0, normPos1);
+	savePositionData(posDataObj0, posDataObj1, "raw");
+	savePositionData(normPos0, normPos1, "normalised");
 	savePeaks(allPeaks);
 	imwrite("results/positionPlot.png", image);
 	imshow("plot0", image);
@@ -159,18 +160,17 @@ Mat LatencyTool::smoothAndNormaliseMat(const Mat& mat) {
 	return cMat;
 }
 
-void LatencyTool::savePositionData(Mat pos0, Mat pos1) {
+void LatencyTool::savePositionData(Mat pos0, Mat pos1, string extension) {
 	std::fstream outputFile;
-	
 	std::stringstream fileName;
-	fileName << "results/positionData_" << videoName << ".csv";
+	fileName << "results/positionData_" << videoName << "_" << extension << ".csv";
 	outputFile.open(fileName.str(), std::ios::out);
 	
 	outputFile << "x0, x1" << endl;
 	
 	for (int i = 0; i < pos0.rows - 1; i++) {
-		outputFile << pos0.at<float>(i,1) << ", ";
-		outputFile << pos1.at<float>(i,1) << ", ";
+		outputFile << pos0.at<float>(i,0) << ", ";
+		outputFile << pos1.at<float>(i,0) << ", ";
 		outputFile << endl;
 	}
 	outputFile.close();
@@ -178,7 +178,9 @@ void LatencyTool::savePositionData(Mat pos0, Mat pos1) {
 
 void LatencyTool::savePeaks(vector<Point2f> peaks) {
 	std::fstream outputFile;
-	outputFile.open("results/peaksData.csv", std::ios::out);
+	std::stringstream fileName;
+	fileName << "results/peaksData_" << videoName << ".csv";
+	outputFile.open(fileName.str(), std::ios::out);
 	
 	outputFile << "x, y" << endl;
 	
