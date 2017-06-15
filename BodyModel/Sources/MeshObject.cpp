@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "MeshObject.h"
 #include "InverseKinematics.h"
+#include "Logger.h"
 
 #include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
@@ -275,6 +276,10 @@ void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(position.x(), position.y(), position.z(), 1.0);
 	invKin->inverseKinematics(bone, desiredPosition);
+	
+	if (logData) {
+		Logger::savePositionData(0, position, getBonePosition(boneIndex));
+	}
 }
 
 vec3 MeshObject::getBonePosition(int boneIndex) {
