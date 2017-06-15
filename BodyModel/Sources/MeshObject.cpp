@@ -155,7 +155,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		vec4 position = head->combined *vec4(0, 0, 0, 1);
 		currentHeight = position.z();
 		
-		invKin = new InverseKinematics(bones);
+		invKin = new InverseKinematics(bones, maxIteration);
 	}
 	
 	for(int j = 0; j < meshesCount; ++j) {
@@ -278,7 +278,7 @@ void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 position) {
 	invKin->inverseKinematics(bone, desiredPosition);
 	
 	if (logData) {
-		Logger::savePositionData(0, position, getBonePosition(boneIndex));
+		Logger::savePositionData(maxIteration, position, getBonePosition(boneIndex));
 	}
 }
 

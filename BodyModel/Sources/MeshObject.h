@@ -138,6 +138,7 @@ private:
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
 	
 	InverseKinematics* invKin;
+	const int maxIteration = 100;
 	
 	Kore::Graphics2::Graphics2* g2;
 	Kore::Graphics4::Texture* redDot;

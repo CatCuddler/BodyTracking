@@ -6,7 +6,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) : maxSteps(100), maxError(0.01f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
 }
