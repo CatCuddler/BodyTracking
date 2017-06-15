@@ -74,8 +74,39 @@ namespace {
 	
 	bool initCharacter = false;
 
-	bool renderDesiredPosition = false;
+	const int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
+	const int renderTrackerOrTargetPosition = 2;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
+	void renderTracker() {
+		switch (renderTrackerOrTargetPosition) {
+			case 0:
+				// Dont render
+				break;
+			case 1:
+			{
+				// Render desired position
+				cube->M = mat4::Translation(desPos2.x(), desPos2.z(), -desPos2.y());
+				Graphics4::setMatrix(mLocation, cube->M);
+				//Graphics4::setPipeline(pipeline2);
+				cube->render(tex);
+				break;
+			}
+			case 2:
+			{
+				// Render target position
+				vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
+				vec4 finalPos = vec4(targetPosition.x(), -targetPosition.y(), -targetPosition.z(), 1);
+				cube->M = T * mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z());
+				Graphics4::setMatrix(mLocation, cube->M);
+				//Graphics4::setPipeline(pipeline2);
+				cube->render(tex);
+				break;
+			}
+			default:
+				break;
+		}
+	}
+	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -153,7 +184,6 @@ namespace {
 		vec3 desPosition = controller.vrPose.position;
 		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
 		avatar->setDesiredPosition(targetBoneIndex, vec3(finalPos.x(), finalPos.y(), finalPos.z()));
 
 		vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
@@ -172,10 +202,11 @@ namespace {
 			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
-			if (renderDesiredPosition) {
+			/*if (renderDesiredPosition) {
 				Graphics4::setMatrix(mLocation, cube->M);
 				cube->render(tex);
-			}
+			}*/
+			renderTracker();
 
 			VrInterface::endRender(eye);
 		}
@@ -204,11 +235,12 @@ namespace {
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
-		if (renderDesiredPosition) {
+		/*if (renderDesiredPosition) {
 			Graphics4::setMatrix(mLocation, cube->M);
 			Graphics4::setPipeline(pipeline2);
 			cube->render(tex);
-		}
+		}*/
+		renderTracker();
 		Graphics4::setPipeline(pipeline);
 
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
@@ -219,6 +251,7 @@ namespace {
 		if (!initCharacter) {
 			avatar->setScale(0.8);
 			avatar->M = initTrans * initRot;
+			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 		}
 		
@@ -233,11 +266,6 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
-		if (renderDesiredPosition) {
-			Graphics4::setMatrix(mLocation, cube->M);
-			cube->render(tex);
-		}
-		
 		Graphics4::setMatrix(mLocation, avatar->M);
 		/*avatar->setAnimation(frame);
 		frame++;
@@ -251,12 +279,13 @@ namespace {
 		
 		//desPos2 = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
 		desPos2 = vec3(-0.1 + radius * Kore::cos(angle), -0.2, 0.9);
-		avatar->setDesiredPosition(10, desPos2);		// Left hand 10, right hand 29
+		avatar->setDesiredPosition(targetBoneIndex, desPos2);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
-		cube->M = mat4::Translation(desPos2.x(), desPos2.z(), -desPos2.y());
-
+		
+		renderTracker();
+		Graphics4::setPipeline(pipeline);
 #endif
 
 
@@ -300,6 +329,10 @@ namespace {
 			case Key_L:
 				Kore::log(Kore::LogLevel::Info, "Position: (%.2f, %.2f, %.2f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
 				Kore::log(Kore::LogLevel::Info, "Rotation: (%.2f, %.2f, %.2f)", globe.x(), globe.y(), globe.z());
+				break;
+			case Key_Q:
+				System::stop();
+				break;
 			default:
 				break;
 		}
