@@ -147,7 +147,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
 
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 
 	if (bones.size() > 0) {
 		// Get the highest position
@@ -159,7 +159,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	}
 	
 	for(int j = 0; j < meshesCount; ++j) {
-		Mesh* mesh = meshes.at(j);
+		Mesh* mesh = meshes[j];
 		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
 		IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces * 3);
 		
@@ -193,7 +193,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		vertexBuffers.push_back(vertexBuffer);
 		indexBuffers.push_back(indexBuffer);
 		
-		Material* material = materials.at(j);
+		Material* material = materials[j];
 		char temp[200];
 		strcpy (temp, textureDir);
 		std::strcat(temp, material->textureName);
@@ -210,9 +210,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 
 void MeshObject::render(TextureUnit tex) {
 	for (int i = 0; i < meshesCount; ++i) {
-		VertexBuffer* vertexBuffer = vertexBuffers.at(i);
-		IndexBuffer* indexBuffer = indexBuffers.at(i);
-		Texture* image = images.at(i);
+		VertexBuffer* vertexBuffer = vertexBuffers[i];
+		IndexBuffer* indexBuffer = indexBuffers[i];
+		Texture* image = images[i];
 		
 		Graphics4::setTexture(tex, image);
 		Graphics4::setVertexBuffer(*vertexBuffer);
@@ -225,7 +225,7 @@ void MeshObject::drawJoints(const mat4& modelMatrix, const mat4& viewMatrix, con
 	g2->begin(false);
 	
 	for(int i = 1; i < bones.size(); ++i) {
-		BoneNode* bone = bones.at(i);
+		BoneNode* bone = bones[i];
 		vec4 pos = bone->combined * vec4(0, 0, 0, 1);
 		vec2 bonePos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
 		g2->drawImage(redDot, bonePos.x(), bonePos.y());
@@ -251,7 +251,7 @@ void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMat
 	g2->begin(false);
 	
 	for (int i = 0; i < meshesCount; ++i) {
-		Mesh* mesh = meshes.at(i);
+		Mesh* mesh = meshes[i];
 		for (int i2 = 0; i2 < mesh->numVertices; ++i2) {
 			vec4 pos = vec4(mesh->vertices[i2 * 3 + 0] * scale, mesh->vertices[i2 * 3 + 1] * scale, mesh->vertices[i2 * 3 + 2] * scale, 1);
 			vec2 nPos = convert(pos, modelMatrix, viewMatrix, projectionMatrix, screenWidth, screenHeight);
@@ -264,10 +264,10 @@ void MeshObject::drawVertices(const mat4& modelMatrix, const Kore::mat4& viewMat
 
 void MeshObject::setAnimation(int frame) {
 	for (int i = 0; i < bones.size(); ++i) {
-		BoneNode* bone = bones.at(i);
+		BoneNode* bone = bones[i];
 		
 		if (bone->aniTransformations.size() > 0 && frame < bone->aniTransformations.size()) {
-			bone->local = bone->aniTransformations.at(frame);
+			bone->local = bone->aniTransformations[frame];
 		}
 	}
 }
@@ -294,7 +294,7 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	/*bool interpolate = true;
 	if (interpolate) {
 		for (int i = 0; i < bones.size(); ++i) {
-			BoneNode* bone = bones.at(i);
+			BoneNode* bone = bones[i];
 			if (bone->interpolate) {
 				quatSlerp(&bone->quaternion, &bone->desQuaternion, 0.001f, &bone->quaternion);
 				
@@ -310,14 +310,14 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	}*/
 	
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones.at(i));
+	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneIndex = 0;	// Iterate over BoneCountArray
 		
-		Mesh* mesh = meshes.at(j);
+		Mesh* mesh = meshes[j];
 		
-		VertexBuffer* vertexBuffer = vertexBuffers.at(j);
+		VertexBuffer* vertexBuffer = vertexBuffers[j];
 		
 		// Mesh Vertex Buffer
 		float* vertices = vertexBuffer->lock();
@@ -334,7 +334,7 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
 				
 				int index = mesh->boneIndices[currentBoneIndex] + 2;
-				//BoneNode* bone = bones.at(mesh->boneIndices[currentBoneIndex] + 1);
+				//BoneNode* bone = bones[mesh->boneIndices[currentBoneIndex] + 1];
 				BoneNode* bone = getBoneWithIndex(index);
 				float boneWeight = mesh->boneWeight[currentBoneIndex];
 				totalJointsWeight += boneWeight;
@@ -369,8 +369,8 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 		}
 		vertexBuffer->unlock();
 		
-		IndexBuffer* indexBuffer = indexBuffers.at(j);
-		Texture* image = images.at(j);
+		IndexBuffer* indexBuffer = indexBuffers[j];
+		Texture* image = images[j];
 		
 		Graphics4::setTexture(tex, image);
 		Graphics4::setVertexBuffer(*vertexBuffer);
@@ -440,7 +440,7 @@ void MeshObject::LoadObj(const char* filename) {
 }
 
 BoneNode* MeshObject::getBoneWithIndex(int boneIndex) {
-	BoneNode* bone = bones.at(boneIndex - 1);
+	BoneNode* bone = bones[boneIndex - 1];
 	return bone;
 }
 
@@ -769,7 +769,7 @@ float MeshObject::getHeight() {
 
 void MeshObject::setScale(float scaleFactor) {
 	// Scale root bone
-	BoneNode* root = bones.at(0);
+	BoneNode* root = bones[0];
 	root->transform = root->transform * mat4::Scale(scaleFactor); //T * R * S
 	root->local = root->transform;
 	

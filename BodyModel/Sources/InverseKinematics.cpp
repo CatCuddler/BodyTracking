@@ -71,7 +71,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		}
 		
 		applyChanges(theta, targetBone);
-		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones.at(i));
+		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
 	}
 	return false;
 }
@@ -130,9 +130,9 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 	while (targetBone->nodeIndex != rootIndex) {
 		BoneNode* bone = targetBone;
 		
-		float radX = theta.at(i);
-		float radY = theta.at(i+1);
-		float radZ = theta.at(i+2);
+		float radX = theta[i];
+		float radY = theta[i+1];
+		float radZ = theta[i+2];
 		/*radX = getRadians(radX);
 		radY = getRadians(radY);
 		radZ = getRadians(radZ);*/
@@ -147,9 +147,9 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		bone->rotation.z() += radZ;
 		
 		Kore::vec4 axis = bone->axes;
-		if (axis.x() == 1) clampValue(bone->constrain.at(0).x(), bone->constrain.at(0).y(), &bone->rotation.x());
-		if (axis.y() == 1) clampValue(bone->constrain.at(1).x(), bone->constrain.at(1).y(), &bone->rotation.y());
-		if (axis.z() == 1) clampValue(bone->constrain.at(2).x(), bone->constrain.at(2).y(), &bone->rotation.z());
+		if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &bone->rotation.x());
+		if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &bone->rotation.y());
+		if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &bone->rotation.z());
 		
 		Kore::Quaternion quat;
 		eulerToQuat(getRadians(bone->rotation.x()), getRadians(bone->rotation.y()), getRadians(bone->rotation.z()), &quat);
@@ -209,57 +209,57 @@ void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeRight;
 	
 	// clavicle
-	/*nodeLeft = bones.at(7-1);
+	/*nodeLeft = bones[7-1];
 	nodeLeft->axes = Kore::vec4(0, 0, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-0.05, 0.05));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	
-	nodeRight = bones.at(26-1);
+	nodeRight = bones[26-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;*/
 	
 	// upperarm
-	nodeLeft = bones.at(8-1);
+	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec4(1, 1, 1, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-90, 150));
 	nodeLeft->constrain.push_back(Kore::vec2(-60, 60));
 	nodeLeft->constrain.push_back(Kore::vec2(-20, 60));
 	
-	nodeRight = bones.at(27-1);
+	nodeRight = bones[27-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;
 	
 	// lowerarm
-	nodeLeft = bones.at(9-1);
+	nodeLeft = bones[9-1];
 	nodeLeft->axes = Kore::vec4(1, 1, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-30, 90));
 	nodeLeft->constrain.push_back(Kore::vec2(-60, 60));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	
-	nodeRight = bones.at(28-1);
+	nodeRight = bones[28-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;
 	
 	// thigh
-	nodeLeft = bones.at(47-1);
+	nodeLeft = bones[47-1];
 	nodeLeft->axes = Kore::vec4(1, 0, 1, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-90, 60));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	nodeLeft->constrain.push_back(Kore::vec2(-80, 80));
 	
-	nodeRight = bones.at(51-1);
+	nodeRight = bones[51-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;
 	
 	// calf
-	nodeLeft = bones.at(48-1);
+	nodeLeft = bones[48-1];
 	nodeLeft->axes = Kore::vec4(1, 0, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-10, 150));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 	
-	nodeRight = bones.at(52-1);
+	nodeRight = bones[52-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain = nodeLeft->constrain;
 	
