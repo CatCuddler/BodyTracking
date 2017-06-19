@@ -127,7 +127,9 @@ float LatencyTool::countFrames() {
 	}
 	
 	float avrFrames = 0;
-	for (int i = 0; i < peaks0.size(); ++i) {
+	int peakCount = 0;
+	// Ignore first and last peak
+	for (int i = 1; i < peaks0.size() - 1; ++i) {
 		// Extract the frame number of the first object
 		Point2f peak = peaks0.at(i);
 		int frame0 = peak.x;
@@ -136,14 +138,15 @@ float LatencyTool::countFrames() {
 		peak = peaks1.at(i);
 		int frame1 = peak.x;
 		
-		//cout << "frame0: " << frame0 << " frame1: " << frame1 << endl;
+		cout << "frame0: " << frame0 << " frame1: " << frame1 << endl;
 		
 		// Calculate the difference
 		int diff = frame1 - frame0;
 		avrFrames += diff;
+		peakCount++;
 	}
 	
-	avrFrames = avrFrames/peaks0.size();
+	avrFrames = avrFrames/peakCount;
 	
 	return avrFrames;
 }
@@ -152,7 +155,8 @@ Mat LatencyTool::smoothAndNormaliseMat(const Mat& mat) {
 	Mat cMat;
 	mat.col(0).copyTo(cMat);		// Copy x Positions
 	
-	const Size& ksize = Size(15, 15);
+	const int k = 71;
+	const Size& ksize = Size(k, k);
 	GaussianBlur(cMat, cMat, ksize, 0);
 
 	normalize(cMat, cMat, 0, 1, NORM_MINMAX);
@@ -189,4 +193,19 @@ void LatencyTool::savePeaks(vector<Point2f> peaks) {
 		outputFile << peak.x << ", " << peak.y << endl;
 	}
 	outputFile.close();
+}
+
+float LatencyTool::getLatencyFromPositionMatrix(Mat mat) {
+	Mat cMat0;
+	mat.col(0).copyTo(cMat0);		// Copy x Positions of the first object
+	Mat cMat1;
+	mat.col(1).copyTo(cMat1);		// Copy x Positions of the second object
+	posDataObj0 = cMat0;
+	posDataObj1 = cMat1;
+	
+	Mat normPos0 = smoothAndNormaliseMat(posDataObj0);
+	Mat normPos1 = smoothAndNormaliseMat(posDataObj1);
+	savePositionData(normPos0, normPos1, "normalised");
+	
+	return countFrames();
 }

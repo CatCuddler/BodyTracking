@@ -37,4 +37,5 @@ public:
 	
 	float countFrames();
 	
+	float getLatencyFromPositionMatrix(Mat mat);
 };

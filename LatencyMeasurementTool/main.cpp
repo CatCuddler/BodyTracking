@@ -36,10 +36,42 @@ void displayLatency(LatencyTool* latency, float videoFPS) {
 	cout << "Frames: " << frames << " ms: " << ms << endl;
 }
 
+/*int main(int argc, const char* argv[]) {
+	const char* fileName = argv[1];
+	ifstream inputFile(fileName);
+	string currentLine;
+	vector< vector<float> > data;
+	while(getline(inputFile, currentLine)) {
+		vector<float> values;
+		stringstream temp(currentLine);
+		string singleVal;
+		while(getline(temp, singleVal, ',')) {
+			values.push_back(atof(singleVal.c_str()));
+		}
+		data.push_back(values);
+	}
+	
+	// Add data into Mat element
+	Mat vec = Mat::zeros((int)data.size(), (int)data[0].size(), CV_32F);
+	for (int rows = 0; rows < (int)data.size(); ++rows) {
+		for (int cols = 0; cols < (int)data[0].size(); ++cols) {
+			vec.at<float>(rows, cols) = data[rows][cols];
+			//cout << " " << vec.at<float>(rows, cols) << endl;
+		}
+	}
+	
+	float FPS = 240.0;
+	LatencyTool* latency = new LatencyTool(FPS, 0, 0, "");
+	float frames = latency->getLatencyFromPositionMatrix(vec);
+	
+	float ms = frames * 1000 / FPS;
+	cout << "Frames: " << frames << " ms: " << ms << endl;
+}*/
+
 int main(int argc, const char* argv[]) {
 	
 	// List of tracker types in OpenCV 3.2
-	const char *types[] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW"};
+	const char *types[] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
 	vector <string> trackerTypes(types, std::end(types));
 	
 	// Create a tracker
@@ -77,6 +109,9 @@ int main(int argc, const char* argv[]) {
 	// Read first frame
 	Mat frame;
 	bool ok = video.read(frame);
+	
+	video.set(CV_CAP_PROP_POS_FRAMES, 50);
+	video.retrieve(frame, CV_CAP_OPENNI_BGR_IMAGE);
 	
 	// Define initial boundibg box (one for the marker, one for the VR object)
 	selectROI("tracker", frame, objects, false);
