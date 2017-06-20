@@ -113,10 +113,12 @@ public:
 	
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
+	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::vec3 desiredRot);
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
 	void quatSlerp(const Kore::Quaternion* from, const Kore::Quaternion* to, const float t, Kore::Quaternion* res);
 
 	vec3 getBonePosition(int boneIndex);
+	vec3 getBoneRotation(int boneIndex);
 
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);

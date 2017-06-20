@@ -11,7 +11,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition) {
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::vec3 desiredRotation) {
 
 	if (!targetBone->initialized) return false;
 	if (desiredPosition == targetBone->desiredPos) return false;
@@ -35,11 +35,14 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		
 		// Calculate error between desired position and actual position of the end effector
 		Kore::vec4 currentPosition = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-		Kore::vec4 dif = desiredPosition - currentPosition;
+		Kore::vec4 diffPos = desiredPosition - currentPosition;
+		
+		// Calculate error between deisred rotation and actual rotation
+		Kore::vec3 diffRot = desiredRotation - targetBone->rotation;
 		
 		//Kore::log(Info, "It: %i, Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", i, currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
-		float error = dif.getLength();
+		float error = diffPos.getLength();
 		//log(Info, "error %f", error);
 		if (error < maxError) {
 			return true;
@@ -57,8 +60,8 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		
 		// Calculate the angles
 		InverseKinematics::mat3x1 V;
-		V.Set(0, 0, dif.x()); V.Set(1, 0, dif.y()); V.Set(2, 0, dif.z());
-		V.Set(3, 0, 0); V.Set(4, 0, 0); V.Set(5, 0, 0);
+		V.Set(0, 0, diffPos.x()); V.Set(1, 0, diffPos.y()); V.Set(2, 0, diffPos.z());
+		V.Set(3, 0, diffRot.x()); V.Set(4, 0, diffRot.y()); V.Set(5, 0, diffRot.z());
 		InverseKinematics::mat1x aThetaX = pseudoInvX * V.Transpose();
 		InverseKinematics::mat1x aThetaY = pseudoInvY * V.Transpose();
 		InverseKinematics::mat1x aThetaZ = pseudoInvZ * V.Transpose();
