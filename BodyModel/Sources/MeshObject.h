@@ -119,6 +119,8 @@ public:
 
 	vec3 getBonePosition(int boneIndex);
 	vec3 getBoneRotation(int boneIndex);
+	
+	void setRotationToBone(int boneIndex, Kore::vec3 rotation);
 
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);

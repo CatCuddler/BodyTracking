@@ -275,15 +275,17 @@ namespace {
 		
 		angle += 0.05f;
 		float radius = 0.2;
-		vec3 desPos = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.3 + radius * Kore::sin(angle));
+		vec3 desPos = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
 		avatar->setDesiredPosition(53, desPos);		// Left foot 49, right foot 53
+		//desPosition = desPos;
 		
-		//desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		//desPosition = vec3(-0.1 + radius * Kore::cos(angle), -0.2, 0.9);
-		desPosition = vec3(0.1, -0.4, 0.9);
-		//avatar->setDesiredPosition(targetBoneIndex, desPos2);		// Left hand 10, right hand 29
-		desRotation = vec3(0, 0.1 * Kore::cos(angle), 0);
-		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, desRotation);		// Left hand 10, right hand 29
+		//avatar->setRotationToBone(52, Kore::vec3(150, 0, 0));
+		
+		desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
+		avatar->setDesiredPosition(targetBoneIndex, desPosition);		// Left hand 10, right hand 29
+		
+		//desRotation = vec3(0, 0.1 * Kore::cos(angle), 0);
+		//avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, desRotation);		// Left hand 10, right hand 29
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);

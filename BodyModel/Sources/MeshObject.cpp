@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "RotationUtility.h"
 #include "MeshObject.h"
 #include "InverseKinematics.h"
 #include "Logger.h"
@@ -297,6 +298,21 @@ vec3 MeshObject::getBoneRotation(int boneIndex) {
 	return bone->rotation;
 }
 
+void MeshObject::setRotationToBone(int boneIndex, Kore::vec3 rotation) {
+	Kore::Quaternion quat;
+	RotationUtility::eulerToQuat(RotationUtility::getRadians(rotation.x()), RotationUtility::getRadians(rotation.y()), RotationUtility::getRadians(rotation.z()), &quat);
+	//RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
+	
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	bone->desQuaternion = quat;
+	
+	// T * R * S
+	quat.normalize();
+	Kore::mat4 rotMat = quat.matrix().Transpose();
+	bone->local = bone->transform * rotMat;
+	//Kore::log(Info, "Bone %s -> angle: %f %f %f quaterion: %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z(),  bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
+}
+
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	
 	// Interpolate
@@ -395,7 +411,8 @@ void MeshObject::quatSlerp(const Kore::Quaternion* from, const Kore::Quaternion*
 	cosom = from->x * to->x + from->y * to->y + from->z * to->z + from->w * to->w;
 	// adjust signs (if necessary)
 	if (cosom < 0.0) {
-		cosom = -cosom; to1[0] = -to->x;
+		cosom = -cosom;
+		to1[0] = -to->x;
 		to1[1] = -to->y;
 		to1[2] = -to->z;
 		to1[3] = -to->w;

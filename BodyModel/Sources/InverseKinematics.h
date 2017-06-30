@@ -33,9 +33,6 @@ private:
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
 	void updateBonePosition(BoneNode* targetBone);
-	
-	float getRadians(float degree);
-	void eulerToQuat(float roll, float pitch, float yaw, Kore::Quaternion* quat);
 
 	void clampValue(float minVal, float maxVal, float* value);
 };
