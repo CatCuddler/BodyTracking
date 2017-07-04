@@ -299,44 +299,44 @@ namespace {
 		Graphics4::swapBuffers();
 	}
 	
-	void keyDown(KeyCode code, wchar_t character) {
+	void keyDown(KeyCode code) {
 		switch (code) {
-			case Kore::Key_Left:
-			case Kore::Key_A:
+			case Kore::KeyLeft:
+			case Kore::KeyA:
 				left = true;
 				break;
-			case Kore::Key_Right:
-			case Kore::Key_D:
+			case Kore::KeyRight:
+			case Kore::KeyD:
 				right = true;
 				break;
-			case Kore::Key_Down:
+			case Kore::KeyDown:
 				down = true;
 				break;
-			case Kore::Key_Up:
+			case Kore::KeyUp:
 				up = true;
 				break;
-			case Kore::Key_W:
+			case Kore::KeyW:
 				forward = true;
 				break;
-			case Kore::Key_S:
+			case Kore::KeyS:
 				backward = true;
 				break;
-			case Kore::Key_X:
+			case Kore::KeyX:
 				rotateX = true;
 				break;
-			case Kore::Key_Z:
+			case Kore::KeyZ:
 				rotateZ = true;
 				break;
-			case Kore::Key_R:
+			case Kore::KeyR:
 #ifdef KORE_STEAMVR
 				VrInterface::resetHmdPose();
 #endif
 				break;
-			case Key_L:
+			case KeyL:
 				Kore::log(Kore::LogLevel::Info, "Position: (%.2f, %.2f, %.2f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
 				Kore::log(Kore::LogLevel::Info, "Rotation: (%.2f, %.2f, %.2f)", globe.x(), globe.y(), globe.z());
 				break;
-			case Key_Q:
+			case KeyQ:
 				System::stop();
 				break;
 			default:
@@ -344,32 +344,32 @@ namespace {
 		}
 	}
 	
-	void keyUp(KeyCode code, wchar_t character) {
+	void keyUp(KeyCode code) {
 		switch (code) {
-			case Kore::Key_Left:
-			case Kore::Key_A:
+			case Kore::KeyLeft:
+			case Kore::KeyA:
 				left = false;
 				break;
-			case Kore::Key_Right:
-			case Kore::Key_D:
+			case Kore::KeyRight:
+			case Kore::KeyD:
 				right = false;
 				break;
-			case Kore::Key_Down:
+			case Kore::KeyDown:
 				down = false;
 				break;
-			case Kore::Key_Up:
+			case Kore::KeyUp:
 				up = false;
 				break;
-			case Kore::Key_W:
+			case Kore::KeyW:
 				forward = false;
 				break;
-			case Kore::Key_S:
+			case Kore::KeyS:
 				backward = false;
 				break;
-			case Kore::Key_X:
+			case Kore::KeyX:
 				rotateX = false;
 				break;
-			case Kore::Key_Z:
+			case Kore::KeyZ:
 				rotateZ = false;
 				break;
 			default:
