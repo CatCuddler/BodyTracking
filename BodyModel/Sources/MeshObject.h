@@ -79,7 +79,6 @@ struct BoneNode {
 	Kore::Quaternion quaternion;
 	Kore::Quaternion desQuaternion;
 	Kore::vec3 rotation;
-	Kore::vec4 desiredPos;
 	
 	bool interpolate = false;
 	
@@ -95,7 +94,7 @@ struct BoneNode {
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
 				 finalTransform(Kore::mat4::Identity()),
 				 quaternion(Kore::Quaternion(0, 0, 0, 1)), desQuaternion(Kore::Quaternion(0, 0, 0, 1)),
-				 rotation(Kore::vec3(0, 0, 0)), desiredPos(Kore::vec4(0, 0, 0, 0)) {}
+				 rotation(Kore::vec3(0, 0, 0)) {}
 };
 
 struct CompareBones {
@@ -132,7 +131,7 @@ public:
 private:
 	Kore::vec4 desiredPosition;
 	
-	bool logData = true;
+	bool logData = false;
 	
 	long meshesCount;
 	float scale;

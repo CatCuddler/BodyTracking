@@ -153,7 +153,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	if (bones.size() > 0) {
 		// Get the highest position
 		BoneNode* head = getBoneWithIndex(46);
-		vec4 position = head->combined *vec4(0, 0, 0, 1);
+		vec4 position = head->combined * vec4(0, 0, 0, 1);
 		currentHeight = position.z();
 		
 		invKin = new InverseKinematics(bones, maxIteration);
@@ -300,8 +300,7 @@ vec3 MeshObject::getBoneRotation(int boneIndex) {
 
 void MeshObject::setRotationToBone(int boneIndex, Kore::vec3 rotation) {
 	Kore::Quaternion quat;
-	RotationUtility::eulerToQuat(RotationUtility::getRadians(rotation.x()), RotationUtility::getRadians(rotation.y()), RotationUtility::getRadians(rotation.z()), &quat);
-	//RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
+	RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
 	
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	bone->desQuaternion = quat;

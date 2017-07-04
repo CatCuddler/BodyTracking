@@ -23,3 +23,5 @@ float Kore::RotationUtility::getRadians(float degree) {
 	const double halfC = Kore::pi / 180.0f;
 	return degree * halfC;
 }
+
+

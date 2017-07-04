@@ -21,15 +21,18 @@ private:
 	
 	std::vector<BoneNode*> bones;
 	
+	static const int jacDim = 6;
 	static const int maxBones = 8;
-	typedef Matrix<6, maxBones, float> mat3x;
-	typedef Matrix<6, 1, float> mat3x1;
-	typedef Matrix<1, maxBones, float> mat1x;
+	typedef Matrix<jacDim, maxBones, float> mat6x;
+	typedef Vector<float, jacDim> vec6;
+	typedef Vector<float, maxBones> vec8;
+	typedef Matrix<jacDim, jacDim, float> mat6x6;
+	typedef Matrix<maxBones, maxBones, float> mat8x8;
 	
 	void setJointConstraints();
 	
-	mat3x calcJacobian(BoneNode* targetBone, Kore::vec4 rotAxis);
-	mat3x getPsevdoInverse(mat3x jacobian);
+	mat6x calcJacobian(BoneNode* targetBone, Kore::vec4 rotAxis);
+	mat6x getPsevdoInverse(mat6x jacobian);
 	
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
 	void updateBonePosition(BoneNode* targetBone);
