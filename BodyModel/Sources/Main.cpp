@@ -10,6 +10,7 @@
 #include <Kore/Log.h>
 
 #include "MeshObject.h"
+#include "RotationUtility.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -65,7 +66,7 @@ namespace {
 	
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
-	vec3 desRotation = vec3(0, 0, 0);
+	Quaternion desRotation = Quaternion(0, 0, 0, 1);
 
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -85,7 +86,7 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-				cube->M = mat4::Translation(desPosition.x(), desPosition.z(), -desPosition.y()) * mat4::Rotation(desRotation.x(), desRotation.y(), desRotation.z());
+				cube->M = mat4::Translation(desPosition.x(), desPosition.z(), -desPosition.y()) * desRotation.matrix();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
@@ -183,7 +184,6 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
 		}
 		desPosition = controller.vrPose.position;
-		//cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		avatar->setDesiredPosition(targetBoneIndex, vec3(finalPos.x(), finalPos.y(), finalPos.z()));
 
@@ -275,17 +275,22 @@ namespace {
 		
 		angle += 0.05f;
 		float radius = 0.2;
-		vec3 desPos = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
-		avatar->setDesiredPosition(53, desPos);		// Left foot 49, right foot 53
-		//desPosition = desPos;
+		desPosition = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
+		avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
 		
-		//avatar->setRotationToBone(52, Kore::vec3(150, 0, 0));
+		//desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
+		desPosition = vec3(0.1, -0.3, 0.9);
+		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
 		
-		desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		avatar->setDesiredPosition(targetBoneIndex, desPosition);		// Left hand 10, right hand 29
+		Quaternion finalRot = Quaternion(0, 0, 0, 1);
+		RotationUtility::eulerToQuat(0, 0.01 * Kore::cos(angle), 0, &finalRot);
+		vec4 rot = vec4(0, 0, 0, 1);
+		RotationUtility::quatToEuler(&finalRot, &rot.x(), &rot.y(), &rot.z());
+		rot = T * rot;
+		RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &desRotation);
 		
-		//desRotation = vec3(0, 0.1 * Kore::cos(angle), 0);
-		//avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, desRotation);		// Left hand 10, right hand 29
+		//avatar->setRotationToBone(targetBoneIndex-1, desRotation);
+		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, finalRot);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);

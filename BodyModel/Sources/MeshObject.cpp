@@ -274,10 +274,10 @@ void MeshObject::setAnimation(int frame) {
 }
 
 void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 desiredPos) {
-	setDesiredPositionAndOrientation(boneIndex, desiredPos, vec3(0, 0, 0));
+	setDesiredPositionAndOrientation(boneIndex, desiredPos, Kore::Quaternion(0, 0, 0, 1));
 }
 
-void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::vec3 desiredRot) {
+void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	invKin->inverseKinematics(bone, desiredPosition, desiredRot);
@@ -303,7 +303,7 @@ void MeshObject::setRotationToBone(int boneIndex, Kore::vec3 rotation) {
 	RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
 	
 	BoneNode* bone = getBoneWithIndex(boneIndex);
-	bone->desQuaternion = quat;
+	bone->quaternion = quat;
 	
 	// T * R * S
 	quat.normalize();
