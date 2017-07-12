@@ -54,6 +54,13 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		diffRot.x() = 0;
 		Kore::log(Kore::Info, "%f %f %f", diffRot.x(), diffRot.y(), diffRot.z());*/
 		
+		// Set rotation
+		diffRot = vec3(0, 0, 0);
+		targetBone->quaternion = desiredRotation;
+		desiredRotation.normalize();
+		Kore::mat4 rotMat = desiredRotation.matrix().Transpose();
+		targetBone->local = targetBone->transform * rotMat;
+		
 		
 		//Kore::log(Info, "It: %i, Current Pos: (%f %f %f), Desired Pos: (%f %f %f)", i, currentPos.x(), currentPos.y(), currentPos.z(), desiredPos.x(), desiredPos.y(), desiredPos.z());
 		
@@ -78,7 +85,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		InverseKinematics::vec6 V;
 		V[0] = diffPos.x(); V[1] = diffPos.y(); V[2] = diffPos.z();
 		V[3] = diffRot.x(); V[4] = diffRot.y(); V[5] = diffRot.z();
-		//V[3] = 0; V[4] = 0; V[5] = 0;
 		Kore::vec3 aThetaX = pseudoInvX * V;
 		Kore::vec3 aThetaY = pseudoInvY * V;
 		Kore::vec3 aThetaZ = pseudoInvZ * V;
@@ -135,13 +141,7 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::mat6x jacobian) {
 	InverseKinematics::mat6x inv;
 	
-	// Left pseudo inverse: (J^T * J ) ^-1 * J^T
-	//InverseKinematics::mat6x inv = ((jacobian.Transpose() * jacobian).Invert() * jacobian.Transpose()).Transpose();
-	
-	// Right pseudo inverse : J^T * (J * J^T) ^−1
-	//InverseKinematics::mat6x inv = (jacobian.Transpose() * (jacobian * jacobian.Transpose()).Invert()).Transpose();
-	
-	float lambda = 1; // Damping factor
+	float lambda = 0.1; // Damping factor
 	if (jacDim < maxBones) {
 		// Left Damped pseudo-inverse
 		InverseKinematics::mat6x6 id6 = InverseKinematics::mat6x6::Identity();
@@ -175,17 +175,19 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		if (radX > delta || radX < -delta || radY > delta || radY < -delta || radZ > delta || radZ < -delta)
 			bone->interpolate = true;
 		
-		bone->rotation.x() += radX;
-		bone->rotation.y() += radY;
-		bone->rotation.z() += radZ;
+		Kore::vec3 rotation;
+		RotationUtility::quatToEuler(&bone->quaternion, &rotation.x(), &rotation.y(), &rotation.z());
+		rotation.x() += radX;
+		rotation.y() += radY;
+		rotation.z() += radZ;
 		
 		Kore::vec4 axis = bone->axes;
-		if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &bone->rotation.x());
-		if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &bone->rotation.y());
-		if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &bone->rotation.z());
+		if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rotation.x());
+		if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rotation.y());
+		if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rotation.z());
 		
 		Kore::Quaternion quat;
-		RotationUtility::eulerToQuat(bone->rotation.x(), bone->rotation.y(), bone->rotation.z(), &quat);
+		RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
 		bone->quaternion = quat;
 		
 		// T * R * S

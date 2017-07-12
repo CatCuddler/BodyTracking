@@ -273,23 +273,22 @@ namespace {
 		if (frame > 200) frame = 0;*/                                                                                                                                                            
 		avatar->animate(tex, deltaT);
 		
-		angle += 0.05f;
+		angle += 0.05;
 		float radius = 0.2;
 		desPosition = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
 		avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
 		
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
 		desPosition = vec3(0.1, -0.3, 0.9);
-		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
 		
 		Quaternion finalRot = Quaternion(0, 0, 0, 1);
-		RotationUtility::eulerToQuat(0, 0.01 * Kore::cos(angle), 0, &finalRot);
+		RotationUtility::eulerToQuat(0, 0.1 * Kore::cos(angle), 0, &finalRot);
 		vec4 rot = vec4(0, 0, 0, 1);
 		RotationUtility::quatToEuler(&finalRot, &rot.x(), &rot.y(), &rot.z());
 		rot = T * rot;
 		RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &desRotation);
 		
-		//avatar->setRotationToBone(targetBoneIndex-1, desRotation);
+		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, finalRot);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);

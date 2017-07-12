@@ -293,23 +293,9 @@ vec3 MeshObject::getBonePosition(int boneIndex) {
 	return vec3(pos.x(), pos.y(), pos.z());
 }
 
-vec3 MeshObject::getBoneRotation(int boneIndex) {
+Quaternion MeshObject::getBoneRotation(int boneIndex) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
-	return bone->rotation;
-}
-
-void MeshObject::setRotationToBone(int boneIndex, Kore::vec3 rotation) {
-	Kore::Quaternion quat;
-	RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
-	
-	BoneNode* bone = getBoneWithIndex(boneIndex);
-	bone->quaternion = quat;
-	
-	// T * R * S
-	quat.normalize();
-	Kore::mat4 rotMat = quat.matrix().Transpose();
-	bone->local = bone->transform * rotMat;
-	//Kore::log(Info, "Bone %s -> angle: %f %f %f quaterion: %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z(),  bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
+	return bone->quaternion;
 }
 
 void MeshObject::animate(TextureUnit tex, float deltaTime) {

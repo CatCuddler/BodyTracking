@@ -77,7 +77,6 @@ struct BoneNode {
 	Kore::mat4 finalTransform;
 	
 	Kore::Quaternion quaternion;
-	Kore::vec3 rotation;
 	
 	bool interpolate = false;
 	
@@ -92,7 +91,7 @@ struct BoneNode {
 	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
 				 finalTransform(Kore::mat4::Identity()),
-				 quaternion(Kore::Quaternion(0, 0, 0, 1)), rotation(Kore::vec3(0, 0, 0)) {}
+				 quaternion(Kore::Quaternion(0, 0, 0, 1)) {}
 };
 
 struct CompareBones {
@@ -115,9 +114,7 @@ public:
 	void quatSlerp(const Kore::Quaternion* from, const Kore::Quaternion* to, const float t, Kore::Quaternion* res);
 
 	vec3 getBonePosition(int boneIndex);
-	vec3 getBoneRotation(int boneIndex);
-	
-	void setRotationToBone(int boneIndex, Kore::vec3 rotation);
+	Quaternion getBoneRotation(int boneIndex);
 
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
