@@ -22,12 +22,10 @@ private:
 	std::vector<BoneNode*> bones;
 	
 	static const int jacDim = 6;
-	static const int maxBones = 8;
+	static const int maxBones = 3;
 	typedef Matrix<jacDim, maxBones, float> mat6x;
 	typedef Vector<float, jacDim> vec6;
-	typedef Vector<float, maxBones> vec8;
 	typedef Matrix<jacDim, jacDim, float> mat6x6;
-	typedef Matrix<maxBones, maxBones, float> mat8x8;
 	
 	void setJointConstraints();
 	

@@ -35,18 +35,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 
 	if (!targetBone->initialized) return false;
 	
-	boneCount = 0;
-	BoneNode* bone = targetBone;
-	while (bone->nodeIndex != rootIndex) {
-		bone = bone->parent;
-		++boneCount;
-	}
-	
-	//Kore::log(Kore::Info, "Bone name %s, Max bone number %i", targetBone->boneName, boneCount);
-	if (boneCount > maxBones) {
-		Kore::log(Kore::Error, "Increase the max bone number");
-	}
-	
 	for (int i = 0; i < maxSteps; ++i) {
 		//log(Info, "Iteration %i", i);
 		
@@ -90,9 +78,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		InverseKinematics::vec6 V;
 		V[0] = diffPos.x(); V[1] = diffPos.y(); V[2] = diffPos.z();
 		V[3] = diffRot.x(); V[4] = diffRot.y(); V[5] = diffRot.z();
-		InverseKinematics::vec8 aThetaX = pseudoInvX * V;
-		InverseKinematics::vec8 aThetaY = pseudoInvY * V;
-		InverseKinematics::vec8 aThetaZ = pseudoInvZ * V;
+		//V[3] = 0; V[4] = 0; V[5] = 0;
+		Kore::vec3 aThetaX = pseudoInvX * V;
+		Kore::vec3 aThetaY = pseudoInvY * V;
+		Kore::vec3 aThetaZ = pseudoInvZ * V;
 		
 		std::vector<float> theta;
 		for (int i = 0; i < maxBones; ++i) {
@@ -114,8 +103,7 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 	// Get current position of the end-effector
 	Kore::vec4 opn = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 	
-	int j = 0;
-	while (targetBone->nodeIndex != rootIndex) {
+	for (int b = 0; b < maxBones; ++b) {
 		BoneNode* bone = targetBone;
 		
 		// Get rotation and position vector of the current bone
@@ -130,16 +118,15 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 		// Calculate cross product
 		Kore::vec4 cross = oaj.cross(opn - opj);
 		
-		jacobian[j][0] = cross.x();
-		jacobian[j][1] = cross.y();
-		jacobian[j][2] = cross.z();
+		jacobian[b][0] = cross.x();
+		jacobian[b][1] = cross.y();
+		jacobian[b][2] = cross.z();
 
-		jacobian[j][3] = oaj.x();
-		jacobian[j][4] = oaj.y();
-		jacobian[j][5] = oaj.z();
+		jacobian[b][3] = oaj.x();
+		jacobian[b][4] = oaj.y();
+		jacobian[b][5] = oaj.z();
 		
 		targetBone = targetBone->parent;
-		++j;
 	}
 	
 	return jacobian;
@@ -161,8 +148,8 @@ InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::
 		inv = ((jacobian.Transpose() * jacobian  + id6 * lambda * lambda).Invert() * jacobian.Transpose()).Transpose();
 	} else {
 		// Right Damped pseudo-inverse
-		InverseKinematics::mat8x8 id8 = InverseKinematics::mat8x8::Identity();
-		inv = (jacobian.Transpose() * (jacobian * jacobian.Transpose() + id8 * lambda * lambda).Invert()).Transpose();
+		Kore::mat3x3 id3 = Kore::mat3x3::Identity();
+		inv = (jacobian.Transpose() * (jacobian * jacobian.Transpose() + id3 * lambda * lambda).Invert()).Transpose();
 	}
 	
 	return inv;
@@ -171,7 +158,7 @@ InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::
 void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetBone) {
 	
 	int i = 0;
-	while (targetBone->nodeIndex != rootIndex) {
+	for (int b = 0; b < maxBones; ++b) {
 		BoneNode* bone = targetBone;
 		
 		float radX = theta[i];
