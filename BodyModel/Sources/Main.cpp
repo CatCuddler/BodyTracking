@@ -67,11 +67,13 @@ namespace {
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
 	Quaternion desRotation = Quaternion(0, 0, 0, 1);
+	mat4 matrix = mat4::Identity();
 
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
 	mat4 hmsOffset = mat4::Translation(0, 0.2, 0);
 	mat4 initRot = mat4::Identity();
+	mat4 initRotInv = mat4::Identity();
 	
 	bool initCharacter = false;
 
@@ -86,7 +88,7 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-				cube->M = mat4::Translation(desPosition.x(), desPosition.z(), -desPosition.y()) * desRotation.matrix();
+				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
@@ -157,9 +159,10 @@ namespace {
 			//playerPosition.x() = -currentUserHeight * 0.5;
 			playerPosition.y() = currentUserHeight * 1.5;
 			playerPosition.z() = currentUserHeight * 0.5;
+			playerPosition = vec3(0.000000, 0.734777, 0.794926);
 
 			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
+//			avatar->setScale(scale);
 
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
@@ -170,6 +173,7 @@ namespace {
 			initRot *= mat4::RotationZ(-zAngle);
 
 			avatar->M = initTrans * initRot * hmsOffset;
+			cube->M = avatar->M;
 			T = (initTrans * initRot * hmsOffset).Invert();
 
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
@@ -177,19 +181,20 @@ namespace {
 			initCharacter = true;
 		}
 
-		// Get controller position
 		VrPoseState controller;
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
 		}
+
+		// Get controller position
 		desPosition = controller.vrPose.position;
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(targetBoneIndex, vec3(finalPos.x(), finalPos.y(), finalPos.z()));
+		avatar->setDesiredPosition(targetBoneIndex, finalPos);
 
-		vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
-		finalPos = vec4(-targetPosition.x(), targetPosition.z(), targetPosition.y(), 1) + avatar->M * vec4(0, 0, 0, 1);
-		//cube->M = mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z());
+		// Get controller rotation
+		desRotation = controller.vrPose.orientation;
+		//avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, desRotation);
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
@@ -203,10 +208,7 @@ namespace {
 			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
-			/*if (renderDesiredPosition) {
-				Graphics4::setMatrix(mLocation, cube->M);
-				cube->render(tex);
-			}*/
+
 			renderTracker();
 
 			VrInterface::endRender(eye);
@@ -236,11 +238,7 @@ namespace {
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
-		/*if (renderDesiredPosition) {
-			Graphics4::setMatrix(mLocation, cube->M);
-			Graphics4::setPipeline(pipeline2);
-			cube->render(tex);
-		}*/
+
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
 
@@ -337,8 +335,8 @@ namespace {
 #endif
 				break;
 			case KeyL:
-				Kore::log(Kore::LogLevel::Info, "Position: (%.2f, %.2f, %.2f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
-				Kore::log(Kore::LogLevel::Info, "Rotation: (%.2f, %.2f, %.2f)", globe.x(), globe.y(), globe.z());
+				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
+				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f)", globe.x(), globe.y(), globe.z());
 				break;
 			case KeyQ:
 				System::stop();
@@ -457,6 +455,7 @@ namespace {
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		initRot = mat4::RotationX(-Kore::pi / 2.0);
+		initRotInv = initRot.Invert();
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
