@@ -78,7 +78,7 @@ namespace {
 	bool initCharacter = false;
 
 	const int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
-	const int renderTrackerOrTargetPosition = 2;		// 0 - dont render, 1 - render desired position, 2 - render target position
+	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {

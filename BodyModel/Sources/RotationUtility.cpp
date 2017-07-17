@@ -2,6 +2,8 @@
 
 #include "RotationUtility.h"
 
+#include <math.h>
+
 void Kore::RotationUtility::eulerToQuat(float roll, float pitch, float yaw, Kore::Quaternion* quat) {
 	float cr, cp, cy, sr, sp, sy, cpcy, spsy;
 	// calculate trig identities
@@ -42,6 +44,21 @@ void Kore::RotationUtility::quatToEuler(const Kore::Quaternion* quat, float* rol
 float Kore::RotationUtility::getRadians(float degree) {
 	const double halfC = Kore::pi / 180.0f;
 	return degree * halfC;
+}
+
+float Kore::RotationUtility::getDegree(float rad) {
+	const double halfC = 180.0f / Kore::pi;
+	return rad * halfC;
+}
+
+void Kore::RotationUtility::getOrientation(const Kore::mat4* m, Kore::Quaternion* orientation) {
+	orientation->w = Kore::sqrt(fmax(0.0, 1.0 + m->get(0, 0) + m->get(1, 1) + m->get(2, 2))) / 2.0;
+	orientation->x = Kore::sqrt(fmax(0.0, 1.0 + m->get(0, 0) - m->get(1, 1) - m->get(2, 2))) / 2.0;
+	orientation->y = Kore::sqrt(fmax(0.0, 1.0 - m->get(0, 0) + m->get(1, 1) - m->get(2, 2))) / 2.0;
+	orientation->z = Kore::sqrt(fmax(0.0, 1.0 - m->get(0, 0) - m->get(1, 1) + m->get(2, 2))) / 2.0;
+	orientation->x = copysign(orientation->x, m->get(2, 1) - m->get(1, 2));
+	orientation->y = copysign(orientation->y, m->get(0, 2) - m->get(2, 0));
+	orientation->z = copysign(orientation->z, m->get(1, 0) - m->get(0, 1));
 }
 
 
