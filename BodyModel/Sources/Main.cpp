@@ -49,11 +49,14 @@ namespace {
 	bool down, up = false;
 	bool forward, backward = false;
 	bool rotateX = false;
+	bool rotateY = false;
 	bool rotateZ = false;
 	int mousePressX, mousePressY = 0;
 	
 	MeshObject* cube;
 	MeshObject* avatar;
+	
+	bool moveCube = false;
 	
 #ifdef KORE_STEAMVR
 	vec3 globe = vec3(Kore::pi, 0, 0);
@@ -88,7 +91,12 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
+#ifdef KORE_STEAMVR
+				vec4 cubePos = desPosition;
+#else
+				vec4 cubePos = avatar->M * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+#endif
+				cube->M = mat4::Translation(cubePos.x(), cubePos.y(), cubePos.z()) * desRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
@@ -116,25 +124,66 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 		
-		const float speed = 0.05f;
-		if (left) {
-			playerPosition.x() -= speed;
+		const float speed = 0.01f;
+		if (!moveCube) {
+			if (left) {
+				playerPosition.x() -= speed;
+			}
+			if (right) {
+				playerPosition.x() += speed;
+			}
+			if (forward) {
+				playerPosition.z() += speed;
+			}
+			if (backward) {
+				playerPosition.z() -= speed;
+			}
+			if (up) {
+				playerPosition.y() += speed;
+			}
+			if (down) {
+				playerPosition.y() -= speed;
+			}
+		} else if (moveCube) {
+			if (!rotateX && !rotateY && !rotateZ) {
+				if (left) {
+					desPosition.x() -= speed;
+				}
+				if (right) {
+					desPosition.x() += speed;
+				}
+				if (forward) {
+					desPosition.z() += speed;
+				}
+				if (backward) {
+					desPosition.z() -= speed;
+				}
+				if (up) {
+					desPosition.y() += speed;
+				}
+				if (down) {
+					desPosition.y() -= speed;
+				}
+			}
+			
+			vec3 currentRotation;
+			Kore::RotationUtility::quatToEuler(&desRotation, &currentRotation.x(), &currentRotation.y(), &currentRotation.z());
+			
+			float rad = 0;
+			if (left) rad = -speed;
+			if (right) rad = +speed;
+			if (rotateX) {
+				currentRotation.x() += rad;
+			} else if (rotateY) {
+				currentRotation.y() += rad;
+			} else if (rotateZ) {
+				currentRotation.z() += rad;
+			}
+			Kore::RotationUtility::eulerToQuat(currentRotation.x(), currentRotation.y(), currentRotation.z(), &desRotation);
+			
+
 		}
-		if (right) {
-			playerPosition.x() += speed;
-		}
-		if (forward) {
-			playerPosition.z() += speed;
-		}
-		if (backward) {
-			playerPosition.z() -= speed;
-		}
-		if (up) {
-			playerPosition.y() += speed;
-		}
-		if (down) {
-			playerPosition.y() -= speed;
-		}
+
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -252,6 +301,8 @@ namespace {
 			avatar->M = initTrans * initRot;
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
+			
+			desPosition = vec3(0.1, -0.4, 0.9);
 		}
 		
 		// projection matrix
@@ -273,22 +324,21 @@ namespace {
 		
 		angle += 0.05;
 		float radius = 0.2;
-		desPosition = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
-		avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
+		//desPosition = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
+		//avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
 		
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		desPosition = vec3(0.1, -0.3, 0.9);
+		//desPosition = vec3(0.1, -0.3, 0.9);
 		
-		Quaternion finalRot = Quaternion(0, 0, 0, 1);
+		/*Quaternion finalRot = Quaternion(0, 0, 0, 1);
 		RotationUtility::eulerToQuat(0, 0.1 * Kore::cos(angle), 0, &finalRot);
 		vec4 rot = vec4(0, 0, 0, 1);
 		RotationUtility::quatToEuler(&finalRot, &rot.x(), &rot.y(), &rot.z());
 		rot = T * rot;
-		RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &desRotation);
+		//RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &desRotation);*/
 		
 		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
-		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, finalRot);
-		desPosition = avatar->M * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, desRotation);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
@@ -327,6 +377,9 @@ namespace {
 			case Kore::KeyX:
 				rotateX = true;
 				break;
+			case Kore::KeyY:
+				rotateY = true;
+				break;
 			case Kore::KeyZ:
 				rotateZ = true;
 				break;
@@ -341,6 +394,9 @@ namespace {
 				break;
 			case KeyQ:
 				System::stop();
+				break;
+			case KeyC:
+				moveCube = true;
 				break;
 			default:
 				break;
@@ -372,8 +428,14 @@ namespace {
 			case Kore::KeyX:
 				rotateX = false;
 				break;
+			case Kore::KeyY:
+				rotateY = false;
+				break;
 			case Kore::KeyZ:
 				rotateZ = false;
+				break;
+			case KeyC:
+				moveCube = false;
 				break;
 			default:
 				break;
@@ -382,6 +444,7 @@ namespace {
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
 		float rotationSpeed = 0.01;
+		
 		if (rotateX) {
 			globe.x() += (float)((mousePressX - x) * rotationSpeed);
 			mousePressX = x;
@@ -389,7 +452,7 @@ namespace {
 			globe.z() += (float)((mousePressY - y) * rotationSpeed);
 			mousePressY = y;
 		}
-				   
+		
 	}
 	
 	void mousePress(int windowId, int button, int x, int y) {
