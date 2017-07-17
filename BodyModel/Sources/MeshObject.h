@@ -114,7 +114,8 @@ public:
 	void quatSlerp(const Kore::Quaternion* from, const Kore::Quaternion* to, const float t, Kore::Quaternion* res);
 
 	vec3 getBonePosition(int boneIndex);
-	Quaternion getBoneRotation(int boneIndex);
+	Quaternion getBoneLocalRotation(int boneIndex);
+	Quaternion getBoneGlobalRotation(int boneIndex);
 
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);

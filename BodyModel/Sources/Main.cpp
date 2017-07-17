@@ -78,7 +78,7 @@ namespace {
 	bool initCharacter = false;
 
 	const int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
-	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
+	const int renderTrackerOrTargetPosition = 2;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
@@ -98,9 +98,9 @@ namespace {
 			{
 				// Render target position
 				vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
-				//vec3 targetRotation = avatar->getBoneRotation(targetBoneIndex);
-				vec4 finalPos = vec4(targetPosition.x(), -targetPosition.y(), -targetPosition.z(), 1);
-				cube->M = T * mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z());
+				Quaternion targetRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
+				vec4 finalPos = vec4(targetPosition.x(), targetPosition.y(), targetPosition.z(), 1);
+				cube->M = avatar->M * mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z()) * targetRotation.matrix();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);

@@ -133,7 +133,15 @@ namespace {
 		return vec2(nPos.x(), nPos.y());
 	}
 
-	
+	void getOrientation(const Kore::mat4* m, Kore::Quaternion* orientation) {
+		orientation->w = sqrt(fmax(0, 1 + m->get(0, 0) + m->get(1, 1) + m->get(2, 2))) / 2;
+		orientation->x = sqrt(fmax(0, 1 + m->get(0, 0) - m->get(1, 1) - m->get(2, 2))) / 2;
+		orientation->y = sqrt(fmax(0, 1 - m->get(0, 0) + m->get(1, 1) - m->get(2, 2))) / 2;
+		orientation->z = sqrt(fmax(0, 1 - m->get(0, 0) - m->get(1, 1) + m->get(2, 2))) / 2;
+		orientation->x = copysign(orientation->x, m->get(2, 1) - m->get(1, 2));
+		orientation->y = copysign(orientation->y, m->get(0, 2) - m->get(2, 0));
+		orientation->z = copysign(orientation->z, m->get(1, 0) - m->get(0, 1));
+	}
 }
 
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile), structure(structure), scale(scale), M(mat4::Identity()) {
@@ -293,9 +301,16 @@ vec3 MeshObject::getBonePosition(int boneIndex) {
 	return vec3(pos.x(), pos.y(), pos.z());
 }
 
-Quaternion MeshObject::getBoneRotation(int boneIndex) {
+Quaternion MeshObject::getBoneLocalRotation(int boneIndex) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	return bone->quaternion;
+}
+
+Quaternion MeshObject::getBoneGlobalRotation(int boneIndex) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	Kore::Quaternion quat;
+	getOrientation(&bone->combined, &quat);
+	return quat;
 }
 
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
