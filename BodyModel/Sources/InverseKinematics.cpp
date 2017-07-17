@@ -7,44 +7,6 @@
 
 #include <vector>
 
-namespace {
-
-	void getOrientation(const Kore::mat4* m, Kore::Quaternion* orientation) {
-		orientation->w = sqrt(fmax(0, 1 + m->get(0, 0) + m->get(1, 1) + m->get(2, 2))) / 2;
-		orientation->x = sqrt(fmax(0, 1 + m->get(0, 0) - m->get(1, 1) - m->get(2, 2))) / 2;
-		orientation->y = sqrt(fmax(0, 1 - m->get(0, 0) + m->get(1, 1) - m->get(2, 2))) / 2;
-		orientation->z = sqrt(fmax(0, 1 - m->get(0, 0) - m->get(1, 1) + m->get(2, 2))) / 2;
-		orientation->x = copysign(orientation->x, m->get(2, 1) - m->get(1, 2));
-		orientation->y = copysign(orientation->y, m->get(0, 2) - m->get(2, 0));
-		orientation->z = copysign(orientation->z, m->get(1, 0) - m->get(0, 1));
-	}
-
-	Kore::vec4 rotMatToRotVec(Kore::mat4 mat) {
-		float eps = 0.001;
-		
-		float th = Kore::acos(0.5 * (mat[0][0] + mat[1][1] + mat[2][2] - 1));
-		
-		Kore::vec4 n;
-		if (Kore::abs(th) < eps) {
-			n = vec4(0, 0, 0, 0);
-		} else {
-			n = 1 / (2 * Kore::sin(th)) * vec4(mat[1][2] - mat[2][1], mat[2][0] - mat[0][2], mat[0][1] - mat[1][0]);
-		}
-		
-		Kore::vec4 phi = th * n;
-		return phi;
-	}
-	
-	Kore::Quaternion rotMatToQuat(Kore::mat4 mat) {
-		Kore::Quaternion quat;
-		quat.w = Kore::sqrt((1 + mat.get(0, 0) + mat.get(1, 1) + mat.get(2, 2)) / 2);
-		quat.x = (mat.get(2, 1) - mat.get(1, 2)) / (4 * quat.w);
-		quat.y = (mat.get(0, 2) - mat.get(2, 0)) / (4 * quat.w);
-		quat.z = (mat.get(1, 0) - mat.get(0, 1)) / (4 * quat.w);
-		return quat;
-	}
-}
-
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.00001f), rootIndex(2) {
 	bones = boneVec;
 	setJointConstraints();
@@ -64,15 +26,14 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		// Calculate error between deisred rotation and actual rotation
 		Kore::Quaternion curQuat = targetBone->quaternion;
 		Kore::Quaternion desQuat = desiredRotation;
-		//Kore::mat4 rot_err = desQuat.matrix() * curQuat.matrix().Invert();
-		Kore::vec3 diffRot;// = rotMatToRotVec(rot_err);
+		Kore::vec3 diffRot;
 		Kore::Quaternion diffQuat = desQuat - curQuat;
 		RotationUtility::quatToEuler(&diffQuat, &diffRot.x(), &diffRot.y(), &diffRot.z());
 		
 		//Kore::log(Kore::Info, "%f %f %f", diffRot.x(), diffRot.y(), diffRot.z());
 		
 		// Set rotation
-		/*Kore::vec3 diffRot = vec3(0, 0, 0);
+		/*diffRot = vec3(0, 0, 0);
 		targetBone->quaternion = desiredRotation;
 		desiredRotation.normalize();
 		Kore::mat4 rotMat = desiredRotation.matrix().Transpose();
@@ -226,26 +187,7 @@ void InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
 }
 
 void InverseKinematics::updateBonePosition(BoneNode *targetBone) {
-	//Kore::vec4 oldPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-	
 	targetBone->combined = targetBone->parent->combined * targetBone->local;
-	
-	BoneNode* test = new BoneNode();
-	
-	if (targetBone->nodeIndex == 51) {
-		mat4 m = targetBone->local;
-		getOrientation(&m, &test->quaternion);
-		
-		Quaternion q1 = targetBone->quaternion;
-		Quaternion q2 = test->quaternion;
-		
-		//log(Info, "%s ", targetBone->boneName);
-		//log(Info, "q1 %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
-		//log(Info, "q2 %f %f %f %f", q2.w, q2.x, q2.y, q2.z);
-	}
-	
-	//Kore::vec4 newPos = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-	//Kore::log(Info, "Bone %s -> oldPos (%f %f %f) newPos (%f %f %f)", targetBone->boneName, oldPos.x(), oldPos.y(), oldPos.z(), newPos.x(), newPos.y(), newPos.z());
 }
 
 void InverseKinematics::setJointConstraints() {
