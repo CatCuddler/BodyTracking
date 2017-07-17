@@ -288,6 +288,7 @@ namespace {
 		
 		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, finalRot);
+		desPosition = avatar->M * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
