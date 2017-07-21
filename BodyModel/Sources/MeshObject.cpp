@@ -302,6 +302,14 @@ Quaternion MeshObject::getBoneGlobalRotation(int boneIndex) {
 	return quat;
 }
 
+void MeshObject::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	desiredRotation.normalize();
+	bone->quaternion = desiredRotation;
+	Kore::mat4 rotMat = desiredRotation.matrix().Transpose();
+	bone->local = bone->transform * rotMat;
+}
+
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	
 	// Interpolate

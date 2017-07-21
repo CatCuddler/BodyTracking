@@ -85,7 +85,7 @@ struct BoneNode {
 	std::vector<Kore::mat4> aniTransformations;
 	
 	// Constraints
-	Kore::vec4 axes;
+	Kore::vec3 axes;
 	std::vector<Kore::vec2> constrain;	// <min, max>
 	
 	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
@@ -116,6 +116,8 @@ public:
 	vec3 getBonePosition(int boneIndex);
 	Quaternion getBoneLocalRotation(int boneIndex);
 	Quaternion getBoneGlobalRotation(int boneIndex);
+	
+	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
