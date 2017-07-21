@@ -94,11 +94,6 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-/*#ifdef KORE_STEAMVR
-				vec4 cubePos = vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-#else
-				vec4 cubePos = avatar->M * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-#endif*/
 				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
@@ -126,7 +121,7 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 		
-		const float speed = 0.1f;
+		const float speed = 0.01f;
 		if (left) {
 			playerPosition.x() -= speed;
 		}
@@ -147,16 +142,15 @@ namespace {
 		}
 		
 		if (rotateCube) {
-			vec3 currentRotation;
+			mat4 rot = desRotation.matrix().Transpose();
 			
-			if (rotateCubeX) currentRotation.x() += 0.01;
-			if (rotateCubeY) currentRotation.y() += 0.01;
-			if (rotateCubeZ) currentRotation.z() -= 0.01;
+			if (rotateCubeX) rot = desRotation.matrix().Transpose() * mat4::RotationX(RotationUtility::getRadians(10));
+			if (rotateCubeY) rot = desRotation.matrix().Transpose() * mat4::RotationY(RotationUtility::getRadians(-10));
+			if (rotateCubeZ) rot = desRotation.matrix().Transpose() * mat4::RotationZ(RotationUtility::getRadians(10));
 			
-			mat4 rot = desRotation.matrix().Transpose() * mat4::Rotation(currentRotation.x(), currentRotation.y(), currentRotation.z());
 			RotationUtility::getOrientation(&rot, &desRotation);
 			
-			//rotateCube = false;
+			rotateCube = false;
 		}
 
 		
@@ -276,13 +270,8 @@ namespace {
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			avatar->animate(tex, deltaT);
-			
-			//desRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
-			
-			//mat4 rot = mat4::RotationZ(Kore::pi/2) * desRotation.matrix().Transpose();
-			//RotationUtility::getOrientation(&rot, &desRotation);
-
+			mat4 rot = desRotation.matrix().Transpose() * mat4::RotationY(-Kore::pi/2) * mat4::RotationZ(-Kore::pi/2);
+			RotationUtility::getOrientation(&rot, &desRotation);
 		}
 		
 		// projection matrix
@@ -306,28 +295,27 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
+		/*desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, finalPos);	// Left foot 49, right foot 53
+		avatar->setDesiredPosition(53, finalPos);	// Left foot 49, right foot 53*/
 		
 		// Set hand position
-		desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.0 + radius * Kore::sin(angle), 0.3);
-		//desPosition = vec3(0.4 + radius * Kore::cos(angle), 1.1, 0.3);
-		//desPosition = vec3(0.4, 1.1, 0.3);
+		radius = 0.1;
+		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1 + radius * Kore::sin(angle), 0.3);
+		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1, 0.3);
+		desPosition = vec3(0.3, 1.1, 0.3);
 		
-		finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
 		
-		//mat4 rot = desRotation.matrix().Transpose() * mat4::Rotation(0, 0, 0.01);
-		//RotationUtility::getOrientation(&rot, &desRotation);
-		
-		Kore::mat4 rot_err = initRot * desRotation.matrix().Transpose().Invert();
-		//Kore::mat4 rot_err = desRotation.matrix().Transpose() * mat4::Rotation(0, Kore::pi, 0);
-		Kore::Quaternion finalRotation;
-		RotationUtility::getOrientation(&rot_err, &finalRotation);
+		Kore::mat4 rot_err = desRotation.matrix().Transpose().Invert() * initRot;
+		Kore::Quaternion finalRot;
+		RotationUtility::getOrientation(&rot_err, &finalRot);
 		
 		//avatar->setLocalRotation(targetBoneIndex-1, Quaternion(0.2, 0.8, 0.0, 1.0)); // lowerarm
 		//avatar->setLocalRotation(targetBoneIndex-2, Quaternion(0.1, 0.0, -0.3, 1.0)); // upperarm
+		
+		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);

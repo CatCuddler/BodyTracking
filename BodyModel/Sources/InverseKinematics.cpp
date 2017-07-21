@@ -16,6 +16,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 
 	if (!targetBone->initialized) return false;
 	
+	//Kore::log(Kore::Info, "desPos %f %f %f", desiredPosition.x(), desiredPosition.y(), desiredPosition.z());
+	//Kore::log(Kore::Info, "desRot %f %f %f %f", desiredRotation.w, desiredRotation.x, desiredRotation.y, desiredRotation.z);
+	
 	for (int i = 0; i < maxSteps; ++i) {
 		//log(Info, "Iteration %i", i);
 		
@@ -30,26 +33,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		desQuat.normalize();
 		
 		Kore::vec3 diffRot = Kore::vec3(0, 0, 0);
-		//Kore::Quaternion diffQuat = desQuat - curQuat;
-		//RotationUtility::quatToEuler(&diffQuat, &diffRot.x(), &diffRot.y(), &diffRot.z());
-		
 		Kore::mat4 rot_err = desQuat.matrix().Transpose() * curQuat.matrix().Transpose().Invert();
 		Kore::Quaternion quatDiff;
 		RotationUtility::getOrientation(&rot_err, &quatDiff);
 		RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
-		
-		Kore::vec3 currentRot;
-		RotationUtility::quatToEuler(&curQuat, &currentRot.x(), &currentRot.y(), &currentRot.z());
-		Kore::vec3 desiredRot;
-		RotationUtility::quatToEuler(&desQuat, &desiredRot.x(), &desiredRot.y(), &desiredRot.z());
-		//diffRot = desiredRot - currentRot;
-		//diffRot = vec3(RotationUtility::getRadians(diffRot.x()), RotationUtility::getRadians(diffRot.y()), RotationUtility::getRadians(diffRot.z()));
-		
-		/*Kore::log(Kore::Info, "Diff %f %f %f --> %f %f %f", RotationUtility::getDegree(diffRot.x()), RotationUtility::getDegree(diffRot.y()), RotationUtility::getDegree(diffRot.z()), diffRot.x(), diffRot.y(), diffRot.z());
-		Kore::log(Kore::Info, "curRot %f %f %f", RotationUtility::getDegree(currentRot.x()), RotationUtility::getDegree(currentRot.y()), RotationUtility::getDegree(currentRot.z()));
-		Kore::log(Kore::Info, "desRot %f %f %f", RotationUtility::getDegree(desiredRot.x()), RotationUtility::getDegree(desiredRot.y()), RotationUtility::getDegree(desiredRot.z()));*/
-		
-		diffRot = vec3(0, 0, 0);
 		
 		/*Kore::Quaternion quat = Quaternion(0.1, 0.2, 0.3, 1);
 		quat.normalize();
@@ -148,7 +135,7 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::mat6x jacobian) {
 	InverseKinematics::mat6x inv;
 	
-	float lambda = 1; // Damping factor
+	float lambda = 0.001; // Damping factor
 	if (jacDim < maxBones) {
 		// Left Damped pseudo-inverse
 		InverseKinematics::mat6x6 id6 = InverseKinematics::mat6x6::Identity();
