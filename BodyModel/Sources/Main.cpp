@@ -56,7 +56,10 @@ namespace {
 	MeshObject* cube;
 	MeshObject* avatar;
 	
-	bool moveCube = false;
+	bool rotateCube = false;
+	bool rotateCubeX = false;
+	bool rotateCubeY = false;
+	bool rotateCubeZ = false;
 	
 #ifdef KORE_STEAMVR
 	vec3 globe = vec3(Kore::pi, 0, 0);
@@ -91,12 +94,12 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-#ifdef KORE_STEAMVR
-				vec4 cubePos = desPosition;
+/*#ifdef KORE_STEAMVR
+				vec4 cubePos = vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 #else
 				vec4 cubePos = avatar->M * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-#endif
-				cube->M = mat4::Translation(cubePos.x(), cubePos.y(), cubePos.z()) * desRotation.matrix().Transpose();
+#endif*/
+				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
@@ -107,8 +110,7 @@ namespace {
 				// Render target position
 				vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
 				Quaternion targetRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
-				vec4 finalPos = vec4(targetPosition.x(), targetPosition.y(), targetPosition.z(), 1);
-				cube->M = avatar->M * mat4::Translation(finalPos.x(), finalPos.y(), finalPos.z()) * targetRotation.matrix();
+				cube->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
 				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
@@ -124,64 +126,37 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 		
-		const float speed = 0.01f;
-		if (!moveCube) {
-			if (left) {
-				playerPosition.x() -= speed;
-			}
-			if (right) {
-				playerPosition.x() += speed;
-			}
-			if (forward) {
-				playerPosition.z() += speed;
-			}
-			if (backward) {
-				playerPosition.z() -= speed;
-			}
-			if (up) {
-				playerPosition.y() += speed;
-			}
-			if (down) {
-				playerPosition.y() -= speed;
-			}
-		} else if (moveCube) {
-			if (!rotateX && !rotateY && !rotateZ) {
-				if (left) {
-					desPosition.x() -= speed;
-				}
-				if (right) {
-					desPosition.x() += speed;
-				}
-				if (forward) {
-					desPosition.z() += speed;
-				}
-				if (backward) {
-					desPosition.z() -= speed;
-				}
-				if (up) {
-					desPosition.y() += speed;
-				}
-				if (down) {
-					desPosition.y() -= speed;
-				}
-			}
-			
+		const float speed = 0.1f;
+		if (left) {
+			playerPosition.x() -= speed;
+		}
+		if (right) {
+			playerPosition.x() += speed;
+		}
+		if (forward) {
+			playerPosition.z() += speed;
+		}
+		if (backward) {
+			playerPosition.z() -= speed;
+		}
+		if (up) {
+			playerPosition.y() += speed;
+		}
+		if (down) {
+			playerPosition.y() -= speed;
+		}
+		
+		if (rotateCube) {
 			vec3 currentRotation;
-			Kore::RotationUtility::quatToEuler(&desRotation, &currentRotation.x(), &currentRotation.y(), &currentRotation.z());
 			
-			float rad = 0;
-			if (left) rad = -speed;
-			if (right) rad = +speed;
-			if (rotateX) {
-				currentRotation.x() += rad;
-			} else if (rotateY) {
-				currentRotation.y() += rad;
-			} else if (rotateZ) {
-				currentRotation.z() += rad;
-			}
-			Kore::RotationUtility::eulerToQuat(currentRotation.x(), currentRotation.y(), currentRotation.z(), &desRotation);
+			if (rotateCubeX) currentRotation.x() += 0.01;
+			if (rotateCubeY) currentRotation.y() += 0.01;
+			if (rotateCubeZ) currentRotation.z() -= 0.01;
 			
-
+			mat4 rot = desRotation.matrix().Transpose() * mat4::Rotation(currentRotation.x(), currentRotation.y(), currentRotation.z());
+			RotationUtility::getOrientation(&rot, &desRotation);
+			
+			//rotateCube = false;
 		}
 
 		
@@ -280,8 +255,7 @@ namespace {
 
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
-		}
-		else {
+		} else {
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 		}
@@ -297,12 +271,18 @@ namespace {
 #else
 		// Scale test
 		if (!initCharacter) {
-			avatar->setScale(0.8);
+			//avatar->setScale(0.8);
 			avatar->M = initTrans * initRot;
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			desPosition = vec3(0.1, -0.4, 0.9);
+			avatar->animate(tex, deltaT);
+			
+			//desRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
+			
+			//mat4 rot = mat4::RotationZ(Kore::pi/2) * desRotation.matrix().Transpose();
+			//RotationUtility::getOrientation(&rot, &desRotation);
+
 		}
 		
 		// projection matrix
@@ -324,21 +304,30 @@ namespace {
 		
 		angle += 0.05;
 		float radius = 0.2;
-		//desPosition = vec3(-0.2 + radius * Kore::cos(angle), -0.2, 0.2 + radius * Kore::sin(angle));
-		//avatar->setDesiredPosition(53, desPosition);		// Left foot 49, right foot 53
 		
-		//desPosition = vec3(0.2 + radius * Kore::cos(angle), -0.3, 1.1 + radius * Kore::sin(angle));
-		//desPosition = vec3(0.1, -0.3, 0.9);
+		// Set foot position
+		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
+		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		avatar->setDesiredPosition(53, finalPos);	// Left foot 49, right foot 53
 		
-		/*Quaternion finalRot = Quaternion(0, 0, 0, 1);
-		RotationUtility::eulerToQuat(0, 0.1 * Kore::cos(angle), 0, &finalRot);
-		vec4 rot = vec4(0, 0, 0, 1);
-		RotationUtility::quatToEuler(&finalRot, &rot.x(), &rot.y(), &rot.z());
-		rot = T * rot;
-		//RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &desRotation);*/
+		// Set hand position
+		desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.0 + radius * Kore::sin(angle), 0.3);
+		//desPosition = vec3(0.4 + radius * Kore::cos(angle), 1.1, 0.3);
+		//desPosition = vec3(0.4, 1.1, 0.3);
 		
-		//avatar->setDesiredPosition(targetBoneIndex, desPosition);
-		avatar->setDesiredPositionAndOrientation(targetBoneIndex, desPosition, desRotation);
+		finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		
+		//mat4 rot = desRotation.matrix().Transpose() * mat4::Rotation(0, 0, 0.01);
+		//RotationUtility::getOrientation(&rot, &desRotation);
+		
+		Kore::mat4 rot_err = initRot * desRotation.matrix().Transpose().Invert();
+		//Kore::mat4 rot_err = desRotation.matrix().Transpose() * mat4::Rotation(0, Kore::pi, 0);
+		Kore::Quaternion finalRotation;
+		RotationUtility::getOrientation(&rot_err, &finalRotation);
+		
+		//avatar->setLocalRotation(targetBoneIndex-1, Quaternion(0.2, 0.8, 0.0, 1.0)); // lowerarm
+		//avatar->setLocalRotation(targetBoneIndex-2, Quaternion(0.1, 0.0, -0.3, 1.0)); // upperarm
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
@@ -376,12 +365,15 @@ namespace {
 				break;
 			case Kore::KeyX:
 				rotateX = true;
+				rotateCubeX = true;
 				break;
 			case Kore::KeyY:
 				rotateY = true;
+				rotateCubeY = true;
 				break;
 			case Kore::KeyZ:
 				rotateZ = true;
+				rotateCubeZ = true;
 				break;
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
@@ -396,7 +388,7 @@ namespace {
 				System::stop();
 				break;
 			case KeyC:
-				moveCube = true;
+				rotateCube = true;
 				break;
 			default:
 				break;
@@ -427,15 +419,18 @@ namespace {
 				break;
 			case Kore::KeyX:
 				rotateX = false;
+				rotateCubeX = false;
 				break;
 			case Kore::KeyY:
 				rotateY = false;
+				rotateCubeY = false;
 				break;
 			case Kore::KeyZ:
 				rotateZ = false;
+				rotateCubeZ = false;
 				break;
 			case KeyC:
-				moveCube = false;
+				rotateCube = false;
 				break;
 			default:
 				break;
