@@ -116,6 +116,19 @@ namespace {
 		}
 	}
 	
+	Kore::mat4 getProjectionMatrix() {
+		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
+		P.Set(0, 0, -P.get(0, 0));
+		return P;
+	}
+	
+	Kore::mat4 getViewMatrix() {
+		vec3 lookAt = playerPosition + vec3(0, 0, -1);
+		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
+		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+		return V;
+	}
+	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -144,9 +157,10 @@ namespace {
 		if (rotateCube) {
 			mat4 rot = desRotation.matrix().Transpose();
 			
-			if (rotateCubeX) rot = desRotation.matrix().Transpose() * mat4::RotationX(RotationUtility::getRadians(10));
-			if (rotateCubeY) rot = desRotation.matrix().Transpose() * mat4::RotationY(RotationUtility::getRadians(-10));
-			if (rotateCubeZ) rot = desRotation.matrix().Transpose() * mat4::RotationZ(RotationUtility::getRadians(10));
+			float angle = Kore::pi / 4.0;
+			if (rotateCubeX) rot = desRotation.matrix().Transpose() * mat4::RotationX(angle);
+			if (rotateCubeY) rot = desRotation.matrix().Transpose() * mat4::RotationY(-angle);
+			if (rotateCubeZ) rot = desRotation.matrix().Transpose() * mat4::RotationZ(-angle);
 			
 			RotationUtility::getOrientation(&rot, &desRotation);
 			
@@ -239,13 +253,8 @@ namespace {
 
 		// Render
 		if (!firstPersonMonitor) {
-			mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
-			P.Set(0, 0, -P.get(0, 0));
-
-			// view matrix
-			vec3 lookAt = playerPosition + vec3(0, 0, -1);
-			mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
-			V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+			mat4 P = getProjectionMatrix();
+			mat4 V = getViewMatrix();
 
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
@@ -275,12 +284,10 @@ namespace {
 		}
 		
 		// projection matrix
-		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
+		mat4 P = getProjectionMatrix();
 		
 		// view matrix
-		vec3 lookAt = playerPosition + vec3(0, 0, -1);
-		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
-		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+		mat4 V = getViewMatrix();
 		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
@@ -308,6 +315,7 @@ namespace {
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
 		
+		//Kore::log(Kore::Info, "desRotation %f %f %f %f", desRotation.w, desRotation.x, desRotation.y, desRotation.z);
 		Kore::mat4 rot_err = desRotation.matrix().Transpose().Invert() * initRot;
 		Kore::Quaternion finalRot;
 		RotationUtility::getOrientation(&rot_err, &finalRot);
