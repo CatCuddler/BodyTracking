@@ -73,7 +73,7 @@ namespace {
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
 	Quaternion desRotation = Quaternion(0, 0, 0, 1);
-	mat4 matrix = mat4::Identity();
+	mat4 desRotationMatrix = mat4::Identity();
 
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -155,14 +155,13 @@ namespace {
 		}
 		
 		if (rotateCube) {
-			mat4 rot = desRotation.matrix().Transpose();
 			
-			float angle = Kore::pi / 4.0;
-			if (rotateCubeX) rot = desRotation.matrix().Transpose() * mat4::RotationX(angle);
-			if (rotateCubeY) rot = desRotation.matrix().Transpose() * mat4::RotationY(-angle);
-			if (rotateCubeZ) rot = desRotation.matrix().Transpose() * mat4::RotationZ(-angle);
+			float angle = RotationUtility::getRadians(10);
+			if (rotateCubeX) desRotationMatrix *= mat4::RotationX(angle);
+			if (rotateCubeY) desRotationMatrix *= mat4::RotationY(-angle);
+			if (rotateCubeZ) desRotationMatrix *= mat4::RotationZ(-angle);
 			
-			RotationUtility::getOrientation(&rot, &desRotation);
+			RotationUtility::getOrientation(&desRotationMatrix, &desRotation);
 			
 			rotateCube = false;
 		}
@@ -279,8 +278,8 @@ namespace {
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			mat4 rot = desRotation.matrix().Transpose() * mat4::RotationY(-Kore::pi/2) * mat4::RotationZ(-Kore::pi/2);
-			RotationUtility::getOrientation(&rot, &desRotation);
+			desRotationMatrix = desRotation.matrix().Transpose() * mat4::RotationY(-Kore::pi/2) * mat4::RotationZ(-Kore::pi/2);
+			RotationUtility::getOrientation(&desRotationMatrix, &desRotation);
 		}
 		
 		// projection matrix
@@ -315,13 +314,9 @@ namespace {
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
 		
-		//Kore::log(Kore::Info, "desRotation %f %f %f %f", desRotation.w, desRotation.x, desRotation.y, desRotation.z);
-		Kore::mat4 rot_err = desRotation.matrix().Transpose().Invert() * initRot;
-		Kore::Quaternion finalRot;
-		RotationUtility::getOrientation(&rot_err, &finalRot);
-		
-		//avatar->setLocalRotation(targetBoneIndex-1, Quaternion(0.2, 0.8, 0.0, 1.0)); // lowerarm
-		//avatar->setLocalRotation(targetBoneIndex-2, Quaternion(0.1, 0.0, -0.3, 1.0)); // upperarm
+		Kore::Quaternion invRotQuat;
+		RotationUtility::getOrientation(&initRot, &invRotQuat);
+		Kore::Quaternion finalRot = invRotQuat * desRotation;
 		
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
 		
