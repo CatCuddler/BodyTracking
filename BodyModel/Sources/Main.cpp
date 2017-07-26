@@ -302,8 +302,8 @@ namespace {
 		
 		// Set foot position
 		/*desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, finalPos);	// Left foot 49, right foot 53*/
+		vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53*/
 		
 		// Set hand position
 		radius = 0.1;
@@ -311,14 +311,14 @@ namespace {
 		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1, 0.3);
 		desPosition = vec3(0.3, 1.1, 0.3);
 		
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
 		
 		Kore::Quaternion invRotQuat;
 		RotationUtility::getOrientation(&initRot, &invRotQuat);
-		Kore::Quaternion finalRot = invRotQuat * desRotation;
+		Kore::Quaternion finalRotHand = invRotQuat * desRotation;
 		
-		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
+		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPosHand, finalRotHand);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);

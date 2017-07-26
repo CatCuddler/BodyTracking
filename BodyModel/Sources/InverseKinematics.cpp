@@ -7,7 +7,7 @@
 
 #include <vector>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2), clamp(false) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -26,18 +26,24 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		Kore::vec4 currentPosition = targetBone->combined * Kore::vec4(0, 0, 0, 1);
 		Kore::vec4 diffPos = desiredPosition - currentPosition;
 		
-		// Calculate error between deisred rotation and actual rotation
-		Kore::Quaternion curQuat;// = targetBone->quaternion;
-		Kore::RotationUtility::getOrientation(&targetBone->combined, &curQuat);
-		Kore::Quaternion desQuat = desiredRotation;
-		desQuat.normalize();
-		
 		Kore::vec3 diffRot = Kore::vec3(0, 0, 0);
-		if (desQuat.x + desQuat.y + desQuat.z + desQuat.w > 0) {
+		if (desiredRotation.x + desiredRotation.y + desiredRotation.z + desiredRotation.w != 0) {
+			// Calculate error between deisred rotation and actual rotation
+			Kore::Quaternion curQuat;// = targetBone->quaternion;
+			Kore::RotationUtility::getOrientation(&targetBone->combined, &curQuat);
+			Kore::Quaternion desQuat = desiredRotation;
+			desQuat.normalize();
+			
 			Kore::mat4 rotErr = desQuat.matrix().Transpose() * curQuat.matrix().Transpose().Invert();
 			Kore::Quaternion quatDiff;
 			RotationUtility::getOrientation(&rotErr, &quatDiff);
 			RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
+			
+			// Dont enforce joint limits by clamping if we know the desired rotation
+			clamp = false;
+		} else {
+			// Force joint limits, if we do not know the desired rotation
+			clamp = true;
 		}
 		
 		//if (diffRot.getLength() > 1) diffRot.setLength(1);
@@ -63,9 +69,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		V[0] = diffPos.x(); V[1] = diffPos.y(); V[2] = diffPos.z();
 		V[3] = diffRot.x(); V[4] = diffRot.y(); V[5] = diffRot.z();
 		
-		float error = V.getLength();//diffPos.getLength();
-		//log(Info, "error %f error \t diffPos %f \t error diffRot %f", error, diffPos.getLength(), diffRot.getLength());
-		if (error < maxError) {
+		//float error = V.getLength();//diffPos.getLength();
+		//log(Info, "error %f \t diffPos %f \t error diffRot %f", error, diffPos.getLength(), diffRot.getLength());
+		if (diffPos.getLength() < maxError && diffRot.getLength() < maxError) {
 			Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
 			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());
@@ -92,6 +98,8 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			theta.push_back(aThetaX[i]);
 			theta.push_back(aThetaY[i]);
 			theta.push_back(aThetaZ[i]);
+			
+			//log(Info, "%f %f %f", aThetaX[i], aThetaY[i], aThetaZ[i]);
 		}
 		
 		applyChanges(theta, targetBone);
@@ -176,10 +184,12 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		rotation.y() += radY;
 		rotation.z() += radZ;
 		
-		Kore::vec3 axis = bone->axes;
-		if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rotation.x());
-		if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rotation.y());
-		if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rotation.z());
+		if (clamp) {
+			Kore::vec3 axis = bone->axes;
+			if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rotation.x());
+			if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rotation.y());
+			if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rotation.z());
+		}
 		
 		Kore::Quaternion quat;
 		RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);

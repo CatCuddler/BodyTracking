@@ -18,6 +18,7 @@ private:
 	int maxSteps;
 	float maxError;
 	int rootIndex;
+	bool clamp;
 	
 	std::vector<BoneNode*> bones;
 	
