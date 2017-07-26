@@ -37,7 +37,12 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			Kore::mat4 rotErr = desQuat.matrix().Transpose() * curQuat.matrix().Transpose().Invert();
 			Kore::Quaternion quatDiff;
 			RotationUtility::getOrientation(&rotErr, &quatDiff);
-			RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
+			
+			//RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
+			quatDiff.normalize();
+			diffRot.x() = quatDiff.x;
+			diffRot.y() = quatDiff.y;
+			diffRot.z() = quatDiff.z;
 			
 			// Dont enforce joint limits by clamping if we know the desired rotation
 			clamp = false;
@@ -45,8 +50,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			// Force joint limits, if we do not know the desired rotation
 			clamp = true;
 		}
-		
-		//if (diffRot.getLength() > 1) diffRot.setLength(1);
 		
 		/*Kore::Quaternion quat = Quaternion(0.1, 0.2, 0.3, 1);
 		quat.normalize();
@@ -69,12 +72,12 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		V[0] = diffPos.x(); V[1] = diffPos.y(); V[2] = diffPos.z();
 		V[3] = diffRot.x(); V[4] = diffRot.y(); V[5] = diffRot.z();
 		
-		//float error = V.getLength();//diffPos.getLength();
+		float error = V.getLength();
 		//log(Info, "error %f \t diffPos %f \t error diffRot %f", error, diffPos.getLength(), diffRot.getLength());
-		if (diffPos.getLength() < maxError && diffRot.getLength() < maxError) {
-			Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
+		if (error < maxError) {
+			/*Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
-			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());
+			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());*/
 			return true;
 		}
 
@@ -147,7 +150,7 @@ InverseKinematics::mat6x InverseKinematics::calcJacobian(BoneNode* targetBone, K
 InverseKinematics::mat6x InverseKinematics::getPsevdoInverse(InverseKinematics::mat6x jacobian) {
 	InverseKinematics::mat6x inv;
 	
-	float lambda = 1;//0.001; // Damping factor
+	float lambda = 0.001; // Damping factor
 	if (jacDim < maxBones) {
 		// Left Damped pseudo-inverse
 		InverseKinematics::mat6x6 id6 = InverseKinematics::mat6x6::Identity();
@@ -178,26 +181,26 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		if (radX > delta || radX < -delta || radY > delta || radY < -delta || radZ > delta || radZ < -delta)
 			bone->interpolate = true;
 		
-		Kore::vec3 rotation;
-		RotationUtility::quatToEuler(&bone->quaternion, &rotation.x(), &rotation.y(), &rotation.z());
-		rotation.x() += radX;
-		rotation.y() += radY;
-		rotation.z() += radZ;
+		bone->quaternion.rotate(Quaternion(vec3(1, 0, 0), radX));
+		bone->quaternion.rotate(Quaternion(vec3(0, 1, 0), radY));
+		bone->quaternion.rotate(Quaternion(vec3(0, 0, 1), radZ));
+			
+		bone->quaternion.normalize();
 		
 		if (clamp) {
 			Kore::vec3 axis = bone->axes;
-			if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rotation.x());
-			if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rotation.y());
-			if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rotation.z());
+			if (axis.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &bone->quaternion.x);
+			if (axis.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &bone->quaternion.y);
+			if (axis.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &bone->quaternion.z);
+			
+			if (axis.x() == 0) bone->quaternion.x = 0;
+			if (axis.y() == 0) bone->quaternion.y = 0;
+			if (axis.z() == 0) bone->quaternion.z = 0;
 		}
 		
-		Kore::Quaternion quat;
-		RotationUtility::eulerToQuat(rotation.x(), rotation.y(), rotation.z(), &quat);
-		quat.normalize();
-		bone->quaternion = quat;
+		bone->quaternion.normalize();
 		
-		// T * R * S
-		Kore::mat4 rotMat = quat.matrix().Transpose();
+		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
 		bone->local = bone->transform * rotMat;
 		//Kore::log(Info, "Bone %s -> angle: %f %f %f quaterion: %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z(),  bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
 		

@@ -155,17 +155,13 @@ namespace {
 		}
 		
 		if (rotateCube) {
-			
-			float angle = RotationUtility::getRadians(10);
-			if (rotateCubeX) desRotationMatrix *= mat4::RotationX(angle);
-			if (rotateCubeY) desRotationMatrix *= mat4::RotationY(-angle);
-			if (rotateCubeZ) desRotationMatrix *= mat4::RotationZ(-angle);
-			
-			RotationUtility::getOrientation(&desRotationMatrix, &desRotation);
+			float rad = RotationUtility::getRadians(10);
+			if (rotateCubeX) desRotation.rotate(Quaternion(vec3(1, 0, 0), rad));
+			if (rotateCubeY) desRotation.rotate(Quaternion(vec3(0, 1, 0), -rad));
+			if (rotateCubeZ) desRotation.rotate(Quaternion(vec3(0, 0, 1), rad));
 			
 			rotateCube = false;
 		}
-
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -301,9 +297,9 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		/*desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
+		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
 		vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53*/
+		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53
 		
 		// Set hand position
 		radius = 0.1;
@@ -313,6 +309,8 @@ namespace {
 		
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		
+		desRotation.rotate(Quaternion(vec3(0,1,0), -0.05));
 		
 		Kore::Quaternion invRotQuat;
 		RotationUtility::getOrientation(&initRot, &invRotQuat);
