@@ -59,30 +59,6 @@ namespace {
 		std::copy(source, source + size, *dest);
 	}
 	
-	/*void setBoneCountArray(Mesh* mesh, int size, const unsigned_int16* data) {
-		for (int i = 0; i < size; ++i) {
-	 mesh->boneCountArray[i] = data[i];
-	 //if (i < 5 || i > size-5)
-	 //	log(Info, "Bone Count %i \t w=%i", i, mesh->boneCountArray[i]);
-		}
-	 }
-	 
-	 void setWeight(Mesh* mesh, int size, const float* data) {
-		for (int i = 0; i < size; ++i) {
-	 mesh->boneWeight[i] = data[i];
-	 //if (i < 5 || i > size-5)
-	 //	log(Info, "Weight %i \t w=%f", i, mesh->weight[i]);
-		}
-	 }
-	 
-	 void setBoneIndices(Mesh* mesh, int size, const unsigned_int16* data) {
-		for (int i = 0; i < size; ++i) {
-	 mesh->boneIndices[i] = data[i];
-	 //if (i < 5 || i > size-5)
-	 //	log(Info, "Bone Index %i \t i=%i", i, mesh->boneIndices[i]);
-		}
-	 }*/
-	
 	unsigned int getIndexFromString(const char* name, int ignore) {
 		const char* num = name + ignore;
 		std::stringstream strValue;
@@ -151,6 +127,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		// Get the highest position
 		BoneNode* head = getBoneWithIndex(46);
 		vec4 position = head->combined * vec4(0, 0, 0, 1);
+		position *= 1.0/position.w();
 		currentHeight = position.z();
 		
 		invKin = new InverseKinematics(bones, maxIteration);
@@ -287,6 +264,7 @@ void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desi
 vec3 MeshObject::getBonePosition(int boneIndex) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	vec4 pos = bone->combined * vec4(0, 0, 0, 1);
+	pos *= 1.0/pos.w();
 	return vec3(pos.x(), pos.y(), pos.z());
 }
 
@@ -310,38 +288,7 @@ void MeshObject::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotatio
 	bone->local = bone->transform * rotMat;
 }
 
-void MeshObject::animate(TextureUnit tex, float deltaTime) {
-	
-	// Interpolate
-	bool interpolate = false;
-	if (interpolate) {
-		for (int i = 0; i < bones.size(); ++i) {
-			BoneNode* bone = bones[i];
-			//if (bone->interpolate) {
-				bone->desQuaternion = bone->desQuaternion.slerp(0.01, bone->quaternion);
-				
-				bone->desQuaternion.normalize();
-				Kore::mat4 rotMat = bone->desQuaternion.matrix().Transpose();
-				bone->local = bone->transform * rotMat;
-				
-				//log(Info, "interpolate %s current: %f %f %f %f desired: %f %f %f", bone->boneName, bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z, bone->desQuaternion.w, bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
-				
-				Kore::vec3 diffRot = Kore::vec3(0, 0, 0);
-				Kore::mat4 rotErr = bone->quaternion.matrix().Transpose() * bone->desQuaternion.matrix().Transpose().Invert();
-				Kore::Quaternion quatDiff;
-				RotationUtility::getOrientation(&rotErr, &quatDiff);
-				RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
-				
-				if (diffRot.getLength() < 0.01) {
-					bone->interpolate = false;
-				}
-				
-			//} else {
-			//	bone->desQuaternion = bone->quaternion;
-			//}
-		}
-	}
-	
+void MeshObject::animate(TextureUnit tex, float deltaTime) {	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 	

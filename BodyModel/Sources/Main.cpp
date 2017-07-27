@@ -37,7 +37,6 @@ namespace {
 	Shader* vertexShader;
 	Shader* fragmentShader;
 	PipelineState* pipeline;
-	PipelineState* pipeline2;
 	
 	// Uniform locations
 	TextureUnit tex;
@@ -53,13 +52,13 @@ namespace {
 	bool rotateZ = false;
 	int mousePressX, mousePressY = 0;
 	
-	MeshObject* cube;
-	MeshObject* avatar;
-	
 	bool rotateCube = false;
 	bool rotateCubeX = false;
 	bool rotateCubeY = false;
 	bool rotateCubeZ = false;
+	
+	MeshObject* cube;
+	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
 	vec3 globe = vec3(Kore::pi, 0, 0);
@@ -68,13 +67,11 @@ namespace {
 	vec3 globe = vec3(0, 0, 0);
 	vec3 playerPosition = vec3(0, 0.7, 1.5);
 #endif
-	int frame = 0;
 	
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
 	Quaternion desRotation = Quaternion(0, 0, 0, 1);
-	mat4 desRotationMatrix = mat4::Identity();
-
+	
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
 	mat4 hmsOffset = mat4::Translation(0, 0.2, 0);
@@ -83,7 +80,7 @@ namespace {
 	
 	bool initCharacter = false;
 
-	const int targetBoneIndex = 10;	// Left foot 49, right foot 53, Left hand 10, right hand 29
+	const int targetBoneIndex = 10;						// Left foot 49, right foot 53, Left hand 10, right hand 29
 	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
 	void renderTracker() {
@@ -96,7 +93,6 @@ namespace {
 				// Render desired position
 				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
-				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
 				break;
 			}
@@ -107,7 +103,6 @@ namespace {
 				Quaternion targetRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
 				cube->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube->M);
-				//Graphics4::setPipeline(pipeline2);
 				cube->render(tex);
 				break;
 			}
@@ -274,8 +269,8 @@ namespace {
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			desRotationMatrix = desRotation.matrix().Transpose() * mat4::RotationY(-Kore::pi/2) * mat4::RotationZ(-Kore::pi/2);
-			RotationUtility::getOrientation(&desRotationMatrix, &desRotation);
+			desRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
+			desRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
 		}
 		
 		// projection matrix
@@ -288,9 +283,7 @@ namespace {
 		Graphics4::setMatrix(pLocation, P);
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
-		/*avatar->setAnimation(frame);
-		frame++;
-		if (frame > 200) frame = 0;*/                                                                                                                                                            
+		
 		avatar->animate(tex, deltaT);
 		
 		angle += 0.05;
@@ -303,14 +296,14 @@ namespace {
 		
 		// Set hand position
 		radius = 0.1;
-		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1 + radius * Kore::sin(angle), 0.3);
-		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1, 0.3);
-		desPosition = vec3(0.1, 0.9, 0.3);
+		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
+		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
+		desPosition = vec3(0.2, 0.9, 0.2);
 		
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		//avatar->setDesiredPosition(targetBoneIndex, finalPosHand);
 		
-		desRotation.rotate(Quaternion(vec3(0,1,0), -0.05));
+		desRotation.rotate(Quaternion(vec3(0, 1, 0), -0.05));
 		
 		Kore::Quaternion invRotQuat;
 		RotationUtility::getOrientation(&initRot, &invRotQuat);
@@ -477,19 +470,6 @@ namespace {
 		pipeline->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline->compile();
 
-		pipeline2 = new PipelineState;
-		pipeline2->inputLayout[0] = &structure;
-		pipeline2->inputLayout[1] = nullptr;
-		pipeline2->vertexShader = vertexShader;
-		pipeline2->fragmentShader = fragmentShader;
-		pipeline2->depthMode = ZCompareAlways;
-		pipeline2->depthWrite = false;
-		pipeline2->blendSource = Graphics4::SourceAlpha;
-		pipeline2->blendDestination = Graphics4::InverseSourceAlpha;
-		pipeline2->alphaBlendSource = Graphics4::SourceAlpha;
-		pipeline2->alphaBlendDestination = Graphics4::InverseSourceAlpha;
-		pipeline2->compile();
-		
 		tex = pipeline->getTextureUnit("tex");
 		
 		pLocation = pipeline->getConstantLocation("P");
