@@ -71,6 +71,7 @@ namespace {
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
 	Quaternion desRotation = Quaternion(0, 0, 0, 1);
+	Quaternion initDesRotation = Quaternion(0, 0, 0, 1);
 	
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -269,8 +270,8 @@ namespace {
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			desRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
-			desRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
+			initDesRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
+			initDesRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
 		}
 		
 		// projection matrix
@@ -303,11 +304,13 @@ namespace {
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPosHand);
 		
-		desRotation.rotate(Quaternion(vec3(0, 1, 0), -0.05));
+		desRotation = Quaternion(0, 0, 0, 1);
+		desRotation.rotate(initDesRotation);
+		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
 		
 		Kore::Quaternion invRotQuat;
-		RotationUtility::getOrientation(&initRot, &invRotQuat);
-		Kore::Quaternion finalRotHand = invRotQuat * desRotation;
+		RotationUtility::getOrientation(&initRotInv, &invRotQuat);
+		Kore::Quaternion finalRotHand = invRotQuat.rotated(desRotation);
 		
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPosHand, finalRotHand);
 		
