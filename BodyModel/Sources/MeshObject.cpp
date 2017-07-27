@@ -248,13 +248,13 @@ void MeshObject::setAnimation(int frame) {
 }
 
 void MeshObject::setDesiredPosition(int boneIndex, Kore::vec3 desiredPos) {
-	setDesiredPositionAndOrientation(boneIndex, desiredPos, Kore::Quaternion(0, 0, 0, 0));
+	setDesiredPositionAndOrientation(boneIndex, desiredPos, Kore::Quaternion(0, 0, 0, 0), false);
 }
 
-void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot) {
+void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
-	invKin->inverseKinematics(bone, desiredPosition, desiredRot);
+	invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
 	
 	if (logData) {
 		Logger::savePositionData(maxIteration, desiredPos, getBonePosition(boneIndex));

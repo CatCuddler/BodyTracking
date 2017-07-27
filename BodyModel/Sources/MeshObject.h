@@ -107,7 +107,7 @@ public:
 	
 	void setAnimation(int frame);
 	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
-	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot);
+	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot = true);
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
 	
 	vec3 getBonePosition(int boneIndex);

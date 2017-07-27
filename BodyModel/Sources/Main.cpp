@@ -290,9 +290,9 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
+		/*desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
 		vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53
+		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53*/
 		
 		// Set hand position
 		radius = 0.1;

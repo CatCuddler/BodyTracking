@@ -12,7 +12,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, bool posAndRot) {
 
 	if (!targetBone->initialized) return false;
 	
@@ -28,7 +28,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		Kore::vec4 diffPos = desiredPosition - currentPosition;
 		
 		Kore::vec3 diffRot = Kore::vec3(0, 0, 0);
-		if (desiredRotation.x + desiredRotation.y + desiredRotation.z + desiredRotation.w != 0) {
+		if (posAndRot) {
 			// Calculate error between deisred rotation and actual rotation
 			Kore::Quaternion curQuat;// = targetBone->quaternion;
 			Kore::RotationUtility::getOrientation(&targetBone->combined, &curQuat);

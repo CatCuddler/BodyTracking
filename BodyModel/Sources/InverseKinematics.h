@@ -11,7 +11,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones, int maxSteps);
-	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation);
+	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, bool posAndRot);
 	
 private:
 	int boneCount;
@@ -19,6 +19,7 @@ private:
 	float maxError;
 	int rootIndex;
 	bool clamp;
+	bool posAndRot = true;
 	
 	std::vector<BoneNode*> bones;
 	
