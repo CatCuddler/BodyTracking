@@ -387,9 +387,9 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 			//currentBoneCountIndex += numOfBones;
 			
 			// position
-			vertices[i * 8 + 0] = startPos.x();
-			vertices[i * 8 + 1] = startPos.y();
-			vertices[i * 8 + 2] = startPos.z();
+			vertices[i * 8 + 0] = startPos.x() * scale;
+			vertices[i * 8 + 1] = startPos.y() * scale;
+			vertices[i * 8 + 2] = startPos.z() * scale;
 			// texCoord
 			vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
 			vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
@@ -764,9 +764,14 @@ float MeshObject::getHeight() {
 void MeshObject::setScale(float scaleFactor) {
 	// Scale root bone
 	BoneNode* root = bones[0];
-	root->transform = root->transform * mat4::Scale(scaleFactor); //T * R * S
+	
+	mat4 scaleMat = mat4::Identity();
+	scaleMat.Set(3, 3, 1.0/scaleFactor);
+	
+	root->transform = root->transform * scaleMat; //T * R * S
 	root->local = root->transform;
 	
+	scale = scaleFactor;
 }
 
 

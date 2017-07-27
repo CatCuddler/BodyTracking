@@ -269,7 +269,7 @@ namespace {
 #else
 		// Scale test
 		if (!initCharacter) {
-			//avatar->setScale(0.8);
+			avatar->setScale(0.8);
 			avatar->M = initTrans * initRot;
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
@@ -297,7 +297,7 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.3);
+		desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
 		vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53
 		
@@ -305,7 +305,7 @@ namespace {
 		radius = 0.1;
 		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1 + radius * Kore::sin(angle), 0.3);
 		//desPosition = vec3(0.3 + radius * Kore::cos(angle), 1.1, 0.3);
-		desPosition = vec3(0.3, 1.1, 0.3);
+		desPosition = vec3(0.1, 0.9, 0.3);
 		
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
