@@ -71,7 +71,9 @@ namespace {
 	float angle = 0;
 	vec3 desPosition = vec3(0, 0, 0);
 	Quaternion desRotation = Quaternion(0, 0, 0, 1);
-	Quaternion initDesRotation = Quaternion(0, 0, 0, 1);
+	
+	Quaternion initDesRotationLeftHand = Quaternion(0, 0, 0, 1);
+	Quaternion initDesRotationRightHand = Quaternion(0, 0, 0, 1);
 	
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -81,8 +83,10 @@ namespace {
 	
 	bool initCharacter = false;
 
-	const int targetBoneIndex = 10;						// Left foot 49, right foot 53, Left hand 10, right hand 29
-	const int renderTrackerOrTargetPosition = 0;		// 0 - dont render, 1 - render desired position, 2 - render target position
+	const int targetBoneIndex = 29;						// Left foot 49, right foot 53, Left hand 10, right hand 29
+	const int leftHandBoneIndex = 10;
+	const int rightHandBoneIndex = 29;
+	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
@@ -279,8 +283,11 @@ namespace {
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
 			
-			initDesRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
-			initDesRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
+			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
+			initDesRotationLeftHand.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
+			
+			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
+			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
 		}
 		
 		// projection matrix
@@ -308,13 +315,14 @@ namespace {
 		radius = 0.1;
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
-		desPosition = vec3(0.2, 0.9, 0.2);
+		desPosition = vec3(-0.2, 0.9, 0.2);
 		
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPosHand);
 		
 		desRotation = Quaternion(0, 0, 0, 1);
-		desRotation.rotate(initDesRotation);
+		if (targetBoneIndex == leftHandBoneIndex) desRotation.rotate(initDesRotationLeftHand);
+		else if (targetBoneIndex == rightHandBoneIndex) desRotation.rotate(initDesRotationRightHand);
 		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
 		
 		Kore::Quaternion invRotQuat;
