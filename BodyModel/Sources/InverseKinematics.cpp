@@ -16,8 +16,8 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 
 	if (!targetBone->initialized) return false;
 	
-	//Kore::log(Kore::Info, "desPos %f %f %f", desiredPosition.x(), desiredPosition.y(), desiredPosition.z());
-	//Kore::log(Kore::Info, "desRot %f %f %f %f", desiredRotation.w, desiredRotation.x, desiredRotation.y, desiredRotation.z);
+	Kore::log(Kore::Info, "desPos %f %f %f", desiredPosition.x(), desiredPosition.y(), desiredPosition.z());
+	Kore::log(Kore::Info, "desRot %f %f %f %f", desiredRotation.w, desiredRotation.x, desiredRotation.y, desiredRotation.z);
 	
 	for (int i = 0; i < maxSteps; ++i) {
 		//log(Info, "Iteration %i", i);
@@ -46,10 +46,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			diffRot.z() = quatDiff.z;
 			
 			// Dont enforce joint limits by clamping if we know the desired rotation
-			clamp = false;
+			//clamp = false;
 		} else {
 			// Force joint limits, if we do not know the desired rotation
-			clamp = true;
+			//clamp = true;
 		}
 		
 		InverseKinematics::vec6 V;

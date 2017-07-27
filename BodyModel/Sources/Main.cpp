@@ -82,7 +82,7 @@ namespace {
 	bool initCharacter = false;
 
 	const int targetBoneIndex = 10;						// Left foot 49, right foot 53, Left hand 10, right hand 29
-	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
+	const int renderTrackerOrTargetPosition = 0;		// 0 - dont render, 1 - render desired position, 2 - render target position
 
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
@@ -189,11 +189,15 @@ namespace {
 
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+
+			initDesRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
 			initRot *= mat4::RotationZ(-zAngle);
+
+			initRotInv = initRot.Invert();
 
 			avatar->M = initTrans * initRot * hmsOffset;
 			cube->M = avatar->M;
@@ -213,11 +217,15 @@ namespace {
 		// Get controller position
 		desPosition = controller.vrPose.position;
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
 
 		// Get controller rotation
 		desRotation = controller.vrPose.orientation;
-		//avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, desRotation);
+		desRotation.rotate(initDesRotation);
+		Kore::Quaternion invRotQuat;
+		RotationUtility::getOrientation(&initRotInv, &invRotQuat);
+		Kore::Quaternion finalRot = invRotQuat.rotated(desRotation);
+		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
@@ -266,6 +274,7 @@ namespace {
 		// Scale test
 		if (!initCharacter) {
 			avatar->setScale(0.8);
+			initRotInv = initRot.Invert();
 			avatar->M = initTrans * initRot;
 			T = (initTrans * initRot).Invert();
 			initCharacter = true;
@@ -486,7 +495,6 @@ namespace {
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		initRot = mat4::RotationX(-Kore::pi / 2.0);
-		initRotInv = initRot.Invert();
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);

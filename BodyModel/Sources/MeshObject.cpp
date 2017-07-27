@@ -9,6 +9,7 @@
 #include <Kore/Log.h>
 
 #include <sstream>
+#include <algorithm>
 
 using namespace Kore;
 using namespace Kore::Graphics4;
