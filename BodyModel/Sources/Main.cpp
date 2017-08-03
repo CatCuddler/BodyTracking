@@ -52,11 +52,6 @@ namespace {
 	bool rotateZ = false;
 	int mousePressX, mousePressY = 0;
 	
-	bool rotateCube = false;
-	bool rotateCubeX = false;
-	bool rotateCubeY = false;
-	bool rotateCubeZ = false;
-	
 	MeshObject* cube;
 	MeshObject* avatar;
 	
@@ -78,16 +73,17 @@ namespace {
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
 	mat4 hmsOffset = mat4::Translation(0, 0.2, 0);
-	mat4 initRot = mat4::Identity();
-	mat4 initRotInv = mat4::Identity();
+	Quaternion initRot = Quaternion(0, 0, 0, 1);
+	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
 	
 	bool initCharacter = false;
-
-	const int targetBoneIndex = 29;						// Left foot 49, right foot 53, Left hand 10, right hand 29
+	
+	// Left foot 49, right foot 53, Left hand 10, right hand 29
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
+	const int targetBoneIndex = rightHandBoneIndex;
 	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
-
+	
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
 			case 0:
@@ -154,75 +150,66 @@ namespace {
 			playerPosition.y() -= speed;
 		}
 		
-		if (rotateCube) {
-			float rad = RotationUtility::getRadians(10);
-			if (rotateCubeX) desRotation.rotate(Quaternion(vec3(1, 0, 0), rad));
-			if (rotateCubeY) desRotation.rotate(Quaternion(vec3(0, 1, 0), -rad));
-			if (rotateCubeZ) desRotation.rotate(Quaternion(vec3(0, 0, 1), rad));
-			
-			rotateCube = false;
-		}
-		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
 		Graphics4::setPipeline(pipeline);
-
+		
 #ifdef KORE_STEAMVR
-
+		
 		bool firstPersonVR = true;
 		bool firstPersonMonitor = false;
-
+		
 		VrInterface::begin();
 		SensorState state;
-
+		
 		if (!initCharacter) {
 			float currentAvatarHeight = avatar->getHeight();
-
+			
 			state = VrInterface::getSensorState(0);
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
-
+			
 			//playerPosition.x() = -currentUserHeight * 0.5;
 			playerPosition.y() = currentUserHeight * 1.5;
 			playerPosition.z() = currentUserHeight * 0.5;
 			playerPosition = vec3(0.000000, 0.734777, 0.794926);
-
+			
 			float scale = currentUserHeight / currentAvatarHeight;
-//			avatar->setScale(scale);
-
+			//			avatar->setScale(scale);
+			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-
+			
 			initDesRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
 			initRot *= mat4::RotationZ(-zAngle);
-
+			
 			initRotInv = initRot.Invert();
-
+			
 			avatar->M = initTrans * initRot * hmsOffset;
 			cube->M = avatar->M;
 			T = (initTrans * initRot * hmsOffset).Invert();
-
+			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
-
+			
 			initCharacter = true;
 		}
-
+		
 		VrPoseState controller;
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
 		}
-
+		
 		// Get controller position
 		desPosition = controller.vrPose.position;
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
-
+		
 		// Get controller rotation
 		desRotation = controller.vrPose.orientation;
 		desRotation.rotate(initDesRotation);
@@ -233,32 +220,32 @@ namespace {
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
-
+			
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
-
+			
 			state = VrInterface::getSensorState(eye);
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
-
+			
 			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
-
+			
 			renderTracker();
-
+			
 			VrInterface::endRender(eye);
 		}
-
+		
 		VrInterface::warpSwap();
-
+		
 		Graphics4::restoreRenderTarget();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
-
+		
 		// Render
 		if (!firstPersonMonitor) {
 			mat4 P = getProjectionMatrix();
 			mat4 V = getViewMatrix();
-
+			
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
 		} else {
@@ -267,20 +254,22 @@ namespace {
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
-
+		
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
-
+		
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
-
+		
 #else
 		// Scale test
 		if (!initCharacter) {
 			avatar->setScale(0.8);
-			initRotInv = initRot.Invert();
-			avatar->M = initTrans * initRot;
-			T = (initTrans * initRot).Invert();
+			
+			initRotInv = initRot.invert();
+			
+			avatar->M = initTrans * initRot.matrix().Transpose();
+			T = (initTrans * initRot.matrix().Transpose()).Invert();
 			initCharacter = true;
 			
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
@@ -288,6 +277,8 @@ namespace {
 			
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
+			//initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
+			//initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
 		}
 		
 		// projection matrix
@@ -308,14 +299,16 @@ namespace {
 		
 		// Set foot position
 		/*desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
-		vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53*/
+		 vec4 finalPosFoot = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		 avatar->setDesiredPosition(53, finalPosFoot);	// Left foot 49, right foot 53*/
 		
 		// Set hand position
 		radius = 0.1;
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
 		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
-		desPosition = vec3(-0.2, 0.9, 0.2);
+		desPosition = vec3(0.2, 0.9, 0.2);
+		
+		if (targetBoneIndex == rightHandBoneIndex) desPosition.x() = -desPosition.x();
 		
 		vec4 finalPosHand = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		//avatar->setDesiredPosition(targetBoneIndex, finalPosHand);
@@ -325,10 +318,7 @@ namespace {
 		else if (targetBoneIndex == rightHandBoneIndex) desRotation.rotate(initDesRotationRightHand);
 		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
 		
-		Kore::Quaternion invRotQuat;
-		RotationUtility::getOrientation(&initRotInv, &invRotQuat);
-		Kore::Quaternion finalRotHand = invRotQuat.rotated(desRotation);
-		
+		Kore::Quaternion finalRotHand = initRotInv.rotated(desRotation);
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPosHand, finalRotHand);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
@@ -337,8 +327,8 @@ namespace {
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
 #endif
-
-
+		
+		
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
@@ -367,15 +357,12 @@ namespace {
 				break;
 			case Kore::KeyX:
 				rotateX = true;
-				rotateCubeX = true;
 				break;
 			case Kore::KeyY:
 				rotateY = true;
-				rotateCubeY = true;
 				break;
 			case Kore::KeyZ:
 				rotateZ = true;
-				rotateCubeZ = true;
 				break;
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
@@ -388,9 +375,6 @@ namespace {
 				break;
 			case KeyQ:
 				System::stop();
-				break;
-			case KeyC:
-				rotateCube = true;
 				break;
 			default:
 				break;
@@ -421,18 +405,12 @@ namespace {
 				break;
 			case Kore::KeyX:
 				rotateX = false;
-				rotateCubeX = false;
 				break;
 			case Kore::KeyY:
 				rotateY = false;
-				rotateCubeY = false;
 				break;
 			case Kore::KeyZ:
 				rotateZ = false;
-				rotateCubeZ = false;
-				break;
-			case KeyC:
-				rotateCube = false;
 				break;
 			default:
 				break;
@@ -489,7 +467,7 @@ namespace {
 		pipeline->alphaBlendSource = Graphics4::SourceAlpha;
 		pipeline->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline->compile();
-
+		
 		tex = pipeline->getTextureUnit("tex");
 		
 		pLocation = pipeline->getConstantLocation("P");
@@ -502,7 +480,7 @@ namespace {
 #else
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
-		initRot = mat4::RotationX(-Kore::pi / 2.0);
+		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
