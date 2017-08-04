@@ -181,18 +181,20 @@ namespace {
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
 			
-			initDesRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+			// initDesRotationRightHand TODO
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
-			initRot *= mat4::RotationZ(-zAngle);
+			//initRot *= mat4::RotationZ(-zAngle);
+			initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
 			
 			initRotInv = initRot.Invert();
 			
-			avatar->M = initTrans * initRot * hmsOffset;
+			avatar->M = initTrans * initRot.matrix().Transpose() * hmsOffset;
 			cube->M = avatar->M;
-			T = (initTrans * initRot * hmsOffset).Invert();
+			T = (initTrans * initRot.matrix().Transpose() * hmsOffset).Invert();
 			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 			
@@ -212,9 +214,9 @@ namespace {
 		
 		// Get controller rotation
 		desRotation = controller.vrPose.orientation;
-		desRotation.rotate(initDesRotation);
-		Kore::Quaternion invRotQuat;
-		RotationUtility::getOrientation(&initRotInv, &invRotQuat);
+		if (targetBoneIndex == leftHandBoneIndex) desRotation.rotate(initDesRotationLeftHand);
+		else if (targetBoneIndex == rightHandBoneIndex) desRotation.rotate(initDesRotationRightHand);
+		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
 		Kore::Quaternion finalRot = invRotQuat.rotated(desRotation);
 		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
 		
@@ -277,8 +279,6 @@ namespace {
 			
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
-			//initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
-			//initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
 		}
 		
 		// projection matrix
