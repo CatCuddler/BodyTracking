@@ -85,7 +85,7 @@ namespace {
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
 	const int targetBoneIndex = rightHandBoneIndex;
-	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
+	const int renderTrackerOrTargetPosition = 0;		// 0 - dont render, 1 - render desired position, 2 - render target position
 	
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
@@ -126,6 +126,15 @@ namespace {
 		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
 		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
 		return V;
+	}
+
+	void setDesiredPositionAndOrientation(Kore::vec3 desPosition, Kore::Quaternion desRotation, int boneIndex) {
+		// Transform desired position to the character coordinate system
+		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
+		
+		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
 	
 	void update() {
@@ -176,45 +185,41 @@ namespace {
 			//playerPosition.x() = -currentUserHeight * 0.5;
 			playerPosition.y() = currentUserHeight * 1.5;
 			playerPosition.z() = currentUserHeight * 0.5;
-			playerPosition = vec3(0.000000, 0.734777, 0.794926);
 			
 			float scale = currentUserHeight / currentAvatarHeight;
-			//			avatar->setScale(scale);
+			avatar->setScale(scale);
 			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
 			
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-			// initDesRotationRightHand TODO
+			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
 			float zAngle = 2 * Kore::acos(hmdOrient.y);
-			//initRot *= mat4::RotationZ(-zAngle);
 			initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
 			
-			initRotInv = initRot.Invert();
+			initRotInv = initRot.invert();
 			
 			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-			cube->M = avatar->M;
 			T = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
 			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 			
 			// Get left and right tracker index
 			VrPoseState controller;
-			vec4 hmdTransPos = T * vec4(hmdPos.x(), hmdPos.y(), hmdPos.z(), 1);
 			for (int i = 0; i < 16; ++i) {
 				controller = VrInterface::getController(i);
 				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = T * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-					if (trackerTransPos.x() > hmdTransPos.x()) {
+					if (trackerTransPos.x() > 0) {
+						log(Info, "leftTrackerIndex: %i -> %i", leftTrackerIndex, i);
+						leftTrackerIndex = i;
+					} else {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
-					} else {
-						log(Info, "leftHandBoneIndex: %i -> %i", leftHandBoneIndex, i);
-						leftHandBoneIndex = i;
 					}
 				}
 			}
@@ -227,20 +232,31 @@ namespace {
 			controller = VrInterface::getController(i);
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
 		}*/
-		controller = VrInterface::getController(leftTrackerIndex);
+		if (leftTrackerIndex != -1) {
+			controller = VrInterface::getController(leftTrackerIndex);
+
+			// Get controller position
+			desPosition = controller.vrPose.position;
+			// Get controller rotation
+			desRotation = controller.vrPose.orientation;
+			desRotation.rotate(initDesRotationLeftHand);
+			
+			setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
+		}
+
+		if (rightTrackerIndex != -1) {
+			controller = VrInterface::getController(rightTrackerIndex);
+
+			// Get controller position
+			desPosition = controller.vrPose.position;
+			// Get controller rotation
+			desRotation = controller.vrPose.orientation;
+			desRotation.rotate(initDesRotationRightHand);
+
+			setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
+		}
+
 		
-		// Get controller position
-		desPosition = controller.vrPose.position;
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		//avatar->setDesiredPosition(targetBoneIndex, finalPos);
-		
-		// Get controller rotation
-		desRotation = controller.vrPose.orientation;
-		if (targetBoneIndex == leftHandBoneIndex) desRotation.rotate(initDesRotationLeftHand);
-		else if (targetBoneIndex == rightHandBoneIndex) desRotation.rotate(initDesRotationRightHand);
-		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
-		Kore::Quaternion finalRot = invRotQuat.rotated(desRotation);
-		avatar->setDesiredPositionAndOrientation(targetBoneIndex, finalPos, finalRot);
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
