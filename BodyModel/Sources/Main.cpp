@@ -58,6 +58,9 @@ namespace {
 #ifdef KORE_STEAMVR
 	vec3 globe = vec3(Kore::pi, 0, 0);
 	vec3 playerPosition = vec3(0, 0, 0);
+	
+	int leftTrackerIndex = -1;
+	int rightTrackerIndex = -1;
 #else
 	vec3 globe = vec3(0, 0, 0);
 	vec3 playerPosition = vec3(0, 0.7, 1.5);
@@ -72,7 +75,7 @@ namespace {
 	
 	mat4 T = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
-	mat4 hmsOffset = mat4::Translation(0, 0.2, 0);
+	mat4 hmdOffset = mat4::Translation(0, 0.2, 0);
 	Quaternion initRot = Quaternion(0, 0, 0, 1);
 	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
 	
@@ -192,20 +195,39 @@ namespace {
 			
 			initRotInv = initRot.Invert();
 			
-			avatar->M = initTrans * initRot.matrix().Transpose() * hmsOffset;
+			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
 			cube->M = avatar->M;
-			T = (initTrans * initRot.matrix().Transpose() * hmsOffset).Invert();
+			T = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
 			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+			
+			// Get left and right tracker index
+			VrPoseState controller;
+			vec4 hmdTransPos = T * vec4(hmdPos.x(), hmdPos.y(), hmdPos.z(), 1);
+			for (int i = 0; i < 16; ++i) {
+				controller = VrInterface::getController(i);
+				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
+					vec3 trackerPos = controller.vrPose.position;
+					vec4 trackerTransPos = T * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+					if (trackerTransPos.x() > hmdTransPos.x()) {
+						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
+						rightTrackerIndex = i;
+					} else {
+						log(Info, "leftHandBoneIndex: %i -> %i", leftHandBoneIndex, i);
+						leftHandBoneIndex = i;
+					}
+				}
+			}
 			
 			initCharacter = true;
 		}
 		
 		VrPoseState controller;
-		for (int i = 0; i < 16; ++i) {
+		/*for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
-		}
+		}*/
+		controller = VrInterface::getController(leftTrackerIndex);
 		
 		// Get controller position
 		desPosition = controller.vrPose.position;
