@@ -134,12 +134,29 @@ namespace {
 		avatar->setDesiredPosition(boneIndex, finalPos);
 	}
 
-	void setDesiredPositionAndOrientation(Kore::vec3 desPosition, Kore::Quaternion desRotation, int boneIndex) {
+	/*void setDesiredPositionAndOrientation(Kore::vec3 desPosition, Kore::Quaternion desRotation, int boneIndex) {
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
+		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
+	}*/
+	
+	void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
+		// Transform desired position to the character coordinate system
+		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		
+		Kore::Quaternion desRot = Quaternion(0, 0, 0, 1);
+		if (boneIndex == rightHandBoneIndex) {
+			desRot.rotate(initDesRotationRightHand);
+		} else if (boneIndex == leftHandBoneIndex) {
+			desRot.rotate(initDesRotationLeftHand);
+			
+		}
+		desRot.rotate(desRotation);
+		desRotation = desRot;
+		Kore::Quaternion finalRot = initRotInv.rotated(desRot);
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
 	
@@ -318,8 +335,10 @@ namespace {
 			T = (initTrans * initRot.matrix().Transpose()).Invert();
 			initCharacter = true;
 			
-			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
-			initDesRotationLeftHand.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
+			//initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
+			//initDesRotationLeftHand.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
+			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
 			
@@ -353,18 +372,13 @@ namespace {
 		
 		// Set position and orientation for the left hand
 		desPosition = vec3(0.2, 0.9, 0.2);
-		desRotation = Quaternion(0, 0, 0, 1);
-		desRotation.rotate(initDesRotationLeftHand);
-		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
+		desRotation = Quaternion(vec3(0, 1, 0), -angle);
 		setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
 		
 		
 		// Set position and orientation for the right hand
 		desPosition.x() = -desPosition.x();
-		desRotation = Quaternion(0, 0, 0, 1);
-		desRotation.rotate(initDesRotationRightHand);
-		desRotation.rotate(Quaternion(vec3(0, 1, 0), -angle));
-		
+		desRotation = Quaternion(vec3(0, 1, 0), -angle);
 		setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
