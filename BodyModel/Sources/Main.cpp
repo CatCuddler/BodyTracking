@@ -134,16 +134,23 @@ namespace {
 		avatar->setDesiredPosition(boneIndex, finalPos);
 	}
 
-	/*void setDesiredPositionAndOrientation(Kore::vec3 desPosition, Kore::Quaternion desRotation, int boneIndex) {
+	void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		
+
+		Kore::Quaternion desRot = desRotation;
+		if (boneIndex == rightHandBoneIndex) {
+			desRot.rotate(initDesRotationRightHand);
+		} else if (boneIndex == leftHandBoneIndex) {
+			desRot.rotate(initDesRotationLeftHand);
+		}
+		desRotation = desRot;
+
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
-	}*/
+	}
 	
-	void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
+	/*void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		
@@ -158,7 +165,7 @@ namespace {
 		desRotation = desRot;
 		Kore::Quaternion finalRot = initRotInv.rotated(desRot);
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
-	}
+	}*/
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -262,7 +269,6 @@ namespace {
 			desPosition = controller.vrPose.position;
 			// Get controller rotation
 			desRotation = controller.vrPose.orientation;
-			desRotation.rotate(initDesRotationLeftHand);
 			
 			setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
 		}
@@ -274,12 +280,9 @@ namespace {
 			desPosition = controller.vrPose.position;
 			// Get controller rotation
 			desRotation = controller.vrPose.orientation;
-			desRotation.rotate(initDesRotationRightHand);
-
+				
 			setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
 		}
-
-		
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
