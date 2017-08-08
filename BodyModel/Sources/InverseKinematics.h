@@ -37,5 +37,5 @@ private:
 	void applyChanges(std::vector<float> theta, BoneNode* targetBone);
 	void updateBonePosition(BoneNode* targetBone);
 
-	void clampValue(float minVal, float maxVal, float* value);
+	bool clampValue(float minVal, float maxVal, float* value);
 };

@@ -338,8 +338,6 @@ namespace {
 			T = (initTrans * initRot.matrix().Transpose()).Invert();
 			initCharacter = true;
 			
-			//initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi/2));
-			//initDesRotationLeftHand.rotate(Quaternion(vec3(1, 0, 0), Kore::pi/2));
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
@@ -375,14 +373,13 @@ namespace {
 		
 		// Set position and orientation for the left hand
 		desPosition = vec3(0.2, 0.9, 0.2);
-		desRotation = Quaternion(vec3(0, 1, 0), -angle);
+		desRotation = Quaternion(vec3(0, 0, 1), -angle);
 		setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
 		
-		
 		// Set position and orientation for the right hand
-		desPosition.x() = -desPosition.x();
-		desRotation = Quaternion(vec3(0, 1, 0), -angle);
-		setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
+		//desPosition.x() = -desPosition.x();
+		//desRotation = Quaternion(vec3(0, 0, 1), -angle);
+		//setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
