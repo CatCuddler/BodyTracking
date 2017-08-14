@@ -289,7 +289,36 @@ void MeshObject::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotatio
 	bone->local = bone->transform * rotMat;
 }
 
-void MeshObject::animate(TextureUnit tex, float deltaTime) {	
+void MeshObject::animate(TextureUnit tex, float deltaTime) {
+	// Interpolate
+	for (int i = 0; i < bones.size(); ++i) {
+		BoneNode* bone = bones[i];
+		
+		if (bone->nodeIndex != 9 && bone->nodeIndex != 8) continue;
+		
+		if (bone->interQuat == Quaternion(0, 0, 0, 1)) bone->interQuat = bone->quaternion;
+		
+		Quaternion quatDiff = bone->quaternion.rotated(bone->interQuat.invert());
+		vec3 rot;
+		RotationUtility::quatToEuler(&quatDiff, &rot.x(), &rot.y(), &rot.z());
+		
+		if (rot.getLength() > 0.1) {
+		//if (true) {
+			//log(Info, "interpolate %s %f", bone->boneName, rot.getLength());
+		
+			bone->interQuat = bone->interQuat.slerp(0.1, bone->quaternion);
+			bone->quaternion = bone->interQuat;
+			
+			Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
+			bone->local = bone->transform * rotMat;
+		
+		} else {
+			//log(Info, "dont interpolate %s %f", bone->boneName, rot.getLength());
+			bone->interQuat = bone->quaternion;
+		}
+		
+	}
+	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 	
