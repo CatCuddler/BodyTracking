@@ -52,7 +52,8 @@ namespace {
 	bool rotateZ = false;
 	int mousePressX, mousePressY = 0;
 	
-	MeshObject* cube;
+	MeshObject* cube1;
+	MeshObject* cube2;
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
@@ -67,8 +68,10 @@ namespace {
 #endif
 	
 	float angle = 0;
-	vec3 desPosition = vec3(0, 0, 0);
-	Quaternion desRotation = Quaternion(0, 0, 0, 1);
+	vec3 desPosition1 = vec3(0, 0, 0);
+	vec3 desPosition2 = vec3(0, 0, 0);
+	Quaternion desRotation1 = Quaternion(0, 0, 0, 1);
+	Quaternion desRotation2 = Quaternion(0, 0, 0, 1);
 	
 	Quaternion initDesRotationLeftHand = Quaternion(0, 0, 0, 1);
 	Quaternion initDesRotationRightHand = Quaternion(0, 0, 0, 1);
@@ -95,9 +98,13 @@ namespace {
 			case 1:
 			{
 				// Render desired position
-				cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube->M);
-				cube->render(tex);
+				cube1->M = mat4::Translation(desPosition1.x(), desPosition1.y(), desPosition1.z()) * desRotation1.matrix().Transpose();
+				Graphics4::setMatrix(mLocation, cube1->M);
+				cube1->render(tex);
+				
+				cube2->M = mat4::Translation(desPosition2.x(), desPosition2.y(), desPosition2.z()) * desRotation2.matrix().Transpose();
+				Graphics4::setMatrix(mLocation, cube2->M);
+				cube2->render(tex);
 				break;
 			}
 			case 2:
@@ -105,9 +112,9 @@ namespace {
 				// Render target position
 				vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
 				Quaternion targetRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
-				cube->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube->M);
-				cube->render(tex);
+				cube1->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
+				Graphics4::setMatrix(mLocation, cube1->M);
+				cube1->render(tex);
 				break;
 			}
 			default:
@@ -362,8 +369,8 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		//desPosition = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
-		//setDesiredPosition(desPosition, 53); // Left foot 49, right foot 53
+		desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
+		setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
 		
 		// Set hand position
 		radius = 0.1;
@@ -372,14 +379,14 @@ namespace {
 		
 		
 		// Set position and orientation for the left hand
-		desPosition = vec3(0.2, 0.9, 0.2);
-		desRotation = Quaternion(vec3(0, 0, 1), -angle);
-		setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
+		desPosition1 = vec3(0.2, 0.9, 0.4);
+		desRotation1 = Quaternion(vec3(0, 0, 1), -angle);
+		setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		
 		// Set position and orientation for the right hand
-		//desPosition.x() = -desPosition.x();
-		//desRotation = Quaternion(vec3(0, 0, 1), -angle);
-		//setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
+		//desPosition2 = vec3(-desPosition1.x(), desPosition1.y(), desPosition1.z());
+		//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
+		//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
@@ -534,7 +541,8 @@ namespace {
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
 		
-		cube = new MeshObject("cube.ogex", "", structure, 0.05);
+		cube1 = new MeshObject("cube.ogex", "", structure, 0.05);
+		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 #ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 #else
