@@ -285,6 +285,7 @@ void MeshObject::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotatio
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredRotation.normalize();
 	bone->quaternion = desiredRotation;
+	bone->interQuat = desiredRotation;
 	Kore::mat4 rotMat = desiredRotation.matrix().Transpose();
 	bone->local = bone->transform * rotMat;
 }
@@ -316,7 +317,6 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 			//log(Info, "dont interpolate %s %f", bone->boneName, rot.getLength());
 			bone->interQuat = bone->quaternion;
 		}
-		
 	}
 	
 	// Update bones
