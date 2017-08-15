@@ -76,8 +76,8 @@ namespace {
 	Quaternion initDesRotationLeftHand = Quaternion(0, 0, 0, 1);
 	Quaternion initDesRotationRightHand = Quaternion(0, 0, 0, 1);
 	
-	mat4 T = mat4::Identity();
-	mat4 initTrans = mat4::Identity();
+	mat4 invT = mat4::Identity();
+	mat4 initT = mat4::Identity();
 	mat4 hmdOffset = mat4::Translation(0, 0.2, 0);
 	Quaternion initRot = Quaternion(0, 0, 0, 1);
 	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
@@ -137,13 +137,13 @@ namespace {
 	
 	void setDesiredPosition(Kore::vec3 desPosition, int boneIndex) {
 		// Transform desired position to the character coordinate system
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		avatar->setDesiredPosition(boneIndex, finalPos);
 	}
 
 	void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
@@ -227,7 +227,7 @@ namespace {
 			avatar->setScale(scale);
 			
 			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+			initT = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
 			
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
@@ -239,8 +239,8 @@ namespace {
 			
 			initRotInv = initRot.invert();
 			
-			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-			T = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+			avatar->M = initT * initRot.matrix().Transpose() * hmdOffset;
+			invT = (initT * initRot.matrix().Transpose() * hmdOffset).Invert();
 			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 			
@@ -341,8 +341,8 @@ namespace {
 			
 			initRotInv = initRot.invert();
 			
-			avatar->M = initTrans * initRot.matrix().Transpose();
-			T = (initTrans * initRot.matrix().Transpose()).Invert();
+			avatar->M = initT * initRot.matrix().Transpose();
+			invT = (initT * initRot.matrix().Transpose()).Invert();
 			initCharacter = true;
 			
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
