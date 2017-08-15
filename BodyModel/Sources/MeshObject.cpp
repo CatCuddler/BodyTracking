@@ -295,8 +295,6 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones[i];
 		
-		if (bone->nodeIndex != 9 && bone->nodeIndex != 8) continue;
-		
 		if (bone->interQuat == Quaternion(0, 0, 0, 1)) bone->interQuat = bone->quaternion;
 		
 		Quaternion quatDiff = bone->quaternion.rotated(bone->interQuat.invert());
