@@ -273,22 +273,22 @@ namespace {
 			controller = VrInterface::getController(leftTrackerIndex);
 
 			// Get controller position
-			desPosition = controller.vrPose.position;
-			// Get controller rotation
+			desPosition1 = controller.vrPose.position;
+			// Get cont1roller rotation
 			desRotation = controller.vrPose.orientation;
 			
-			setDesiredPositionAndOrientation(desPosition, desRotation, leftHandBoneIndex);
+			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		}
 
 		if (rightTrackerIndex != -1) {
 			controller = VrInterface::getController(rightTrackerIndex);
 
 			// Get controller position
-			desPosition = controller.vrPose.position;
+			desPosition2 = controller.vrPose.position;
 			// Get controller rotation
-			desRotation = controller.vrPose.orientation;
+			desRotation2 = controller.vrPose.orientation;
 				
-			setDesiredPositionAndOrientation(desPosition, desRotation, rightHandBoneIndex);
+			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		}
 		
 		for (int eye = 0; eye < 2; ++eye) {
