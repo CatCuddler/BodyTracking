@@ -78,7 +78,8 @@ namespace {
 	
 	mat4 invT = mat4::Identity();
 	mat4 initT = mat4::Identity();
-	mat4 hmdOffset = mat4::Translation(0, 0.2, 0);
+	const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
+	const float handOffset = 0.1f;
 	Quaternion initRot = Quaternion(0, 0, 0, 1);
 	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
 	
@@ -110,11 +111,17 @@ namespace {
 			case 2:
 			{
 				// Render target position
-				vec3 targetPosition = avatar->getBonePosition(targetBoneIndex);
-				Quaternion targetRotation = avatar->getBoneGlobalRotation(targetBoneIndex);
+				vec3 targetPosition = avatar->getBonePosition(leftHandBoneIndex);
+				Quaternion targetRotation = avatar->getBoneGlobalRotation(leftHandBoneIndex);
 				cube1->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube1->M);
 				cube1->render(tex);
+				
+				targetPosition = avatar->getBonePosition(rightHandBoneIndex);
+				targetRotation = avatar->getBoneGlobalRotation(rightHandBoneIndex);
+				cube2->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
+				Graphics4::setMatrix(mLocation, cube2->M);
+				cube2->render(tex);
 				break;
 			}
 			default:
@@ -141,38 +148,34 @@ namespace {
 		avatar->setDesiredPosition(boneIndex, finalPos);
 	}
 
-	void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
+	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
-		vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		//vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 
+		Kore::mat4 curPos = mat4::Identity();
+		Kore::vec4 desPos;
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
-		} else if (boneIndex == leftHandBoneIndex) {
-			desRot.rotate(initDesRotationLeftHand);
-		}
-		desRotation = desRot;
-
-		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
-	}
-	
-	/*void setDesiredPositionAndOrientation(const Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
-		// Transform desired position to the character coordinate system
-		vec4 finalPos = T * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		
-		Kore::Quaternion desRot = Quaternion(0, 0, 0, 1);
-		if (boneIndex == rightHandBoneIndex) {
-			desRot.rotate(initDesRotationRightHand);
+			
+			// Transform desired position to the hand bone
+			curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
 			
+			// Transform desired position to the hand bone
+			curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
 		}
-		desRot.rotate(desRotation);
 		desRotation = desRot;
-		Kore::Quaternion finalRot = initRotInv.rotated(desRot);
+		desPos = curPos * vec4(0, 0, 0, 1);
+		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
+		
+		// Transform desired position to the character coordinate system
+		vec4 finalPos = invT * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
+		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
-	}*/
+	}
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -369,8 +372,8 @@ namespace {
 		float radius = 0.2;
 		
 		// Set foot position
-		desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
-		setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
+		//desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
+		//setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
 		
 		// Set hand position
 		radius = 0.1;
@@ -384,9 +387,9 @@ namespace {
 		setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		
 		// Set position and orientation for the right hand
-		//desPosition2 = vec3(-desPosition1.x(), desPosition1.y(), desPosition1.z());
-		//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
-		//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+		desPosition2 = vec3(-0.2, 0.9, 0.4);
+		desRotation2 = Quaternion(vec3(0, 0, 1), angle);
+		setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
