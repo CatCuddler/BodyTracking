@@ -88,7 +88,6 @@ namespace {
 	// Left foot 49, right foot 53, Left hand 10, right hand 29
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
-	const int targetBoneIndex = rightHandBoneIndex;
 	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
 	
 	void renderTracker() {
@@ -151,23 +150,18 @@ namespace {
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
 		//vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-
-		Kore::mat4 curPos = mat4::Identity();
-		Kore::vec4 desPos;
+		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
-			
-			// Transform desired position to the hand bone
-			curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
-			
-			// Transform desired position to the hand bone
-			curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
 		}
 		desRotation = desRot;
-		desPos = curPos * vec4(0, 0, 0, 1);
+		
+		// Transform desired position to the hand bone
+		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
+		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
 		// Transform desired position to the character coordinate system
