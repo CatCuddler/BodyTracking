@@ -250,7 +250,7 @@ namespace {
 				controller = VrInterface::getController(i);
 				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 					vec3 trackerPos = controller.vrPose.position;
-					vec4 trackerTransPos = T * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+					vec4 trackerTransPos = invT * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 					if (trackerTransPos.x() > 0) {
 						log(Info, "leftTrackerIndex: %i -> %i", leftTrackerIndex, i);
 						leftTrackerIndex = i;
@@ -275,7 +275,7 @@ namespace {
 			// Get controller position
 			desPosition1 = controller.vrPose.position;
 			// Get cont1roller rotation
-			desRotation = controller.vrPose.orientation;
+			desRotation1 = controller.vrPose.orientation;
 			
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		}
