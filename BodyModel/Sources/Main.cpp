@@ -79,7 +79,6 @@ namespace {
 	mat4 invT = mat4::Identity();
 	mat4 initT = mat4::Identity();
 	const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
-	const float handOffset = 0.1f;
 	Quaternion initRot = Quaternion(0, 0, 0, 1);
 	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
 	
@@ -150,17 +149,25 @@ namespace {
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
 		//vec4 finalPos = invT * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+
+		float handOffsetX = 0.05f;
+		float handOffsetY = 0;// 0.05f;
+
+		float rotOffsetY = Kore::pi / 4;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
+			handOffsetX = -handOffsetX;
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
 		
 		// Transform desired position to the hand bone
-		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffset, 0);
+		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffsetY, 0);
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
@@ -255,6 +262,8 @@ namespace {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
 					}
+					//leftTrackerIndex = -1;
+					//rightTrackerIndex = i;
 				}
 			}
 			
