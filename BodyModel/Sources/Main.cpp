@@ -34,7 +34,8 @@ namespace {
 	bool logData = false;
 	bool readData = true;
 	int line = 0;
-	const char* filename = "positionData_1503412146.csv";
+	const char* positionDataFilename = "positionData_1503416118.csv";
+	const char* initialTransFilename = "initTransAndRot_1503416118.csv";
 
 	double startTime;
 	double lastTime;
@@ -355,6 +356,11 @@ namespace {
 		if (!initCharacter) {
 			avatar->setScale(0.8);
 			
+			if (readData) {
+				log(Info, "Read data from file %s", initialTransFilename);
+				Logger::readInitTransAndRot(initialTransFilename, initTrans, initRot);
+			}
+			
 			initRotInv = initRot.invert();
 			
 			avatar->M = initTrans * initRot.matrix().Transpose();
@@ -366,6 +372,9 @@ namespace {
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
 			
+			if (logData) {
+				Logger::saveInitTransAndRot(initTrans, initRot);
+			}
 		}
 		
 		// projection matrix
@@ -384,14 +393,14 @@ namespace {
 		if (readData) {
 			Kore::vec3 rawPos;
 			Kore::Quaternion rawRot;
-			if (Logger::readData(line, filename, &rawPos, &rawRot)) {
+			if (Logger::readData(line, positionDataFilename, &rawPos, &rawRot)) {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
 				Kore::vec3 finalPos = initTransInv * vec4(rawPos.x(), rawPos.y(), rawPos.z(), 1);
 				Kore::Quaternion finalRot = initRotInv.rotated(rawRot);
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
+				log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 				avatar->setDesiredPositionAndOrientation(leftHandBoneIndex, finalPos, finalRot);
 			}
 

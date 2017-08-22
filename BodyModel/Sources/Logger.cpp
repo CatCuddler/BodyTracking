@@ -43,13 +43,20 @@ void Logger::saveInitTransAndRot(Kore::mat4 initTrans, Kore::Quaternion initRot)
 	
 	std::fstream outputFile;
 	
+	std::stringstream row;
+	
 	// Save initial transformation matrix
 	outputFile.open(Kore::Logger::initTransRotPath.str(), std::ios::app);
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
-			outputFile << initTrans[i][j] << "\n";
+			row << initTrans[i][j];
+			if (j < 3) row << ",";
 		}
+		
+		row << "\n";
 	}
+	
+	outputFile << row.rdbuf();
 	
 	// Save initial rotation
 	outputFile << initRot.x << "\n";
@@ -92,5 +99,43 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 		return true;
 	} else {
 		return false;
+	}
+}
+
+void Logger::readInitTransAndRot(const char* filename, Kore::mat4 initTrans, Kore::Quaternion initRot) {
+	std::fstream inputFile(filename);
+	
+	// Get initial transformation matrix
+	int column = 0;
+	std::string str;
+	for (int row = 0; row < 4; ++row) {
+		std::getline(inputFile, str, '\n');
+		
+		std::stringstream ss;
+		ss.str(str);
+		std::string item;
+		while(std::getline(ss, item, ',')) {
+			float num = std::stof(item);
+			
+			//log(Kore::Info, "%i %i -> %f", row, column, num);
+			
+			initTrans[row][column] = num;
+			
+			++column;
+		}
+		column = 0;
+	}
+	
+	// Get initial rotation
+	column = 0;
+	while (std::getline(inputFile, str, '\n')) {
+		float num = std::stof(str);
+		
+		if (column == 0) initRot.x = num;
+		else if (column == 1) initRot.y = num;
+		else if (column == 2) initRot.z = num;
+		else if (column == 3) initRot.w = num;
+		
+		++column;
 	}
 }
