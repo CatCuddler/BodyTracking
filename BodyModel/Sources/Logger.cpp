@@ -6,16 +6,32 @@
 #include <fstream>
 #include <sstream>
 
-void Logger::savePositionData(int maxIteration, Kore::vec3 rawPosArray, Kore::vec3 targetPosArray) {
-	const char* filename = "positionData";
+#include <ctime>
+
+namespace Kore {
+	namespace Logger {
+		const char* filename = "positionData";
+		std::stringstream filePath;
+	}
+}
+
+void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
+	time_t t = time(0);   // get time now
+	
 	std::fstream outputFile;
-	std::stringstream filePath;
-	filePath << /*"Deployment/results/" <<*/ filename << "_" << maxIteration << ".csv";
-	outputFile.open(filePath.str(), std::ios::app);	// Append to the end
+	
+	if (Kore::Logger::filePath.str().empty()) {
+		Kore::Logger::filePath << "Deployment/" << Kore::Logger::filename << "_" << t << ".csv";
+	}
+	
+	outputFile.open(Kore::Logger::filePath.str(), std::ios::app);	// Append to the end
 	
 	//outputFile << "rawX, rawY, rawZ, targetX, targetY, targetZ\n";
 	
-	outputFile << rawPosArray.x() << "," << rawPosArray.y() << "," << rawPosArray.z() << "," << targetPosArray.x() << "," << targetPosArray.y() << "," << targetPosArray.z() << "\n";
+	outputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
 	outputFile.close();
+}
 
+void readData(int line, Kore::vec3 &rawPos, Kore::Quaternion &rawRot) {
+	
 }

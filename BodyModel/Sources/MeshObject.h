@@ -127,8 +127,6 @@ public:
 private:
 	Kore::vec4 desiredPosition;
 	
-	bool logData = false;
-	
 	long meshesCount;
 	float scale;
 	float currentHeight;

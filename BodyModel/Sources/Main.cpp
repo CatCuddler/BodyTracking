@@ -11,6 +11,7 @@
 
 #include "MeshObject.h"
 #include "RotationUtility.h"
+#include "Logger.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -30,6 +31,8 @@ namespace {
 	const int height = 768;
 #endif
 	
+	bool logData = true;
+
 	double startTime;
 	double lastTime;
 	
@@ -174,6 +177,10 @@ namespace {
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = invT * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+		
+		if (logData) {
+			Logger::saveData(finalPos, finalRot);
+		}
 		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
@@ -390,9 +397,9 @@ namespace {
 		setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		
 		// Set position and orientation for the right hand
-		desPosition2 = vec3(-0.2, 0.9, 0.4);
-		desRotation2 = Quaternion(vec3(0, 0, 1), angle);
-		setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+		//desPosition2 = vec3(-0.2, 0.9, 0.4);
+		//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
+		//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);

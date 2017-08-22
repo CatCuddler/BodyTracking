@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Kore/Graphics4/Graphics.h>
-
-#include <vector>
+#include <Kore/Math/Quaternion.h>
 
 namespace Logger {
-	void savePositionData(int maxIteration, Kore::vec3 rawPosArray, Kore::vec3 targetPosArray);
+	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
+	void readData(int line, Kore::vec3 &rawPos, Kore::Quaternion &rawRot);
 }

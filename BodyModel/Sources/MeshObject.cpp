@@ -2,7 +2,6 @@
 #include "RotationUtility.h"
 #include "MeshObject.h"
 #include "InverseKinematics.h"
-#include "Logger.h"
 
 #include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
@@ -256,10 +255,6 @@ void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desi
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
-	
-	if (logData) {
-		Logger::savePositionData(maxIteration, desiredPos, getBonePosition(boneIndex));
-	}
 }
 
 vec3 MeshObject::getBonePosition(int boneIndex) {
@@ -292,7 +287,7 @@ void MeshObject::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotatio
 
 void MeshObject::animate(TextureUnit tex, float deltaTime) {
 	// Interpolate
-	for (int i = 0; i < bones.size(); ++i) {
+	/*for (int i = 0; i < bones.size(); ++i) {
 		BoneNode* bone = bones[i];
 		
 		if (bone->interQuat == Quaternion(0, 0, 0, 1)) bone->interQuat = bone->quaternion;
@@ -315,7 +310,7 @@ void MeshObject::animate(TextureUnit tex, float deltaTime) {
 			//log(Info, "dont interpolate %s %f", bone->boneName, rot.getLength());
 			bone->interQuat = bone->quaternion;
 		}
-	}
+	}*/
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
