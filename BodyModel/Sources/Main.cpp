@@ -31,7 +31,10 @@ namespace {
 	const int height = 768;
 #endif
 	
-	bool logData = true;
+	bool logData = false;
+	bool readData = true;
+	int line = 0;
+	const char* filename = "positionData_1503412146.csv";
 
 	double startTime;
 	double lastTime;
@@ -174,13 +177,13 @@ namespace {
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
+		if (logData) {
+			Logger::saveData(desPosition, desRotation);
+		}
+		
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = invT * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-		
-		if (logData) {
-			Logger::saveData(finalPos, finalRot);
-		}
 		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
@@ -378,28 +381,46 @@ namespace {
 		
 		avatar->animate(tex, deltaT);
 		
-		angle += 0.05;
-		float radius = 0.2;
-		
-		// Set foot position
-		//desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
-		//setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
-		
-		// Set hand position
-		radius = 0.1;
-		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
-		//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
-		
-		
-		// Set position and orientation for the left hand
-		desPosition1 = vec3(0.2, 0.9, 0.4);
-		desRotation1 = Quaternion(vec3(0, 0, 1), -angle);
-		setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-		
-		// Set position and orientation for the right hand
-		//desPosition2 = vec3(-0.2, 0.9, 0.4);
-		//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
-		//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+		if (readData) {
+			Kore::vec3 rawPos;
+			Kore::Quaternion rawRot;
+			if (Logger::readData(line, filename, &rawPos, &rawRot)) {
+				desPosition1 = rawPos;
+				desRotation1 = rawRot;
+				
+				Kore::vec3 finalPos = invT * vec4(rawPos.x(), rawPos.y(), rawPos.z(), 1);
+				Kore::Quaternion finalRot = initRotInv.rotated(rawRot);
+				
+				log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
+				avatar->setDesiredPositionAndOrientation(leftHandBoneIndex, finalPos, finalRot);
+			}
+
+			
+			++line;
+		} else {
+			angle += 0.05;
+			float radius = 0.2;
+			
+			// Set foot position
+			//desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
+			//setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
+			
+			// Set hand position
+			radius = 0.1;
+			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
+			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
+			
+			
+			// Set position and orientation for the left hand
+			desPosition1 = vec3(0.2, 0.9, 0.4);
+			desRotation1 = Quaternion(vec3(0, 0, 1), -angle);
+			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+			
+			// Set position and orientation for the right hand
+			//desPosition2 = vec3(-0.2, 0.9, 0.4);
+			//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
+			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+		}
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
