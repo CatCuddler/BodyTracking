@@ -13,28 +13,52 @@
 
 namespace Kore {
 	namespace Logger {
-		const char* filename = "positionData";
-		std::stringstream filePath;
+		const char* positionData = "positionData";
+		const char* initTransRotFilename = "initTransAndRot";
+		std::stringstream positionDataPath;
+		std::stringstream initTransRotPath;
 		
 		std::fstream inputFile;
 	}
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
-	time_t t = time(0);   // get time now
+	if (Kore::Logger::positionDataPath.str().empty()) {
+		time_t t = time(0);   // Get time now
+		Kore::Logger::positionDataPath << Kore::Logger::positionData << "_" << t << ".csv";
+	}
+	
+	std::fstream outputFile;
+	outputFile.open(Kore::Logger::positionDataPath.str(), std::ios::app);	// Append to the end
+	
+	// Save positional and rotation data
+	//outputFile << "rawX, rawY, rawZ, targetX, targetY, targetZ\n";
+	outputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
+	outputFile.close();
+}
+
+void Logger::saveInitTransAndRot(Kore::mat4 initTrans, Kore::Quaternion initRot) {
+	time_t t = time(0);   // Get time now
+	Kore::Logger::initTransRotPath << Kore::Logger::initTransRotFilename << "_" << t << ".csv";
 	
 	std::fstream outputFile;
 	
-	if (Kore::Logger::filePath.str().empty()) {
-		Kore::Logger::filePath << Kore::Logger::filename << "_" << t << ".csv";
+	// Save initial transformation matrix
+	outputFile.open(Kore::Logger::initTransRotPath.str(), std::ios::app);
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			outputFile << initTrans[i][j] << "\n";
+		}
 	}
 	
-	outputFile.open(Kore::Logger::filePath.str(), std::ios::app);	// Append to the end
+	// Save initial rotation
+	outputFile << initRot.x << "\n";
+	outputFile << initRot.y << "\n";
+	outputFile << initRot.z << "\n";
+	outputFile << initRot.w << "\n";
 	
-	//outputFile << "rawX, rawY, rawZ, targetX, targetY, targetZ\n";
-	
-	outputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
 	outputFile.close();
+
 }
 
 bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::Quaternion *rawRot) {
