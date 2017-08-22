@@ -102,7 +102,7 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 	}
 }
 
-void Logger::readInitTransAndRot(const char* filename, Kore::mat4 initTrans, Kore::Quaternion initRot) {
+void Logger::readInitTransAndRot(const char* filename, Kore::mat4 *initTrans, Kore::Quaternion *initRot) {
 	std::fstream inputFile(filename);
 	
 	// Get initial transformation matrix
@@ -119,7 +119,7 @@ void Logger::readInitTransAndRot(const char* filename, Kore::mat4 initTrans, Kor
 			
 			//log(Kore::Info, "%i %i -> %f", row, column, num);
 			
-			initTrans[row][column] = num;
+			initTrans->Set(row, column, num);
 			
 			++column;
 		}
@@ -131,10 +131,12 @@ void Logger::readInitTransAndRot(const char* filename, Kore::mat4 initTrans, Kor
 	while (std::getline(inputFile, str, '\n')) {
 		float num = std::stof(str);
 		
-		if (column == 0) initRot.x = num;
-		else if (column == 1) initRot.y = num;
-		else if (column == 2) initRot.z = num;
-		else if (column == 3) initRot.w = num;
+		//log(Kore::Info, "%i -> %f", column, num);
+		
+		if (column == 0) initRot->x = num;
+		else if (column == 1) initRot->y = num;
+		else if (column == 2) initRot->z = num;
+		else if (column == 3) initRot->w = num;
 		
 		++column;
 	}
