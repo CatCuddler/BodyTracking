@@ -18,6 +18,7 @@ namespace Kore {
 		std::stringstream positionDataPath;
 		std::stringstream initTransRotPath;
 		
+		int currLineNumber = 0;
 		std::fstream inputFile;
 	}
 }
@@ -73,9 +74,15 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 		Kore::Logger::inputFile.open(filename);
 	}
 	
+	// Skip lines
+	std::string str;
+	while(line > Kore::Logger::currLineNumber - 1) {
+		std::getline(Kore::Logger::inputFile, str, '\n');
+		++Kore::Logger::currLineNumber;
+	}
+	
 	int column = 0;
 	
-	std::string str;
 	if (std::getline(Kore::Logger::inputFile, str, '\n')) {
 		
 		std::stringstream ss;
@@ -96,6 +103,7 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 			++column;
 		}
 		
+		++Kore::Logger::currLineNumber;
 		return true;
 	} else {
 		return false;
