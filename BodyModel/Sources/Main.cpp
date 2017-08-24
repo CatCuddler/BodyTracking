@@ -34,8 +34,8 @@ namespace {
 	bool logData = false;
 	bool readData = true;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1503416118.csv";
-	const char* initialTransFilename = "initTransAndRot_1503416118.csv";
+	const char* positionDataFilename = "positionData_1503562117.csv";
+	const char* initialTransFilename = "initTransAndRot_1503562117.csv";
 
 	double startTime;
 	double lastTime;
@@ -64,14 +64,14 @@ namespace {
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
-	vec3 globe = vec3(Kore::pi, 0, 0);
-	vec3 playerPosition = vec3(0, 0, 0);
+	vec3 cameraRotation = vec3(Kore::pi, 0, 0);
+	vec3 cameraPosition = vec3(0, 0, 0);
 	
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
 #else
-	vec3 globe = vec3(0, 0, 0);
-	vec3 playerPosition = vec3(0, 0.7, 1.5);
+	vec3 cameraRotation = vec3(0, 0, 0);
+	vec3 cameraPosition = vec3(0, 0.7, 1.5);
 #endif
 	
 	float angle = 0;
@@ -141,9 +141,9 @@ namespace {
 	}
 	
 	Kore::mat4 getViewMatrix() {
-		vec3 lookAt = playerPosition + vec3(0, 0, -1);
-		mat4 V = mat4::lookAt(playerPosition, lookAt, vec3(0, 1, 0));
-		V *= mat4::Rotation(globe.x(), globe.y(), globe.z());
+		vec3 lookAt = cameraPosition + vec3(0, 0, -1);
+		mat4 V = mat4::lookAt(cameraPosition, lookAt, vec3(0, 1, 0));
+		V *= mat4::Rotation(cameraRotation.x(), cameraRotation.y(), cameraRotation.z());
 		return V;
 	}
 	
@@ -196,22 +196,22 @@ namespace {
 		
 		const float speed = 0.01f;
 		if (left) {
-			playerPosition.x() -= speed;
+			cameraPosition.x() -= speed;
 		}
 		if (right) {
-			playerPosition.x() += speed;
+			cameraPosition.x() += speed;
 		}
 		if (forward) {
-			playerPosition.z() += speed;
+			cameraPosition.z() += speed;
 		}
 		if (backward) {
-			playerPosition.z() -= speed;
+			cameraPosition.z() -= speed;
 		}
 		if (up) {
-			playerPosition.y() += speed;
+			cameraPosition.y() += speed;
 		}
 		if (down) {
-			playerPosition.y() -= speed;
+			cameraPosition.y() -= speed;
 		}
 		
 		Graphics4::begin();
@@ -234,9 +234,9 @@ namespace {
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 			
-			//playerPosition.x() = -currentUserHeight * 0.5;
-			playerPosition.y() = currentUserHeight * 1.5;
-			playerPosition.z() = currentUserHeight * 0.5;
+			//cameraPosition.x() = -currentUserHeight * 0.5;
+			cameraPosition.y() = currentUserHeight * 1.5;
+			cameraPosition.z() = currentUserHeight * 0.5;
 			
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
@@ -354,11 +354,11 @@ namespace {
 #else
 		// Scale test
 		if (!initCharacter) {
-			avatar->setScale(0.8);
+			//avatar->setScale(0.8);
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
-				Logger::readInitTransAndRot(initialTransFilename, initTrans, initRot);
+				Logger::readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
 			}
 			
 			initRotInv = initRot.invert();
@@ -400,11 +400,11 @@ namespace {
 				Kore::vec3 finalPos = initTransInv * vec4(rawPos.x(), rawPos.y(), rawPos.z(), 1);
 				Kore::Quaternion finalRot = initRotInv.rotated(rawRot);
 				
-				log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 				avatar->setDesiredPositionAndOrientation(leftHandBoneIndex, finalPos, finalRot);
 			}
 
-			
+			//log(Info, "%i", line);
 			++line;
 		} else {
 			angle += 0.05;
@@ -480,8 +480,8 @@ namespace {
 #endif
 				break;
 			case KeyL:
-				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", playerPosition.x(), playerPosition.y(), playerPosition.z());
-				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f)", globe.x(), globe.y(), globe.z());
+				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
+				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f)", cameraRotation.x(), cameraRotation.y(), cameraRotation.z());
 				break;
 			case KeyQ:
 				System::stop();
@@ -531,10 +531,10 @@ namespace {
 		float rotationSpeed = 0.01;
 		
 		if (rotateX) {
-			globe.x() += (float)((mousePressX - x) * rotationSpeed);
+			cameraRotation.x() += (float)((mousePressX - x) * rotationSpeed);
 			mousePressX = x;
 		} else if (rotateZ) {
-			globe.z() += (float)((mousePressY - y) * rotationSpeed);
+			cameraRotation.z() += (float)((mousePressY - y) * rotationSpeed);
 			mousePressY = y;
 		}
 		
