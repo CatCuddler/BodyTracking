@@ -35,8 +35,8 @@ namespace {
 	bool logData = false;
 	bool readData = false;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1503562117.csv";
-	const char* initialTransFilename = "initTransAndRot_1503562117.csv";
+	const char* positionDataFilename = "positionData_1503573998.csv";
+	const char* initialTransFilename = "initTransAndRot_1503573998.csv";
 
 	double startTime;
 	double lastTime;
@@ -157,6 +157,11 @@ namespace {
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		// Transform desired position to the character coordinate system
 		//vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		
+		if (logData) {
+			logger->saveData(desPosition, desRotation);
+		}
+
 
 		float handOffsetX = 0.05f;
 		float handOffsetY = 0.05f;
@@ -179,9 +184,6 @@ namespace {
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
 		
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
@@ -279,6 +281,10 @@ namespace {
 				}
 			}
 			
+			if (logData) {
+				logger->saveInitTransAndRot(initTrans, initRot);
+			}
+			
 			initCharacter = true;
 		}
 		
@@ -354,7 +360,7 @@ namespace {
 		
 #else
 		if (!initCharacter) {
-			avatar->setScale(0.8);	// Scale test
+			//avatar->setScale(0.8);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
@@ -375,6 +381,8 @@ namespace {
 			if (logData) {
 				logger->saveInitTransAndRot(initTrans, initRot);
 			}
+			
+			line = 0;
 		}
 		
 		// projection matrix
@@ -397,11 +405,9 @@ namespace {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				Kore::vec3 finalPos = initTransInv * vec4(desPosition1.x(), desPosition1.y(), desPosition1.z(), 1);
-				Kore::Quaternion finalRot = initRotInv.rotated(desRotation1);
+				log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
-				avatar->setDesiredPositionAndOrientation(leftHandBoneIndex, finalPos, finalRot);
+				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
 
 			//log(Info, "%i", line);

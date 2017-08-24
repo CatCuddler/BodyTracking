@@ -64,6 +64,7 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 	// Get header
 	if (line == 0) {
 		std::getline(positionDataInputFile, str, '\n');
+		++currLineNumber;
 	}
 	
 	// Skip lines
