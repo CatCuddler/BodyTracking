@@ -31,8 +31,9 @@ namespace {
 	const int height = 768;
 #endif
 	
+	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
 	const char* positionDataFilename = "positionData_1503562117.csv";
 	const char* initialTransFilename = "initTransAndRot_1503562117.csv";
@@ -158,7 +159,7 @@ namespace {
 		//vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 
 		float handOffsetX = 0.05f;
-		float handOffsetY = 0;// 0.05f;
+		float handOffsetY = 0.05f;
 
 		float rotOffsetY = Kore::pi / 4;
 		
@@ -179,7 +180,7 @@ namespace {
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
 		if (logData) {
-			Logger::saveData(desPosition, desRotation);
+			logger->saveData(desPosition, desRotation);
 		}
 		
 		// Transform desired position to the character coordinate system
@@ -352,13 +353,12 @@ namespace {
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 		
 #else
-		// Scale test
 		if (!initCharacter) {
-			//avatar->setScale(0.8);
+			avatar->setScale(0.8);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
-				Logger::readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
+				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
 			}
 			
 			initRotInv = initRot.invert();
@@ -373,7 +373,7 @@ namespace {
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
 			
 			if (logData) {
-				Logger::saveInitTransAndRot(initTrans, initRot);
+				logger->saveInitTransAndRot(initTrans, initRot);
 			}
 		}
 		
@@ -391,16 +391,16 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		if (readData) {
-			Kore::vec3 rawPos;
-			Kore::Quaternion rawRot;
-			if (Logger::readData(line, positionDataFilename, &rawPos, &rawRot)) {
+			Kore::vec3 rawPos = vec3(0, 0, 0);
+			Kore::Quaternion rawRot = Kore::Quaternion(0, 0, 0, 1);
+			if (logger->readData(line, positionDataFilename, &rawPos, &rawRot)) {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				Kore::vec3 finalPos = initTransInv * vec4(rawPos.x(), rawPos.y(), rawPos.z(), 1);
-				Kore::Quaternion finalRot = initRotInv.rotated(rawRot);
+				Kore::vec3 finalPos = initTransInv * vec4(desPosition1.x(), desPosition1.y(), desPosition1.z(), 1);
+				Kore::Quaternion finalRot = initRotInv.rotated(desRotation1);
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
 				avatar->setDesiredPositionAndOrientation(leftHandBoneIndex, finalPos, finalRot);
 			}
 
@@ -595,6 +595,8 @@ namespace {
 		
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
+		
+		logger = new Logger();
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove

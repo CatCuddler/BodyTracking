@@ -4,86 +4,77 @@
 
 #include <Kore/Log.h>
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
 #include <ctime>
-#include <vector>
 
-namespace Kore {
-	namespace Logger {
-		const char* positionData = "positionData";
-		const char* initTransRotFilename = "initTransAndRot";
-		std::stringstream positionDataPath;
-		std::stringstream initTransRotPath;
-		
-		int currLineNumber = 0;
-		std::fstream inputFile;
-	}
+Logger::Logger() : initPositionData(false), initTransRotData(false) {
+	time_t t = time(0);   // Get time now
+	positionDataPath << positionData << "_" << t << ".csv";
+	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
+}
+
+Logger::~Logger() {
+	positionDataOutputFile.close();
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
-	if (Kore::Logger::positionDataPath.str().empty()) {
-		time_t t = time(0);   // Get time now
-		Kore::Logger::positionDataPath << Kore::Logger::positionData << "_" << t << ".csv";
+	if (!initPositionData) {
+		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
+		positionDataOutputFile << "rawPosX, rawPosY, rawPosZ, rawRotX, rawRotY, rawRotZ, rawRotW\n";
+		initPositionData = true;
 	}
 	
-	std::fstream outputFile;
-	outputFile.open(Kore::Logger::positionDataPath.str(), std::ios::app);	// Append to the end
-	
 	// Save positional and rotation data
-	//outputFile << "rawX, rawY, rawZ, targetX, targetY, targetZ\n";
-	outputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
-	outputFile.close();
+	positionDataOutputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
 }
 
 void Logger::saveInitTransAndRot(Kore::mat4 initTrans, Kore::Quaternion initRot) {
-	time_t t = time(0);   // Get time now
-	Kore::Logger::initTransRotPath << Kore::Logger::initTransRotFilename << "_" << t << ".csv";
-	
-	std::fstream outputFile;
+	if (!initTransRotData) {
+		initTransRotDataOutputFile.open(initTransRotPath.str(), std::ios::app);
+		initTransRotData = true;
+	}
 	
 	std::stringstream row;
-	
 	// Save initial transformation matrix
-	outputFile.open(Kore::Logger::initTransRotPath.str(), std::ios::app);
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			row << initTrans[i][j];
 			if (j < 3) row << ",";
 		}
-		
 		row << "\n";
 	}
 	
-	outputFile << row.rdbuf();
+	initTransRotDataOutputFile << row.rdbuf();
 	
 	// Save initial rotation
-	outputFile << initRot.x << "\n";
-	outputFile << initRot.y << "\n";
-	outputFile << initRot.z << "\n";
-	outputFile << initRot.w << "\n";
+	initTransRotDataOutputFile << initRot.x << "\n";
+	initTransRotDataOutputFile << initRot.y << "\n";
+	initTransRotDataOutputFile << initRot.z << "\n";
+	initTransRotDataOutputFile << initRot.w << "\n";
 	
-	outputFile.close();
-
+	initTransRotDataOutputFile.close();
 }
 
 bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::Quaternion *rawRot) {
-	if (!Kore::Logger::inputFile.is_open()) {
-		Kore::Logger::inputFile.open(filename);
+	if (!positionDataInputFile.is_open()) {
+		positionDataInputFile.open(filename);
+	}
+	
+	std::string str;
+	
+	// Get header
+	if (line == 0) {
+		std::getline(positionDataInputFile, str, '\n');
 	}
 	
 	// Skip lines
-	std::string str;
-	while(line > Kore::Logger::currLineNumber - 1) {
-		std::getline(Kore::Logger::inputFile, str, '\n');
-		++Kore::Logger::currLineNumber;
+	while(line > currLineNumber - 1) {
+		std::getline(positionDataInputFile, str, '\n');
+		++currLineNumber;
 	}
 	
+	// Read line
 	int column = 0;
-	
-	if (std::getline(Kore::Logger::inputFile, str, '\n')) {
+	if (std::getline(positionDataInputFile, str, '\n')) {
 		
 		std::stringstream ss;
 		ss.str(str);
@@ -103,7 +94,7 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 			++column;
 		}
 		
-		++Kore::Logger::currLineNumber;
+		++currLineNumber;
 		return true;
 	} else {
 		return false;
