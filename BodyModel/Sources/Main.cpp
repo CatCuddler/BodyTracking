@@ -33,10 +33,10 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = false;
+	bool readData = true;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1503573998.csv";
-	const char* initialTransFilename = "initTransAndRot_1503573998.csv";
+	const char* positionDataFilename = "positionData_1503574644.csv";
+	const char* initialTransFilename = "initTransAndRot_1503574644.csv";
 
 	double startTime;
 	double lastTime;
@@ -360,11 +360,21 @@ namespace {
 		
 #else
 		if (!initCharacter) {
-			//avatar->setScale(0.8);	// Scale test
+			avatar->setScale(0.8);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
 				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
+				
+				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+				initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+				
+				line = 2000;
+			} else {
+				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 2));
+				initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
+				initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
 			}
 			
 			initRotInv = initRot.invert();
@@ -373,16 +383,10 @@ namespace {
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
 			initCharacter = true;
 			
-			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 2));
-			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
-			initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
-			
 			if (logData) {
 				logger->saveInitTransAndRot(initTrans, initRot);
 			}
 			
-			line = 0;
 		}
 		
 		// projection matrix
@@ -405,7 +409,7 @@ namespace {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
 				
 				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
@@ -429,6 +433,7 @@ namespace {
 			// Set position and orientation for the left hand
 			desPosition1 = vec3(0.2, 0.9, 0.4);
 			desRotation1 = Quaternion(vec3(0, 0, 1), -angle);
+			
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			
 			// Set position and orientation for the right hand
