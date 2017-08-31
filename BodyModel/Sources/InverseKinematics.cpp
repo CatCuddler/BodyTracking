@@ -168,11 +168,10 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		bone->quaternion.rotate(Quaternion(vec3(0, 0, 1), radZ));
 		bone->quaternion.normalize();
 		
-		//log(Info, "new %f %f %f %f", bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z);
+		//log(Info, "%s %f %f %f %f", bone->boneName, bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z);
 		
 		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
 		bone->local = bone->transform * rotMat;
-		//Kore::log(Info, "Bone %s -> angle: %f %f %f quaterion: %f %f %f", bone->boneName, bone->rotation.x(), bone->rotation.y(), bone->rotation.z(),  bone->desQuaternion.x, bone->desQuaternion.y, bone->desQuaternion.z);
 		
 		targetBone = targetBone->parent;
 		i = i + 3;
@@ -180,7 +179,7 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 	
 }
 
-void InverseKinematics::applyJointConstraints(BoneNode *targetBone) {
+void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 	for (int b = 0; b < maxBones; ++b) {
 		BoneNode* bone = targetBone;
 		
@@ -196,6 +195,9 @@ void InverseKinematics::applyJointConstraints(BoneNode *targetBone) {
 			RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
 			
 			bone->quaternion.normalize();
+			
+			Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
+			bone->local = bone->transform * rotMat;
 		}
 		targetBone = targetBone->parent;
 	}
@@ -212,17 +214,17 @@ bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
 	}
 	
 	if (*value < minVal) {
-		*value = minVal;// - *value;
+		*value = minVal;
 		return true;
 	} else if (*value > maxVal) {
-		*value = maxVal;// - *value;
+		*value = maxVal;
 		return true;
 	}
 	//*value = 0;
 	return false;
 }
 
-void InverseKinematics::updateBonePosition(BoneNode *bone) {
+void InverseKinematics::updateBonePosition(BoneNode* bone) {
 	bone->combined = bone->parent->combined * bone->local;
 }
 
