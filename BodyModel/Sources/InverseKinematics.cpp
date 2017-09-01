@@ -249,7 +249,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 3.0f, Kore::pi / 3.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, Kore::pi / 6.0f));
 	
 	nodeRight = bones[27-1];
@@ -264,7 +264,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft->axes = Kore::vec3(1, 1, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 3.0f, Kore::pi / 6.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f));
 	
 	nodeRight = bones[28-1];
 	nodeRight->axes = nodeLeft->axes;
