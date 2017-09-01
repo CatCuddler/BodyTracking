@@ -35,8 +35,8 @@ namespace {
 	bool logData = false;
 	bool readData = true;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1503574644.csv";
-	const char* initialTransFilename = "initTransAndRot_1503574644.csv";
+	const char* positionDataFilename = "positionData_1504179231.csv";
+	const char* initialTransFilename = "initTransAndRot_1504179231.csv";
 
 	double startTime;
 	double lastTime;
@@ -72,7 +72,7 @@ namespace {
 	int rightTrackerIndex = -1;
 #else
 	vec3 cameraRotation = vec3(0, 0, 0);
-	vec3 cameraPosition = vec3(0, 0.7, 1.5);
+	vec3 cameraPosition = vec3(0, 0.8, 1.8);
 #endif
 	
 	float angle = 0;
@@ -155,32 +155,33 @@ namespace {
 	}
 
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
-		// Transform desired position to the character coordinate system
-		//vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		
+		//desPosition2 = desPosition;
+		//desRotation2 = desRotation.rotated(initDesRotationLeftHand);
 		
 		if (logData) {
 			logger->saveData(desPosition, desRotation);
 		}
 
+		float handOffsetX = 0.02f;
+		float handOffsetY = 0.2f;
 
-		float handOffsetX = 0.05f;
-		float handOffsetY = 0.05f;
-
-		float rotOffsetY = Kore::pi / 4;
+//		float rotOffsetY = Kore::pi / 6;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
 			handOffsetX = -handOffsetX;
-			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
+//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
-			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+			handOffsetX = handOffsetX;
+//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
 		
 		// Transform desired position to the hand bone
-		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(0, handOffsetY, 0);
+		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(handOffsetX, handOffsetY, 0);
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
@@ -360,22 +361,20 @@ namespace {
 		
 #else
 		if (!initCharacter) {
-			avatar->setScale(0.8);	// Scale test
+			avatar->setScale(0.9);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
 				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
 				
-				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-				initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+				cameraRotation = vec3(-2.6, 0.0, 0);
+				cameraPosition = vec3(-0.5, 1.0, 1.0);
 				
-				line = 2000;
-			} else {
-				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-				initDesRotationLeftHand.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 2));
-				initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi/2));
-				initDesRotationRightHand.rotate(Quaternion(vec3(0, 0, 1), Kore::pi/2));
+				line = 500;
 			}
+			
+			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
 			initRotInv = initRot.invert();
 			
@@ -388,19 +387,6 @@ namespace {
 			}
 			
 		}
-		
-		// projection matrix
-		mat4 P = getProjectionMatrix();
-		
-		// view matrix
-		mat4 V = getViewMatrix();
-		
-		Graphics4::setMatrix(vLocation, V);
-		Graphics4::setMatrix(pLocation, P);
-		
-		Graphics4::setMatrix(mLocation, avatar->M);
-		
-		avatar->animate(tex, deltaT);
 		
 		if (readData) {
 			Kore::vec3 rawPos = vec3(0, 0, 0);
@@ -417,7 +403,7 @@ namespace {
 			//log(Info, "%i", line);
 			++line;
 		} else {
-			angle += 0.05;
+			angle += 0.01;
 			float radius = 0.2;
 			
 			// Set foot position
@@ -431,19 +417,38 @@ namespace {
 			
 			
 			// Set position and orientation for the left hand
-			desPosition1 = vec3(0.2, 0.9, 0.4);
-			desRotation1 = Quaternion(vec3(0, 0, 1), -angle);
-			
+			desPosition1 = vec3(0.2, 1.0, 0.4);
+			desRotation1 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
+			desRotation1.rotate(Quaternion(vec3(0, 1, 0), -angle));
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			
 			// Set position and orientation for the right hand
-			//desPosition2 = vec3(-0.2, 0.9, 0.4);
-			//desRotation2 = Quaternion(vec3(0, 0, 1), angle);
-			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			desPosition2 = vec3(-0.2, 1.0, 0.4);
+			desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
+			desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
+			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		}
+		
+		// projection matrix
+		mat4 P = getProjectionMatrix();
+		
+		// view matrix
+		mat4 V = getViewMatrix();
+		
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
+		
+		Graphics4::setMatrix(mLocation, avatar->M);
+		
+		avatar->animate(tex, deltaT);
 		
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
+		
+		//Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
+		//Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
+		//log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
+		//log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);
 		
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
