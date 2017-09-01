@@ -35,8 +35,8 @@ namespace {
 	bool logData = false;
 	bool readData = true;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1504179231.csv";
-	const char* initialTransFilename = "initTransAndRot_1504179231.csv";
+	const char* positionDataFilename = "positionData_1504264185.csv";
+	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
 
 	double startTime;
 	double lastTime;
@@ -71,7 +71,7 @@ namespace {
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
 #else
-	vec3 cameraRotation = vec3(0, 0, 0);
+	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0.8, 1.8);
 #endif
 	
@@ -144,7 +144,7 @@ namespace {
 	Kore::mat4 getViewMatrix() {
 		vec3 lookAt = cameraPosition + vec3(0, 0, -1);
 		mat4 V = mat4::lookAt(cameraPosition, lookAt, vec3(0, 1, 0));
-		V *= mat4::Rotation(cameraRotation.x(), cameraRotation.y(), cameraRotation.z());
+		V *= cameraRotation.matrix();
 		return V;
 	}
 	
@@ -154,6 +154,7 @@ namespace {
 		avatar->setDesiredPosition(boneIndex, finalPos);
 	}
 
+	// desPosition and desRotation are global
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		
 		//desPosition2 = desPosition;
@@ -164,7 +165,7 @@ namespace {
 		}
 
 		float handOffsetX = 0.02f;
-		float handOffsetY = 0.2f;
+		float handOffsetY = 0.02f;
 
 //		float rotOffsetY = Kore::pi / 6;
 		
@@ -186,7 +187,7 @@ namespace {
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
 		
-		// Transform desired position to the character coordinate system
+		// Transform desired position to the character local coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
@@ -361,14 +362,14 @@ namespace {
 		
 #else
 		if (!initCharacter) {
-			avatar->setScale(0.9);	// Scale test
+			avatar->setScale(0.95);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
 				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
 				
-				cameraRotation = vec3(-2.6, 0.0, 0);
-				cameraPosition = vec3(-0.5, 1.0, 1.0);
+				cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
+				cameraPosition = vec3(0.8, 0.8, 1.8);
 				
 				line = 500;
 			}
@@ -376,10 +377,12 @@ namespace {
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
+			initRot.normalize();
 			initRotInv = initRot.invert();
 			
 			avatar->M = initTrans * initRot.matrix().Transpose();
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
+			
 			initCharacter = true;
 			
 			if (logData) {
@@ -423,10 +426,10 @@ namespace {
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			
 			// Set position and orientation for the right hand
-			desPosition2 = vec3(-0.2, 1.0, 0.4);
-			desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
-			desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
-			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			//desPosition2 = (-0.2, 1.0, 0.4);
+			//desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
+			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
+			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		}
 		
 		// projection matrix
@@ -497,7 +500,7 @@ namespace {
 				break;
 			case KeyL:
 				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
-				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f)", cameraRotation.x(), cameraRotation.y(), cameraRotation.z());
+				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f %f)", cameraRotation.w, cameraRotation.x, cameraRotation.y, cameraRotation.z);
 				break;
 			case KeyQ:
 				System::stop();
@@ -547,10 +550,11 @@ namespace {
 		float rotationSpeed = 0.01;
 		
 		if (rotateX) {
-			cameraRotation.x() += (float)((mousePressX - x) * rotationSpeed);
+			//cameraRotation.x() += (float)((mousePressX - x) * rotationSpeed);
+			cameraRotation.rotate(Quaternion(vec3(0, 1, 0), (float)((mousePressX - x) * rotationSpeed)));
 			mousePressX = x;
 		} else if (rotateZ) {
-			cameraRotation.z() += (float)((mousePressY - y) * rotationSpeed);
+			cameraRotation.rotate(Quaternion(vec3(1, 0, 0), (float)((mousePressY - y) * rotationSpeed)));
 			mousePressY = y;
 		}
 		
