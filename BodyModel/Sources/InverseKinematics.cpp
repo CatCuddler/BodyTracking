@@ -62,7 +62,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
 			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());*/
 			
-			applyJointConstraints(targetBone);
+//			applyJointConstraints(targetBone);
 			return true;
 		}
 
@@ -83,16 +83,17 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		
 		std::vector<float> theta;
 		for (int i = 0; i < maxBones; ++i) {
-			theta.push_back(aThetaX[i]);
-			theta.push_back(aThetaY[i]);
-			theta.push_back(aThetaZ[i]);
+			theta.push_back(aThetaX[i] * 0.5f);
+			theta.push_back(aThetaY[i] * 0.5f);
+			theta.push_back(aThetaZ[i] * 0.5f);
 		}
 		
 		applyChanges(theta, targetBone);
+		applyJointConstraints(targetBone);
 		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
 	}
 	
-	applyJointConstraints(targetBone);
+	//applyJointConstraints(targetBone);
 	return false;
 }
 
@@ -248,9 +249,9 @@ void InverseKinematics::setJointConstraints() {
 	// upperarm
 	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, 2.0f * Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, Kore::pi / 6.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
 	
 	nodeRight = bones[27-1];
 	nodeRight->axes = nodeLeft->axes;
@@ -261,10 +262,10 @@ void InverseKinematics::setJointConstraints() {
 	
 	// lowerarm
 	nodeLeft = bones[9-1];
-	nodeLeft->axes = Kore::vec3(1, 1, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 3.0f, Kore::pi / 6.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f));
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 3.0f, Kore::pi / 6.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 8.0f, Kore::pi / 8.0f));
 	
 	nodeRight = bones[28-1];
 	nodeRight->axes = nodeLeft->axes;

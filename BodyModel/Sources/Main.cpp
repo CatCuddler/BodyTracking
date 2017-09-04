@@ -167,17 +167,17 @@ namespace {
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
 
-//		float rotOffsetY = Kore::pi / 6;
+		float rotOffsetY = Kore::pi / 6;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
 			handOffsetX = -handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
 			handOffsetX = handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
 		
@@ -190,6 +190,8 @@ namespace {
 		// Transform desired position to the character local coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+		
+//		log(Info, "loc pos %f %f %f loc rot %f %f %f %f", finalPos.x(), finalPos.y(), finalPos.z(), finalRot.x, finalRot.y, finalRot.z, finalRot.w);
 		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
@@ -398,7 +400,7 @@ namespace {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 				
 				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
@@ -448,10 +450,10 @@ namespace {
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 		
-		//Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
-		//Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
-		//log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
-		//log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);
+		/*Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
+		Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
+		log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
+		log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);*/
 		
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
