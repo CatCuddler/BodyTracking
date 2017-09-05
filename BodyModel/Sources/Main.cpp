@@ -368,7 +368,9 @@ namespace {
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
-				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
+				vec3 initPos = vec3(0, 0, 0);
+				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 				
 				cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
 				cameraPosition = vec3(0.8, 0.8, 1.8);
@@ -388,7 +390,8 @@ namespace {
 			initCharacter = true;
 			
 			if (logData) {
-				logger->saveInitTransAndRot(initTrans, initRot);
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 			
 		}
