@@ -65,7 +65,7 @@ namespace {
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
-	vec3 cameraRotation = vec3(Kore::pi, 0, 0);
+	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
 	
 	int leftTrackerIndex = -1;
@@ -242,7 +242,7 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 			
 			//cameraPosition.x() = -currentUserHeight * 0.5;
-			cameraPosition.y() = currentUserHeight * 1.5;
+			cameraPosition.y() = currentUserHeight * 0.5;
 			cameraPosition.z() = currentUserHeight * 0.5;
 			
 			float scale = currentUserHeight / currentAvatarHeight;
@@ -610,6 +610,7 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 #ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
