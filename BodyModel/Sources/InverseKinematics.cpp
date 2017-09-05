@@ -61,8 +61,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			/*Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
 			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());*/
-			
-//			applyJointConstraints(targetBone);
 			return true;
 		}
 
@@ -83,9 +81,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		
 		std::vector<float> theta;
 		for (int i = 0; i < maxBones; ++i) {
-			theta.push_back(aThetaX[i] * 0.5f);
-			theta.push_back(aThetaY[i] * 0.5f);
-			theta.push_back(aThetaZ[i] * 0.5f);
+			theta.push_back(aThetaX[i]);
+			theta.push_back(aThetaY[i]);
+			theta.push_back(aThetaZ[i]);
 		}
 		
 		applyChanges(theta, targetBone);
@@ -93,7 +91,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
 	}
 	
-	//applyJointConstraints(targetBone);
 	return false;
 }
 
@@ -205,9 +202,6 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 }
 
 bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
-	//minVal = -Kore::pi * 0.8;
-	//maxVal = Kore::pi * 0.8;
-	
 	if (minVal > maxVal) {
 		float temp = minVal;
 		minVal = maxVal;
@@ -221,7 +215,6 @@ bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
 		*value = maxVal;
 		return true;
 	}
-	//*value = 0;
 	return false;
 }
 
