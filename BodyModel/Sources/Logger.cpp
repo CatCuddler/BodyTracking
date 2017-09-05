@@ -6,37 +6,54 @@
 
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initTransRotData(false) {
+Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false) {
 	time_t t = time(0);   // Get time now
 	positionDataPath << positionData << "_" << t << ".csv";
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
+	logDataPath << logDataFilename << "_" << t << ".csv";
 }
 
 Logger::~Logger() {
 	positionDataOutputFile.close();
+	logDataOutputFile.close();
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
 	if (!initPositionData) {
 		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
 		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+		positionDataOutputFile.flush();
 		initPositionData = true;
 	}
 	
 	// Save positional and rotation data
 	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
+	positionDataOutputFile.flush();
 }
 
 void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 	if (!initTransRotData) {
 		initTransRotDataOutputFile.open(initTransRotPath.str(), std::ios::app);
 		initTransRotDataOutputFile << "initPosX;initPosY;initPosZ;initRotX;initRotY;initRotZ;initRotW\n";
+		initTransRotDataOutputFile.flush();
 		initTransRotData = true;
 	}
 	
 	// Save initial position rotation
 	initTransRotDataOutputFile << initPos.x() << ";" << initPos.y() << ";" << initPos.z() << ";" << initRot.x << ";" << initRot.y << ";" << initRot.z << ";" << initRot.w << "\n";
+	initTransRotDataOutputFile.flush();
 	initTransRotDataOutputFile.close();
+}
+
+void Logger::saveLogData(const char* str, float num) {
+	if (!initLogData) {
+		logDataOutputFile.open(logDataPath.str(), std::ios::app);
+		initLogData = true;
+	}
+	
+	// Save data
+	logDataOutputFile << str << ";" << num << "\n";
+	logDataOutputFile.flush();
 }
 
 bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::Quaternion *rawRot) {
