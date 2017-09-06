@@ -58,6 +58,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		float error = V.getLength();
 		//log(Info, "error %f \t diffPos %f \t error diffRot %f", error, diffPos.getLength(), diffRot.getLength());
 		if (error < maxError) {
+			sumIter += i;
+			++totalNum;
+			
 			/*Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
 			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());*/
@@ -90,6 +93,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		applyJointConstraints(targetBone);
 		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
 	}
+	
+	sumIter += maxSteps;
+	++totalNum;
 	
 	return false;
 }
@@ -325,5 +331,9 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
-	
+}
+
+float InverseKinematics::getAverageIter() {
+	float average = sumIter / (float)totalNum;
+	return average;
 }

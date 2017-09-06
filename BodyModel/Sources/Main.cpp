@@ -40,6 +40,7 @@ namespace {
 
 	double startTime;
 	double lastTime;
+	float fiveSec;
 	
 	VertexStructure structure;
 	Shader* vertexShader;
@@ -200,6 +201,17 @@ namespace {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
+		
+		fiveSec += deltaT;
+		if (fiveSec > 1) {
+			fiveSec = 0;
+			
+			float averageIt = avatar->getAverageIKiterationNum();
+			
+			if (logData) logger->saveLogData("it", averageIt);
+			
+			log(Info, "Average iteration %f", averageIt);
+		}
 		
 		const float speed = 0.01f;
 		if (left) {
@@ -435,6 +447,8 @@ namespace {
 			//desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
 			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
 			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			
+			logger->saveLogData("angle", angle);
 		}
 		
 		// projection matrix
