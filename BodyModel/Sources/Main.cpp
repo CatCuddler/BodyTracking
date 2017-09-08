@@ -190,7 +190,7 @@ namespace {
 		// Transform desired position to the character local coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-		
+
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
 	
@@ -362,7 +362,7 @@ namespace {
 		
 #else
 		if (!initCharacter) {
-			avatar->setScale(0.95);	// Scale test
+			avatar->setScale(0.929);	// Scale test
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
@@ -374,6 +374,7 @@ namespace {
 				line = 500;
 			}
 			
+			//rotate hands
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
@@ -382,18 +383,24 @@ namespace {
 			
 			avatar->M = initTrans * initRot.matrix().Transpose();
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
-			
+
 			initCharacter = true;
 			
 			if (logData) {
 				logger->saveInitTransAndRot(initTrans, initRot);
 			}
-			
 		}
 		
 		if (readData) {
 			Kore::vec3 rawPos = vec3(0, 0, 0);
 			Kore::Quaternion rawRot = Kore::Quaternion(0, 0, 0, 1);
+
+			//stretch the arms out
+			//avatar->setLocalRotation(leftHandBoneIndex - 2, Quaternion(vec3(0, 0, 1), Kore::pi / 4));
+			//avatar->setLocalRotation(leftHandBoneIndex - 1, Quaternion(vec3(1, 0, 0), -Kore::pi / 7));
+			//avatar->setLocalRotation(rightHandBoneIndex - 2, Quaternion(vec3(0, 0, 1), -Kore::pi / 4));
+			//avatar->setLocalRotation(rightHandBoneIndex - 1, Quaternion(vec3(1, 0, 0), -Kore::pi / 7));
+
 			if (logger->readData(line, positionDataFilename, &rawPos, &rawRot)) {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
