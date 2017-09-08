@@ -33,7 +33,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
 	const char* positionDataFilename = "positionData_1504264185.csv";
 	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
