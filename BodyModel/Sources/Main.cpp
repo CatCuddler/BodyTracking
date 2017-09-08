@@ -298,7 +298,8 @@ namespace {
 			}
 			
 			if (logData) {
-				logger->saveInitTransAndRot(initTrans, initRot);
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 			
 			initCharacter = true;
