@@ -58,11 +58,12 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		float error = V.getLength();
 		//log(Info, "error %f \t diffPos %f \t error diffRot %f", error, diffPos.getLength(), diffRot.getLength());
 		if (error < maxError) {
+			sumIter += i;
+			++totalNum;
+			
 			/*Kore::log(Kore::Info, "Inverse kinematics terminated after %i iterations.", i);
 			Kore::log(Kore::Info, "Position error: %f", diffPos.getLength());
 			Kore::log(Kore::Info, "Attitude error: %f", diffRot.getLength());*/
-			
-			applyJointConstraints(targetBone);
 			return true;
 		}
 
@@ -89,10 +90,13 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 		}
 		
 		applyChanges(theta, targetBone);
+		applyJointConstraints(targetBone);
 		for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
 	}
 	
-	applyJointConstraints(targetBone);
+	sumIter += maxSteps;
+	++totalNum;
+	
 	return false;
 }
 
@@ -204,9 +208,6 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 }
 
 bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
-	//minVal = -Kore::pi * 0.8;
-	//maxVal = Kore::pi * 0.8;
-	
 	if (minVal > maxVal) {
 		float temp = minVal;
 		minVal = maxVal;
@@ -220,7 +221,6 @@ bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
 		*value = maxVal;
 		return true;
 	}
-	//*value = 0;
 	return false;
 }
 
@@ -300,7 +300,7 @@ void InverseKinematics::setJointConstraints() {
 		constraintLowerarmZ = Kore::vec2(-0, 0);
 	}
 	else if (mode == 5) {
-		//trial3 (T-Arms)
+		//trial3 (with T-Arms)
 		constraintUpperarmX = Kore::vec2(-degToRad(120), degToRad(90));
 		constraintUpperarmY = Kore::vec2(-degToRad(100), degToRad(100));
 		constraintUpperarmZ = Kore::vec2(-degToRad(130), degToRad(150));
@@ -312,10 +312,11 @@ void InverseKinematics::setJointConstraints() {
 	// upperarm
 	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(constraintUpperarmX);
-	nodeLeft->constrain.push_back(constraintUpperarmY);
-	nodeLeft->constrain.push_back(constraintUpperarmZ);
 
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, 2.0f * Kore::pi / 3.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
+	
 	nodeRight = bones[27-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
@@ -324,11 +325,12 @@ void InverseKinematics::setJointConstraints() {
 	
 	// lowerarm
 	nodeLeft = bones[9-1];
-	nodeLeft->axes = Kore::vec3(1, 1, 0);
-	nodeLeft->constrain.push_back(constraintLowerarmX);
-	nodeLeft->constrain.push_back(constraintLowerarmY);
-	nodeLeft->constrain.push_back(constraintLowerarmZ);
 
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 3.0f, Kore::pi / 6.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 8.0f, Kore::pi / 8.0f));
+	
 	nodeRight = bones[28-1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
@@ -389,4 +391,9 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
+}
+
+float InverseKinematics::getAverageIter() {
+	float average = sumIter / (float)totalNum;
+	return average;
 }

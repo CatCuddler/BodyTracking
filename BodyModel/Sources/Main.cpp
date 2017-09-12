@@ -40,6 +40,7 @@ namespace {
 
 	double startTime;
 	double lastTime;
+	float fiveSec;
 	
 	VertexStructure structure;
 	Shader* vertexShader;
@@ -175,7 +176,8 @@ namespace {
 			handOffsetX = -handOffsetX;
 			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
-			desRot.rotate(initDesRotationLeftHand);			handOffsetX = handOffsetX;
+			desRot.rotate(initDesRotationLeftHand);
+			handOffsetX = handOffsetX;
 			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
@@ -189,7 +191,9 @@ namespace {
 		// Transform desired position to the character local coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-
+		
+//		log(Info, "loc pos %f %f %f loc rot %f %f %f %f", finalPos.x(), finalPos.y(), finalPos.z(), finalRot.x, finalRot.y, finalRot.z, finalRot.w);
+		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
 	
@@ -197,6 +201,17 @@ namespace {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
+		
+		fiveSec += deltaT;
+		if (fiveSec > 1) {
+			fiveSec = 0;
+			
+			float averageIt = avatar->getAverageIKiterationNum();
+			
+			if (logData) logger->saveLogData("it", averageIt);
+			
+			log(Info, "Average iteration %f", averageIt);
+		}
 		
 		const float speed = 0.01f;
 		if (left) {
@@ -239,7 +254,7 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 			
 			//cameraPosition.x() = -currentUserHeight * 0.5;
-			cameraPosition.y() = currentUserHeight * 1.5;
+			cameraPosition.y() = currentUserHeight * 0.5;
 			cameraPosition.z() = currentUserHeight * 0.5;
 			
 			float scale = currentUserHeight / currentAvatarHeight;
@@ -283,7 +298,8 @@ namespace {
 			}
 			
 			if (logData) {
-				logger->saveInitTransAndRot(initTrans, initRot);
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 			
 			initCharacter = true;
@@ -368,7 +384,9 @@ namespace {
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
-				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
+				vec3 initPos = vec3(0, 0, 0);
+				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 				
 				cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
 				cameraPosition = vec3(0.8, 0.8, 1.8);
@@ -389,7 +407,8 @@ namespace {
 			initCharacter = true;
 			
 			if (logData) {
-				logger->saveInitTransAndRot(initTrans, initRot);
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 		}
 		
@@ -407,7 +426,7 @@ namespace {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 				
 				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
@@ -439,6 +458,8 @@ namespace {
 			//desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
 			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
 			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			
+			logger->saveLogData("angle", angle);
 		}
 		
 		// projection matrix
@@ -457,10 +478,10 @@ namespace {
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 		
-		//Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
-		//Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
-		//log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
-		//log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);
+		/*Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
+		Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
+		log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
+		log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);*/
 		
 		renderTracker();
 		Graphics4::setPipeline(pipeline);

@@ -13,6 +13,8 @@ public:
 	InverseKinematics(std::vector<BoneNode*> bones, int maxSteps);
 	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, bool posAndRot);
 	
+	float getAverageIter();
+	
 private:
 	int boneCount;
 	int maxSteps;
@@ -39,4 +41,8 @@ private:
 
 	void applyJointConstraints(BoneNode* targetBone);
 	bool clampValue(float minVal, float maxVal, float* value);
+	
+	int totalNum;
+	int sumIter;
+	
 };

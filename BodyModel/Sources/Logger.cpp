@@ -6,52 +6,54 @@
 
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initTransRotData(false) {
+Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false) {
 	time_t t = time(0);   // Get time now
 	positionDataPath << positionData << "_" << t << ".csv";
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
+	logDataPath << logDataFilename << "_" << t << ".csv";
 }
 
 Logger::~Logger() {
 	positionDataOutputFile.close();
+	logDataOutputFile.close();
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
 	if (!initPositionData) {
 		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-		positionDataOutputFile << "rawPosX, rawPosY, rawPosZ, rawRotX, rawRotY, rawRotZ, rawRotW\n";
+		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+		positionDataOutputFile.flush();
 		initPositionData = true;
 	}
 	
 	// Save positional and rotation data
-	positionDataOutputFile << rawPos.x() << "," << rawPos.y() << "," << rawPos.z() << "," << rawRot.x << "," << rawRot.y << "," << rawRot.z << "," << rawRot.w << "\n";
+	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
+	positionDataOutputFile.flush();
 }
 
-void Logger::saveInitTransAndRot(Kore::mat4 initTrans, Kore::Quaternion initRot) {
+void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 	if (!initTransRotData) {
 		initTransRotDataOutputFile.open(initTransRotPath.str(), std::ios::app);
+		initTransRotDataOutputFile << "initPosX;initPosY;initPosZ;initRotX;initRotY;initRotZ;initRotW\n";
+		initTransRotDataOutputFile.flush();
 		initTransRotData = true;
 	}
 	
-	std::stringstream row;
-	// Save initial transformation matrix
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
-			row << initTrans[i][j];
-			if (j < 3) row << ",";
-		}
-		row << "\n";
+	// Save initial position rotation
+	initTransRotDataOutputFile << initPos.x() << ";" << initPos.y() << ";" << initPos.z() << ";" << initRot.x << ";" << initRot.y << ";" << initRot.z << ";" << initRot.w << "\n";
+	initTransRotDataOutputFile.flush();
+	initTransRotDataOutputFile.close();
+}
+
+void Logger::saveLogData(const char* str, float num) {
+	if (!initLogData) {
+		logDataOutputFile.open(logDataPath.str(), std::ios::app);
+		initLogData = true;
 	}
 	
-	initTransRotDataOutputFile << row.rdbuf();
-	
-	// Save initial rotation
-	initTransRotDataOutputFile << initRot.x << "\n";
-	initTransRotDataOutputFile << initRot.y << "\n";
-	initTransRotDataOutputFile << initRot.z << "\n";
-	initTransRotDataOutputFile << initRot.w << "\n";
-	
-	initTransRotDataOutputFile.close();
+	// Save data
+	logDataOutputFile << str << ";" << num << "\n";
+	logDataOutputFile.flush();
 }
 
 bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::Quaternion *rawRot) {
@@ -80,7 +82,7 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 		std::stringstream ss;
 		ss.str(str);
 		std::string item;
-		while(std::getline(ss, item, ',')) {
+		while(std::getline(ss, item, ';')) {
 			float num = std::stof(item);
 			//log(Kore::Info, "%f", num);
 			
@@ -102,41 +104,31 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 	}
 }
 
-void Logger::readInitTransAndRot(const char* filename, Kore::mat4 *initTrans, Kore::Quaternion *initRot) {
+void Logger::readInitTransAndRot(const char* filename, Kore::vec3 *initPos, Kore::Quaternion *initRot) {
 	std::fstream inputFile(filename);
 	
-	// Get initial transformation matrix
+	// Get header
 	int column = 0;
 	std::string str;
-	for (int row = 0; row < 4; ++row) {
-		std::getline(inputFile, str, '\n');
-		
-		std::stringstream ss;
-		ss.str(str);
-		std::string item;
-		while(std::getline(ss, item, ',')) {
-			float num = std::stof(item);
-			
-			//log(Kore::Info, "%i %i -> %f", row, column, num);
-			
-			initTrans->Set(row, column, num);
-			
-			++column;
-		}
-		column = 0;
-	}
+	std::getline(inputFile, str, '\n');
 	
-	// Get initial rotation
-	column = 0;
-	while (std::getline(inputFile, str, '\n')) {
-		float num = std::stof(str);
-		
+	// Get initial positional vector and rotation
+	std::getline(inputFile, str, '\n');
+	std::stringstream ss;
+	ss.str(str);
+	std::string item;
+	while(std::getline(ss, item, ';')) {
+		float num = std::stof(item);
+			
 		//log(Kore::Info, "%i -> %f", column, num);
 		
-		if (column == 0) initRot->x = num;
-		else if (column == 1) initRot->y = num;
-		else if (column == 2) initRot->z = num;
-		else if (column == 3) initRot->w = num;
+		if (column == 0) initPos->x() = num;
+		else if (column == 1) initPos->y() = num;
+		else if (column == 2) initPos->z() = num;
+		else if (column == 3) initRot->x = num;
+		else if (column == 4) initRot->y = num;
+		else if (column == 5) initRot->z = num;
+		else if (column == 6) initRot->w = num;
 		
 		++column;
 	}

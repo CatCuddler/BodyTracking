@@ -257,6 +257,10 @@ void MeshObject::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desi
 	invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
 }
 
+float MeshObject::getAverageIKiterationNum() {
+	return invKin->getAverageIter();
+}
+
 vec3 MeshObject::getBonePosition(int boneIndex) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	vec4 pos = bone->combined * vec4(0, 0, 0, 1);

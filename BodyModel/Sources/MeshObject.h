@@ -111,6 +111,8 @@ public:
 	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot = true);
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
 	
+	float getAverageIKiterationNum();
+	
 	vec3 getBonePosition(int boneIndex);
 	Quaternion getBoneLocalRotation(int boneIndex);
 	Quaternion getBoneGlobalRotation(int boneIndex);
