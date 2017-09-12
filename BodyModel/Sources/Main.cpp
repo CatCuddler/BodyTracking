@@ -63,6 +63,8 @@ namespace {
 	
 	MeshObject* cube1;
 	MeshObject* cube2;
+	MeshObject* cube3;
+	MeshObject* cube4;
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
@@ -71,6 +73,8 @@ namespace {
 	
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
+	int leftFootTrackerIndex = -1;
+	int rightFootTrackerIndex = -1;
 #else
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0.8, 1.8);
@@ -79,8 +83,12 @@ namespace {
 	float angle = 0;
 	vec3 desPosition1 = vec3(0, 0, 0);
 	vec3 desPosition2 = vec3(0, 0, 0);
+	vec3 desPositionLeftFoot = vec3(0, 0, 0);
+	vec3 desPositionRightFoot = vec3(0, 0, 0);
 	Quaternion desRotation1 = Quaternion(0, 0, 0, 1);
 	Quaternion desRotation2 = Quaternion(0, 0, 0, 1);
+	Quaternion desRotationLeftFoot = Quaternion(0, 0, 0, 1);
+	Quaternion desRotationRightFoot = Quaternion(0, 0, 0, 1);
 	
 	Quaternion initDesRotationLeftHand = Quaternion(0, 0, 0, 1);
 	Quaternion initDesRotationRightHand = Quaternion(0, 0, 0, 1);
@@ -96,23 +104,28 @@ namespace {
 	// Left foot 49, right foot 53, Left hand 10, right hand 29
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
+	const int leftFootBoneIndex = 49;
+	const int rightFootBoneIndex = 53;
 	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
-	
-	void renderTracker() {
-		switch (renderTrackerOrTargetPosition) {
+
+	void renderCube(MeshObject* cube, float x, float y, float z, Quaternion rotation) {
+		cube->M = mat4::Translation(x, y, z) * rotation.matrix().Transpose();
+		Graphics4::setMatrix(mLocation, cube->M);
+		cube->render(tex);
+	}
+
+	void renderTracker(int mode) {
+		switch (mode) {
 			case 0:
 				// Dont render
 				break;
 			case 1:
 			{
 				// Render desired position
-				cube1->M = mat4::Translation(desPosition1.x(), desPosition1.y(), desPosition1.z()) * desRotation1.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube1->M);
-				cube1->render(tex);
-				
-				cube2->M = mat4::Translation(desPosition2.x(), desPosition2.y(), desPosition2.z()) * desRotation2.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube2->M);
-				cube2->render(tex);
+				renderCube(cube1, desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1);
+				renderCube(cube2, desPosition2.x(), desPosition2.y(), desPosition2.z(), desRotation2);
+				renderCube(cube3, desPositionLeftFoot.x(), desPositionLeftFoot.y(), desPositionLeftFoot.z(), desRotationLeftFoot);
+				renderCube(cube4, desPositionRightFoot.x(), desPositionRightFoot.y(), desPositionRightFoot.z(), desRotationRightFoot);
 				break;
 			}
 			case 2:
@@ -120,15 +133,20 @@ namespace {
 				// Render target position
 				vec3 targetPosition = avatar->getBonePosition(leftHandBoneIndex);
 				Quaternion targetRotation = avatar->getBoneGlobalRotation(leftHandBoneIndex);
-				cube1->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube1->M);
-				cube1->render(tex);
-				
+
+				renderCube(cube1, targetPosition.x(), targetPosition.y(), targetPosition.z(), targetRotation);
+
 				targetPosition = avatar->getBonePosition(rightHandBoneIndex);
 				targetRotation = avatar->getBoneGlobalRotation(rightHandBoneIndex);
-				cube2->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cube2->M);
-				cube2->render(tex);
+				renderCube(cube2, targetPosition.x(), targetPosition.y(), targetPosition.z(), targetRotation);
+
+				targetPosition = avatar->getBonePosition(leftFootBoneIndex);
+				targetRotation = avatar->getBoneGlobalRotation(leftFootBoneIndex);
+				renderCube(cube3, targetPosition.x(), targetPosition.y(), targetPosition.z(), targetRotation);
+
+				targetPosition = avatar->getBonePosition(rightFootBoneIndex);
+				targetRotation = avatar->getBoneGlobalRotation(rightFootBoneIndex);
+				renderCube(cube4, targetPosition.x(), targetPosition.y(), targetPosition.z(), targetRotation);
 				break;
 			}
 			default:
@@ -210,7 +228,7 @@ namespace {
 			
 			if (logData) logger->saveLogData("it", averageIt);
 			
-			log(Info, "Average iteration %f", averageIt);
+			//log(Info, "Average iteration %f", averageIt);
 		}
 		
 		const float speed = 0.01f;
@@ -247,22 +265,26 @@ namespace {
 		SensorState state;
 		
 		if (!initCharacter) {
+			// Get height of avatar to scale it to the y-pos of the hmd
 			float currentAvatarHeight = avatar->getHeight();
 			
+			// Get Position of hmd
 			state = VrInterface::getSensorState(0);
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 			
-			//cameraPosition.x() = -currentUserHeight * 0.5;
+			// Set camera position depending on user-height
 			cameraPosition.y() = currentUserHeight * 0.5;
 			cameraPosition.z() = currentUserHeight * 0.5;
 			
+			// Scale the avatar
 			float scale = currentUserHeight / currentAvatarHeight;
 			//avatar->setScale(scale);
 			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-			
+
+			// Initial transformation of both hands: z-axis (blue) -> direction of thumbs
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
@@ -273,15 +295,19 @@ namespace {
 			
 			initRotInv = initRot.invert();
 			
+			// Set matrix of avatar, combined of initial transform and rotation matrices
 			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
+
+			// Get inverse of the Trans-Matrix of the avatar, for positioning of the tracker
 			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
 			
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 			
-			// Get left and right tracker index
+			// Get tracker indices of left/right hand and foot tracker
 			VrPoseState controller;
 			for (int i = 0; i < 16; ++i) {
 				controller = VrInterface::getController(i);
+				// Hand tracker
 				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
@@ -295,6 +321,21 @@ namespace {
 					leftTrackerIndex = i;
 					rightTrackerIndex = -1;
 				}
+				// Foot tracker
+				else if (controller.trackedDevice == TrackedDevice::Controller) {
+					vec3 trackerPos = controller.vrPose.position;
+					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+					if (trackerTransPos.x() > 0) {
+						log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
+						leftFootTrackerIndex = i;
+					}
+					else {
+						log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
+						rightFootTrackerIndex = i;
+					}
+					leftFootTrackerIndex = i;
+					rightFootTrackerIndex = -1;
+				}
 			}
 			
 			if (logData) {
@@ -305,12 +346,9 @@ namespace {
 			initCharacter = true;
 		}
 		
-
+		// Update avatar-bones depending on controller positions
 		VrPoseState controller;
-		/*for (int i = 0; i < 16; ++i) {
-			controller = VrInterface::getController(i);
-			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
-		}*/
+
 		if (leftTrackerIndex != -1) {
 			controller = VrInterface::getController(leftTrackerIndex);
 
@@ -319,7 +357,7 @@ namespace {
 			// Get cont1roller rotation
 			desRotation1 = controller.vrPose.orientation;
 
-			log(Info, "pos: %f %f %f, orient: %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.w, desRotation1.x, desRotation1.y, desRotation1.z);
+			//log(Info, "pos: %f %f %f, orient: %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.w, desRotation1.x, desRotation1.y, desRotation1.z);
 			
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		}
@@ -334,7 +372,32 @@ namespace {
 				
 			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 		}
+
+		if (leftFootTrackerIndex != -1) {
+			controller = VrInterface::getController(leftFootTrackerIndex);
+
+			// Get controller position
+			desPositionLeftFoot = controller.vrPose.position;
+			// Get cont1roller rotation
+			desRotationLeftFoot = controller.vrPose.orientation;
+
+			//log(Info, "pos: %f %f %f, orient: %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.w, desRotation1.x, desRotation1.y, desRotation1.z);
+
+			setDesiredPositionAndOrientation(desPositionLeftFoot, desRotationLeftFoot, leftFootBoneIndex);
+		}
+
+		if (rightFootTrackerIndex != -1) {
+			controller = VrInterface::getController(rightFootTrackerIndex);
+
+			// Get controller position
+			desPositionRightFoot = controller.vrPose.position;
+			// Get controller rotation
+			desRotationRightFoot = controller.vrPose.orientation;
+
+			setDesiredPositionAndOrientation(desPositionRightFoot, desRotationRightFoot, rightFootBoneIndex);
+		}
 		
+		// Render for each eye once
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
 			
@@ -344,11 +407,10 @@ namespace {
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 			
-			// Render
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
 			
-			renderTracker();
+			renderTracker(renderTrackerOrTargetPosition);
 			
 			VrInterface::endRender(eye);
 		}
@@ -358,21 +420,24 @@ namespace {
 		Graphics4::restoreRenderTarget();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
-		// Render
+		// Render on Monitor
 		if (!firstPersonMonitor) {
+			// Camera view
 			mat4 P = getProjectionMatrix();
 			mat4 V = getViewMatrix();
 			
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
 		} else {
+			// First person view
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
 		avatar->animate(tex, deltaT);
 		
-		renderTracker();
+		renderTracker(renderTrackerOrTargetPosition);
+
 		Graphics4::setPipeline(pipeline);
 		
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
@@ -634,6 +699,8 @@ namespace {
 		
 		cube1 = new MeshObject("cube.ogex", "", structure, 0.05);
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
+		cube3 = new MeshObject("cube.ogex", "", structure, 0.05);
+		cube4 = new MeshObject("cube.ogex", "", structure, 0.05);
 #ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
