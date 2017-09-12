@@ -65,7 +65,7 @@ namespace {
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
-	vec3 cameraRotation = vec3(Kore::pi, 0, 0);
+	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
 	
 	int leftTrackerIndex = -1;
@@ -167,17 +167,16 @@ namespace {
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
 
-//		float rotOffsetY = Kore::pi / 6;
+		float rotOffsetY = Kore::pi / 6;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
 			handOffsetX = -handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
-			desRot.rotate(initDesRotationLeftHand);
-			handOffsetX = handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+			desRot.rotate(initDesRotationLeftHand);			handOffsetX = handOffsetX;
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
 		
@@ -244,7 +243,7 @@ namespace {
 			cameraPosition.z() = currentUserHeight * 0.5;
 			
 			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
+			//avatar->setScale(scale);
 			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
@@ -278,8 +277,8 @@ namespace {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
 					}
-					//leftTrackerIndex = -1;
-					//rightTrackerIndex = i;
+					leftTrackerIndex = i;
+					rightTrackerIndex = -1;
 				}
 			}
 			
@@ -290,6 +289,7 @@ namespace {
 			initCharacter = true;
 		}
 		
+
 		VrPoseState controller;
 		/*for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
@@ -302,6 +302,8 @@ namespace {
 			desPosition1 = controller.vrPose.position;
 			// Get cont1roller rotation
 			desRotation1 = controller.vrPose.orientation;
+
+			log(Info, "pos: %f %f %f, orient: %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.w, desRotation1.x, desRotation1.y, desRotation1.z);
 			
 			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 		}
@@ -555,7 +557,6 @@ namespace {
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
 		float rotationSpeed = 0.01;
-		
 		if (rotateX) {
 			//cameraRotation.x() += (float)((mousePressX - x) * rotationSpeed);
 			cameraRotation.rotate(Quaternion(vec3(0, 1, 0), (float)((mousePressX - x) * rotationSpeed)));
@@ -564,7 +565,6 @@ namespace {
 			cameraRotation.rotate(Quaternion(vec3(1, 0, 0), (float)((mousePressY - y) * rotationSpeed)));
 			mousePressY = y;
 		}
-		
 	}
 	
 	void mousePress(int windowId, int button, int x, int y) {
@@ -615,6 +615,7 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 #ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif

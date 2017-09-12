@@ -292,9 +292,9 @@ void InverseKinematics::setJointConstraints() {
 	else if (mode == 4) {
 		//trial2 //better with T-Arms
 		//(avatar->setScale(0.929);)
-		constraintUpperarmX = Kore::vec2(-degToRad(120), degToRad(90));
+		constraintUpperarmX = Kore::vec2(-degToRad(150), degToRad(120));
 		constraintUpperarmY = Kore::vec2(-degToRad(40), degToRad(120));
-		constraintUpperarmZ = Kore::vec2(-degToRad(110), degToRad(140)); //max 140: arm wird richtig nach hinten ausgestreckt
+		constraintUpperarmZ = Kore::vec2(-degToRad(110), degToRad(160)); //max 160: arm wird richtig nach hinten ausgestreckt
 		constraintLowerarmX = Kore::vec2(-degToRad(30), degToRad(120));
 		constraintLowerarmY = Kore::vec2(-degToRad(30), degToRad(30));
 		constraintLowerarmZ = Kore::vec2(-0, 0);
