@@ -252,63 +252,6 @@ void InverseKinematics::setJointConstraints() {
 	
 	//degrees × π / 180°
 
-	Kore::vec2 constraintUpperarmX = Kore::vec2(0, 0);
-	Kore::vec2 constraintUpperarmY = Kore::vec2(0, 0);
-	Kore::vec2 constraintUpperarmZ = Kore::vec2(0, 0);
-	Kore::vec2 constraintLowerarmX = Kore::vec2(0, 0);
-	Kore::vec2 constraintLowerarmY = Kore::vec2(0, 0);
-	Kore::vec2 constraintLowerarmZ = Kore::vec2(0, 0);
-
-	int mode = 4;
-
-	//mode 0 = rigid
-	if (mode == 1) {
-		//originally
-		constraintUpperarmX = Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f);
-		constraintUpperarmY = Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f);
-		constraintUpperarmZ = Kore::vec2(-Kore::pi / 6.0f, Kore::pi / 6.0f);
-		constraintLowerarmX = Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f);
-		constraintLowerarmY = Kore::vec2(-Kore::pi / 3.0f, Kore::pi / 6.0f);
-		constraintLowerarmZ = Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f);
-	}
-	else if (mode == 2) {
-		//movable in every direction by 180°
-		constraintUpperarmX = Kore::vec2(-degToRad(180), degToRad(180));
-		constraintUpperarmY = Kore::vec2(-degToRad(180), degToRad(180));
-		constraintUpperarmZ = Kore::vec2(-degToRad(180), degToRad(180));
-		constraintLowerarmX = Kore::vec2(-degToRad(180), degToRad(180));
-		constraintLowerarmY = Kore::vec2(-degToRad(180), degToRad(180));
-		constraintLowerarmZ = Kore::vec2(-degToRad(180), degToRad(180));
-	}
-	else if (mode == 3) {
-		//trial1
-		constraintUpperarmX = Kore::vec2(-degToRad(90), degToRad(90));
-		constraintUpperarmY = Kore::vec2(-degToRad(90), degToRad(90));
-		constraintUpperarmZ = Kore::vec2(-degToRad(90), degToRad(90));
-		constraintLowerarmX = Kore::vec2(-degToRad(15), degToRad(60));
-		constraintLowerarmY = Kore::vec2(-degToRad(45), degToRad(45));
-		constraintLowerarmZ = Kore::vec2(-degToRad(3), degToRad(3));
-	}
-	else if (mode == 4) {
-		//trial2 //better with T-Arms
-		//(avatar->setScale(0.929);)
-		constraintUpperarmX = Kore::vec2(-degToRad(150), degToRad(120));
-		constraintUpperarmY = Kore::vec2(-degToRad(40), degToRad(120));
-		constraintUpperarmZ = Kore::vec2(-degToRad(110), degToRad(160)); //max 160: arm wird richtig nach hinten ausgestreckt
-		constraintLowerarmX = Kore::vec2(-degToRad(30), degToRad(120));
-		constraintLowerarmY = Kore::vec2(-degToRad(30), degToRad(30));
-		constraintLowerarmZ = Kore::vec2(-0, 0);
-	}
-	else if (mode == 5) {
-		//trial3 (with T-Arms)
-		constraintUpperarmX = Kore::vec2(-degToRad(120), degToRad(90));
-		constraintUpperarmY = Kore::vec2(-degToRad(100), degToRad(100));
-		constraintUpperarmZ = Kore::vec2(-degToRad(130), degToRad(150));
-		constraintLowerarmX = Kore::vec2(-degToRad(40), degToRad(120));
-		constraintLowerarmY = Kore::vec2(-degToRad(110), degToRad(50));
-		constraintLowerarmZ = Kore::vec2(-0, 0);
-	}
-
 	// upperarm
 	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
@@ -354,7 +297,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft = bones[47-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-5.0 * Kore::pi / 6.0f, Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f));
 	
 	nodeRight = bones[51-1];

@@ -183,28 +183,42 @@ namespace {
 			logger->saveData(desPosition, desRotation);
 		}
 
+		float offsetX = 0;
+		float offsetY = 0;
+		float offsetZ = 0;
+
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
+		float footOffsetX = 0.1f;
+		float footOffsetY = 1.0f;
+		float footOffsetZ = 0.0f;
 
 		float rotOffsetY = Kore::pi / 6;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
-			handOffsetX = -handOffsetX;
+			offsetX = -handOffsetX;
 			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
-			handOffsetX = handOffsetX;
+			offsetX = handOffsetX;
 			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+		}
+		else if (boneIndex == leftFootBoneIndex) {
+			offsetZ = footOffsetZ;
+			offsetX = -footOffsetX;
+		}
+		else if (boneIndex == rightFootBoneIndex) {
+			offsetZ = footOffsetZ;
+			offsetX = footOffsetX;
 		}
 		desRotation = desRot;
 		
-		// Transform desired position to the hand bone
-		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(handOffsetX, handOffsetY, 0);
+		// Transform desired position to the bone
+		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(offsetX, offsetY, offsetZ);
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
-		
 		
 		// Transform desired position to the character local coordinate system
 		vec4 finalPos = initTransInv * vec4(desPos.x(), desPos.y(), desPos.z(), 1);
@@ -279,7 +293,7 @@ namespace {
 			
 			// Scale the avatar
 			float scale = currentUserHeight / currentAvatarHeight;
-			//avatar->setScale(scale);
+			avatar->setScale(scale);
 			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
@@ -308,7 +322,7 @@ namespace {
 			for (int i = 0; i < 16; ++i) {
 				controller = VrInterface::getController(i);
 				// Hand tracker
-				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
+				if (controller.trackedDevice == TrackedDevice::Controller) { //ViveTracker
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 					if (trackerTransPos.x() > 0) {
@@ -318,11 +332,11 @@ namespace {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
 					}
-					leftTrackerIndex = i;
+					leftTrackerIndex = -1;
 					rightTrackerIndex = -1;
 				}
 				// Foot tracker
-				else if (controller.trackedDevice == TrackedDevice::Controller) {
+				else if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 					if (trackerTransPos.x() > 0) {
@@ -365,9 +379,7 @@ namespace {
 		if (rightTrackerIndex != -1) {
 			controller = VrInterface::getController(rightTrackerIndex);
 
-			// Get controller position
 			desPosition2 = controller.vrPose.position;
-			// Get controller rotation
 			desRotation2 = controller.vrPose.orientation;
 				
 			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
@@ -376,9 +388,7 @@ namespace {
 		if (leftFootTrackerIndex != -1) {
 			controller = VrInterface::getController(leftFootTrackerIndex);
 
-			// Get controller position
 			desPositionLeftFoot = controller.vrPose.position;
-			// Get cont1roller rotation
 			desRotationLeftFoot = controller.vrPose.orientation;
 
 			//log(Info, "pos: %f %f %f, orient: %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.w, desRotation1.x, desRotation1.y, desRotation1.z);
