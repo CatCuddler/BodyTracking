@@ -176,47 +176,46 @@ namespace {
 	// desPosition and desRotation are global
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
 		
-		//desPosition2 = desPosition;
-		//desRotation2 = desRotation.rotated(initDesRotationLeftHand);
-		
 		if (logData) {
 			logger->saveData(desPosition, desRotation);
 		}
 
-		float offsetX = 0;
-		float offsetY = 0;
-		float offsetZ = 0;
+		float offsetX = 0.0f;
+		float offsetY = 0.0f;
+		float offsetZ = 0.0f;
 
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
-		float footOffsetX = 0.1f;
-		float footOffsetY = 1.0f;
-		float footOffsetZ = 0.0f;
+		float handRotOffsetY = Kore::pi / 6;
 
-		float rotOffsetY = Kore::pi / 6;
+		float footOffsetX = 0.08f;
+		float footOffsetY = -0.06f;
+		float footOffsetZ = 0.0f;
+		float footRotOffsetX = -Kore::pi / 2.1f;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
 			offsetX = -handOffsetX;
-			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -handRotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
 			offsetX = handOffsetX;
-			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
-		}
-		else if (boneIndex == leftFootBoneIndex) {
-			offsetZ = footOffsetZ;
-			offsetX = -footOffsetX;
-		}
-		else if (boneIndex == rightFootBoneIndex) {
-			offsetZ = footOffsetZ;
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), handRotOffsetY));
+		} else if (boneIndex == leftFootBoneIndex
+			|| boneIndex == rightFootBoneIndex) {
+			desRot.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), footRotOffsetX));
 			offsetX = footOffsetX;
+			offsetY = footOffsetY;
+			offsetZ = footOffsetZ;
 		}
 		desRotation = desRot;
 		
 		// Transform desired position to the bone
-		Kore::mat4 curPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRot.matrix().Transpose() * mat4::Translation(offsetX, offsetY, offsetZ);
+		Kore::mat4 curPos = 
+			mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z())
+			* desRot.matrix().Transpose() 
+			* mat4::Translation(offsetX, offsetY, offsetZ);
 		Kore::vec4 desPos = curPos * vec4(0, 0, 0, 1);
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 		
@@ -347,8 +346,8 @@ namespace {
 						log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
 						rightFootTrackerIndex = i;
 					}
-					leftFootTrackerIndex = i;
-					rightFootTrackerIndex = -1;
+					//leftFootTrackerIndex = i;
+					//rightFootTrackerIndex = -1;
 				}
 			}
 			
