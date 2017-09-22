@@ -81,6 +81,14 @@ namespace {
 		}
 		return mat;
 	}
+	
+	vec3 getVector3(const float* vector) {
+		vec3 vec = vec4(0, 0, 0);
+		vec.x() = vector[0];
+		vec.y() = vector[1];
+		vec.z() = vector[2];
+		return vec;
+	}
 }
 
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile), structure(structure), scale(scale), M(mat4::Identity()) {
@@ -152,15 +160,32 @@ void MeshObject::render(TextureUnit tex) {
 		VertexBuffer* vertexBuffer = vertexBuffers[i];
 		IndexBuffer* indexBuffer = indexBuffers[i];
 		
-		if (images.size() > i && images[i] != nullptr) {
-			Texture* image = images[i];
-			Graphics4::setTexture(tex, image);
-		}
+		Texture* image = images[i];
+		Graphics4::setTexture(tex, image);
+		
 		Graphics4::setVertexBuffer(*vertexBuffer);
 		Graphics4::setIndexBuffer(*indexBuffer);
 		Graphics4::drawIndexedVertices();
 	}
 }
+
+void MeshObject::render(TextureUnit tex, ConstantLocation color) {
+	for (int i = 0; i < meshesCount; ++i) {
+		Material* material = materials[i];
+		Graphics4::setFloat4(color, material->color);
+		
+		VertexBuffer* vertexBuffer = vertexBuffers[i];
+		IndexBuffer* indexBuffer = indexBuffers[i];
+		
+		Texture* image = new Texture(100, 100, Texture::Format::BGRA32, true);
+		Graphics4::setTexture(tex, image);
+		
+		Graphics4::setVertexBuffer(*vertexBuffer);
+		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::drawIndexedVertices();
+	}
+}
+
 
 void MeshObject::LoadObj(const char* filename) {
 	FileReader fileReader(filename, FileReader::Asset);
@@ -422,8 +447,18 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 		
 		switch (subStructure->GetStructureType()) {
 				
-			case OGEX::kStructureColor:
+			case OGEX::kStructureColor: {
+				const OGEX::ColorStructure& colorStructure = *static_cast<const OGEX::ColorStructure *>(subStructure);
+				
+				const String& attrib = colorStructure.GetAttribString();
+				if (attrib == "diffuse") {
+					const float* color = colorStructure.GetColor();
+					vec3 vecColor = getVector3(color);
+					material->color = vec4(vecColor.x(), vecColor.y(), vecColor.z(), 1);
+				}
+
 				break;
+			}
 				
 			case OGEX::kStructureParam:
 				break;
@@ -450,6 +485,8 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 		
 		subStructure = subStructure->Next();
 	}
+	
+	//log(Info, "Texture name %s, color (%f %f %f)", material->materialName, material->color.x(), material->color.y(), material->color.z());
 	
 	return material;
 }

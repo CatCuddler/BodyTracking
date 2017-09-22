@@ -21,25 +21,7 @@ private:
 	Kore::Graphics4::Texture* yellowDot;
 	
 public:
-	Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f) : MeshObject(meshFile, textureFile, structure, scale) {
-		
-		// Update bones
-		for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
-		
-		//if (bones.size() > 0) {
-			// Get the highest position
-			BoneNode* head = getBoneWithIndex(46);
-			Kore::vec4 position = head->combined * Kore::vec4(0, 0, 0, 1);
-			position *= 1.0/position.w();
-			currentHeight = position.z();
-			
-			invKin = new InverseKinematics(bones, 100);
-		//}
-		
-		g2 = new Kore::Graphics2::Graphics2(1024, 768);
-		redDot = new Kore::Graphics4::Texture("redDot.png");
-		yellowDot = new Kore::Graphics4::Texture("yellowDot.png");
-	}
+	Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
 	

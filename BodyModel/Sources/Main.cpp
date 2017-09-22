@@ -10,6 +10,8 @@
 #include <Kore/Log.h>
 
 #include "MeshObject.h"
+#include "Avatar.h"
+#include "LivingRoom.h"
 #include "RotationUtility.h"
 #include "Logger.h"
 
@@ -42,16 +44,28 @@ namespace {
 	double lastTime;
 	float fiveSec;
 	
+	// Avatar
 	VertexStructure structure;
 	Shader* vertexShader;
 	Shader* fragmentShader;
 	PipelineState* pipeline;
 	
-	// Uniform locations
 	TextureUnit tex;
 	ConstantLocation pLocation;
 	ConstantLocation vLocation;
 	ConstantLocation mLocation;
+	
+	// Living room
+	VertexStructure structure_living_room;
+	Shader* vertexShader_living_room;
+	Shader* fragmentShader_living_room;
+	PipelineState* pipeline_living_room;
+	
+	TextureUnit tex_living_room;
+	ConstantLocation pLocation_living_room;
+	ConstantLocation vLocation_living_room;
+	ConstantLocation mLocation_living_room;
+	ConstantLocation cLocation_living_room;
 	
 	bool left, right = false;
 	bool down, up = false;
@@ -63,7 +77,8 @@ namespace {
 	
 	MeshObject* cube1;
 	MeshObject* cube2;
-	MeshObject* avatar;
+	Avatar* avatar;
+	LivingRoom* livingRoom;
 	
 #ifdef KORE_STEAMVR
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
@@ -157,10 +172,6 @@ namespace {
 
 	// desPosition and desRotation are global
 	void setDesiredPositionAndOrientation(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
-		
-		//desPosition2 = desPosition;
-		//desRotation2 = desRotation.rotated(initDesRotationLeftHand);
-		
 		if (logData) {
 			logger->saveData(desPosition, desRotation);
 		}
@@ -210,7 +221,7 @@ namespace {
 			
 			if (logData) logger->saveLogData("it", averageIt);
 			
-			log(Info, "Average iteration %f", averageIt);
+			//log(Info, "Average iteration %f", averageIt);
 		}
 		
 		const float speed = 0.01f;
@@ -465,7 +476,6 @@ namespace {
 		
 		avatar->animate(tex, deltaT);
 		
-		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 		
 		/*Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
@@ -474,10 +484,19 @@ namespace {
 		log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);*/
 		
 		renderTracker();
+		
 		Graphics4::setPipeline(pipeline);
+		
+		Graphics4::setPipeline(pipeline_living_room);
+		
+		livingRoom->M = mat4::Translation(1, 1, 0);
+		Graphics4::setMatrix(mLocation_living_room, livingRoom->M);
+		Graphics4::setMatrix(vLocation_living_room, V);
+		Graphics4::setMatrix(pLocation_living_room, P);
+		livingRoom->render(tex_living_room, cLocation_living_room);
+		
+		Graphics4::setPipeline(pipeline_living_room);
 #endif
-		
-		
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
@@ -592,7 +611,7 @@ namespace {
 		//rotateZ = false;
 	}
 	
-	void init() {
+	void loadAvatarShader() {
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
 		//FileReader vs("shader_lighting.vert");
@@ -619,23 +638,64 @@ namespace {
 		pipeline->compile();
 		
 		tex = pipeline->getTextureUnit("tex");
+		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
+		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
 		
 		pLocation = pipeline->getConstantLocation("P");
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
+	}
+	
+	void loadLivingRoomShader() {
+		// Load shader for living room
+		FileReader vs("shader_living_room.vert");
+		FileReader fs("shader_living_room.frag");
+		vertexShader_living_room = new Shader(vs.readAll(), vs.size(), VertexShader);
+		fragmentShader_living_room = new Shader(fs.readAll(), fs.size(), FragmentShader);
 		
-		cube1 = new MeshObject("cube.ogex", "", structure, 0.05);
-		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
+		structure_living_room.add("pos", Float3VertexData);
+		structure_living_room.add("tex", Float2VertexData);
+		structure_living_room.add("nor", Float3VertexData);
+		
+		pipeline_living_room = new PipelineState;
+		pipeline_living_room->inputLayout[0] = &structure_living_room;
+		pipeline_living_room->inputLayout[1] = nullptr;
+		pipeline_living_room->vertexShader = vertexShader_living_room;
+		pipeline_living_room->fragmentShader = fragmentShader_living_room;
+		pipeline_living_room->depthMode = ZCompareLess;
+		pipeline_living_room->depthWrite = true;
+		pipeline_living_room->blendSource = Graphics4::SourceAlpha;
+		pipeline_living_room->blendDestination = Graphics4::InverseSourceAlpha;
+		pipeline_living_room->alphaBlendSource = Graphics4::SourceAlpha;
+		pipeline_living_room->alphaBlendDestination = Graphics4::InverseSourceAlpha;
+		pipeline_living_room->compile();
+		
+		tex_living_room = pipeline->getTextureUnit("tex");
+		Graphics4::setTextureAddressing(tex_living_room, Graphics4::U, Repeat);
+		Graphics4::setTextureAddressing(tex_living_room, Graphics4::V, Repeat);
+		
+		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
+		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
+		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
+		cLocation_living_room = pipeline_living_room->getConstantLocation("tint");
+	
+	}
+	
+	void init() {
+		loadAvatarShader();
 #ifdef KORE_STEAMVR
-		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
-		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
-		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
-		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
+		cube1 = new MeshObject("cube.ogex", "", structure, 0.05);
+		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
+		
+		loadLivingRoomShader();
+		livingRoom = new LivingRoom("living_room/living_room1.ogex", "living_room/", structure_living_room, 0.0005);
 		
 		logger = new Logger();
 		
