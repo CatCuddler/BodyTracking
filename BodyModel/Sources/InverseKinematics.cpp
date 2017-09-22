@@ -1,11 +1,10 @@
 #include "pch.h"
-#include "RotationUtility.h"
 #include "InverseKinematics.h"
+
+#include "RotationUtility.h"
 #include "MeshObject.h"
 
 #include <Kore/Log.h>
-
-#include <vector>
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2), clamp(false), sumIter(0), totalNum(0) {
 	bones = boneVec;
@@ -39,10 +38,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			//Kore::Quaternion quatDiff;
 			//RotationUtility::getOrientation(&rotErr, &quatDiff);
 			
-			Quaternion quatDiff = desQuat.rotated(curQuat.invert());
+			Kore::Quaternion quatDiff = desQuat.rotated(curQuat.invert());
 			if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
 			
-			RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
+			Kore::RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
 			
 			// Dont enforce joint limits by clamping if we know the desired rotation
 			//clamp = false;
@@ -167,9 +166,9 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		
 		//Kore::log(Kore::Info, "Bone %s -> x=%f y=%f z=%f", bone->boneName, radX, radY, radZ);
 		
-		bone->quaternion.rotate(Quaternion(vec3(1, 0, 0), radX));
-		bone->quaternion.rotate(Quaternion(vec3(0, 1, 0), radY));
-		bone->quaternion.rotate(Quaternion(vec3(0, 0, 1), radZ));
+		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), radX));
+		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), radY));
+		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), radZ));
 		bone->quaternion.normalize();
 		
 		//log(Info, "%s %f %f %f %f", bone->boneName, bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z);
@@ -189,14 +188,14 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		
 		clamp = true;
 		if (clamp) {
-			vec3 rot;
-			RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
+			Kore::vec3 rot;
+			Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
 			
 			clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
 			clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
 			clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
 			
-			RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
+			Kore::RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
 			
 			bone->quaternion.normalize();
 			

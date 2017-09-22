@@ -3,11 +3,7 @@
 #include "OpenGEX/OpenGEX.h"
 
 #include <Kore/Graphics4/Graphics.h>
-#include <Kore/Graphics2/Graphics.h>
-#include <Kore/Graphics4/Texture.h>
 #include <Kore/Math/Quaternion.h>
-
-#include "InverseKinematics.h"
 
 #include <vector>
 
@@ -99,49 +95,19 @@ struct CompareBones {
 	}
 };
 
-class InverseKinematics;
-
 class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
-	
-	void setAnimation(int frame);
-	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
-	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot = true);
-	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
-	
-	float getAverageIKiterationNum();
-	
-	vec3 getBonePosition(int boneIndex);
-	Quaternion getBoneLocalRotation(int boneIndex);
-	Quaternion getBoneGlobalRotation(int boneIndex);
-	
-	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 
-	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
-	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
-	
-	float getHeight();
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
 	
-private:
-	Kore::vec4 desiredPosition;
-	
 	long meshesCount;
 	float scale;
-	float currentHeight;
 	const Kore::Graphics4::VertexStructure& structure;
 	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
 	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
-	
-	InverseKinematics* invKin;
-	const int maxIteration = 100;
-	
-	Kore::Graphics2::Graphics2* g2;
-	Kore::Graphics4::Texture* redDot;
-	Kore::Graphics4::Texture* yellowDot;
 	
 	const char* textureDir;
 	std::vector<Kore::Graphics4::Texture*> images;
@@ -150,10 +116,11 @@ private:
 	std::vector<Material*> materials;
 	std::vector<BoneNode*> bones;
 	std::vector<BoneNode*> children;
+
+	BoneNode* getBoneWithIndex(int index) const;
 	
+private:
 	void LoadObj(const char* filename);
-	
-	BoneNode* getBoneWithIndex(int index);
 	
 	void ConvertObjects(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);

@@ -1,11 +1,10 @@
 #pragma once
 
-#include <Kore/Graphics2/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
-struct BoneNode;
+#include <vector>
 
-using namespace Kore;
+struct BoneNode;
 
 class InverseKinematics {
 	
@@ -27,9 +26,9 @@ private:
 	
 	static const int jacDim = 6;
 	static const int maxBones = 3;
-	typedef Matrix<jacDim, maxBones, float> mat6x;
-	typedef Vector<float, jacDim> vec6;
-	typedef Matrix<jacDim, jacDim, float> mat6x6;
+	typedef Kore::Matrix<jacDim, maxBones, float> mat6x;
+	typedef Kore::Vector<float, jacDim> vec6;
+	typedef Kore::Matrix<jacDim, jacDim, float> mat6x6;
 	
 	void setJointConstraints();
 	
