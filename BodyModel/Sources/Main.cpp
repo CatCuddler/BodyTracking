@@ -35,7 +35,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
 	const char* positionDataFilename = "positionData_1504264185.csv";
 	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
@@ -88,7 +88,7 @@ namespace {
 	int rightTrackerIndex = -1;
 #else
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
-	vec3 cameraPosition = vec3(0, 0.8, 1.8);
+	vec3 cameraPosition = vec3(0, 0, 0);
 #endif
 	
 	float angle = 0;
@@ -313,6 +313,8 @@ namespace {
 				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 			
+			livingRoom->M = initRot.matrix().Transpose();
+			
 			initCharacter = true;
 		}
 		
@@ -411,6 +413,8 @@ namespace {
 			avatar->M = initTrans * initRot.matrix().Transpose();
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
 			
+			livingRoom->M = initRot.matrix().Transpose();
+			
 			initCharacter = true;
 			
 			if (logData) {
@@ -489,11 +493,9 @@ namespace {
 		
 		Graphics4::setPipeline(pipeline_living_room);
 		
-		livingRoom->M = mat4::Translation(1, 1, 0);
-		Graphics4::setMatrix(mLocation_living_room, livingRoom->M);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, cLocation_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
 		
 		Graphics4::setPipeline(pipeline_living_room);
 #endif
@@ -688,6 +690,8 @@ namespace {
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2));
+		cameraPosition = vec3(0.8, 0.5, 5.5);
 #endif
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
@@ -695,7 +699,7 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 		
 		loadLivingRoomShader();
-		livingRoom = new LivingRoom("living_room/living_room1.ogex", "living_room/", structure_living_room, 0.0005);
+		livingRoom = new LivingRoom("living_room/living_room.ogex", "living_room/", structure_living_room, 1);
 		
 		logger = new Logger();
 		

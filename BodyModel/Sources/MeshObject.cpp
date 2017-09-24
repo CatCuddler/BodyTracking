@@ -143,7 +143,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		indexBuffers.push_back(indexBuffer);
 		
 		Material* material = materials[j];
-		if (material->textureName != nullptr) {
+		if (material != nullptr && material->textureName != nullptr) {
 			char temp[200];
 			strcpy (temp, textureDir);
 			std::strcat(temp, material->textureName);
@@ -169,10 +169,17 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::render(TextureUnit tex, ConstantLocation color) {
+void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation cLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Material* material = materials[i];
-		Graphics4::setFloat4(color, material->color);
+		if (material != nullptr)
+			Graphics4::setFloat4(cLocation, material->color);
+		else
+			Graphics4::setFloat4(cLocation, vec4(1, 1, 1, 1)); // TODO
+		
+		Geometry* geometry = geometries[i];
+		mat4 modelMatrix = M * geometry->transform;
+		Graphics4::setMatrix(mLocation, modelMatrix);
 		
 		VertexBuffer* vertexBuffer = vertexBuffers[i];
 		IndexBuffer* indexBuffer = indexBuffers[i];

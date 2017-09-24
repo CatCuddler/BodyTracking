@@ -100,7 +100,7 @@ class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
-	void render(Kore::Graphics4::TextureUnit tex, Kore::Graphics4::ConstantLocation color);
+	void render(Kore::Graphics4::TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation cLocation);
 
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
