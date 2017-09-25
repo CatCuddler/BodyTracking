@@ -696,7 +696,7 @@ namespace {
 		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 0.02);
 		Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
 		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		livingRoom->M = mat4::Translation(0, 2, 0) * livingRoomRot.matrix().Transpose();
+		livingRoom->M = mat4::Translation(0, 2.045, 0) * livingRoomRot.matrix().Transpose();
 		
 		logger = new Logger();
 		
