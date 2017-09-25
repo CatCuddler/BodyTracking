@@ -17,7 +17,7 @@ out vec4 FragColor;
 void kore() {
 	const float amb = 0.4;
 	const float diff = 0.5;
-	const float spec = 0.5;
+	const float spec = 1.5;//0.5;
 	const float n = 0.5;
 	
 	vec4 ambient = vec4(amb, amb, amb, 1.0);
@@ -31,5 +31,5 @@ void kore() {
 	
 	vec4 light = ambient + diffuse + specular;
 	
-	FragColor = light * /*texture(tex, texCoord) **/ tintCol;
+	FragColor = light * texture(tex, texCoord) * tintCol;
 }
