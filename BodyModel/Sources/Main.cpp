@@ -88,7 +88,7 @@ namespace {
 	int rightTrackerIndex = -1;
 #else
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
-	vec3 cameraPosition = vec3(0, 0, 0);
+	vec3 cameraPosition = vec3(0, 1.0, 3.5);
 #endif
 	
 	float angle = 0;
@@ -224,7 +224,7 @@ namespace {
 			//log(Info, "Average iteration %f", averageIt);
 		}
 		
-		const float speed = 0.01f;
+		const float speed = 0.1f;
 		if (left) {
 			cameraPosition.x() -= speed;
 		}
@@ -312,8 +312,6 @@ namespace {
 				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
 				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
-			
-			livingRoom->M = initRot.matrix().Transpose();
 			
 			initCharacter = true;
 		}
@@ -412,8 +410,6 @@ namespace {
 			
 			avatar->M = initTrans * initRot.matrix().Transpose();
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
-			
-			livingRoom->M = initRot.matrix().Transpose();
 			
 			initCharacter = true;
 			
@@ -690,8 +686,6 @@ namespace {
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2));
-		cameraPosition = vec3(0.8, 0.5, 5.5);
 #endif
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
@@ -699,7 +693,10 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 		
 		loadLivingRoomShader();
-		livingRoom = new LivingRoom("living_room/living_room.ogex", "living_room/", structure_living_room, 1);
+		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 0.02);
+		Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
+		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		livingRoom->M = mat4::Translation(0, 2, 0) * livingRoomRot.matrix().Transpose();
 		
 		logger = new Logger();
 		
