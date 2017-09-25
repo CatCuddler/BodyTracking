@@ -38,8 +38,8 @@ struct CompareMesh {
 struct Geometry {
 	Kore::mat4 transform;
 	char* name;
-	const char* objectRef;
-	const char* materialRef;
+//	const char* objectRef;
+//	const char* materialRef;
 	unsigned int geometryIndex;
 };
 
@@ -108,11 +108,13 @@ public:
 	long meshesCount;
 	float scale;
 	const Kore::Graphics4::VertexStructure& structure;
-	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
-	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
+	Kore::Graphics4::VertexBuffer** vertexBuffers;
+	Kore::Graphics4::IndexBuffer** indexBuffers;
+	
+	Kore::Graphics4::Texture** images;
 	
 	const char* textureDir;
-	std::vector<Kore::Graphics4::Texture*> images;
+	//std::vector<Kore::Graphics4::Texture*> images;
 	std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;

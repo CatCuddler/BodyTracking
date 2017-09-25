@@ -87,10 +87,8 @@ void Avatar::animate(TextureUnit tex, float deltaTime) {
 		
 		Mesh* mesh = meshes[j];
 		
-		VertexBuffer* vertexBuffer = vertexBuffers[j];
-		
 		// Mesh Vertex Buffer
-		float* vertices = vertexBuffer->lock();
+		float* vertices = vertexBuffers[j]->lock();
 		for (int i = 0; i < mesh->numVertices; ++i) {
 			vec4 startPos(0, 0, 0, 1);
 			vec4 startNormal(0, 0, 0, 1);
@@ -129,14 +127,13 @@ void Avatar::animate(TextureUnit tex, float deltaTime) {
 			
 			//log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
 		}
-		vertexBuffer->unlock();
+		vertexBuffers[j]->unlock();
 		
-		IndexBuffer* indexBuffer = indexBuffers[j];
 		Texture* image = images[j];
 		
 		Graphics4::setTexture(tex, image);
-		Graphics4::setVertexBuffer(*vertexBuffer);
-		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::setVertexBuffer(*vertexBuffers[j]);
+		Graphics4::setIndexBuffer(*indexBuffers[j]);
 		Graphics4::drawIndexedVertices();
 	}
 }

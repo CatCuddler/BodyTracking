@@ -12,6 +12,39 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 namespace {
+	
+	void setVertexFromMesh(float* vertices, Mesh* mesh, float scale = 1.0) {
+		for (int i = 0; i < mesh->numVertices; ++i) {
+			// position
+			vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
+			vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
+			vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
+			// texCoord
+			if (mesh->texcoord != nullptr) {
+				vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
+				vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
+			} else {
+				vertices[i * 8 + 3] = 0;
+				vertices[i * 8 + 4] = 0;
+			}
+			// normal
+			vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
+			vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
+			vertices[i * 8 + 7] = mesh->normals[i * 3 + 2];
+			
+			//log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
+		}
+	}
+	
+	void setIndexFromMesh(int* indices, Mesh* mesh) {
+		for (int i = 0; i < mesh->numFaces * 3; ++i) {
+			indices[i] = mesh->indices[i];
+			
+			//log(Info, "%i", indices[i]);
+		}
+
+	}
+	
 	void setPosition(Mesh* mesh, int size, const float* data) {
 		for (int i = 0; i < size; ++i) {
 			mesh->vertices[(i * 3) + 0] = data[i * 3 + 0];
@@ -102,69 +135,46 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
 	std::sort(materials.begin(), materials.end(), CompareMaterials());
 	
+	vertexBuffers = new VertexBuffer*[meshesCount];
+	indexBuffers = new IndexBuffer*[meshesCount];
+	images = new Texture*[meshesCount];
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes[j];
-		VertexBuffer* vertexBuffer = new VertexBuffer(mesh->numVertices, structure, 0);
-		IndexBuffer* indexBuffer = new IndexBuffer(mesh->numFaces * 3);
 		
 		// Mesh Vertex Buffer
-		float* vertices = vertexBuffer->lock();
-		for (int i = 0; i < mesh->numVertices; ++i) {
-			// position
-			vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
-			vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
-			vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
-			// texCoord
-			if (mesh->texcoord != nullptr) {
-				vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
-				vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
-			} else {
-				vertices[i * 8 + 3] = 0;
-				vertices[i * 8 + 4] = 0;
-			}
-			// normal
-			vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
-			vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
-			vertices[i * 8 + 7] = mesh->normals[i * 3 + 2];
-			
-			//log(Info, "%f %f %f %f %f %f %f %f", vertices[i * 8 + 0], vertices[i * 8 + 1], vertices[i * 8 + 2], vertices[i * 8 + 3], vertices[i * 8 + 4], vertices[i * 8 + 5], vertices[i * 8 + 6], vertices[i * 8 + 7]);
-		}
-		vertexBuffer->unlock();
+		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure, 0);
+		float* vertices = vertexBuffers[j]->lock();
+		setVertexFromMesh(vertices, mesh, scale);
+		vertexBuffers[j]->unlock();
 		
-		int* indices = indexBuffer->lock();
-		for (int i = 0; i < mesh->numFaces * 3; ++i) {
-			indices[i] = mesh->indices[i];
-			
-			//log(Info, "%i", indices[i]);
-		}
-		indexBuffer->unlock();
+		// Mesh Index Buffer
+		indexBuffers[j] = new IndexBuffer(mesh->numFaces * 3);
+		int* indices = indexBuffers[j]->lock();
+		setIndexFromMesh(indices, mesh);
+		indexBuffers[j]->unlock();
 		
-		vertexBuffers.push_back(vertexBuffer);
-		indexBuffers.push_back(indexBuffer);
 		
 		Material* material = materials[j];
+		images[j] = nullptr;
 		if (material != nullptr && material->textureName != nullptr) {
 			char temp[200];
 			strcpy (temp, textureDir);
 			std::strcat(temp, material->textureName);
 			log(Info, "Load Texture %s", temp);
 			Texture* image = new Texture(temp, true);
-			images.push_back(image);
+			images[j] = image;
 		}
 	}
 	
 }
 
 void MeshObject::render(TextureUnit tex) {
-	for (int i = 0; i < meshesCount; ++i) {
-		VertexBuffer* vertexBuffer = vertexBuffers[i];
-		IndexBuffer* indexBuffer = indexBuffers[i];
-		
+	for (int i = 0; i < meshesCount; ++i) {		
 		Texture* image = images[i];
 		Graphics4::setTexture(tex, image);
 		
-		Graphics4::setVertexBuffer(*vertexBuffer);
-		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::setVertexBuffer(*vertexBuffers[i]);
+		Graphics4::setIndexBuffer(*indexBuffers[i]);
 		Graphics4::drawIndexedVertices();
 	}
 }
@@ -181,14 +191,11 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 		mat4 modelMatrix = M * geometry->transform;
 		Graphics4::setMatrix(mLocation, modelMatrix);
 		
-		VertexBuffer* vertexBuffer = vertexBuffers[i];
-		IndexBuffer* indexBuffer = indexBuffers[i];
+		Texture* image = images[i];
+		if (image != nullptr) Graphics4::setTexture(tex, image);
 		
-		Texture* image = new Texture(100, 100, Texture::Format::BGRA32, true);
-		Graphics4::setTexture(tex, image);
-		
-		Graphics4::setVertexBuffer(*vertexBuffer);
-		Graphics4::setIndexBuffer(*indexBuffer);
+		Graphics4::setVertexBuffer(*vertexBuffers[i]);
+		Graphics4::setIndexBuffer(*indexBuffers[i]);
 		Graphics4::drawIndexedVertices();
 	}
 }
