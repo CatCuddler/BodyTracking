@@ -345,6 +345,8 @@ namespace {
 		
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
+
+			Graphics4::setPipeline(pipeline);
 			
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 			
@@ -352,11 +354,18 @@ namespace {
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 			
-			// Render
+			// Render avatar
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
 			
 			renderTracker();
+
+			// Render living room
+			Graphics4::setPipeline(pipeline_living_room);
+
+			Graphics4::setMatrix(vLocation_living_room, state.pose.vrPose.eye);
+			Graphics4::setMatrix(pLocation_living_room, state.pose.vrPose.projection);
+			livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
 			
 			VrInterface::endRender(eye);
 		}
@@ -366,11 +375,12 @@ namespace {
 		Graphics4::restoreRenderTarget();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
-		// Render
-		if (!firstPersonMonitor) {
-			mat4 P = getProjectionMatrix();
-			mat4 V = getViewMatrix();
-			
+		// Render on monitor
+		Graphics4::setPipeline(pipeline);
+
+		mat4 P = getProjectionMatrix();
+		mat4 V = getViewMatrix(); 
+		if (!firstPersonMonitor) {	
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
 		} else {
@@ -381,7 +391,12 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		renderTracker();
-		Graphics4::setPipeline(pipeline);
+		
+		Graphics4::setPipeline(pipeline_living_room);
+
+		Graphics4::setMatrix(vLocation_living_room, V);
+		Graphics4::setMatrix(pLocation_living_room, P);
+		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
 		
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
@@ -485,15 +500,12 @@ namespace {
 		
 		renderTracker();
 		
-		Graphics4::setPipeline(pipeline);
-		
 		Graphics4::setPipeline(pipeline_living_room);
 		
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
 		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
-		
-		Graphics4::setPipeline(pipeline_living_room);
+
 #endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
