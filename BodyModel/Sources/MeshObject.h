@@ -38,8 +38,9 @@ struct CompareMesh {
 struct Geometry {
 	Kore::mat4 transform;
 	char* name;
-//	const char* objectRef;
-//	const char* materialRef;
+	char* objectRef;
+	char* materialRef;
+	unsigned int materialIndex;
 	unsigned int geometryIndex;
 };
 
@@ -131,6 +132,7 @@ private:
 	Mesh* ConvertMesh(const OGEX::MeshStructure& structure, const char* geometryName);
 	
 	Material* ConvertMaterial(const OGEX::MaterialStructure& structure);
+	Material* findMaterialWithIndex(const int index);
 	
 	void ConvertNodes(const Structure& structure, BoneNode& parentNode);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);

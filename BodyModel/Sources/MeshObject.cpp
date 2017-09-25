@@ -122,6 +122,7 @@ namespace {
 		vec.z() = vector[2];
 		return vec;
 	}
+	
 }
 
 MeshObject::MeshObject(const char* meshFile, const char* textureFile, const VertexStructure& structure, float scale) : textureDir(textureFile), structure(structure), scale(scale), M(mat4::Identity()) {
@@ -129,7 +130,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	LoadObj(meshFile);
 	
 	meshesCount = meshes.size();
-	log(Info, "Meshes length %i", meshesCount);
+	log(Info, "Meshes length %i, geometry length %i, material length %i", meshesCount, geometries.size(), materials.size());
 	
 	std::sort(meshes.begin(), meshes.end(), CompareMesh());
 	std::sort(geometries.begin(), geometries.end(), CompareGeometry());
@@ -153,8 +154,9 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		setIndexFromMesh(indices, mesh);
 		indexBuffers[j]->unlock();
 		
-		
-		Material* material = materials[j];
+		Geometry* geometry = geometries[j];
+		unsigned int materialIndex = geometry->materialIndex;
+		Material* material = findMaterialWithIndex(materialIndex);
 		images[j] = nullptr;
 		if (material != nullptr && material->textureName != nullptr) {
 			char temp[200];
@@ -181,15 +183,18 @@ void MeshObject::render(TextureUnit tex) {
 
 void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation cLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
-		Material* material = materials[i];
+		Geometry* geometry = geometries[i];
+		mat4 modelMatrix = M * geometry->transform;
+		Graphics4::setMatrix(mLocation, modelMatrix);
+		
+		//unsigned int index = getIndexFromString(geometry->materialRef, 8);
+		unsigned int materialIndex = geometry->materialIndex;
+		Material* material = findMaterialWithIndex(materialIndex);
 		if (material != nullptr)
 			Graphics4::setFloat4(cLocation, material->color);
 		else
 			Graphics4::setFloat4(cLocation, vec4(1, 1, 1, 1)); // TODO
 		
-		Geometry* geometry = geometries[i];
-		mat4 modelMatrix = M * geometry->transform;
-		Graphics4::setMatrix(mLocation, modelMatrix);
 		
 		Texture* image = images[i];
 		if (image != nullptr) Graphics4::setTexture(tex, image);
@@ -422,9 +427,6 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 	copyString(name, geometry->name, length);
 	//log(Info, "Geometry name %s", name);
 	
-	const char* nodeName = structure.GetStructureName();
-	geometry->geometryIndex = getIndexFromString(nodeName, 4);
-	
 	const Structure *subStructure = structure.GetFirstSubnode();
 	while (subStructure) {
 		switch (subStructure->GetStructureType()) {
@@ -433,6 +435,33 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				const float* transform = transformStructure.GetTransform();
 				geometry->transform = getMatrix4x4(transform);
 				
+				break;
+			}
+				
+			case OGEX::kStructureMaterialRef: {
+				const OGEX::MaterialRefStructure& materialRefStructure = *static_cast<const OGEX::MaterialRefStructure *>(subStructure);
+				const Structure* subSubStructure = materialRefStructure.GetTargetStructure();
+				
+				const char* name = subSubStructure->GetStructureName();
+				int length = (int)strlen(name) + 1;
+				geometry->materialRef = new char[length]();
+				copyString(name, geometry->materialRef, length);
+				
+				geometry->materialIndex = getIndexFromString(geometry->materialRef, 8);
+				break;
+			}
+				
+			case OGEX::kStructureObjectRef: {
+				const OGEX::ObjectRefStructure& objectRefStructure = *static_cast<const OGEX::ObjectRefStructure *>(subStructure);
+				const Structure* subSubStructure = objectRefStructure.GetTargetStructure();
+				
+				const char* name = subSubStructure->GetStructureName();
+				int length = (int)strlen(name) + 1;
+				geometry->objectRef = new char[length]();
+				copyString(name, geometry->objectRef, length);
+				
+				geometry->geometryIndex = getIndexFromString(geometry->objectRef, 8);
+
 				break;
 			}
 				
@@ -503,6 +532,16 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 	//log(Info, "Texture name %s, color (%f %f %f)", material->materialName, material->color.x(), material->color.y(), material->color.z());
 	
 	return material;
+}
+
+Material* MeshObject::findMaterialWithIndex(const int index) {
+	for (int i = 0; i < materials.size(); ++i) {
+		Material* mat = materials[i];
+		if (mat->materialIndex == index) {
+			return mat;
+		}
+	}
+	return nullptr;
 }
 
 BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) {
