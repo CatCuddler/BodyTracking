@@ -35,7 +35,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = false;
+	bool readData = true;
 	int line = 0;
 	const char* positionDataFilename = "positionData_1504264185.csv";
 	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
@@ -67,13 +67,8 @@ namespace {
 	ConstantLocation mLocation_living_room;
 	ConstantLocation cLocation_living_room;
 	
-	bool left, right = false;
-	bool down, up = false;
-	bool forward, backward = false;
-	bool rotateX = false;
-	bool rotateY = false;
-	bool rotateZ = false;
-	int mousePressX, mousePressY = 0;
+	bool W, A, S, D = false;
+	bool Z, X = false;
 	
 	MeshObject* cube1;
 	MeshObject* cube2;
@@ -224,24 +219,22 @@ namespace {
 			//log(Info, "Average iteration %f", averageIt);
 		}
 		
-		const float speed = 0.1f;
-		if (left) {
-			cameraPosition.x() -= speed;
+		// Move position of camera based on WASD keys, and XZ keys for up and down
+		const float moveSpeed = 0.1f;
+		if (S) {
+			cameraPosition.z() += moveSpeed;
+		} else if (W) {
+			cameraPosition.z() -= moveSpeed;
 		}
-		if (right) {
-			cameraPosition.x() += speed;
+		if (A) {
+			cameraPosition.x() -= moveSpeed;
+		} else if (D) {
+			cameraPosition.x() += moveSpeed;
 		}
-		if (forward) {
-			cameraPosition.z() += speed;
-		}
-		if (backward) {
-			cameraPosition.z() -= speed;
-		}
-		if (up) {
-			cameraPosition.y() += speed;
-		}
-		if (down) {
-			cameraPosition.y() -= speed;
+		if (Z) {
+			cameraPosition.y() += moveSpeed;
+		} else if (X) {
+			cameraPosition.y() -= moveSpeed;
 		}
 		
 		Graphics4::begin();
@@ -411,8 +404,8 @@ namespace {
 				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
 				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 				
-				cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
-				cameraPosition = vec3(0.8, 0.8, 1.8);
+				//cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
+				//cameraPosition = vec3(0.8, 0.8, 1.8);
 				
 				line = 500;
 			}
@@ -462,7 +455,6 @@ namespace {
 			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
 			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
 			
-			
 			// Set position and orientation for the left hand
 			desPosition1 = vec3(0.2, 1.0, 0.4);
 			desRotation1 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
@@ -475,7 +467,6 @@ namespace {
 			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
 			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 			
-			logger->saveLogData("angle", angle);
 		}
 		
 		// projection matrix
@@ -513,34 +504,23 @@ namespace {
 	
 	void keyDown(KeyCode code) {
 		switch (code) {
-			case Kore::KeyLeft:
-			case Kore::KeyA:
-				left = true;
-				break;
-			case Kore::KeyRight:
-			case Kore::KeyD:
-				right = true;
-				break;
-			case Kore::KeyDown:
-				down = true;
-				break;
-			case Kore::KeyUp:
-				up = true;
-				break;
 			case Kore::KeyW:
-				forward = true;
+				W = true;
+				break;
+			case Kore::KeyA:
+				A = true;
 				break;
 			case Kore::KeyS:
-				backward = true;
+				S = true;
 				break;
-			case Kore::KeyX:
-				rotateX = true;
-				break;
-			case Kore::KeyY:
-				rotateY = true;
+			case Kore::KeyD:
+				D = true;
 				break;
 			case Kore::KeyZ:
-				rotateZ = true;
+				Z = true;
+				break;
+			case Kore::KeyX:
+				X = true;
 				break;
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
@@ -561,34 +541,23 @@ namespace {
 	
 	void keyUp(KeyCode code) {
 		switch (code) {
-			case Kore::KeyLeft:
-			case Kore::KeyA:
-				left = false;
-				break;
-			case Kore::KeyRight:
-			case Kore::KeyD:
-				right = false;
-				break;
-			case Kore::KeyDown:
-				down = false;
-				break;
-			case Kore::KeyUp:
-				up = false;
-				break;
 			case Kore::KeyW:
-				forward = false;
+				W = false;
+				break;
+			case Kore::KeyA:
+				A = false;
 				break;
 			case Kore::KeyS:
-				backward = false;
+				S = false;
 				break;
-			case Kore::KeyX:
-				rotateX = false;
-				break;
-			case Kore::KeyY:
-				rotateY = false;
+			case Kore::KeyD:
+				D = false;
 				break;
 			case Kore::KeyZ:
-				rotateZ = false;
+				Z = false;
+				break;
+			case Kore::KeyX:
+				X = false;
 				break;
 			default:
 				break;
@@ -596,29 +565,10 @@ namespace {
 	}
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
-		float rotationSpeed = 0.01;
+		const float mouseSensitivity = 0.01f;
 		
-		if (rotateX) {
-			//cameraRotation.x() += (float)((mousePressX - x) * rotationSpeed);
-			cameraRotation.rotate(Quaternion(vec3(0, 1, 0), (float)((mousePressX - x) * rotationSpeed)));
-			mousePressX = x;
-		} else if (rotateZ) {
-			cameraRotation.rotate(Quaternion(vec3(1, 0, 0), (float)((mousePressY - y) * rotationSpeed)));
-			mousePressY = y;
-		}
-		
-	}
-	
-	void mousePress(int windowId, int button, int x, int y) {
-		//rotateX = true;
-		//rotateZ = true;
-		mousePressX = x;
-		mousePressY = y;
-	}
-	
-	void mouseRelease(int windowId, int button, int x, int y) {
-		//rotateX = false;
-		//rotateZ = false;
+		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), movementX * mouseSensitivity));
+		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), movementY * mouseSensitivity));
 	}
 	
 	void loadAvatarShader() {
@@ -688,7 +638,6 @@ namespace {
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
 		cLocation_living_room = pipeline_living_room->getConstantLocation("tint");
-	
 	}
 	
 	void init() {
@@ -708,7 +657,8 @@ namespace {
 		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 0.02);
 		Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
 		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		livingRoom->M = mat4::Translation(0, 2.045, 0) * livingRoomRot.matrix().Transpose();
+		livingRoomRot.rotate(Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
+		livingRoom->M = mat4::Translation(-1.5, 2.045, 1.5) * livingRoomRot.matrix().Transpose();
 		
 		logger = new Logger();
 		
@@ -731,8 +681,6 @@ int kore(int argc, char** argv) {
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;
 	Mouse::the()->Move = mouseMove;
-	Mouse::the()->Press = mousePress;
-	Mouse::the()->Release = mouseRelease;
 	
 	System::start();
 	
