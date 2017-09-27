@@ -67,6 +67,7 @@ namespace {
 	ConstantLocation mLocation_living_room;
 	ConstantLocation cLocation_living_room;
 	
+	bool rotate = false;
 	bool W, A, S, D = false;
 	bool Z, X = false;
 	
@@ -565,10 +566,19 @@ namespace {
 	}
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
-		const float mouseSensitivity = 0.01f;
-		
-		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), movementX * mouseSensitivity));
-		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), movementY * mouseSensitivity));
+		if (rotate) {
+			const float mouseSensitivity = 0.01f;
+			cameraRotation.rotate(Quaternion(vec3(0, 1, 0), movementX * mouseSensitivity));
+			cameraRotation.rotate(Quaternion(vec3(1, 0, 0), movementY * mouseSensitivity));
+		}
+	}
+	
+	void mousePress(int windowId, int button, int x, int y) {
+		rotate = true;
+	}
+	
+	void mouseRelease(int windowId, int button, int x, int y) {
+		rotate = false;
 	}
 	
 	void loadAvatarShader() {
@@ -681,6 +691,8 @@ int kore(int argc, char** argv) {
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;
 	Mouse::the()->Move = mouseMove;
+	Mouse::the()->Press = mousePress;
+	Mouse::the()->Release = mouseRelease;
 	
 	System::start();
 	
