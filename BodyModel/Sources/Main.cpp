@@ -65,7 +65,8 @@ namespace {
 	ConstantLocation pLocation_living_room;
 	ConstantLocation vLocation_living_room;
 	ConstantLocation mLocation_living_room;
-	ConstantLocation cLocation_living_room;
+	ConstantLocation diffuse_living_room;
+	ConstantLocation specular_living_room;
 	ConstantLocation lightPosLocation_living_room;
 	
 	vec3 lightPosition = vec3(0, 0, 0);
@@ -243,6 +244,8 @@ namespace {
 		
 		// update light pos
 		lightPosition = vec3(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t));
+		lightPosition = vec3(0, 1, -2);
+		desPosition2 = lightPosition;
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -503,7 +506,7 @@ namespace {
 		Graphics4::setFloat3(lightPosLocation_living_room, lightPosition);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room);
 
 #endif
 		Graphics4::end();
@@ -652,7 +655,8 @@ namespace {
 		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
-		cLocation_living_room = pipeline_living_room->getConstantLocation("tint");
+		diffuse_living_room = pipeline_living_room->getConstantLocation("diffuse");
+		specular_living_room = pipeline_living_room->getConstantLocation("specular");
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 	}
 	

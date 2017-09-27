@@ -8,12 +8,14 @@ out vec3 eyeCoord;
 out vec3 lightDirection;
 out vec2 texCoord;
 out vec3 normal;
-out vec4 tintCol;
+out vec3 diffuseCol;
+out vec3 specularCol;
 
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
-uniform vec4 tint;
+uniform vec3 diffuse;
+uniform vec3 specular;
 uniform vec3 lightPos;
 
 void kore() {
@@ -28,7 +30,8 @@ void kore() {
 	mat4 N = transpose(inverse(mat4(M)));
 	normal = (N * vec4(nor, 0.0)).xyz;
 	
-	tintCol = tint;
+	diffuseCol = diffuse;
+	specularCol = specular;
 	
 	// Apply all matrix transformations to vert
 	gl_Position = P * vec4(eyeCoord, 1.0);

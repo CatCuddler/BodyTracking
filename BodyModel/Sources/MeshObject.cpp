@@ -181,7 +181,7 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation cLocation) {
+void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation diffuseLocation, ConstantLocation specularLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Geometry* geometry = geometries[i];
 		mat4 modelMatrix = M * geometry->transform;
@@ -189,10 +189,13 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 		
 		unsigned int materialIndex = geometry->materialIndex;
 		Material* material = findMaterialWithIndex(materialIndex);
-		if (material != nullptr)
-			Graphics4::setFloat4(cLocation, material->color);
-		else
-			Graphics4::setFloat4(cLocation, vec4(1, 1, 1, 1)); // TODO
+		if (material != nullptr) {
+			Graphics4::setFloat3(diffuseLocation, material->diffuse);
+			Graphics4::setFloat3(specularLocation, material->specular * material->specular_power);
+		} else {
+			Graphics4::setFloat3(diffuseLocation, vec3(0.0, 0.0, 0.0));
+			Graphics4::setFloat3(specularLocation, vec3(0.0, 0.0, 0.0));
+		}
 		
 		
 		Texture* image = images[i];
@@ -494,16 +497,26 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 				
 				const String& attrib = colorStructure.GetAttribString();
 				if (attrib == "diffuse") {
-					const float* color = colorStructure.GetColor();
-					vec3 vecColor = getVector3(color);
-					material->color = vec4(vecColor.x(), vecColor.y(), vecColor.z(), 1);
+					const float* diffuse = colorStructure.GetColor();
+					material->diffuse = getVector3(diffuse);
+				} else if (attrib == "specular") {
+					const float* specular = colorStructure.GetColor();
+					material->specular = getVector3(specular);
 				}
 
 				break;
 			}
 				
-			case OGEX::kStructureParam:
+			case OGEX::kStructureParam: {
+				const OGEX::ParamStructure& paramStructure = *static_cast<const OGEX::ParamStructure *>(subStructure);
+				
+				const String& attrib = paramStructure.GetAttribString();
+				if (attrib == "specular_power") {
+					material->specular_power = paramStructure.GetParam();
+				}
+				
 				break;
+			}
 				
 			case OGEX::kStructureTexture: {
 				const OGEX::TextureStructure& textureStructure = *static_cast<const OGEX::TextureStructure *>(subStructure);
