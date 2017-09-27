@@ -35,7 +35,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
 	const char* positionDataFilename = "positionData_1504264185.csv";
 	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
@@ -65,7 +65,11 @@ namespace {
 	ConstantLocation pLocation_living_room;
 	ConstantLocation vLocation_living_room;
 	ConstantLocation mLocation_living_room;
+	ConstantLocation nLocation_living_room;
 	ConstantLocation cLocation_living_room;
+	ConstantLocation lightPosLocation_living_room;
+	
+	vec3 lightPosition = vec3(0, 0, 0);
 	
 	bool rotate = false;
 	bool W, A, S, D = false;
@@ -237,6 +241,9 @@ namespace {
 		} else if (X) {
 			cameraPosition.y() -= moveSpeed;
 		}
+		
+		// update light pos
+		lightPosition = vec3(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t));
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -494,9 +501,10 @@ namespace {
 		
 		Graphics4::setPipeline(pipeline_living_room);
 		
+		Graphics4::setFloat3(lightPosLocation_living_room, lightPosition);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, nLocation_living_room, cLocation_living_room);
 
 #endif
 		Graphics4::end();
@@ -584,8 +592,6 @@ namespace {
 	void loadAvatarShader() {
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
-		//FileReader vs("shader_lighting.vert");
-		//FileReader fs("shader_lighting.frag");
 		vertexShader = new Shader(vs.readAll(), vs.size(), VertexShader);
 		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
 		
@@ -647,7 +653,9 @@ namespace {
 		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
+		nLocation_living_room = pipeline_living_room->getConstantLocation("N");
 		cLocation_living_room = pipeline_living_room->getConstantLocation("tint");
+		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 	}
 	
 	void init() {

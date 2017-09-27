@@ -15,10 +15,10 @@ in vec4 tintCol;
 out vec4 FragColor;
 
 void kore() {
-	const float amb = 0.4;
-	const float diff = 0.5;
-	const float spec = 1.5;//0.5;
-	const float n = 0.5;
+	const float amb = 0.2;//0.4;
+	const float diff = 1.0;//0.5;
+	const float spec = 2.0f;//1.5;
+	const float n = 16.0;//0.5;
 	
 	vec4 ambient = vec4(amb, amb, amb, 1.0);
 	

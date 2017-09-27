@@ -181,11 +181,15 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation cLocation) {
+void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation nLocation, ConstantLocation cLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Geometry* geometry = geometries[i];
 		mat4 modelMatrix = M * geometry->transform;
 		Graphics4::setMatrix(mLocation, modelMatrix);
+		
+		Kore::mat4 normalMatrix = M.Invert();
+		normalMatrix = normalMatrix.Transpose();
+		Graphics4::setMatrix(nLocation, normalMatrix);
 		
 		//unsigned int index = getIndexFromString(geometry->materialRef, 8);
 		unsigned int materialIndex = geometry->materialIndex;
