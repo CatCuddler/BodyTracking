@@ -65,7 +65,6 @@ namespace {
 	ConstantLocation pLocation_living_room;
 	ConstantLocation vLocation_living_room;
 	ConstantLocation mLocation_living_room;
-	ConstantLocation nLocation_living_room;
 	ConstantLocation cLocation_living_room;
 	ConstantLocation lightPosLocation_living_room;
 	
@@ -504,7 +503,7 @@ namespace {
 		Graphics4::setFloat3(lightPosLocation_living_room, lightPosition);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, nLocation_living_room, cLocation_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
 
 #endif
 		Graphics4::end();
@@ -653,7 +652,6 @@ namespace {
 		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
-		nLocation_living_room = pipeline_living_room->getConstantLocation("N");
 		cLocation_living_room = pipeline_living_room->getConstantLocation("tint");
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 	}
