@@ -10,12 +10,14 @@ out vec2 texCoord;
 out vec3 normal;
 out vec3 diffuseCol;
 out vec3 specularCol;
+out float specularColPow;
 
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 uniform vec3 diffuse;
 uniform vec3 specular;
+uniform float specularPow;
 uniform vec3 lightPos;
 
 void kore() {
@@ -32,6 +34,7 @@ void kore() {
 	
 	diffuseCol = diffuse;
 	specularCol = specular;
+	specularColPow = specularPow;
 	
 	// Apply all matrix transformations to vert
 	gl_Position = P * vec4(eyeCoord, 1.0);

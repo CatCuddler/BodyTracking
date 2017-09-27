@@ -181,7 +181,7 @@ void MeshObject::render(TextureUnit tex) {
 	}
 }
 
-void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation diffuseLocation, ConstantLocation specularLocation) {
+void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation diffuseLocation, ConstantLocation specularLocation, ConstantLocation specularPowerLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Geometry* geometry = geometries[i];
 		mat4 modelMatrix = M * geometry->transform;
@@ -191,7 +191,8 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 		Material* material = findMaterialWithIndex(materialIndex);
 		if (material != nullptr) {
 			Graphics4::setFloat3(diffuseLocation, material->diffuse);
-			Graphics4::setFloat3(specularLocation, material->specular * material->specular_power);
+			Graphics4::setFloat3(specularLocation, material->specular);
+			Graphics4::setFloat(specularPowerLocation, material->specular_power);
 		} else {
 			Graphics4::setFloat3(diffuseLocation, vec3(0.0, 0.0, 0.0));
 			Graphics4::setFloat3(specularLocation, vec3(0.0, 0.0, 0.0));
