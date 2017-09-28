@@ -15,11 +15,8 @@ uniform mat4 M;
 void kore() {
 	// Pass some variables to the fragment shader
 	eyeCoord = (M * vec4(pos, 1.0)).xyz;
-	
 	texCoord = tex;
-	
-	mat4 N = transpose(inverse(mat4(M)));
-	normal = (N * vec4(nor, 0.0)).xyz;
+	normal = normalize((transpose(inverse(mat4(M))) * vec4(nor, 0.0)).xyz);
 	
 	// Apply all matrix transformations to vert
 	gl_Position = P * V * M * vec4(pos, 1.0);

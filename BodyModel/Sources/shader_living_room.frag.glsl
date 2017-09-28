@@ -49,17 +49,15 @@ vec3 applyLight(vec4 lightPosition) {
 	}
 	
 	// Ambient
-	const float amb = 0.4;
+	const float amb = 1.0 / numLights;
 	vec3 ambient = vec3(amb);
 	
 	// Diffuse
-	vec3 nor = normalize(normal);
-	vec3 lightDir = normalize(lightDirection);
-	vec3 diffuse = max(dot(lightDir, nor), 0.0) * vec3(diffuseCol);
+	vec3 diffuse = max(dot(lightDirection, normal), 0.0) * vec3(diffuseCol);
 	
 	// Specular
-	vec3 halfVector = normalize(lightDir - normalize(eyeCoord));
-	vec3 specular = pow(max(0.0, dot(halfVector, nor)), specularPow) * vec3(specularCol);
+	vec3 halfVector = normalize(lightDirection - normalize(eyeCoord));
+	vec3 specular = pow(max(0.0, dot(halfVector, reflect(-lightDirection, normal))), specularPow) * vec3(specularCol);
 	
 	vec3 light = ambient + attenuation * (diffuse + specular);
 	return light;

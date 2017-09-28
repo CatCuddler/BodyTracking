@@ -689,7 +689,7 @@ namespace {
 		// Initilize light positions
 		lightPosition[0] = vec4(-3.4, 1.7, 0.4, 0.0);	// w == 0 --> Spot light
 		lightPosition[1] = vec4(-3.4, 1.7, 2.9, 0.0);
-		lightPosition[2] = vec4(0.9, 1.6, 4.3, 0.0);
+		lightPosition[2] = vec4(0.85, 1.6, 4.35, 0.0);
 		lightPosition[3] = vec4(0.0, 1.0, 0.0, 1.0);	// w == 1 --> Point light
 		
 		logger = new Logger();
