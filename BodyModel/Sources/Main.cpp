@@ -245,7 +245,7 @@ namespace {
 		
 		// update light pos
 		lightPosition = vec3(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t));
-		lightPosition = vec3(0, 1, -2);
+		//lightPosition = vec3(0, 1, -2);
 		desPosition2 = lightPosition;
 		
 		Graphics4::begin();
@@ -502,13 +502,13 @@ namespace {
 		
 		renderTracker();
 		
+		// Render living room
 		Graphics4::setPipeline(pipeline_living_room);
 		
 		Graphics4::setFloat3(lightPosLocation_living_room, lightPosition);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
 		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
-
 #endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -649,15 +649,15 @@ namespace {
 		pipeline_living_room->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline_living_room->compile();
 		
-		tex_living_room = pipeline->getTextureUnit("tex");
+		tex_living_room = pipeline_living_room->getTextureUnit("tex");
 		Graphics4::setTextureAddressing(tex_living_room, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex_living_room, Graphics4::V, Repeat);
 		
 		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
-		diffuse_living_room = pipeline_living_room->getConstantLocation("diffuse");
-		specular_living_room = pipeline_living_room->getConstantLocation("specular");
+		diffuse_living_room = pipeline_living_room->getConstantLocation("diffuseCol");
+		specular_living_room = pipeline_living_room->getConstantLocation("specularCol");
 		specular_power_living_room = pipeline_living_room->getConstantLocation("specularPow");
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 	}
