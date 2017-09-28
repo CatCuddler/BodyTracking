@@ -69,8 +69,10 @@ namespace {
 	ConstantLocation specular_living_room;
 	ConstantLocation specular_power_living_room;
 	ConstantLocation lightPosLocation_living_room;
+	ConstantLocation lightCount_living_room;
 	
-	vec3 lightPosition = vec3(0, 0, 0);
+	const int lightCount = 4;
+	vec4 lightPosition[lightCount];
 	
 	bool rotate = false;
 	bool W, A, S, D = false;
@@ -244,9 +246,7 @@ namespace {
 		}
 		
 		// update light pos
-		lightPosition = vec3(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t));
-		//lightPosition = vec3(0, 1, -2);
-		desPosition2 = lightPosition;
+		//lightPosition[3] = vec4(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t), 1.0);
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -505,7 +505,8 @@ namespace {
 		// Render living room
 		Graphics4::setPipeline(pipeline_living_room);
 		
-		Graphics4::setFloat3(lightPosLocation_living_room, lightPosition);
+		Graphics4::setInt(lightCount_living_room, lightCount);
+		Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
 		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
@@ -541,8 +542,10 @@ namespace {
 				break;
 			case KeyL:
 				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
-				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f %f)", cameraRotation.w, cameraRotation.x, cameraRotation.y, cameraRotation.z);
+				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f, %f)", cameraRotation.w, cameraRotation.x, cameraRotation.y, cameraRotation.z);
+			Kore::log(Kore::LogLevel::Info, "Light Pos: (%f, %f, %f)", lightPosition[0].x(), lightPosition[0].y(), lightPosition[0].z());
 				break;
+			case Kore::KeyEscape:
 			case KeyQ:
 				System::stop();
 				break;
@@ -660,6 +663,7 @@ namespace {
 		specular_living_room = pipeline_living_room->getConstantLocation("specularCol");
 		specular_power_living_room = pipeline_living_room->getConstantLocation("specularPow");
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
+		lightCount_living_room = pipeline_living_room->getConstantLocation("numLights");
 	}
 	
 	void init() {
@@ -681,6 +685,12 @@ namespace {
 		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		livingRoomRot.rotate(Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
 		livingRoom->M = mat4::Translation(-1.5, 2.045, 1.5) * livingRoomRot.matrix().Transpose();
+		
+		// Initilize light positions
+		lightPosition[0] = vec4(-3.4, 1.7, 0.4, 0.0);	// w == 0 --> Spot light
+		lightPosition[1] = vec4(-3.4, 1.7, 2.9, 0.0);
+		lightPosition[2] = vec4(0.9, 1.6, 4.3, 0.0);
+		lightPosition[3] = vec4(0.0, 1.0, 0.0, 1.0);	// w == 1 --> Point light
 		
 		logger = new Logger();
 		

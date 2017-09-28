@@ -5,7 +5,6 @@ in vec2 tex;
 in vec3 nor;
 
 out vec3 eyeCoord;
-out vec3 lightDirection;
 out vec2 texCoord;
 out vec3 normal;
 
@@ -13,13 +12,9 @@ uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 
-uniform vec3 lightPos;
-
 void kore() {
 	// Pass some variables to the fragment shader
 	eyeCoord = (M * vec4(pos, 1.0)).xyz;
-	
-	lightDirection = lightPos - eyeCoord;
 	
 	texCoord = tex;
 	
