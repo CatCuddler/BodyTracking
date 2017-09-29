@@ -56,26 +56,7 @@ void Logger::saveLogData(const char* str, float num) {
 	logDataOutputFile.flush();
 }
 
-bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::Quaternion *rawRot) {
-	if (!positionDataInputFile.is_open()) {
-		positionDataInputFile.open(filename);
-	}
-	
-	std::string str;
-	
-	// Get header
-	if (line == 0) {
-		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
-	}
-	
-	// Skip lines
-	while(line > currLineNumber - 1) {
-		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
-	}
-	
-	// Read line
+bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
 	int column = 0;
 	if (std::getline(positionDataInputFile, str, '\n')) {
 		
@@ -104,7 +85,36 @@ bool Logger::readData(int line, const char* filename, Kore::vec3 *rawPos, Kore::
 	}
 }
 
-void Logger::readInitTransAndRot(const char* filename, Kore::vec3 *initPos, Kore::Quaternion *initRot) {
+bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
+	if (!positionDataInputFile.is_open()) {
+		positionDataInputFile.open(filename);
+	}
+	
+	std::string str;
+	
+	// Get header
+	if (line == 0) {
+		std::getline(positionDataInputFile, str, '\n');
+		++currLineNumber;
+	}
+	
+	// Skip lines
+	while(line > currLineNumber - 1) {
+		std::getline(positionDataInputFile, str, '\n');
+		++currLineNumber;
+	}
+	
+	// Read line
+	bool success = false;
+	for (int i = 0; i < numOfEndEffectors; ++i) {
+		rawPos[i] = Kore::vec3(0, 0, 0);
+		rawRot[i] = Kore::Quaternion(0, 0, 0, 1);
+		success = readLine(str, &rawPos[i], &rawRot[i]);
+	}
+	return success;
+}
+
+void Logger::readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot) {
 	std::fstream inputFile(filename);
 	
 	// Get header

@@ -35,11 +35,13 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = false;
+	bool readData = true;
 	int line = 0;
-	const char* positionDataFilename = "positionData_1504264185.csv";
-	const char* initialTransFilename = "initTransAndRot_1504264185.csv";
+	const int numOfEndEffectors = 2;
+	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
+	const char* positionDataFilename = "positionData_1506685997.csv";
 
+	
 	double startTime;
 	double lastTime;
 	float fiveSec;
@@ -83,15 +85,12 @@ namespace {
 	Avatar* avatar;
 	LivingRoom* livingRoom;
 	
-#ifdef KORE_STEAMVR
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
 	
+#ifdef KORE_STEAMVR
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
-#else
-	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
-	vec3 cameraPosition = vec3(0, 1.0, 3.5);
 #endif
 	
 	float angle = 0;
@@ -152,6 +151,16 @@ namespace {
 			default:
 				break;
 		}
+	}
+	
+	void renderLivingRoom(mat4 V, mat4 P) {
+		Graphics4::setPipeline(pipeline_living_room);
+		
+		Graphics4::setInt(lightCount_living_room, lightCount);
+		Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
+		Graphics4::setMatrix(vLocation_living_room, V);
+		Graphics4::setMatrix(pLocation_living_room, P);
+		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
 	}
 	
 	Kore::mat4 getProjectionMatrix() {
@@ -362,14 +371,11 @@ namespace {
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
 			
+			// Render tracker
 			renderTracker();
 
 			// Render living room
-			Graphics4::setPipeline(pipeline_living_room);
-
-			Graphics4::setMatrix(vLocation_living_room, state.pose.vrPose.eye);
-			Graphics4::setMatrix(pLocation_living_room, state.pose.vrPose.projection);
-			livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
+			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(eye);
 		}
@@ -396,11 +402,7 @@ namespace {
 		
 		renderTracker();
 		
-		Graphics4::setPipeline(pipeline_living_room);
-
-		Graphics4::setMatrix(vLocation_living_room, V);
-		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, cLocation_living_room);
+		renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
@@ -414,11 +416,6 @@ namespace {
 				vec3 initPos = vec3(0, 0, 0);
 				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
 				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
-				
-				//cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
-				//cameraPosition = vec3(0.8, 0.8, 1.8);
-				
-				line = 500;
 			}
 			
 			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
@@ -440,19 +437,27 @@ namespace {
 		}
 		
 		if (readData) {
-			Kore::vec3 rawPos = vec3(0, 0, 0);
-			Kore::Quaternion rawRot = Kore::Quaternion(0, 0, 0, 1);
-			if (logger->readData(line, positionDataFilename, &rawPos, &rawRot)) {
-				desPosition1 = rawPos;
-				desRotation1 = rawRot;
+			Kore::vec3 rawPos[numOfEndEffectors];
+			Kore::Quaternion rawRot[numOfEndEffectors];
+			if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+				
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					if (i == 0) {
+						desPosition1 = rawPos[i];
+						desRotation1 = rawRot[i];
+						setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+					} else if (i == 1) {
+						desPosition2 = rawPos[i];
+						desRotation2 = rawRot[i];
+						setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+					}
+				}
 				
 				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
-				
-				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
 
 			//log(Info, "%i", line);
-			++line;
+			line += numOfEndEffectors;
 		} else {
 			angle += 0.01;
 			float radius = 0.2;
@@ -503,13 +508,7 @@ namespace {
 		renderTracker();
 		
 		// Render living room
-		Graphics4::setPipeline(pipeline_living_room);
-		
-		Graphics4::setInt(lightCount_living_room, lightCount);
-		Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
-		Graphics4::setMatrix(vLocation_living_room, V);
-		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
+		renderLivingRoom(V, P);
 #endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -543,7 +542,6 @@ namespace {
 			case KeyL:
 				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
 				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f, %f)", cameraRotation.w, cameraRotation.x, cameraRotation.y, cameraRotation.z);
-			Kore::log(Kore::LogLevel::Info, "Light Pos: (%f, %f, %f)", lightPosition[0].x(), lightPosition[0].y(), lightPosition[0].z());
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
@@ -673,6 +671,10 @@ namespace {
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		
+		cameraPosition = vec3(-1.1, 1.6, 6.5);
+		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
 #endif
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
