@@ -24,18 +24,12 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 namespace {
-	
-#ifdef KORE_STEAMVR
-	const int width = 2048;
-	const int height = 1024;
-#else
 	const int width = 1024;
 	const int height = 768;
-#endif
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
 	const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
@@ -90,6 +84,7 @@ namespace {
 #ifdef KORE_STEAMVR
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
+	int backTrackerIndex = -1;
 #endif
 	
 	float angle = 0;
@@ -219,6 +214,15 @@ namespace {
 		
 		avatar->setDesiredPositionAndOrientation(boneIndex, finalPos, finalRot);
 	}
+
+	void setBackBonePosition(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
+		if (logData) {
+			logger->saveData(desPosition, desRotation);
+		}
+
+		// TODO
+
+	}
 	
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -277,10 +281,6 @@ namespace {
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 			float currentUserHeight = hmdPos.y();
 			
-			//cameraPosition.x() = -currentUserHeight * 0.5;
-			cameraPosition.y() = currentUserHeight * 0.5;
-			cameraPosition.z() = currentUserHeight * 0.5;
-			
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
 			
@@ -318,6 +318,9 @@ namespace {
 					}
 					//leftTrackerIndex = -1;
 					//rightTrackerIndex = i;
+				} else if (controller.trackedDevice == TrackedDevice::Controller)  {
+					log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
+					backTrackerIndex = i;
 				}
 			}
 			
@@ -330,10 +333,6 @@ namespace {
 		}
 		
 		VrPoseState controller;
-		/*for (int i = 0; i < 16; ++i) {
-			controller = VrInterface::getController(i);
-			if (controller.trackedDevice == TrackedDevice::ViveTracker) break;
-		}*/
 		if (leftTrackerIndex != -1) {
 			controller = VrInterface::getController(leftTrackerIndex);
 
@@ -354,6 +353,17 @@ namespace {
 			desRotation2 = controller.vrPose.orientation;
 				
 			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+		}
+
+		if (backTrackerIndex != -1) {
+			controller = VrInterface::getController(backTrackerIndex);
+
+			// Get controller position
+			vec3 pos = controller.vrPose.position;
+			// Get controller rotation
+			Quaternion rot = controller.vrPose.orientation;
+
+			setBackBonePosition(pos, rot, backTrackerIndex);
 		}
 		
 		for (int eye = 0; eye < 2; ++eye) {
@@ -402,7 +412,12 @@ namespace {
 		
 		renderTracker();
 		
-		renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		if (!firstPersonMonitor) {
+			renderLivingRoom(V, P);
+		}
+		else {
+			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		}
 		
 		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
@@ -674,14 +689,13 @@ namespace {
 		loadAvatarShader();
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
-		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		
+#endif
 		cameraPosition = vec3(-1.1, 1.6, 6.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
-#endif
+
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
 		cube1 = new MeshObject("cube.ogex", "", structure, 0.05);
