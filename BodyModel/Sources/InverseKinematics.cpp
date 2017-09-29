@@ -191,9 +191,9 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 			Kore::vec3 rot;
 			Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
 			
-			clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
-			clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
-			clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
+			if (bone->axes.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
+			if (bone->axes.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
+			if (bone->axes.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
 			
 			Kore::RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
 			
@@ -271,22 +271,6 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
-	
-	// hand
-	nodeLeft = bones[10-1];
-	nodeLeft->axes = Kore::vec3(0, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	
-	nodeRight = bones[29-1];
-	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
-	
-	
 	
 	
 	// thigh
