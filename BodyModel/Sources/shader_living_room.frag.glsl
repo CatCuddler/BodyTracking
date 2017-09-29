@@ -43,13 +43,13 @@ vec3 applyLight(vec4 lightPosition) {
 		}
 		
 	} else {
-		// Point light
-		lightDirection = normalize(lightPosition.xyz - eyeCoord);
+		// Directional light
+		lightDirection = normalize(lightPosition.xyz);
 		attenuation = 1.0; // No attenuation for directional lights
 	}
 	
 	// Ambient
-	const float amb = 1.0 / numLights;
+	const float amb = 0.3;
 	vec3 ambient = vec3(amb);
 	
 	// Diffuse
