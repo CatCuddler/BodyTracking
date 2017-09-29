@@ -91,7 +91,8 @@ struct BoneNode {
 	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
 				 finalTransform(Kore::mat4::Identity()),
-				 quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)) {}
+				 quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)),
+				  axes(Kore::vec3(0, 0, 0)) {}
 };
 
 struct CompareBones {

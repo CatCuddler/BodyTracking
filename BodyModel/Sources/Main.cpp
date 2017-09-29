@@ -40,7 +40,6 @@ namespace {
 	const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
 	const char* positionDataFilename = "positionData_1506685997.csv";
-
 	
 	double startTime;
 	double lastTime;
@@ -110,9 +109,10 @@ namespace {
 	
 	bool initCharacter = false;
 	
-	// Left foot 49, right foot 53, Left hand 10, right hand 29
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
+	const int leftFootBoneIndex = 49;
+	const int rightFootBoneIndex = 53;
 	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position, 2 - render target position
 	
 	void renderTracker() {
@@ -446,10 +446,16 @@ namespace {
 						desPosition1 = rawPos[i];
 						desRotation1 = rawRot[i];
 						setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
 					} else if (i == 1) {
 						desPosition2 = rawPos[i];
 						desRotation2 = rawRot[i];
 						setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+					} else if (i == 2) {
+						vec3 pos = rawPos[i];
+						//desPosition2 = pos;
+						//avatar->M = mat4::Translation(pos.x(), pos.y(), pos.z()) * initRot.matrix().Transpose();
 					}
 				}
 				
