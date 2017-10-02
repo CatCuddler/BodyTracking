@@ -37,9 +37,9 @@ struct CompareMesh {
 
 struct Geometry {
 	Kore::mat4 transform;
-	char* name;
-	char* objectRef;
-	char* materialRef;
+	const char* name;
+	const char* objectRef;
+	const char* materialRef;
 	unsigned int materialIndex;
 	unsigned int geometryIndex;
 };
@@ -50,8 +50,14 @@ struct CompareGeometry {
 	}
 };
 
+struct Light {
+	Kore::vec4 position;
+	const char* name;
+	int type;
+};
+
 struct Material {
-	char* materialName;
+	const char* materialName;
 	char* textureName;
 	unsigned int materialIndex;
 	
@@ -67,7 +73,7 @@ struct CompareMaterials {
 };
 
 struct BoneNode {
-	char* boneName;
+	const char* boneName;
 	int nodeIndex;
 	int nodeDepth;
 	BoneNode* parent;
@@ -106,6 +112,8 @@ public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
 	void render(Kore::Graphics4::TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation diffuseLocation, Kore::Graphics4::ConstantLocation specularLocation, Kore::Graphics4::ConstantLocation specularPowerLocation);
+	
+	void setLights(Kore::Graphics4::ConstantLocation lightCountLocation, Kore::Graphics4::ConstantLocation lightPosLocation);
 
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
@@ -119,12 +127,12 @@ public:
 	Kore::Graphics4::Texture** images;
 	
 	const char* textureDir;
-	//std::vector<Kore::Graphics4::Texture*> images;
 	std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;
 	std::vector<BoneNode*> bones;
 	std::vector<BoneNode*> children;
+	std::vector<Light*> lights;
 
 	BoneNode* getBoneWithIndex(int index) const;
 	
@@ -141,4 +149,6 @@ private:
 	void ConvertNodes(const Structure& structure, BoneNode& parentNode);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
 	BoneNode* ConvertBoneNode(const OGEX::BoneNodeStructure& structure);
+	
+	Light* ConvertLightNode(const OGEX::LightNodeStructure& structure);
 };

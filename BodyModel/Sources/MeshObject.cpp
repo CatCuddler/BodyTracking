@@ -160,7 +160,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		images[j] = nullptr;
 		if (material != nullptr && material->textureName != nullptr) {
 			char temp[200];
-			strcpy (temp, textureDir);
+			std::strcpy(temp, textureDir);
 			std::strcat(temp, material->textureName);
 			log(Info, "Load Texture %s", temp);
 			Texture* image = new Texture(temp, true);
@@ -206,6 +206,25 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 		Graphics4::setIndexBuffer(*indexBuffers[i]);
 		Graphics4::drawIndexedVertices();
 	}
+}
+
+void MeshObject::setLights(Kore::Graphics4::ConstantLocation lightCountLocation, Kore::Graphics4::ConstantLocation lightPosLocation) {
+	const int lightCount = (int)lights.size();
+	Graphics4::setInt(lightCountLocation, lightCount);
+	
+	vec4 lightPosition[lightCount];
+	for (int i = 0; i < lights.size(); ++i) {
+		Light* light = lights[i];
+		lightPosition[i] = M * light->position;
+		
+		if (light->type == 0) {
+			lightPosition[i].w() = 0;
+		} else if (light->type == 1) {
+			lightPosition[i].w() = 1;
+		}
+		
+	}
+	Graphics4::setFloats(lightPosLocation, (float*)lightPosition, lightCount * 4);
 }
 
 
@@ -292,8 +311,11 @@ void MeshObject::ConvertNodes(const Structure& rootStructure, BoneNode& parentNo
 				break;
 			}
 				
-			case OGEX::kStructureLightNode:
-				//return ConvertLightNode(static_cast<const OGEX::LightNodeStructure&>(structure));
+			case OGEX::kStructureLightNode: {
+				Light* light = ConvertLightNode(static_cast<const OGEX::LightNodeStructure&>(nodeStructure));
+				lights.push_back(light);
+				break;
+			}
 				
 			case OGEX::kStructureCameraNode:
 				//return ConvertCameraNode(static_cast<const CameraNodeStructure&>(nodeStructure));
@@ -424,10 +446,7 @@ Mesh* MeshObject::ConvertMesh(const OGEX::MeshStructure& structure, const char* 
 Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure) {
 	Geometry* geometry = new Geometry();
 	
-	const char* name = structure.GetNodeName();
-	int length = (int)strlen(name) + 1;
-	geometry->name = new char[length]();
-	copyString(name, geometry->name, length);
+	geometry->name = structure.GetNodeName();
 	//log(Info, "Geometry name %s", name);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
@@ -445,11 +464,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				const OGEX::MaterialRefStructure& materialRefStructure = *static_cast<const OGEX::MaterialRefStructure *>(subStructure);
 				const Structure* subSubStructure = materialRefStructure.GetTargetStructure();
 				
-				const char* name = subSubStructure->GetStructureName();
-				int length = (int)strlen(name) + 1;
-				geometry->materialRef = new char[length]();
-				copyString(name, geometry->materialRef, length);
-				
+				geometry->materialRef = subSubStructure->GetStructureName();				
 				geometry->materialIndex = getIndexFromString(geometry->materialRef, 8);
 				break;
 			}
@@ -458,11 +473,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				const OGEX::ObjectRefStructure& objectRefStructure = *static_cast<const OGEX::ObjectRefStructure *>(subStructure);
 				const Structure* subSubStructure = objectRefStructure.GetTargetStructure();
 				
-				const char* name = subSubStructure->GetStructureName();
-				int length = (int)strlen(name) + 1;
-				geometry->objectRef = new char[length]();
-				copyString(name, geometry->objectRef, length);
-				
+				geometry->objectRef = subSubStructure->GetStructureName();
 				geometry->geometryIndex = getIndexFromString(geometry->objectRef, 8);
 
 				break;
@@ -480,13 +491,9 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
 	Material* material = new Material();
 	
-	const char* name = materialStructure.GetStructureName();
-	int length = (int)strlen(name) + 1;
-	material->materialName = new char[length]();
-	copyString(name, material->materialName, length);
-	//log(Info, "Material name %s", name);
-	
-	material->materialIndex = getIndexFromString(name, 8);
+	material->materialName = materialStructure.GetStructureName();
+	material->materialIndex = getIndexFromString(material->materialName, 8);
+	//log(Info, "Material name %s, index %i", material->materialName, material->materialIndex);
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
 	while (subStructure) {
@@ -561,9 +568,7 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	BoneNode* bone = new BoneNode();
 	
 	const char* name = structure.GetNodeName();
-	int length = (int)strlen(name) + 1;
-	bone->boneName = new char[length]();
-	copyString(structure.GetNodeName(), bone->boneName, length);
+	bone->boneName = name;
 	
 	const char* nodeName = structure.GetStructureName();
 	bone->nodeIndex = getIndexFromString(nodeName, 4);
@@ -608,6 +613,42 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	
 	}
 	return bone;
+}
+
+Light* MeshObject::ConvertLightNode(const OGEX::LightNodeStructure& structure) {
+	Light* light = new Light();
+	
+	const char* name = structure.GetNodeName();
+	light->name = name;
+	
+	std::string lightName(name);
+	if (lightName.compare("Spot") == 0) {
+		light->type = 0;
+	} else if (lightName.compare("Point") == 0) {
+		light->type = 1;
+	}
+	
+	log(Info, "Light name %s, type %i", name, light->type);
+	
+	const Structure *subStructure = structure.GetFirstSubnode();
+	while (subStructure) {
+		switch (subStructure->GetStructureType()) {
+			case OGEX::kStructureTransform: {
+				const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
+				const float* transform = transformStructure.GetTransform();
+				mat4 lightPos = getMatrix4x4(transform);
+				light->position = lightPos * vec4(0, 0, 0, 1);
+				
+				break;
+			}
+				
+			default:
+				break;
+		}
+		subStructure = subStructure->Next();
+	}
+	
+	return light;
 }
 
 void MeshObject::setScale(float scaleFactor) {
