@@ -6,9 +6,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 
-in vec3 position;
 in vec2 texCoord;
-in vec3 normal;
 
 out vec4 FragColor;
 
