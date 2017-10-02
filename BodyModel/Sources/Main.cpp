@@ -29,7 +29,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = false;
+	bool readData = true;
 	int line = 0;
 	const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
@@ -65,9 +65,6 @@ namespace {
 	ConstantLocation specular_power_living_room;
 	ConstantLocation lightPosLocation_living_room;
 	ConstantLocation lightCount_living_room;
-	
-	const int lightCount = 4;
-	vec4 lightPosition[lightCount];
 	
 	bool rotate = false;
 	bool W, A, S, D = false;
@@ -151,8 +148,9 @@ namespace {
 	void renderLivingRoom(mat4 V, mat4 P) {
 		Graphics4::setPipeline(pipeline_living_room);
 		
-		Graphics4::setInt(lightCount_living_room, lightCount);
-		Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
+		//Graphics4::setInt(lightCount_living_room, lightCount);
+		//Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
+		livingRoom->setLights(lightCount_living_room, lightPosLocation_living_room);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
 		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
@@ -702,17 +700,11 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 		
 		loadLivingRoomShader();
-		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 0.02);
+		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 1);
 		Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
 		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		livingRoomRot.rotate(Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
-		livingRoom->M = mat4::Translation(-1.5, 2.045, 1.5) * livingRoomRot.matrix().Transpose();
-		
-		// Initilize light positions
-		lightPosition[0] = vec4(-3.4, 1.7, 0.4, 0.0);	// w == 0 --> Spot light
-		lightPosition[1] = vec4(-3.4, 1.7, 2.9, 0.0);
-		lightPosition[2] = vec4(0.85, 1.6, 4.35, 0.0);
-		lightPosition[3] = vec4(0.0, 1.0, 0.0, 1.0);	// w == 1 --> Point light
+		livingRoom->M = mat4::Translation(-0.7, 0, 0) * livingRoomRot.matrix().Transpose();
 		
 		logger = new Logger();
 		

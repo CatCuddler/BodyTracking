@@ -628,7 +628,7 @@ Light* MeshObject::ConvertLightNode(const OGEX::LightNodeStructure& structure) {
 		light->type = 1;
 	}
 	
-	log(Info, "Light name %s, type %i", name, light->type);
+	//log(Info, "Light name %s, type %i", name, light->type);
 	
 	const Structure *subStructure = structure.GetFirstSubnode();
 	while (subStructure) {
