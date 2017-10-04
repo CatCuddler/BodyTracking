@@ -140,6 +140,9 @@ public:
 	BoneNode* getBoneWithIndex(int index) const;
 	
 private:
+	static const int maxLightCount = 10;
+	Kore::vec4 lightPositions[maxLightCount];
+	
 	void LoadObj(const char* filename);
 	
 	void ConvertObjects(const Structure& structure);

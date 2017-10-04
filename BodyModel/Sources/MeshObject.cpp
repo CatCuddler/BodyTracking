@@ -206,21 +206,19 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 
 void MeshObject::setLights(Kore::Graphics4::ConstantLocation lightCountLocation, Kore::Graphics4::ConstantLocation lightPosLocation) {
 	const int lightCount = (int)lights.size();
-	Graphics4::setInt(lightCountLocation, lightCount);
-	
-	vec4 lightPosition[lightCount];
-	for (int i = 0; i < lights.size(); ++i) {
+	for (int i = 0; i < lightCount; ++i) {
 		Light* light = lights[i];
-		lightPosition[i] = M * light->position;
+		lightPositions[i] = M * light->position;
 		
 		if (light->type == 0) {
-			lightPosition[i].w() = 0;
+			lightPositions[i].w() = 0;
 		} else if (light->type == 1) {
-			lightPosition[i].w() = 1;
+			lightPositions[i].w() = 1;
 		}
-		
 	}
-	Graphics4::setFloats(lightPosLocation, (float*)lightPosition, lightCount * 4);
+	
+	Graphics4::setInt(lightCountLocation, lightCount);
+	Graphics4::setFloats(lightPosLocation, (float*)lightPositions, lightCount * 4);
 }
 
 
