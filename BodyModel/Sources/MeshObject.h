@@ -61,6 +61,9 @@ struct Material {
 	char* textureName;
 	unsigned int materialIndex;
 	
+	int texScaleX;
+	int texScaleY;
+	
 	Kore::vec3 diffuse;
 	Kore::vec3 specular;
 	float specular_power;

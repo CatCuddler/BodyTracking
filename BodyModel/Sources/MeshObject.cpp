@@ -13,20 +13,15 @@ using namespace Kore::Graphics4;
 
 namespace {
 	
-	void setVertexFromMesh(float* vertices, Mesh* mesh, float scale = 1.0) {
+	void setVertexFromMesh(float* vertices, Mesh* mesh, float vertexScale = 1.0, float texScaleX = 1.0, float texScaleY = 1.0) {
 		for (int i = 0; i < mesh->numVertices; ++i) {
 			// position
-			vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * scale;
-			vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * scale;
-			vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * scale;
+			vertices[i * 8 + 0] = mesh->vertices[i * 3 + 0] * vertexScale;
+			vertices[i * 8 + 1] = mesh->vertices[i * 3 + 1] * vertexScale;
+			vertices[i * 8 + 2] = mesh->vertices[i * 3 + 2] * vertexScale;
 			// texCoord
-			if (mesh->texcoord != nullptr) {
-				vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0];
-				vertices[i * 8 + 4] = 1.0f - mesh->texcoord[i * 2 + 1];
-			} else {
-				vertices[i * 8 + 3] = 0;
-				vertices[i * 8 + 4] = 0;
-			}
+			vertices[i * 8 + 3] = mesh->texcoord[i * 2 + 0] * texScaleX;
+			vertices[i * 8 + 4] = (1.0f - mesh->texcoord[i * 2 + 1]) * texScaleY;
 			// normal
 			vertices[i * 8 + 5] = mesh->normals[i * 3 + 0];
 			vertices[i * 8 + 6] = mesh->normals[i * 3 + 1];
@@ -142,18 +137,6 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 	for(int j = 0; j < meshesCount; ++j) {
 		Mesh* mesh = meshes[j];
 		
-		// Mesh Vertex Buffer
-		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure, 0);
-		float* vertices = vertexBuffers[j]->lock();
-		setVertexFromMesh(vertices, mesh, scale);
-		vertexBuffers[j]->unlock();
-		
-		// Mesh Index Buffer
-		indexBuffers[j] = new IndexBuffer(mesh->numFaces * 3);
-		int* indices = indexBuffers[j]->lock();
-		setIndexFromMesh(indices, mesh);
-		indexBuffers[j]->unlock();
-		
 		Geometry* geometry = geometries[j];
 		unsigned int materialIndex = geometry->materialIndex;
 		Material* material = findMaterialWithIndex(materialIndex);
@@ -166,6 +149,19 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 			Texture* image = new Texture(temp, true);
 			images[j] = image;
 		}
+		
+		// Mesh Vertex Buffer
+		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure, 0);
+		float* vertices = vertexBuffers[j]->lock();
+		setVertexFromMesh(vertices, mesh, scale, material->texScaleX, material->texScaleY);
+		vertexBuffers[j]->unlock();
+		
+		// Mesh Index Buffer
+		indexBuffers[j] = new IndexBuffer(mesh->numFaces * 3);
+		int* indices = indexBuffers[j]->lock();
+		setIndexFromMesh(indices, mesh);
+		indexBuffers[j]->unlock();
+		
 	}
 	
 }
@@ -197,7 +193,6 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 			Graphics4::setFloat3(diffuseLocation, vec3(0.0, 0.0, 0.0));
 			Graphics4::setFloat3(specularLocation, vec3(0.0, 0.0, 0.0));
 		}
-		
 		
 		Texture* image = images[i];
 		if (image != nullptr) Graphics4::setTexture(tex, image);
@@ -537,6 +532,19 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 					material->textureName = new char[length]();
 					copyString(textureName, material->textureName, length);
 					//log(Info, "Texture name %s", material->textureName);
+				}
+				
+				// Get texture scale factor
+				const Structure *subStructure = textureStructure.GetFirstSubstructure(OGEX::kStructureTransform);
+				if (subStructure != nullptr) {
+					const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
+					Kore::mat4 transform = getMatrix4x4(transformStructure.GetTransform());
+					
+					material->texScaleX = transform.get(0, 0);
+					material->texScaleY = transform.get(1, 1);
+				} else {
+					material->texScaleX = 1;
+					material->texScaleY = 1;
 				}
 				
 				break;
