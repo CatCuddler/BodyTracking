@@ -190,8 +190,9 @@ void MeshObject::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLoca
 			Graphics4::setFloat3(specularLocation, material->specular);
 			Graphics4::setFloat(specularPowerLocation, material->specular_power);
 		} else {
-			Graphics4::setFloat3(diffuseLocation, vec3(0.0, 0.0, 0.0));
-			Graphics4::setFloat3(specularLocation, vec3(0.0, 0.0, 0.0));
+			Graphics4::setFloat3(diffuseLocation, vec3(1.0, 1.0, 1.0));
+			Graphics4::setFloat3(specularLocation, vec3(1.0, 1.0, 1.0));
+			Graphics4::setFloat(specularPowerLocation, 1.0);
 		}
 		
 		Texture* image = images[i];
