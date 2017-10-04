@@ -29,11 +29,15 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
+	bool readData = false;
 	int line = 0;
-	const int numOfEndEffectors = 2;
+	/*const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
-	const char* positionDataFilename = "positionData_1506685997.csv";
+	const char* positionDataFilename = "positionData_1506685997.csv";*/
+	
+	const int numOfEndEffectors = 3;
+	const char* initialTransFilename = "initTransAndRot_1506695407.csv";
+	const char* positionDataFilename = "positionData_1506695407.csv";
 	
 	double startTime;
 	double lastTime;
@@ -92,6 +96,8 @@ namespace {
 	
 	Quaternion initDesRotationLeftHand = Quaternion(0, 0, 0, 1);
 	Quaternion initDesRotationRightHand = Quaternion(0, 0, 0, 1);
+	Quaternion initDesRotationLeftFoot = Quaternion(0, 0, 0, 1);
+	Quaternion initDesRotationRightFoot = Quaternion(0, 0, 0, 1);
 	
 	mat4 initTransInv = mat4::Identity();
 	mat4 initTrans = mat4::Identity();
@@ -195,6 +201,10 @@ namespace {
 			desRot.rotate(initDesRotationLeftHand);
 			handOffsetX = handOffsetX;
 			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+		} else if (boneIndex == rightFootBoneIndex) {
+			desRot.rotate(initDesRotationRightFoot);
+		} else if (boneIndex == leftFootBoneIndex) {
+			desRot.rotate(initDesRotationLeftFoot);
 		}
 		desRotation = desRot;
 		
@@ -284,9 +294,6 @@ namespace {
 			
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-			
-			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			
 			// Set initial orientation
 			Quaternion hmdOrient = state.pose.vrPose.orientation;
@@ -431,9 +438,6 @@ namespace {
 				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 			}
 			
-			initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-			initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
-			
 			initRot.normalize();
 			initRotInv = initRot.invert();
 			
@@ -458,17 +462,24 @@ namespace {
 					if (i == 0) {
 						desPosition1 = rawPos[i];
 						desRotation1 = rawRot[i];
-						setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
 					} else if (i == 1) {
 						desPosition2 = rawPos[i];
 						desRotation2 = rawRot[i];
-						setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
 						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
 					} else if (i == 2) {
 						vec3 pos = rawPos[i];
-						//desPosition2 = pos;
-						//avatar->M = mat4::Translation(pos.x(), pos.y(), pos.z()) * initRot.matrix().Transpose();
+						Quaternion rot = rawRot[i];
+						
+						initRot = rot.rotated(Quaternion(vec3(0, 1, 0), Kore::pi));
+						initRot.normalize();
+						initRotInv = initRot.invert();
+						avatar->M = mat4::Translation(pos.x(), 0, pos.z()) * initRot.matrix().Transpose();
+						
+						
+						//setDesiredPosition(pos, 3);
 					}
 				}
 				
@@ -693,6 +704,13 @@ namespace {
 		cameraPosition = vec3(-1.1, 1.6, 6.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
+		
+		initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+		initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+		initDesRotationLeftFoot.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+		initDesRotationRightFoot.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+		initDesRotationLeftFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
+		initDesRotationRightFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		

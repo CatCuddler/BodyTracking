@@ -577,7 +577,9 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	BoneNode* bone = new BoneNode();
 	
 	const char* name = structure.GetNodeName();
-	bone->boneName = name;
+	int length = (int)strlen(name) + 1;
+	bone->boneName = new char[length]();
+	copyString(structure.GetNodeName(), bone->boneName, length);
 	
 	const char* nodeName = structure.GetStructureName();
 	bone->nodeIndex = getIndexFromString(nodeName, 4);

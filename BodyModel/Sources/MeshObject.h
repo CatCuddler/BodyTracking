@@ -76,7 +76,7 @@ struct CompareMaterials {
 };
 
 struct BoneNode {
-	const char* boneName;
+	char* boneName;
 	int nodeIndex;
 	int nodeDepth;
 	BoneNode* parent;
