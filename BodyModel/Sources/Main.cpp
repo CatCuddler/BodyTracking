@@ -31,7 +31,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = false;
+	bool readData = true;
 	int line = 0;
 	/*const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
@@ -476,13 +476,15 @@ namespace {
 					if (i == 0) {
 						desPosition1 = rawPos[i];
 						desRotation1 = rawRot[i];
-						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
+						
+						if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+						else if (track == 1) setDesiredPosition(desPosition1, leftFootBoneIndex);//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
 					} else if (i == 1) {
 						desPosition2 = rawPos[i];
 						desRotation2 = rawRot[i];
-						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
-						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+						
+						if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+						else if (track == 1) setDesiredPosition(desPosition2, rightFootBoneIndex);//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
 					} else if (i == 2) {
 						vec3 pos = rawPos[i];
 						Quaternion rot = rawRot[i];
@@ -491,7 +493,7 @@ namespace {
 						initRot.normalize();
 						initRotInv = initRot.invert();
 						avatar->M = mat4::Translation(pos.x(), 0, pos.z()) * initRot.matrix().Transpose();
-						
+						initTransInv = avatar->M.Invert();
 						
 						//setDesiredPosition(pos, 3);
 					}
@@ -715,9 +717,9 @@ namespace {
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
-		cameraPosition = vec3(-1.1, 1.6, 6.5);
+		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
-		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 4));
+		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
 		
 		initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 		initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
