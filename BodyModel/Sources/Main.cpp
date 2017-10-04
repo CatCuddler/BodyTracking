@@ -703,7 +703,7 @@ namespace {
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 6.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
-		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
+		cameraRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 4));
 		
 		initDesRotationLeftHand.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 		initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
