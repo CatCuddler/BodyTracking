@@ -26,6 +26,8 @@ using namespace Kore::Graphics4;
 namespace {
 	const int width = 1024;
 	const int height = 768;
+
+	int track = 1; // 0 - hands, 1 - feet
 	
 	Logger* logger;
 	bool logData = false;
@@ -133,14 +135,26 @@ namespace {
 			case 2:
 			{
 				// Render target position
-				vec3 targetPosition = avatar->getBonePosition(leftHandBoneIndex);
-				Quaternion targetRotation = avatar->getBoneGlobalRotation(leftHandBoneIndex);
+				vec3 targetPosition = vec3(0, 0, 0);
+				Quaternion targetRotation = Quaternion(0, 0, 0, 1);
+				if (track == 0) {
+					targetPosition = avatar->getBonePosition(leftHandBoneIndex);
+					targetRotation = avatar->getBoneGlobalRotation(leftHandBoneIndex);
+				} else if (track == 1) {
+					targetPosition = avatar->getBonePosition(leftFootBoneIndex);
+					targetRotation = avatar->getBoneGlobalRotation(leftFootBoneIndex);
+				}
 				cube1->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube1->M);
 				cube1->render(tex);
 				
-				targetPosition = avatar->getBonePosition(rightHandBoneIndex);
-				targetRotation = avatar->getBoneGlobalRotation(rightHandBoneIndex);
+				if (track == 0) {
+					targetPosition = avatar->getBonePosition(rightHandBoneIndex);
+					targetRotation = avatar->getBoneGlobalRotation(rightHandBoneIndex);
+				} else if (track == 1) {
+					targetPosition = avatar->getBonePosition(rightFootBoneIndex);
+					targetRotation = avatar->getBoneGlobalRotation(rightFootBoneIndex);
+				}
 				cube2->M = avatar->M * mat4::Translation(targetPosition.x(), targetPosition.y(), targetPosition.z()) * targetRotation.matrix().Transpose();
 				Graphics4::setMatrix(mLocation, cube2->M);
 				cube2->render(tex);
@@ -190,7 +204,7 @@ namespace {
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
 
-		float rotOffsetY = Kore::pi / 6;
+		float rotOffsetY = Kore::pi / 8;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
@@ -341,23 +355,23 @@ namespace {
 		if (leftTrackerIndex != -1) {
 			controller = VrInterface::getController(leftTrackerIndex);
 
-			// Get controller position
+			// Get controller position and rotation
 			desPosition1 = controller.vrPose.position;
-			// Get cont1roller rotation
 			desRotation1 = controller.vrPose.orientation;
 			
-			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+			if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+			else if (track == 1) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
 		}
 
 		if (rightTrackerIndex != -1) {
 			controller = VrInterface::getController(rightTrackerIndex);
 
-			// Get controller position
+			// Get controller position and rotation
 			desPosition2 = controller.vrPose.position;
-			// Get controller rotation
 			desRotation2 = controller.vrPose.orientation;
 				
-			setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			else if (track == 1) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
 		}
 
 		if (backTrackerIndex != -1) {
@@ -709,8 +723,8 @@ namespace {
 		initDesRotationRightHand.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		initDesRotationLeftFoot.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		initDesRotationRightFoot.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-		initDesRotationLeftFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
-		initDesRotationRightFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
+		initDesRotationLeftFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
+		initDesRotationRightFoot.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
 
 		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
