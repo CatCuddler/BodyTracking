@@ -31,7 +31,6 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
-	bool readData = true;
 	int line = 0;
 	/*const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
@@ -168,8 +167,6 @@ namespace {
 	void renderLivingRoom(mat4 V, mat4 P) {
 		Graphics4::setPipeline(pipeline_living_room);
 		
-		//Graphics4::setInt(lightCount_living_room, lightCount);
-		//Graphics4::setFloats(lightPosLocation_living_room, (float*)lightPosition, lightCount * 4);
 		livingRoom->setLights(lightCount_living_room, lightPosLocation_living_room);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
@@ -283,9 +280,6 @@ namespace {
 			cameraPosition.y() -= moveSpeed;
 		}
 		
-		// update light pos
-		//lightPosition[3] = vec4(2 * Kore::sin(2 * t), 2, 2 * Kore::cos(2 * t), 1.0);
-		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
@@ -380,14 +374,14 @@ namespace {
 		if (backTrackerIndex != -1) {
 			controller = VrInterface::getController(backTrackerIndex);
 
-			// Get controller position
+			// Get controller position and rotation
 			vec3 pos = controller.vrPose.position;
-			// Get controller rotation
 			Quaternion rot = controller.vrPose.orientation;
 
 			setBackBonePosition(pos, rot, backTrackerIndex);
 		}
 		
+		// Render for both eyes
 		for (int eye = 0; eye < 2; ++eye) {
 			VrInterface::beginRender(eye);
 
@@ -399,7 +393,7 @@ namespace {
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 			
-			// Render avatar
+			// Animate avatar
 			Graphics4::setMatrix(mLocation, avatar->M);
 			avatar->animate(tex, deltaT);
 			
@@ -420,6 +414,7 @@ namespace {
 		// Render on monitor
 		Graphics4::setPipeline(pipeline);
 
+		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix(); 
 		if (!firstPersonMonitor) {	
@@ -430,30 +425,29 @@ namespace {
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 		}
 		Graphics4::setMatrix(mLocation, avatar->M);
-		avatar->animate(tex, deltaT);
 		
+		// Animate avatar
+		avatar->animate(tex, deltaT);
+		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
+		
+		// Render tracker
 		renderTracker();
 		
+		// Render living room
 		if (!firstPersonMonitor) {
 			renderLivingRoom(V, P);
-		}
-		else {
+		} else {
 			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
-		
-		//cube->drawVertices(cube->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height);
-		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 		
 #else
 		if (!initCharacter) {
 			avatar->setScale(0.95);	// Scale test
 			
-			if (readData) {
-				log(Info, "Read data from file %s", initialTransFilename);
-				vec3 initPos = vec3(0, 0, 0);
-				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
-				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
-			}
+			log(Info, "Read data from file %s", initialTransFilename);
+			vec3 initPos = vec3(0, 0, 0);
+			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+			initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 			
 			initRot.normalize();
 			initRotInv = initRot.invert();
@@ -462,82 +456,46 @@ namespace {
 			initTransInv = (initTrans * initRot.matrix().Transpose()).Invert();
 			
 			initCharacter = true;
-			
-			if (logData) {
-				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-			}
-			
 		}
 		
-		if (readData) {
-			Kore::vec3 rawPos[numOfEndEffectors];
-			Kore::Quaternion rawRot[numOfEndEffectors];
-			if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
-				
-				for (int i = 0; i < numOfEndEffectors; ++i) {
-					if (i == 0) {
-						desPosition1 = rawPos[i];
-						desRotation1 = rawRot[i];
-						
-						if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-						else if (track == 1) setDesiredPosition(desPosition1, leftFootBoneIndex);//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
-					} else if (i == 1) {
-						desPosition2 = rawPos[i];
-						desRotation2 = rawRot[i];
-						
-						if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
-						else if (track == 1) setDesiredPosition(desPosition2, rightFootBoneIndex);//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
-					} else if (i == 2) {
-						vec3 pos = rawPos[i];
-						Quaternion rot = rawRot[i];
-						
-						initRot = rot.rotated(Quaternion(vec3(0, 1, 0), Kore::pi));
-						initRot.normalize();
-						initRotInv = initRot.invert();
-						avatar->M = mat4::Translation(pos.x(), 0, pos.z()) * initRot.matrix().Transpose();
-						initTransInv = avatar->M.Invert();
-						
-						//setDesiredPosition(pos, 3);
-					}
+		Kore::vec3 rawPos[numOfEndEffectors];
+		Kore::Quaternion rawRot[numOfEndEffectors];
+		// Read line
+		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+			
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				if (i == 0) {
+					desPosition1 = rawPos[i];
+					desRotation1 = rawRot[i];
+					
+					if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
+					else if (track == 1) setDesiredPosition(desPosition1, leftFootBoneIndex);//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
+				} else if (i == 1) {
+					desPosition2 = rawPos[i];
+					desRotation2 = rawRot[i];
+					
+					if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+					else if (track == 1) setDesiredPosition(desPosition2, rightFootBoneIndex);//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+				} else if (i == 2) {
+					vec3 pos = rawPos[i];
+					Quaternion rot = rawRot[i];
+					
+					initRot = rot.rotated(Quaternion(vec3(0, 1, 0), Kore::pi));
+					initRot.normalize();
+					initRotInv = initRot.invert();
+					avatar->M = mat4::Translation(pos.x(), 0, pos.z()) * initRot.matrix().Transpose();
+					initTransInv = avatar->M.Invert();
 				}
-				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 			}
-
-			//log(Info, "%i", line);
-			line += numOfEndEffectors;
-		} else {
-			angle += 0.01;
-			float radius = 0.2;
 			
-			// Set foot position
-			//desPosition2 = vec3(-0.2 + radius * Kore::cos(angle), 0.3 + radius * Kore::sin(angle), 0.2);
-			//setDesiredPosition(desPosition2, 53); // Left foot 49, right foot 53
-			
-			// Set hand position
-			radius = 0.1;
-			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9 + radius * Kore::sin(angle), 0.2);
-			//desPosition = vec3(0.2 + radius * Kore::cos(angle), 0.9, 0.2);
-			
-			// Set position and orientation for the left hand
-			desPosition1 = vec3(0.2, 1.0, 0.4);
-			desRotation1 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
-			desRotation1.rotate(Quaternion(vec3(0, 1, 0), -angle));
-			setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-			
-			// Set position and orientation for the right hand
-			//desPosition2 = (-0.2, 1.0, 0.4);
-			//desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
-			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
-			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
-			
+			//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 		}
 		
-		// projection matrix
-		mat4 P = getProjectionMatrix();
+		//log(Info, "%i", line);
+		line += numOfEndEffectors;
 		
-		// view matrix
+		// Get projection and view matrix
+		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 		
 		Graphics4::setMatrix(vLocation, V);
@@ -545,15 +503,11 @@ namespace {
 		
 		Graphics4::setMatrix(mLocation, avatar->M);
 		
+		// Animate avatar
 		avatar->animate(tex, deltaT);
-		
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 		
-		/*Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
-		Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
-		log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
-		log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);*/
-		
+		// Render tracker
 		renderTracker();
 		
 		// Render living room
