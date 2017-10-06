@@ -242,8 +242,11 @@ namespace {
 			logger->saveData(desPosition, desRotation);
 		}
 
-		// TODO
-
+		initRot = desRotation.rotated(Quaternion(vec3(0, 1, 0), Kore::pi));
+		initRot.normalize();
+		initRotInv = initRot.invert();
+		avatar->M = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
+		initTransInv = avatar->M.Invert();
 	}
 	
 	void update() {
@@ -360,7 +363,7 @@ namespace {
 			desRotation1 = controller.vrPose.orientation;
 			
 			if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-			else if (track == 1) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
+			else if (track == 1) setDesiredPosition(desPosition1, leftFootBoneIndex);// setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
 		}
 
 		if (rightTrackerIndex != -1) {
@@ -371,7 +374,7 @@ namespace {
 			desRotation2 = controller.vrPose.orientation;
 				
 			if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
-			else if (track == 1) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+			else if (track == 1) setDesiredPosition(desPosition2, rightFootBoneIndex);// setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
 		}
 
 		if (backTrackerIndex != -1) {
