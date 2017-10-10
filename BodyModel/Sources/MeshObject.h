@@ -3,11 +3,7 @@
 #include "OpenGEX/OpenGEX.h"
 
 #include <Kore/Graphics4/Graphics.h>
-#include <Kore/Graphics2/Graphics.h>
-#include <Kore/Graphics4/Texture.h>
 #include <Kore/Math/Quaternion.h>
-
-#include "InverseKinematics.h"
 
 #include <vector>
 
@@ -41,9 +37,10 @@ struct CompareMesh {
 
 struct Geometry {
 	Kore::mat4 transform;
-	char* name;
+	const char* name;
 	const char* objectRef;
 	const char* materialRef;
+	unsigned int materialIndex;
 	unsigned int geometryIndex;
 };
 
@@ -53,10 +50,23 @@ struct CompareGeometry {
 	}
 };
 
+struct Light {
+	Kore::vec4 position;
+	const char* name;
+	int type;
+};
+
 struct Material {
-	char* materialName;
+	const char* materialName;
 	char* textureName;
 	unsigned int materialIndex;
+	
+	int texScaleX;
+	int texScaleY;
+	
+	Kore::vec3 diffuse;
+	Kore::vec3 specular;
+	float specular_power;
 };
 
 struct CompareMaterials {
@@ -90,7 +100,8 @@ struct BoneNode {
 	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
 				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
 				 finalTransform(Kore::mat4::Identity()),
-				 quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)) {}
+				 quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)),
+				  axes(Kore::vec3(0, 0, 0)) {}
 };
 
 struct CompareBones {
@@ -99,61 +110,35 @@ struct CompareBones {
 	}
 };
 
-class InverseKinematics;
-
 class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
-	
-	void setAnimation(int frame);
-	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
-	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot = true);
-	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
-	
-	float getAverageIKiterationNum();
-	
-	vec3 getBonePosition(int boneIndex);
-	Quaternion getBoneLocalRotation(int boneIndex);
-	Quaternion getBoneGlobalRotation(int boneIndex);
-	
-	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 
-	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
-	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
-	
-	float getHeight();
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
 	
-private:
-	Kore::vec4 desiredPosition;
-	
 	long meshesCount;
 	float scale;
-	float currentHeight;
 	const Kore::Graphics4::VertexStructure& structure;
-	std::vector<Kore::Graphics4::VertexBuffer*> vertexBuffers;
-	std::vector<Kore::Graphics4::IndexBuffer*> indexBuffers;
+	Kore::Graphics4::VertexBuffer** vertexBuffers;
+	Kore::Graphics4::IndexBuffer** indexBuffers;
 	
-	InverseKinematics* invKin;
-	const int maxIteration = 100;
-	
-	Kore::Graphics2::Graphics2* g2;
-	Kore::Graphics4::Texture* redDot;
-	Kore::Graphics4::Texture* yellowDot;
+	Kore::Graphics4::Texture** images;
 	
 	const char* textureDir;
-	std::vector<Kore::Graphics4::Texture*> images;
 	std::vector<Mesh*> meshes;
 	std::vector<Geometry*> geometries;
 	std::vector<Material*> materials;
 	std::vector<BoneNode*> bones;
 	std::vector<BoneNode*> children;
+	std::vector<Light*> lights;
+
+	BoneNode* getBoneWithIndex(int index) const;
+	Material* findMaterialWithIndex(const int index);
 	
+private:	
 	void LoadObj(const char* filename);
-	
-	BoneNode* getBoneWithIndex(int index);
 	
 	void ConvertObjects(const Structure& structure);
 	Mesh* ConvertGeometryObject(const OGEX::GeometryObjectStructure& structure);
@@ -164,4 +149,6 @@ private:
 	void ConvertNodes(const Structure& structure, BoneNode& parentNode);
 	Geometry* ConvertGeometryNode(const OGEX::GeometryNodeStructure& structure);
 	BoneNode* ConvertBoneNode(const OGEX::BoneNodeStructure& structure);
+	
+	Light* ConvertLightNode(const OGEX::LightNodeStructure& structure);
 };
