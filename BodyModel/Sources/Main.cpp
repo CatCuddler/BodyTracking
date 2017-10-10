@@ -40,6 +40,7 @@ namespace {
 
 	double startTime;
 	double lastTime;
+	float fiveSec;
 	
 	VertexStructure structure;
 	Shader* vertexShader;
@@ -65,7 +66,7 @@ namespace {
 	MeshObject* avatar;
 	
 #ifdef KORE_STEAMVR
-	vec3 cameraRotation = vec3(Kore::pi, 0, 0);
+	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
 	
 	int leftTrackerIndex = -1;
@@ -167,17 +168,17 @@ namespace {
 		float handOffsetX = 0.02f;
 		float handOffsetY = 0.02f;
 
-//		float rotOffsetY = Kore::pi / 6;
+		float rotOffsetY = Kore::pi / 6;
 		
 		Kore::Quaternion desRot = desRotation;
 		if (boneIndex == rightHandBoneIndex) {
 			desRot.rotate(initDesRotationRightHand);
 			handOffsetX = -handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), -rotOffsetY));
 		} else if (boneIndex == leftHandBoneIndex) {
 			desRot.rotate(initDesRotationLeftHand);
 			handOffsetX = handOffsetX;
-//			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
+			desRot.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), rotOffsetY));
 		}
 		desRotation = desRot;
 		
@@ -198,6 +199,17 @@ namespace {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
+		
+		fiveSec += deltaT;
+		if (fiveSec > 1) {
+			fiveSec = 0;
+			
+			float averageIt = avatar->getAverageIKiterationNum();
+			
+			if (logData) logger->saveLogData("it", averageIt);
+			
+			log(Info, "Average iteration %f", averageIt);
+		}
 		
 		const float speed = 0.01f;
 		if (left) {
@@ -240,7 +252,7 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 			
 			//cameraPosition.x() = -currentUserHeight * 0.5;
-			cameraPosition.y() = currentUserHeight * 1.5;
+			cameraPosition.y() = currentUserHeight * 0.5;
 			cameraPosition.z() = currentUserHeight * 0.5;
 			
 			float scale = currentUserHeight / currentAvatarHeight;
@@ -366,7 +378,9 @@ namespace {
 			
 			if (readData) {
 				log(Info, "Read data from file %s", initialTransFilename);
-				logger->readInitTransAndRot(initialTransFilename, &initTrans, &initRot);
+				vec3 initPos = vec3(0, 0, 0);
+				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+				initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z());
 				
 				cameraRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi/2));
 				cameraPosition = vec3(0.8, 0.8, 1.8);
@@ -387,7 +401,8 @@ namespace {
 			initCharacter = true;
 			
 			if (logData) {
-				logger->saveInitTransAndRot(initTrans, initRot);
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
 		}
 		
@@ -405,7 +420,7 @@ namespace {
 				desPosition1 = rawPos;
 				desRotation1 = rawRot;
 				
-				//log(Info, "pos %f %f %f rot %f %f %f %f", rawPos.x(), rawPos.y(), rawPos.z(), rawRot.x, rawRot.y, rawRot.z, rawRot.w);
+				//log(Info, "pos %f %f %f rot %f %f %f %f", desPosition1.x(), desPosition1.y(), desPosition1.z(), desRotation1.x, desRotation1.y, desRotation1.z, desRotation1.w);
 				
 				setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
 			}
@@ -437,6 +452,8 @@ namespace {
 			//desRotation2 = Quaternion(vec3(1, 0, 0), Kore::pi/2);
 			//desRotation2.rotate(Quaternion(vec3(0, 1, 0), angle));
 			//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
+			
+			logger->saveLogData("angle", angle);
 		}
 		
 		// projection matrix
@@ -455,10 +472,10 @@ namespace {
 		//cube->drawVertices(cube->M, V, P, width, height);
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 		
-		//Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
-		//Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
-		//log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
-		//log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);
+		/*Quaternion q1 = avatar->getBoneLocalRotation(leftHandBoneIndex-1);
+		Quaternion q2 = avatar->getBoneLocalRotation(leftHandBoneIndex-2);
+		log(Info, "low %f %f %f %f", q1.w, q1.x, q1.y, q1.z);
+		log(Info, "up %f %f %f %f", q2.w, q2.x, q2.y, q2.z);*/
 		
 		renderTracker();
 		Graphics4::setPipeline(pipeline);
@@ -615,6 +632,7 @@ namespace {
 		cube2 = new MeshObject("cube.ogex", "", structure, 0.05);
 #ifdef KORE_STEAMVR
 		avatar = new MeshObject("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 #else
 		avatar = new MeshObject("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
