@@ -236,6 +236,10 @@ namespace {
 	}
 	
 	void setDesiredPosition(EndEffector* endEffector, Kore::vec3& desPosition) {
+		if (logData) {
+			logger->saveData(desPosition, Quaternion(0, 0, 0, 1));
+		}
+		
 		// Transform desired position to the character coordinate system
 		vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		finalPos += vec4(endEffector->offsetPosition.x(), endEffector->offsetPosition.y(), endEffector->offsetPosition.z());
@@ -402,8 +406,13 @@ namespace {
 			desPosition1 = controller.vrPose.position;
 			desRotation1 = controller.vrPose.orientation;
 			
-			if (track == 0) setDesiredPositionAndOrientation(desPosition1, desRotation1, leftHandBoneIndex);
-			else if (track == 1) setDesiredPosition(desPosition1, leftFootBoneIndex);// setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
+			if (track == 0) {
+				initEndEffector(leftHand, desPosition1, desRotation1, leftHandBoneIndex);
+				setDesiredPositionAndOrientation(leftHand, desPosition1, desRotation1);
+			} else if (track == 1) {
+				initEndEffector(leftFoot, desPosition1, desRotation1, leftFootBoneIndex);
+				setDesiredPosition(leftFoot, desPosition1);
+			}
 		}
 
 		if (rightTrackerIndex != -1) {
@@ -413,8 +422,13 @@ namespace {
 			desPosition2 = controller.vrPose.position;
 			desRotation2 = controller.vrPose.orientation;
 				
-			if (track == 0) setDesiredPositionAndOrientation(desPosition2, desRotation2, rightHandBoneIndex);
-			else if (track == 1) setDesiredPosition(desPosition2, rightFootBoneIndex);// setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+			if (track == 0) {
+				initEndEffector(rightHand, desPosition2, desRotation2, rightHandBoneIndex);
+				setDesiredPositionAndOrientation(rightHand, desPosition2, desRotation2);
+			} else if (track == 1) {
+				initEndEffector(rightFoot, desPosition2, desRotation2, rightFootBoneIndex);
+				setDesiredPosition(rightFoot, desPosition2);
+			}
 		}
 
 		if (backTrackerIndex != -1) {
