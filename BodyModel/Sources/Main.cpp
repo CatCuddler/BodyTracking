@@ -37,7 +37,7 @@ namespace {
 	const int height = 768;
 	
 	Logger* logger;
-	bool logData = false;
+	bool logData = true;
 	int line = 0;
 	
 	/*const int track = 0; // 0 - hands, 1 - feet
@@ -175,20 +175,20 @@ namespace {
 			endEffector->offsetPosition = vec3(0, 0, 0);
 			
 			if (boneIndex == backBoneIndex) {
-				endEffector->offsetPosition = vec3(0, -0.1, 0);
+				endEffector->offsetPosition = vec3(0, -0.1f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			} else if (boneIndex == leftHandBoneIndex) {
-				endEffector->offsetPosition = vec3(0.02, 0.02, 0);
+				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 			} else if (boneIndex == rightHandBoneIndex) {
-				endEffector->offsetPosition = vec3(-0.02, 0.02, 0);
+				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 			} else if (boneIndex == leftFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.1);
+				endEffector->offsetPosition = vec3(0, 0, 0.1f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
 			} else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.1);
+				endEffector->offsetPosition = vec3(0, 0, 0.1f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
 			}
@@ -213,7 +213,7 @@ namespace {
 	
 	void setDesiredPosition(EndEffector* endEffector, Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
 		if (logData) {
-			logger->saveData(desPosition, Quaternion(0, 0, 0, 1));
+			logger->saveData(desPosition, desRotation);
 		}
 		
 		applyOffset(endEffector, desPosition, desRotation);
@@ -239,12 +239,14 @@ namespace {
 		avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 	}
 	
-	void setBackBonePosition(Kore::vec3 &desPosition, Kore::Quaternion &desRotation, const int boneIndex) {
+	void setBackBonePosition(Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
 		if (logData) {
 			logger->saveData(desPosition, desRotation);
 		}
-		
-		initRot = desRotation.rotated(Quaternion(vec3(0, 1, 0), Kore::pi));
+
+		applyOffset(back, desPosition, desRotation);
+
+		initRot = desRotation;
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		avatar->M = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
@@ -358,15 +360,13 @@ namespace {
 			controller = VrInterface::getController(leftTrackerIndex);
 			
 			// Get controller position and rotation
-			desPosition1 = controller.vrPose.position;
-			desRotation1 = controller.vrPose.orientation;
+			desPosition[0] = controller.vrPose.position;
+			desRotation[0] = controller.vrPose.orientation;
 			
 			if (track == 0) {
-				initEndEffector(leftHand, desPosition1, desRotation1, leftHandBoneIndex);
-				setDesiredPositionAndOrientation(leftHand, desPosition1, desRotation1);
+				setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
 			} else if (track == 1) {
-				initEndEffector(leftFoot, desPosition1, desRotation1, leftFootBoneIndex);
-				setDesiredPosition(leftFoot, desPosition1);
+				setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
 			}
 		}
 		
@@ -374,15 +374,13 @@ namespace {
 			controller = VrInterface::getController(rightTrackerIndex);
 			
 			// Get controller position and rotation
-			desPosition2 = controller.vrPose.position;
-			desRotation2 = controller.vrPose.orientation;
+			desPosition[1] = controller.vrPose.position;
+			desRotation[1] = controller.vrPose.orientation;
 			
 			if (track == 0) {
-				initEndEffector(rightHand, desPosition2, desRotation2, rightHandBoneIndex);
-				setDesiredPositionAndOrientation(rightHand, desPosition2, desRotation2);
+				setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
 			} else if (track == 1) {
-				initEndEffector(rightFoot, desPosition2, desRotation2, rightFootBoneIndex);
-				setDesiredPosition(rightFoot, desPosition2);
+				setDesiredPosition(rightFoot, desPosition[1], desRotation[1]);
 			}
 		}
 		
@@ -390,10 +388,10 @@ namespace {
 			controller = VrInterface::getController(backTrackerIndex);
 			
 			// Get controller position and rotation
-			vec3 pos = controller.vrPose.position;
-			Quaternion rot = controller.vrPose.orientation;
+			desPosition[2] = controller.vrPose.position;
+			desRotation[2] = controller.vrPose.orientation;
 			
-			setBackBonePosition(pos, rot, pelvisBoneIndex);
+			setBackBonePosition(desPosition[2], desRotation[2]);
 		}
 		
 		// Render for both eyes
