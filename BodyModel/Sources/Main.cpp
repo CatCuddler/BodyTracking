@@ -393,13 +393,6 @@ namespace {
 			desRotation[0] = controller.vrPose.orientation;
 
 			setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
-
-			//if (track == 0) {
-			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
-			//}
-			//else if (track == 1) {
-			//	setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
-			//}
 		}
 
 		if (rightTrackerIndex != -1) {
@@ -410,13 +403,6 @@ namespace {
 			desRotation[1] = controller.vrPose.orientation;
 
 			setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
-
-			//if (track == 0) {
-			//	setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
-			//}
-			//else if (track == 1) {
-			//	setDesiredPosition(rightFoot, desPosition[1], desRotation[1]);
-			//}
 		}
 
 		if (backTrackerIndex != -1) {
