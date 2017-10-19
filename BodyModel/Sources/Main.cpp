@@ -98,6 +98,8 @@ namespace {
 #ifdef KORE_STEAMVR
 	int leftTrackerIndex = -1;
 	int rightTrackerIndex = -1;
+	int leftFootTrackerIndex = -1;
+	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
 #endif
 
@@ -124,7 +126,7 @@ namespace {
 	const int leftFootBoneIndex = 49;
 	const int rightFootBoneIndex = 53;
 	const int backBoneIndex = 4;//3;
-	const int renderTrackerOrTargetPosition = 0;		// 0 - dont render, 1 - render desired position
+	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position
 
 	void renderTracker() {
 		switch (renderTrackerOrTargetPosition) {
@@ -340,6 +342,29 @@ namespace {
 				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+					if (trackerPos.y() < currentUserHeight / 4) {
+						//Foot tracker (if y pos is in the lower quarter of the body)
+						if (trackerTransPos.x() > 0) {
+							log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
+							leftFootTrackerIndex = i;
+						}
+						else {
+							log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
+							rightFootTrackerIndex = i;
+						}
+					}
+					else {
+						//back tracker
+						log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
+						backTrackerIndex = i;
+					}
+					//leftTrackerIndex = -1;
+					//rightTrackerIndex = i;
+				}
+				else if (controller.trackedDevice == TrackedDevice::Controller) {
+					//Hand tracker
+					vec3 trackerPos = controller.vrPose.position;
+					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 					if (trackerTransPos.x() > 0) {
 						log(Info, "leftTrackerIndex: %i -> %i", leftTrackerIndex, i);
 						leftTrackerIndex = i;
@@ -348,12 +373,6 @@ namespace {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
 					}
-					//leftTrackerIndex = -1;
-					//rightTrackerIndex = i;
-				}
-				else if (controller.trackedDevice == TrackedDevice::Controller) {
-					log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
-					backTrackerIndex = i;
 				}
 			}
 
@@ -373,12 +392,14 @@ namespace {
 			desPosition[0] = controller.vrPose.position;
 			desRotation[0] = controller.vrPose.orientation;
 
-			if (track == 0) {
-				setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
-			}
-			else if (track == 1) {
-				setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
-			}
+			setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
+
+			//if (track == 0) {
+			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
+			//}
+			//else if (track == 1) {
+			//	setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
+			//}
 		}
 
 		if (rightTrackerIndex != -1) {
@@ -388,12 +409,14 @@ namespace {
 			desPosition[1] = controller.vrPose.position;
 			desRotation[1] = controller.vrPose.orientation;
 
-			if (track == 0) {
-				setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
-			}
-			else if (track == 1) {
-				setDesiredPosition(rightFoot, desPosition[1], desRotation[1]);
-			}
+			setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
+
+			//if (track == 0) {
+			//	setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
+			//}
+			//else if (track == 1) {
+			//	setDesiredPosition(rightFoot, desPosition[1], desRotation[1]);
+			//}
 		}
 
 		if (backTrackerIndex != -1) {
@@ -404,6 +427,40 @@ namespace {
 			desRotation[2] = controller.vrPose.orientation;
 
 			setBackBonePosition(desPosition[2], desRotation[2]);
+		}
+
+		if (leftFootTrackerIndex != -1) {
+			controller = VrInterface::getController(leftFootTrackerIndex);
+
+			// Get controller position and rotation
+			desPosition[3] = controller.vrPose.position;
+			desRotation[3] = controller.vrPose.orientation;
+
+			setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
+
+			//if (track == 0) {
+			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
+			//}
+			//else if (track == 1) {
+			//	setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
+			//}
+		}
+
+		if (rightFootTrackerIndex != -1) {
+			controller = VrInterface::getController(rightFootTrackerIndex);
+
+			// Get controller position and rotation
+			desPosition[4] = controller.vrPose.position;
+			desRotation[4] = controller.vrPose.orientation;
+
+			setDesiredPosition(rightFoot, desPosition[0], desRotation[0]);
+
+			//if (track == 0) {
+			//	setDesiredPositionAndOrientation(rightHand, desPosition[0], desRotation[0]);
+			//}
+			//else if (track == 1) {
+			//	setDesiredPosition(rightFoot, desPosition[0], desRotation[0]);
+			//}
 		}
 
 		// Render for both eyes
@@ -500,7 +557,7 @@ namespace {
 					}
 					else if (track == 1) {
 						setDesiredPosition(leftFoot, desPosition[i], desRotation[i]);
-						//setDesiredPositionAndOrientation(desPosition1, desRotation1, leftFootBoneIndex);
+						//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
 					}
 				}
 				else if (i == 1) {	// Second row
@@ -509,7 +566,7 @@ namespace {
 					}
 					else if (track == 1) {
 						setDesiredPosition(rightFoot, desPosition[i], desRotation[i]);
-						//setDesiredPositionAndOrientation(desPosition2, desRotation2, rightFootBoneIndex);
+						//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
 					}
 				}
 				else if (i == 2) {	// Third row
