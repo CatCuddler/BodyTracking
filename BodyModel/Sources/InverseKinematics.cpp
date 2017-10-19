@@ -1,12 +1,13 @@
 #include "pch.h"
-#include "InverseKinematics.h"
-
 #include "RotationUtility.h"
+#include "InverseKinematics.h"
 #include "MeshObject.h"
 
 #include <Kore/Log.h>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2), clamp(false), sumIter(0), totalNum(0) {
+#include <vector>
+
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2), clamp(false) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -38,10 +39,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 			//Kore::Quaternion quatDiff;
 			//RotationUtility::getOrientation(&rotErr, &quatDiff);
 			
-			Kore::Quaternion quatDiff = desQuat.rotated(curQuat.invert());
+			Quaternion quatDiff = desQuat.rotated(curQuat.invert());
 			if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
 			
-			Kore::RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
+			RotationUtility::quatToEuler(&quatDiff, &diffRot.x(), &diffRot.y(), &diffRot.z());
 			
 			// Dont enforce joint limits by clamping if we know the desired rotation
 			//clamp = false;
@@ -166,9 +167,9 @@ void InverseKinematics::applyChanges(std::vector<float> theta, BoneNode* targetB
 		
 		//Kore::log(Kore::Info, "Bone %s -> x=%f y=%f z=%f", bone->boneName, radX, radY, radZ);
 		
-		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), radX));
-		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), radY));
-		bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), radZ));
+		bone->quaternion.rotate(Quaternion(vec3(1, 0, 0), radX));
+		bone->quaternion.rotate(Quaternion(vec3(0, 1, 0), radY));
+		bone->quaternion.rotate(Quaternion(vec3(0, 0, 1), radZ));
 		bone->quaternion.normalize();
 		
 		//log(Info, "%s %f %f %f %f", bone->boneName, bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z);
@@ -188,14 +189,14 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		
 		clamp = true;
 		if (clamp) {
-			Kore::vec3 rot;
-			Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
+			vec3 rot;
+			RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
 			
-			if (bone->axes.x() == 1) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
-			if (bone->axes.y() == 1) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
-			if (bone->axes.z() == 1) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
+			clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
+			clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
+			clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
 			
-			Kore::RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
+			RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
 			
 			bone->quaternion.normalize();
 			
@@ -227,14 +228,16 @@ void InverseKinematics::updateBonePosition(BoneNode* bone) {
 	bone->combined = bone->parent->combined * bone->local;
 }
 
+float degToRad(float degree) {
+	if (degree == 0)
+		return 0;
+	else
+		return 2 * Kore::pi / (360.0 / degree);
+}
+
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
-	
-	// pelvis
-	nodeLeft = bones[3-1];
-	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 	
 	// clavicle
 	/*nodeLeft = bones[7-1];
@@ -248,23 +251,24 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain = nodeLeft->constrain;*/
 	
 	//degrees × π / 180°
-	
+
 	// upperarm
 	nodeLeft = bones[8-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
+
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, 2.0f * Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
 	
 	nodeRight = bones[27-1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 	
 	// lowerarm
 	nodeLeft = bones[9-1];
+
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 3.0f, Kore::pi / 6.0f));
@@ -272,17 +276,28 @@ void InverseKinematics::setJointConstraints() {
 	
 	nodeRight = bones[28-1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 	
+	// hand
+	nodeLeft = bones[10-1];
+	nodeLeft->axes = Kore::vec3(0, 0, 0);
+	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
+	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
+	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
+	
+	nodeRight = bones[29-1];
+	nodeRight->axes = nodeLeft->axes;
+	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
+	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
+	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 	
 	// thigh
 	nodeLeft = bones[47-1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-5.0 * Kore::pi / 6.0f, Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f));
 	
 	nodeRight = bones[51-1];
