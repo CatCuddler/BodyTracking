@@ -7,11 +7,14 @@ LivingRoom::LivingRoom(const char* meshFile, const char* textureFile, const Kore
 
 }
 
-void LivingRoom::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, ConstantLocation diffuseLocation, ConstantLocation specularLocation, ConstantLocation specularPowerLocation) {
+void LivingRoom::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation mLocationInverse, ConstantLocation diffuseLocation, ConstantLocation specularLocation, ConstantLocation specularPowerLocation) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Geometry* geometry = geometries[i];
 		mat4 modelMatrix = M * geometry->transform;
+		mat4 modelMatrixInverse = modelMatrix.Invert();
+
 		Graphics4::setMatrix(mLocation, modelMatrix);
+		Graphics4::setMatrix(mLocationInverse, modelMatrixInverse);
 
 		unsigned int materialIndex = geometry->materialIndex;
 		Material* material = findMaterialWithIndex(materialIndex);

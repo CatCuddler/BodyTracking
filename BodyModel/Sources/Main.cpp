@@ -37,7 +37,7 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = true;
+	bool logData = false;
 	int line = 0;
 
 	/*const int track = 0; // 0 - hands, 1 - feet
@@ -75,6 +75,7 @@ namespace {
 	ConstantLocation pLocation_living_room;
 	ConstantLocation vLocation_living_room;
 	ConstantLocation mLocation_living_room;
+	ConstantLocation mLocation_living_room_inverse;
 	ConstantLocation diffuse_living_room;
 	ConstantLocation specular_living_room;
 	ConstantLocation specular_power_living_room;
@@ -151,7 +152,7 @@ namespace {
 		livingRoom->setLights(lightCount_living_room, lightPosLocation_living_room);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, diffuse_living_room, specular_living_room, specular_power_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room);
 	}
 
 	Kore::mat4 getProjectionMatrix() {
@@ -694,6 +695,7 @@ namespace {
 		pLocation_living_room = pipeline_living_room->getConstantLocation("P");
 		vLocation_living_room = pipeline_living_room->getConstantLocation("V");
 		mLocation_living_room = pipeline_living_room->getConstantLocation("M");
+		mLocation_living_room_inverse = pipeline_living_room->getConstantLocation("MInverse");
 		diffuse_living_room = pipeline_living_room->getConstantLocation("diffuseCol");
 		specular_living_room = pipeline_living_room->getConstantLocation("specularCol");
 		specular_power_living_room = pipeline_living_room->getConstantLocation("specularPow");
