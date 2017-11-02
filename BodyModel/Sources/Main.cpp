@@ -46,9 +46,11 @@ namespace {
 	const char* positionDataFilename = "positionData_1506685997.csv";*/
 
 	const int track = 1;
-	const int numOfEndEffectors = 3;
+	//const int numOfEndEffectors = 3;
 	const char* initialTransFilename = "initTransAndRot_1506695407.csv";
 	const char* positionDataFilename = "positionData_1506695407.csv";
+
+	const int numOfEndEffectors = 5;
 
 	double startTime;
 	double lastTime;
@@ -318,7 +320,7 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
+			//avatar->setScale(scale);
 
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
@@ -422,7 +424,7 @@ namespace {
 			desPosition[3] = controller.vrPose.position;
 			desRotation[3] = controller.vrPose.orientation;
 
-			setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
+			setDesiredPosition(leftFoot, desPosition[3], desRotation[3]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
@@ -439,7 +441,7 @@ namespace {
 			desPosition[4] = controller.vrPose.position;
 			desRotation[4] = controller.vrPose.orientation;
 
-			setDesiredPosition(rightFoot, desPosition[0], desRotation[0]);
+			setDesiredPosition(rightFoot, desPosition[4], desRotation[4]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(rightHand, desPosition[0], desRotation[0]);
