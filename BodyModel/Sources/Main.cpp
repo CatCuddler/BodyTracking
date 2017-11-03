@@ -37,7 +37,7 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = false;
+	bool logData = true;
 	int line = 0;
 
 	/*const int track = 0; // 0 - hands, 1 - feet
@@ -181,6 +181,7 @@ namespace {
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, -0.1f, 0);
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.45)); //rot
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
@@ -189,7 +190,11 @@ namespace {
 			}
 			else if (boneIndex == rightHandBoneIndex) {
 				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi + Kore::pi / 4));
+
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 4)); //rot
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2)); //grün
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi)); //blau
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.1f);
@@ -320,7 +325,7 @@ namespace {
 			float currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
-			//avatar->setScale(scale);
+			avatar->setScale(scale);
 
 			// Set initial transformation
 			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
