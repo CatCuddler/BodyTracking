@@ -53,14 +53,14 @@ namespace {
 	//const char* positionDataFilename = "positionData_1506695407.csv";
 
 	//Walk with tracker on right foot, back and both hands
-	//const int numOfEndEffectorsToRead = 4;
-	//const char* initialTransFilename = "initTransAndRot_1509716042.csv";
-	//const char* positionDataFilename = "positionData_1509716042.csv";
+	const int numOfEndEffectorsToRead = 4;
+	const char* initialTransFilename = "initTransAndRot_1509716042.csv";
+	const char* positionDataFilename = "positionData_1509716042.csv";
 	
 	//Moving both arms
-	const int numOfEndEffectorsToRead = 4;
-	const char* initialTransFilename = "initTransAndRot_1509716248.csv";
-	const char* positionDataFilename = "positionData_1509716248.csv";
+	//const int numOfEndEffectorsToRead = 4;
+	//const char* initialTransFilename = "initTransAndRot_1509716248.csv";
+	//const char* positionDataFilename = "positionData_1509716248.csv";
 		
 	//const int numOfEndEffectorsToRead = 2;
 	//const char* initialTransFilename = "initTransAndRot_1509716355.csv";
@@ -218,13 +218,15 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0.1f, 0, 0);
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi / 1.5f)));
+				endEffector->offsetPosition = vec3(0.1f, 0, 0.2f);
 
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 8));
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi / 1.5f)));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //grün
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blau
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.16f))); //rot
+
+				// Dynamische korrektur der rotation:
+				// - differenz zwischen aktueller Rotation und ziel-rotation ermitteln (alle drei achsen)
+				// - differenz von aktueller Rotation abziehen/addieren 
 			}
 
 			endEffector->initialized = true;
