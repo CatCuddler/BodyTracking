@@ -51,16 +51,16 @@ namespace {
 	//const char* positionDataFilename = "positionData_1506695407.csv";
 
 	//Walk with tracker on right foot, back and both hands
-	//const int numOfEndEffectors = 5;
-	//const int numOfEndEffectorsToRead = 4;
-	//const char* initialTransFilename = "initTransAndRot_1509716042.csv";
-	//const char* positionDataFilename = "positionData_1509716042.csv";
-	
-	//Moving both arms
 	const int numOfEndEffectors = 5;
 	const int numOfEndEffectorsToRead = 4;
-	const char* initialTransFilename = "initTransAndRot_1509716248.csv";
-	const char* positionDataFilename = "positionData_1509716248.csv";
+	const char* initialTransFilename = "initTransAndRot_1509716042.csv";
+	const char* positionDataFilename = "positionData_1509716042.csv";
+	
+	//Moving both arms
+	//const int numOfEndEffectors = 5;
+	//const int numOfEndEffectorsToRead = 4;
+	//const char* initialTransFilename = "initTransAndRot_1509716248.csv";
+	//const char* positionDataFilename = "positionData_1509716248.csv";
 		
 	double startTime;
 	double lastTime;
@@ -196,15 +196,17 @@ namespace {
 			}
 			else if (boneIndex == leftHandBoneIndex) {
 				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
+
 			}
 			else if (boneIndex == rightHandBoneIndex) {
 				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
 				//endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi + Kore::pi / 4));
 
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 4)); //rot
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2)); //grün
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi)); //blau
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2)); //grün
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi)); //blau
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.1f);
@@ -544,67 +546,26 @@ namespace {
 
 			initCharacter = true;
 		}
-
-		//vec3 rawPos[numOfEndEffectors];
-		//Quaternion rawRot[numOfEndEffectors];
-		//// Read line
-		//if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
-
-		//	for (int i = 0; i < numOfEndEffectors; ++i) {
-		//		desPosition[i] = rawPos[i];
-		//		desRotation[i] = rawRot[i];
-
-		//		if (i == 0) {			// First row
-		//			if (track == 0) {
-		//				setDesiredPositionAndOrientation(leftHand, desPosition[i], desRotation[i]);
-		//			}
-		//			else if (track == 1) {
-		//				setDesiredPosition(leftFoot, desPosition[i], desRotation[i]);
-		//				//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
-		//			}
-		//		}
-		//		else if (i == 1) {	// Second row
-		//			if (track == 0) {
-		//				setDesiredPositionAndOrientation(rightHand, desPosition[i], desRotation[i]);
-		//			}
-		//			else if (track == 1) {
-		//				setDesiredPosition(rightFoot, desPosition[i], desRotation[i]);
-		//				//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
-		//			}
-		//		}
-		//		else if (i == 2) {	// Third row
-		//			applyOffset(back, desPosition[i], desRotation[i]);
-
-		//			initRot = desRotation[i];
-		//			initRot.normalize();
-		//			initRotInv = initRot.invert();
-		//			avatar->M = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
-		//			initTransInv = avatar->M.Invert();
-
-		//			//setDesiredPositionAndOrientation(back, pos, rot);
-		//		}
-		//	}
-		//}
-
 		 
 		vec3 rawPos[numOfEndEffectorsToRead];
 		Quaternion rawRot[numOfEndEffectorsToRead];
 		// Read line
 		if (logger->readData(line, numOfEndEffectorsToRead, positionDataFilename, rawPos, rawRot)) {
 
-			for (int row = 0; row < numOfEndEffectorsToRead; ++row) {
-				
+			for (int tracker = 0; tracker < numOfEndEffectorsToRead; ++tracker) {
+			
+				desPosition[tracker] = rawPos[tracker];
+				desRotation[tracker] = rawRot[tracker];
+
 				bool leftFootTracker = false;
 				bool rightFootTracker = false;
 				bool leftHandTracker = false;
 				bool rightHandTracker = false;
 				bool backTracker = false;
 
-				desPosition[row] = rawPos[row];
-				desRotation[row] = rawRot[row];
-
 				if (numOfEndEffectorsToRead == 5) {
-					switch (row) {
+					//Data contains all 5 trackers
+					switch (tracker) {
 					case 0: leftHandTracker = true;
 						break;
 					case 1: rightHandTracker = true;
@@ -619,7 +580,7 @@ namespace {
 				}
 				else {
 					//Walk with tracker on right foot, back and both hands
-					switch (row) {
+					switch (tracker) {
 					case 0: leftHandTracker = true;
 						break;
 					case 1: rightHandTracker = true;
@@ -631,30 +592,22 @@ namespace {
 					}
 				}
 
-				if (leftFootTracker) {	// Left foot
-					setDesiredPosition(leftFoot, desPosition[row], desRotation[row]);
+				if (leftFootTracker) {
+					setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
 					//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
 				}
-				else if (rightFootTracker) {	// Right foot
-					setDesiredPosition(rightFoot, desPosition[row], desRotation[row]);
+				else if (rightFootTracker) {
+					setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
 					//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
 				}
-				else if (backTracker) {	// Back
-					applyOffset(back, desPosition[row], desRotation[row]);
-
-					initRot = desRotation[row];
-					initRot.normalize();
-					initRotInv = initRot.invert();
-					avatar->M = mat4::Translation(desPosition[row].x(), 0, desPosition[row].z()) * initRot.matrix().Transpose();
-					initTransInv = avatar->M.Invert();
-
-					//setDesiredPositionAndOrientation(back, pos, rot);
+				else if (backTracker) {
+					setBackBonePosition(desPosition[tracker], desRotation[tracker]);
 				}
-				else if (leftHandTracker) { // Left Hand
-					setDesiredPositionAndOrientation(leftHand, desPosition[row], desRotation[row]);
+				else if (leftHandTracker) {
+					setDesiredPositionAndOrientation(leftHand, desPosition[tracker], desRotation[tracker]);
 				}
-				else if (rightHandTracker) { // Right Hand
-					setDesiredPositionAndOrientation(rightHand, desPosition[row], desRotation[row]);
+				else if (rightHandTracker) {
+					setDesiredPositionAndOrientation(rightHand, desPosition[tracker], desRotation[tracker]);
 				}
 			}
 		}
