@@ -37,7 +37,7 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = true;
+	bool logData = false;
 	int line = 0;
 
 	/*const int track = 0; // 0 - hands, 1 - feet
@@ -47,11 +47,21 @@ namespace {
 
 	const int track = 1;
 	//const int numOfEndEffectors = 3;
-	const char* initialTransFilename = "initTransAndRot_1506695407.csv";
-	const char* positionDataFilename = "positionData_1506695407.csv";
+	//const char* initialTransFilename = "initTransAndRot_1506695407.csv";
+	//const char* positionDataFilename = "positionData_1506695407.csv";
 
+	//Walk with tracker on right foot, back and both hands
+	//const int numOfEndEffectors = 5;
+	//const int numOfEndEffectorsToRead = 4;
+	//const char* initialTransFilename = "initTransAndRot_1509716042.csv";
+	//const char* positionDataFilename = "positionData_1509716042.csv";
+	
+	//Moving both arms
 	const int numOfEndEffectors = 5;
-
+	const int numOfEndEffectorsToRead = 4;
+	const char* initialTransFilename = "initTransAndRot_1509716248.csv";
+	const char* positionDataFilename = "positionData_1509716248.csv";
+		
 	double startTime;
 	double lastTime;
 	float fiveSec;
@@ -535,49 +545,122 @@ namespace {
 			initCharacter = true;
 		}
 
-		vec3 rawPos[numOfEndEffectors];
-		Quaternion rawRot[numOfEndEffectors];
+		//vec3 rawPos[numOfEndEffectors];
+		//Quaternion rawRot[numOfEndEffectors];
+		//// Read line
+		//if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+
+		//	for (int i = 0; i < numOfEndEffectors; ++i) {
+		//		desPosition[i] = rawPos[i];
+		//		desRotation[i] = rawRot[i];
+
+		//		if (i == 0) {			// First row
+		//			if (track == 0) {
+		//				setDesiredPositionAndOrientation(leftHand, desPosition[i], desRotation[i]);
+		//			}
+		//			else if (track == 1) {
+		//				setDesiredPosition(leftFoot, desPosition[i], desRotation[i]);
+		//				//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
+		//			}
+		//		}
+		//		else if (i == 1) {	// Second row
+		//			if (track == 0) {
+		//				setDesiredPositionAndOrientation(rightHand, desPosition[i], desRotation[i]);
+		//			}
+		//			else if (track == 1) {
+		//				setDesiredPosition(rightFoot, desPosition[i], desRotation[i]);
+		//				//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
+		//			}
+		//		}
+		//		else if (i == 2) {	// Third row
+		//			applyOffset(back, desPosition[i], desRotation[i]);
+
+		//			initRot = desRotation[i];
+		//			initRot.normalize();
+		//			initRotInv = initRot.invert();
+		//			avatar->M = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
+		//			initTransInv = avatar->M.Invert();
+
+		//			//setDesiredPositionAndOrientation(back, pos, rot);
+		//		}
+		//	}
+		//}
+
+		 
+		vec3 rawPos[numOfEndEffectorsToRead];
+		Quaternion rawRot[numOfEndEffectorsToRead];
 		// Read line
-		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+		if (logger->readData(line, numOfEndEffectorsToRead, positionDataFilename, rawPos, rawRot)) {
 
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				desPosition[i] = rawPos[i];
-				desRotation[i] = rawRot[i];
+			for (int row = 0; row < numOfEndEffectorsToRead; ++row) {
+				
+				bool leftFootTracker = false;
+				bool rightFootTracker = false;
+				bool leftHandTracker = false;
+				bool rightHandTracker = false;
+				bool backTracker = false;
 
-				if (i == 0) {			// First row
-					if (track == 0) {
-						setDesiredPositionAndOrientation(leftHand, desPosition[i], desRotation[i]);
-					}
-					else if (track == 1) {
-						setDesiredPosition(leftFoot, desPosition[i], desRotation[i]);
-						//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
+				desPosition[row] = rawPos[row];
+				desRotation[row] = rawRot[row];
+
+				if (numOfEndEffectorsToRead == 5) {
+					switch (row) {
+					case 0: leftHandTracker = true;
+						break;
+					case 1: rightHandTracker = true;
+						break;
+					case 2: backTracker = true;
+						break;
+					case 3: leftFootTracker = true;
+						break; 
+					case 4: rightFootTracker = true;
+						break;
 					}
 				}
-				else if (i == 1) {	// Second row
-					if (track == 0) {
-						setDesiredPositionAndOrientation(rightHand, desPosition[i], desRotation[i]);
-					}
-					else if (track == 1) {
-						setDesiredPosition(rightFoot, desPosition[i], desRotation[i]);
-						//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
+				else {
+					//Walk with tracker on right foot, back and both hands
+					switch (row) {
+					case 0: leftHandTracker = true;
+						break;
+					case 1: rightHandTracker = true;
+						break;
+					case 2: backTracker = true;
+						break;
+					case 3: rightFootTracker = true;
+						break;
 					}
 				}
-				else if (i == 2) {	// Third row
-					applyOffset(back, desPosition[i], desRotation[i]);
 
-					initRot = desRotation[i];
+				if (leftFootTracker) {	// Left foot
+					setDesiredPosition(leftFoot, desPosition[row], desRotation[row]);
+					//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
+				}
+				else if (rightFootTracker) {	// Right foot
+					setDesiredPosition(rightFoot, desPosition[row], desRotation[row]);
+					//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
+				}
+				else if (backTracker) {	// Back
+					applyOffset(back, desPosition[row], desRotation[row]);
+
+					initRot = desRotation[row];
 					initRot.normalize();
 					initRotInv = initRot.invert();
-					avatar->M = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
+					avatar->M = mat4::Translation(desPosition[row].x(), 0, desPosition[row].z()) * initRot.matrix().Transpose();
 					initTransInv = avatar->M.Invert();
 
 					//setDesiredPositionAndOrientation(back, pos, rot);
+				}
+				else if (leftHandTracker) { // Left Hand
+					setDesiredPositionAndOrientation(leftHand, desPosition[row], desRotation[row]);
+				}
+				else if (rightHandTracker) { // Right Hand
+					setDesiredPositionAndOrientation(rightHand, desPosition[row], desRotation[row]);
 				}
 			}
 		}
 
 		//log(Info, "%i", line);
-		line += numOfEndEffectors;
+		line += numOfEndEffectorsToRead;
 
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
