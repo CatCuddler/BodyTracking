@@ -40,6 +40,8 @@ namespace {
 	bool logData = false;
 	int line = 0;
 
+	const int numOfEndEffectors = 5;
+
 	/*const int track = 0; // 0 - hands, 1 - feet
 	const int numOfEndEffectors = 2;
 	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
@@ -51,17 +53,19 @@ namespace {
 	//const char* positionDataFilename = "positionData_1506695407.csv";
 
 	//Walk with tracker on right foot, back and both hands
-	const int numOfEndEffectors = 5;
-	const int numOfEndEffectorsToRead = 4;
-	const char* initialTransFilename = "initTransAndRot_1509716042.csv";
-	const char* positionDataFilename = "positionData_1509716042.csv";
+	//const int numOfEndEffectorsToRead = 4;
+	//const char* initialTransFilename = "initTransAndRot_1509716042.csv";
+	//const char* positionDataFilename = "positionData_1509716042.csv";
 	
 	//Moving both arms
-	//const int numOfEndEffectors = 5;
-	//const int numOfEndEffectorsToRead = 4;
-	//const char* initialTransFilename = "initTransAndRot_1509716248.csv";
-	//const char* positionDataFilename = "positionData_1509716248.csv";
+	const int numOfEndEffectorsToRead = 4;
+	const char* initialTransFilename = "initTransAndRot_1509716248.csv";
+	const char* positionDataFilename = "positionData_1509716248.csv";
 		
+	//const int numOfEndEffectorsToRead = 2;
+	//const char* initialTransFilename = "initTransAndRot_1509716355.csv";
+	//const char* positionDataFilename = "positionData_1509716355.csv";
+
 	double startTime;
 	double lastTime;
 	float fiveSec;
@@ -214,9 +218,13 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.1f);
+				endEffector->offsetPosition = vec3(0.1f, 0, 0);
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
+				//endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi / 1.5f)));
+
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi / 8));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi / 1.5f)));
 			}
 
 			endEffector->initialized = true;
@@ -271,7 +279,7 @@ namespace {
 		}
 
 		applyOffset(back, desPosition, desRotation);
-
+		
 		initRot = desRotation;
 		initRot.normalize();
 		initRotInv = initRot.invert();
@@ -590,15 +598,23 @@ namespace {
 					case 3: rightFootTracker = true;
 						break;
 					}
+
+					//Walk with tracker on right foot, back and both hands
+					//switch (tracker) {
+					//case 0: backTracker = true;
+					//	break;
+					//case 1: rightFootTracker = true;
+					//	break;
+					//}
 				}
 
 				if (leftFootTracker) {
-					setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
-					//setDesiredPositionAndOrientation(leftFoot, desPosition[i], desRotation[i]);
+					//setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
+					setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
 				}
 				else if (rightFootTracker) {
-					setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
-					//setDesiredPositionAndOrientation(rightFoot, desPosition[i], desRotation[i]);
+					//setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
+					setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
 				}
 				else if (backTracker) {
 					setBackBonePosition(desPosition[tracker], desRotation[tracker]);
