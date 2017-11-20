@@ -37,7 +37,7 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = false;
+	bool logData = true;
 	int line = 0;
 
 	const int numOfEndEffectors = 5;
@@ -194,39 +194,34 @@ namespace {
 			endEffector->offsetPosition = vec3(0, 0, 0);
 
 			if (boneIndex == backBoneIndex) {
-				endEffector->offsetPosition = vec3(0, -0.1f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.45)); //rot
+				endEffector->offsetPosition = vec3(0, 0.05f, 0);
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.55)); //rot
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
 				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
-
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.1)); //grün
 			}
 			else if (boneIndex == rightHandBoneIndex) {
 				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi + Kore::pi / 4));
-
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi / 2)); //grün
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.1)); //grün
 				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi)); //blau
 			}
 			else if (boneIndex == leftFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.1f);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi / 2));
+				endEffector->offsetPosition = vec3(0, 0, 0.05f);
+
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.0f))); //grün
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * 0.125f))); //blau
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //rot  //0.16f
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0.1f, 0, 0.2f);
+				endEffector->offsetPosition = vec3(0, 0, 0.05f);
 
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //grün
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blau
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.16f))); //rot
-
-				// Dynamische korrektur der rotation:
-				// - differenz zwischen aktueller Rotation und ziel-rotation ermitteln (alle drei achsen)
-				// - differenz von aktueller Rotation abziehen/addieren 
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //rot  //0.16f
 			}
 
 			endEffector->initialized = true;
@@ -451,7 +446,7 @@ namespace {
 			desPosition[3] = controller.vrPose.position;
 			desRotation[3] = controller.vrPose.orientation;
 
-			setDesiredPosition(leftFoot, desPosition[3], desRotation[3]);
+			setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
@@ -468,7 +463,7 @@ namespace {
 			desPosition[4] = controller.vrPose.position;
 			desRotation[4] = controller.vrPose.orientation;
 
-			setDesiredPosition(rightFoot, desPosition[4], desRotation[4]);
+			setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(rightHand, desPosition[0], desRotation[0]);
