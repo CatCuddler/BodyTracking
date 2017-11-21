@@ -37,34 +37,15 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = true;
+	bool logData = false;
 	int line = 0;
 
 	const int numOfEndEffectors = 5;
 
-	/*const int track = 0; // 0 - hands, 1 - feet
-	const int numOfEndEffectors = 2;
-	const char* initialTransFilename = "initTransAndRot_1506685997.csv";
-	const char* positionDataFilename = "positionData_1506685997.csv";*/
-
-	const int track = 1;
-	//const int numOfEndEffectors = 3;
-	//const char* initialTransFilename = "initTransAndRot_1506695407.csv";
-	//const char* positionDataFilename = "positionData_1506695407.csv";
-
-	//Walk with tracker on right foot, back and both hands
-	const int numOfEndEffectorsToRead = 4;
-	const char* initialTransFilename = "initTransAndRot_1509716042.csv";
-	const char* positionDataFilename = "positionData_1509716042.csv";
-	
-	//Moving both arms
-	//const int numOfEndEffectorsToRead = 4;
-	//const char* initialTransFilename = "initTransAndRot_1509716248.csv";
-	//const char* positionDataFilename = "positionData_1509716248.csv";
-		
-	//const int numOfEndEffectorsToRead = 2;
-	//const char* initialTransFilename = "initTransAndRot_1509716355.csv";
-	//const char* positionDataFilename = "positionData_1509716355.csv";
+	//tracked data of 5 tracker
+	const int numOfEndEffectorsToRead = 5;
+	const char* initialTransFilename = "initTransAndRot_1511178843.csv";
+	const char* positionDataFilename = "positionData_1511178843.csv";
 
 	double startTime;
 	double lastTime;
@@ -195,33 +176,32 @@ namespace {
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.55)); //rot
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.57)); //red
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
 				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.1)); //grün
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.1)); //green
 			}
 			else if (boneIndex == rightHandBoneIndex) {
 				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //rot
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.1)); //grün
-				//endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi)); //blau
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.1)); //green
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
 
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.0f))); //grün
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * 0.125f))); //blau
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //rot  //0.16f
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.0f))); //green
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * 0.125f))); //blue
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
 			}
 			else if (boneIndex == rightFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
 
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //grün
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blau
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //rot  //0.16f
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //green
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blue
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
 			}
 
 			endEffector->initialized = true;
@@ -536,7 +516,7 @@ namespace {
 
 #else
 		if (!initCharacter) {
-			avatar->setScale(0.95);	// Scale test
+			//avatar->setScale(0.95);	// Scale test
 
 			log(Info, "Read data from file %s", initialTransFilename);
 			vec3 initPos = vec3(0, 0, 0);
@@ -584,6 +564,7 @@ namespace {
 					}
 				}
 				else {
+					//Only 4 tracker
 					//Walk with tracker on right foot, back and both hands
 					switch (tracker) {
 					case 0: leftHandTracker = true;
@@ -595,22 +576,12 @@ namespace {
 					case 3: rightFootTracker = true;
 						break;
 					}
-
-					//Walk with tracker on right foot, back and both hands
-					//switch (tracker) {
-					//case 0: backTracker = true;
-					//	break;
-					//case 1: rightFootTracker = true;
-					//	break;
-					//}
 				}
 
 				if (leftFootTracker) {
-					//setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
 					setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
 				}
 				else if (rightFootTracker) {
-					//setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
 					setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
 				}
 				else if (backTracker) {
