@@ -4,7 +4,11 @@
 
 #include <Kore/Log.h>
 
-MoCap::MoCap() {
+MoCap::MoCap(std::vector<BoneNode*> bones) {
+
+}
+
+void MoCap::setBone(BoneNode* bone, Kore::vec3 desiredPosition) {
 
 }
 

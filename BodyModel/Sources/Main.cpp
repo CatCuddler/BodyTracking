@@ -36,17 +36,17 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 
+	bool useIK = true;
+	
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
 
-	const int numOfEndEffectors = 5;
-
 	//tracked data of 5 tracker
-	const int numOfEndEffectorsToRead = 5;
-	const char* initialTransFilename = "initTransAndRot_1511178843.csv";
-	const char* positionDataFilename = "positionData_1511178843.csv";
-
+	const int numOfEndEffectors = 5;
+	const char* initialTransFilename = "initTransAndRot.csv";
+	const char* positionDataFilename = "positionData.csv";
+	
 	double startTime;
 	double lastTime;
 	float fiveSec;
@@ -63,6 +63,7 @@ namespace {
 	ConstantLocation mLocation;
 
 	// Living room shader
+	bool renderRoom = true;
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
 	Shader* fragmentShader_living_room;
@@ -118,31 +119,23 @@ namespace {
 
 	bool initCharacter = false;
 
+	const bool renderTrackerAndController = true;
 	const int leftHandBoneIndex = 10;
 	const int rightHandBoneIndex = 29;
 	const int leftFootBoneIndex = 49;
 	const int rightFootBoneIndex = 53;
 	const int backBoneIndex = 4;//3;
-	const int renderTrackerOrTargetPosition = 1;		// 0 - dont render, 1 - render desired position
-
+	
 	void renderTracker() {
-		switch (renderTrackerOrTargetPosition) {
-		case 0:
-			// Dont render
-			break;
-		case 1:
-			// Render desired position
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				if (cubes[i] != nullptr) {
-					cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
-					Graphics4::setMatrix(mLocation, cubes[i]->M);
-					cubes[i]->render(tex);
-				}
+		// Render desired position
+		for (int i = 0; i < numOfEndEffectors; ++i) {
+			if (cubes[i] != nullptr) {
+				cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
+				Graphics4::setMatrix(mLocation, cubes[i]->M);
+				cubes[i]->render(tex);
 			}
-			break;
-		default:
-			break;
 		}
+		
 	}
 
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -262,6 +255,65 @@ namespace {
 		initRotInv = initRot.invert();
 		avatar->M = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
 		initTransInv = avatar->M.Invert();
+	}
+	
+	void readLogData() {
+		vec3 rawPos[numOfEndEffectors];
+		Quaternion rawRot[numOfEndEffectors];
+		
+		// Read line
+		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+			
+			for (int tracker = 0; tracker < numOfEndEffectors; ++tracker) {
+			 
+				desPosition[tracker] = rawPos[tracker];
+				desRotation[tracker] = rawRot[tracker];
+			 
+				switch (tracker) {
+					case 0:
+						setDesiredPositionAndOrientation(leftHand, desPosition[tracker], desRotation[tracker]);
+						break;
+					case 1:
+						setDesiredPositionAndOrientation(rightHand, desPosition[tracker], desRotation[tracker]);
+						break;
+					case 2:
+						setBackBonePosition(desPosition[tracker], desRotation[tracker]);
+						break;
+					case 3:
+						setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
+						break;
+					case 4:
+						setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
+						break;
+				}
+			}
+		}
+		
+		//log(Info, "%i", line);
+		line += numOfEndEffectors;
+	}
+	
+	void readMocapData() {
+		//log(Info, "Read Mocap from file %s", mocapFilepath);
+		/*			std::string boneName;
+		 vec3 positionForBone = vec3(0, 0, 0);;
+		 mocap->readMocapData(mocapFilepath, &boneName, &positionForBone);
+		 
+		 if (boneName == "rhand") {
+		 desPosition[0] = positionForBone;
+		 }
+		 else if (boneName == "lhand") {
+		 desPosition[1] = positionForBone;
+		 }
+		 else if (boneName == "lowerback") {
+		 desPosition[2] = positionForBone;
+		 }
+		 else if (boneName == "lfoot") {
+		 desPosition[3] = positionForBone;
+		 }
+		 else if (boneName == "rfoot") {
+		 desPosition[4] = positionForBone;
+		 }*/
 	}
 
 	void update() {
@@ -504,14 +556,12 @@ namespace {
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 
 		// Render tracker
-		renderTracker();
+		if (renderTrackerAndController) renderTracker();
 
 		// Render living room
-		if (!firstPersonMonitor) {
-			renderLivingRoom(V, P);
-		}
-		else {
-			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		if (renderRoom) {
+			if (!firstPersonMonitor) renderLivingRoom(V, P);
+			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 
 #else
@@ -531,73 +581,9 @@ namespace {
 
 			initCharacter = true;
 		}
-		 
-		vec3 rawPos[numOfEndEffectorsToRead];
-		Quaternion rawRot[numOfEndEffectorsToRead];
-		// Read line
-		if (logger->readData(line, numOfEndEffectorsToRead, positionDataFilename, rawPos, rawRot)) {
-
-			for (int tracker = 0; tracker < numOfEndEffectorsToRead; ++tracker) {
-			
-				desPosition[tracker] = rawPos[tracker];
-				desRotation[tracker] = rawRot[tracker];
-
-				bool leftFootTracker = false;
-				bool rightFootTracker = false;
-				bool leftHandTracker = false;
-				bool rightHandTracker = false;
-				bool backTracker = false;
-
-				if (numOfEndEffectorsToRead == 5) {
-					//Data contains all 5 trackers
-					switch (tracker) {
-					case 0: leftHandTracker = true;
-						break;
-					case 1: rightHandTracker = true;
-						break;
-					case 2: backTracker = true;
-						break;
-					case 3: leftFootTracker = true;
-						break; 
-					case 4: rightFootTracker = true;
-						break;
-					}
-				}
-				else {
-					//Only 4 tracker
-					//Walk with tracker on right foot, back and both hands
-					switch (tracker) {
-					case 0: leftHandTracker = true;
-						break;
-					case 1: rightHandTracker = true;
-						break;
-					case 2: backTracker = true;
-						break;
-					case 3: rightFootTracker = true;
-						break;
-					}
-				}
-
-				if (leftFootTracker) {
-					setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
-				}
-				else if (rightFootTracker) {
-					setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
-				}
-				else if (backTracker) {
-					setBackBonePosition(desPosition[tracker], desRotation[tracker]);
-				}
-				else if (leftHandTracker) {
-					setDesiredPositionAndOrientation(leftHand, desPosition[tracker], desRotation[tracker]);
-				}
-				else if (rightHandTracker) {
-					setDesiredPositionAndOrientation(rightHand, desPosition[tracker], desRotation[tracker]);
-				}
-			}
-		}
-
-		//log(Info, "%i", line);
-		line += numOfEndEffectorsToRead;
+		
+		if (useIK) readLogData();
+		else readMocapData();
 
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -616,7 +602,7 @@ namespace {
 		renderTracker();
 
 		// Render living room
-		renderLivingRoom(V, P);
+		if (renderRoom) renderLivingRoom(V, P);
 #endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -776,9 +762,9 @@ namespace {
 	void init() {
 		loadAvatarShader();
 #ifdef KORE_STEAMVR
-		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure, useIK);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure, useIK);
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
@@ -790,12 +776,14 @@ namespace {
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05);
 		}
 
-		loadLivingRoomShader();
-		livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 1);
-		Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
-		livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		livingRoomRot.rotate(Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
-		livingRoom->M = mat4::Translation(-0.7, 0, 0) * livingRoomRot.matrix().Transpose();
+		if (renderRoom) {
+			loadLivingRoomShader();
+			livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 1);
+			Quaternion livingRoomRot = Quaternion(0, 0, 0, 1);
+			livingRoomRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+			livingRoomRot.rotate(Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
+			livingRoom->M = mat4::Translation(-0.7, 0, 0) * livingRoomRot.matrix().Transpose();
+		}
 
 		logger = new Logger();
 
