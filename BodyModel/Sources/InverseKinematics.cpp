@@ -325,6 +325,7 @@ void InverseKinematics::setJointConstraints() {
 }
 
 float InverseKinematics::getAverageIter() {
-	float average = sumIter / (float)totalNum;
+	float average = -1;
+	if (totalNum != 0) average = sumIter / (float)totalNum;
 	return average;
 }
