@@ -7,6 +7,9 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 namespace {
+	
+	const int headBoneIndex = 20;
+	
 	vec2 convert(vec4 pos, const mat4& modelMatrix, const mat4& viewMatrix, const mat4& projectionMatrix, int screenWidth, int screenHeight) {
 		vec4 nPos = modelMatrix * pos;
 		nPos = viewMatrix * nPos;
@@ -28,7 +31,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	
 	//if (bones.size() > 0) {
 	// Get the highest position
-	BoneNode* head = getBoneWithIndex(46);
+	BoneNode* head = getBoneWithIndex(headBoneIndex);
 	Kore::vec4 position = head->combined * Kore::vec4(0, 0, 0, 1);
 	position *= 1.0/position.w();
 	currentHeight = position.z();
