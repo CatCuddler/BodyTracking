@@ -12,20 +12,16 @@ struct BoneNode;
 class MoCap {
 
 private:
+	const char* mocapFilepath = "mocap/mocap_29.txt";	//jumping jacks, side twists, bend over, squats
 	
-	int headerMocap = 4;
+	int headerMocap = 3;
 	int currTxtLineNumber = 0;
 	std::fstream positionMocapData;
 	
-	
-
+	std::string readLine(Kore::vec3* rawPos);
 	
 public:
 	MoCap(std::vector<BoneNode*> bones);
 	
-	void setBone(BoneNode* bone, Kore::vec3 desiredPosition);
-	
-	void readMocalSet(std::string* boneName, Kore::vec3* rawPos);
-	void readMocapData(const char* filename, std::string* boneName, Kore::vec3* rawPos);
-
+	void readMocalSet(Kore::vec3* rawPos);
 };
