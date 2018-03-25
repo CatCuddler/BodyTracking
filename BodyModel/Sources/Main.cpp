@@ -120,10 +120,10 @@ namespace {
 	bool initCharacter = false;
 
 	const bool renderTrackerAndController = true;
-	const int leftHandBoneIndex = 10;
-	const int rightHandBoneIndex = 29;
-	const int leftFootBoneIndex = 49;
-	const int rightFootBoneIndex = 53;
+	const int leftHandBoneIndex = 14;//10;
+	const int rightHandBoneIndex = 24;//29;
+	const int leftFootBoneIndex = 6;//49;
+	const int rightFootBoneIndex = 31;//53;
 	const int backBoneIndex = 4;//3;
 	
 	void renderTracker() {
@@ -294,26 +294,82 @@ namespace {
 	}
 	
 	void readMocapData() {
-		//log(Info, "Read Mocap from file %s", mocapFilepath);
-		/*			std::string boneName;
-		 vec3 positionForBone = vec3(0, 0, 0);;
-		 mocap->readMocapData(mocapFilepath, &boneName, &positionForBone);
-		 
-		 if (boneName == "rhand") {
-		 desPosition[0] = positionForBone;
-		 }
-		 else if (boneName == "lhand") {
-		 desPosition[1] = positionForBone;
-		 }
-		 else if (boneName == "lowerback") {
-		 desPosition[2] = positionForBone;
-		 }
-		 else if (boneName == "lfoot") {
-		 desPosition[3] = positionForBone;
-		 }
-		 else if (boneName == "rfoot") {
-		 desPosition[4] = positionForBone;
-		 }*/
+		vec3 rawRot[29];
+		
+		avatar->getNextMocapSet(rawRot);
+		
+		for (int i = 0; i < 29; ++i) {
+			
+			int boneIndex = -1;
+			switch (i) {
+				// Map indices from mocap to *.ogex
+				// TODO: move this to mocap.h
+				case 0:
+					//boneIndex = 3;
+					break;
+				case 1:				//lowerback
+					boneIndex = 7;	//LowerBack
+					break;
+				case 2:				//upperback
+					boneIndex = 8;	//Spine
+					break;
+				case 3:				//thorax
+					boneIndex = 9;	//Spine1
+					break;
+					
+				case 7:				//rclavicle
+					boneIndex = 21;	//RightShoulder
+					break;
+				case 8:				//rhumerus
+					boneIndex = 22;	//RightArm
+					break;
+				case 9:				//rradius
+					boneIndex = 23;	//RightForeArm
+					break;
+					
+				case 21:			//rfemur
+					boneIndex = 29;	//RightUpLeg
+					break;
+				case 22:			//rtibia
+					boneIndex = 30;	//RightLeg
+					break;
+					
+				case 25:			//lfemur
+					boneIndex = 4;	//LeftUpLeg
+					break;
+				case 26:			//ltibia
+					boneIndex = 5;	//LeftLeg
+					break;
+					
+				case 14:			//lclavicle
+					boneIndex = 11;	//LeftShoulder
+					break;
+				case 15:			//lhumerus
+					boneIndex = 12;	//LeftArm
+					break;
+				case 16:			//lradius
+					boneIndex = 13;	//LeftForeArm
+				default:
+					break;
+			}
+			
+			if (boneIndex != -1) {
+				Kore::vec3 desRotEuler = rawRot[i];
+				Kore::Quaternion desRot;
+				RotationUtility::eulerToQuat(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()), &desRot);
+				
+				avatar->setDesiredPositionAndOrientation(boneIndex, vec3(0, 0, 0), desRot);
+				
+			}
+			
+			desPosition[0] = rawRot[0];
+			//log(Info, "%f %f %f", rawRot[0].x(), rawRot[0].y(), rawRot[0].z());
+			//desRotation[0] = Quaternion(Kore::pi, 0, 0, 1);
+			//desRotation[0].normalize();
+			//setBackBonePosition(desPosition[0], desRotation[0]);
+			
+			
+		}
 	}
 
 	void update() {
@@ -522,7 +578,7 @@ namespace {
 			avatar->animate(tex, deltaT);
 
 			// Render tracker
-			renderTracker();
+			if (renderTrackerAndController) renderTracker();
 
 			// Render living room
 			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
@@ -568,9 +624,12 @@ namespace {
 		if (!initCharacter) {
 			//avatar->setScale(0.95);	// Scale test
 
-			log(Info, "Read data from file %s", initialTransFilename);
 			vec3 initPos = vec3(0, 0, 0);
-			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+			
+			if (useIK) {
+				log(Info, "Read data from file %s", initialTransFilename);
+				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+			}
 
 			initRot.normalize();
 			initRotInv = initRot.invert();
@@ -599,7 +658,7 @@ namespace {
 		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 
 		// Render tracker
-		renderTracker();
+		if(renderTrackerAndController) renderTracker();
 
 		// Render living room
 		if (renderRoom) renderLivingRoom(V, P);
