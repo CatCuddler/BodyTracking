@@ -17,7 +17,6 @@ private:
 	
 	// MoCap
 	MoCap* mocap;
-	const char* mocapFilepath = "mocap.txt";
 	
 	float currentHeight;
 	
@@ -42,10 +41,13 @@ public:
 	void setDesiredPosition(int boneIndex, Kore::vec3 desiredPos);
 	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot = true);
 	
+	BoneNode* getBoneWithIndex(int index) const;
+	
 	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 	
 	float getAverageIKiterationNum() const;
 	float getHeight() const;
 	
-	
+	// Mocap
+	void getNextMocapSet(Kore::vec3* rawPos);
 };

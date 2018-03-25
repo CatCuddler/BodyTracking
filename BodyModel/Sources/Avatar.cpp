@@ -207,7 +207,7 @@ void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredP
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	
 	if (useIK) invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
-	else mocap->setBone(bone, desiredPosition);
+	else setLocalRotation(boneIndex, desiredRot);
 }
 
 void Avatar::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
@@ -219,6 +219,11 @@ void Avatar::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
 	bone->local = bone->transform * rotMat;
 }
 
+BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
+	BoneNode* bone = bones[boneIndex - 1];
+	return bone;
+}
+
 float Avatar::getAverageIKiterationNum() const {
 	if (useIK) return invKin->getAverageIter();
 	else return -1;
@@ -226,4 +231,8 @@ float Avatar::getAverageIKiterationNum() const {
 
 float Avatar::getHeight() const {
 	return currentHeight;
+}
+
+void Avatar::getNextMocapSet(Kore::vec3* rawPos) {
+	mocap->readMocalSet(rawPos);
 }

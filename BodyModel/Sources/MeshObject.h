@@ -134,7 +134,6 @@ public:
 	std::vector<BoneNode*> children;
 	std::vector<Light*> lights;
 
-	BoneNode* getBoneWithIndex(int index) const;
 	Material* findMaterialWithIndex(const int index);
 	
 private:	

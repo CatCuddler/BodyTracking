@@ -198,11 +198,6 @@ void MeshObject::LoadObj(const char* filename) {
 	delete[] buffer;
 }
 
-BoneNode* MeshObject::getBoneWithIndex(int boneIndex) const {
-	BoneNode* bone = bones[boneIndex - 1];
-	return bone;
-}
-
 void MeshObject::ConvertObjects(const Structure& rootStructure) {
 	const Structure* structure = rootStructure.GetFirstSubnode();
 	while (structure) {
