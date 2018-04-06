@@ -820,7 +820,7 @@ namespace {
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure, useIK);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton_tpose_13_29.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure, useIK);
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));
