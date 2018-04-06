@@ -44,6 +44,7 @@ public:
 	BoneNode* getBoneWithIndex(int index) const;
 	
 	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
+	void setLocalRotation(int boneIndex, Kore::vec3 rot);
 	
 	float getAverageIKiterationNum() const;
 	float getHeight() const;

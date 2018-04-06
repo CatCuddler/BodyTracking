@@ -357,18 +357,15 @@ namespace {
 				Kore::vec3 desRotEuler = rawRot[i];
 				Kore::Quaternion desRot;
 				RotationUtility::eulerToQuat(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()), &desRot);
-				
 				avatar->setDesiredPositionAndOrientation(boneIndex, vec3(0, 0, 0), desRot);
+				
+				//vec3 rot = vec3(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()));
+				//avatar->setLocalRotation(boneIndex, rot);
+				
 				
 			}
 			
 			desPosition[0] = rawRot[0];
-			//log(Info, "%f %f %f", rawRot[0].x(), rawRot[0].y(), rawRot[0].z());
-			//desRotation[0] = Quaternion(Kore::pi, 0, 0, 1);
-			//desRotation[0].normalize();
-			//setBackBonePosition(desPosition[0], desRotation[0]);
-			
-			
 		}
 	}
 
@@ -823,7 +820,7 @@ namespace {
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure, useIK);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton_tpose_13_29.ogex", "avatar/", structure, useIK);
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));

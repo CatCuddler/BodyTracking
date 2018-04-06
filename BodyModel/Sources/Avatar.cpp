@@ -222,6 +222,23 @@ void Avatar::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
 	bone->local = bone->transform * rotMat;
 }
 
+void Avatar::setLocalRotation(int boneIndex, Kore::vec3 rot) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	
+	Kore::mat4 rotMat = Kore::mat4::Identity();
+	rotMat = rotMat.RotationZ(rot.z());
+	rotMat = rotMat.RotationY(rot.y());
+	rotMat = rotMat.RotationX(rot.x());
+	//rotMat = desiredRotation.matrix().Transpose();
+	
+	Kore::Quaternion quat;
+	RotationUtility::getOrientation(&rotMat, &quat);
+	bone->quaternion = quat;
+	bone->interQuat = quat;
+	
+	bone->local = bone->transform * rotMat;
+}
+
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	BoneNode* bone = bones[boneIndex - 1];
 	return bone;
