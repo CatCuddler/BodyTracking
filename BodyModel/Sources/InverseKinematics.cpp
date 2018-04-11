@@ -234,8 +234,8 @@ void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
 
-	// pelvis
-	nodeLeft = bones[3 - 1];
+	// hips
+	nodeLeft = bones[2 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 
