@@ -94,8 +94,8 @@ namespace {
 	LivingRoom* livingRoom;
 
 #ifdef KORE_STEAMVR
-	int leftTrackerIndex = -1;
-	int rightTrackerIndex = -1;
+	int leftHandTrackerIndex = -1;
+	int rightHandTrackerIndex = -1;
 	int leftFootTrackerIndex = -1;
 	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
@@ -119,12 +119,13 @@ namespace {
 
 	bool initCharacter = false;
 
+	const bool setOrientationForFoot = true;
 	const bool renderTrackerAndController = true;
-	const int leftHandBoneIndex = 14;//10;
-	const int rightHandBoneIndex = 24;//29;
-	const int leftFootBoneIndex = 6;//49;
-	const int rightFootBoneIndex = 31;//53;
-	const int backBoneIndex = 4;//3;
+	const int leftHandBoneIndex = 14;
+	const int rightHandBoneIndex = 24;
+	const int leftFootBoneIndex = 5;
+	const int rightFootBoneIndex = 30;
+	const int backBoneIndex = 2;
 	
 	void renderTracker() {
 		// Render desired position
@@ -135,7 +136,6 @@ namespace {
 				cubes[i]->render(tex);
 			}
 		}
-		
 	}
 
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -161,6 +161,7 @@ namespace {
 	}
 
 	bool initEndEffector(EndEffector* endEffector, const int boneIndex) {
+		// TODO: calibrate -> should be independent from tracker or controller orientation
 		if (!endEffector->initialized) {
 
 			endEffector->boneIndex = boneIndex;
@@ -169,34 +170,35 @@ namespace {
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.57)); //red
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.4));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
-				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.1)); //green
+				endEffector->offsetPosition = vec3(0, 0.02f, 0);
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.6f));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5));
 			}
 			else if (boneIndex == rightHandBoneIndex) {
-				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.1)); //green
+				endEffector->offsetPosition = vec3(0, 0.02f, 0);
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.6f));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
-
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.0f))); //green
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * 0.125f))); //blue
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
-
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //green
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blue
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1));
 			}
 
+			endEffector->offsetRotation.normalize();
 			endEffector->initialized = true;
 			return true;
 		}
@@ -268,7 +270,7 @@ namespace {
 			 
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
-			 
+				
 				switch (tracker) {
 					case 0:
 						setDesiredPositionAndOrientation(leftHand, desPosition[tracker], desRotation[tracker]);
@@ -280,10 +282,12 @@ namespace {
 						setBackBonePosition(desPosition[tracker], desRotation[tracker]);
 						break;
 					case 3:
-						setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
+						if (setOrientationForFoot) setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
+						else setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
 						break;
 					case 4:
-						setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
+						if (setOrientationForFoot) setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
+						else setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
 						break;
 				}
 			}
@@ -467,20 +471,20 @@ namespace {
 						log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
 						backTrackerIndex = i;
 					}
-					//leftTrackerIndex = -1;
-					//rightTrackerIndex = i;
+					//leftHandTrackerIndex = -1;
+					//rightHandTrackerIndex = i;
 				}
 				else if (controller.trackedDevice == TrackedDevice::Controller) {
 					//Hand tracker
 					vec3 trackerPos = controller.vrPose.position;
 					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 					if (trackerTransPos.x() > 0) {
-						log(Info, "leftTrackerIndex: %i -> %i", leftTrackerIndex, i);
-						leftTrackerIndex = i;
+						log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
+						leftHandTrackerIndex = i;
 					}
 					else {
-						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
-						rightTrackerIndex = i;
+						log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
+						rightHandTrackerIndex = i;
 					}
 				}
 			}
@@ -494,8 +498,8 @@ namespace {
 		}
 
 		VrPoseState controller;
-		if (leftTrackerIndex != -1) {
-			controller = VrInterface::getController(leftTrackerIndex);
+		if (leftHandTrackerIndex != -1) {
+			controller = VrInterface::getController(leftHandTrackerIndex);
 
 			// Get controller position and rotation
 			desPosition[0] = controller.vrPose.position;
@@ -504,8 +508,8 @@ namespace {
 			setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
 		}
 
-		if (rightTrackerIndex != -1) {
-			controller = VrInterface::getController(rightTrackerIndex);
+		if (rightHandTrackerIndex != -1) {
+			controller = VrInterface::getController(rightHandTrackerIndex);
 
 			// Get controller position and rotation
 			desPosition[1] = controller.vrPose.position;
@@ -523,7 +527,7 @@ namespace {
 
 			setBackBonePosition(desPosition[2], desRotation[2]);
 		}
-
+		
 		if (leftFootTrackerIndex != -1) {
 			controller = VrInterface::getController(leftFootTrackerIndex);
 
@@ -531,14 +535,8 @@ namespace {
 			desPosition[3] = controller.vrPose.position;
 			desRotation[3] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
-
-			//if (track == 0) {
-			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
-			//}
-			//else if (track == 1) {
-			//	setDesiredPosition(leftFoot, desPosition[0], desRotation[0]);
-			//}
+			if (setOrientationForFoot) setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
+			else setDesiredPosition(leftFoot, desPosition[3], desRotation[3]);
 		}
 
 		if (rightFootTrackerIndex != -1) {
@@ -548,14 +546,8 @@ namespace {
 			desPosition[4] = controller.vrPose.position;
 			desRotation[4] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
-
-			//if (track == 0) {
-			//	setDesiredPositionAndOrientation(rightHand, desPosition[0], desRotation[0]);
-			//}
-			//else if (track == 1) {
-			//	setDesiredPosition(rightFoot, desPosition[0], desRotation[0]);
-			//}
+			if (setOrientationForFoot) setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
+			else setDesiredPosition(rightFoot, desPosition[4], desRotation[4]);
 		}
 
 		// Render for both eyes
