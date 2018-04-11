@@ -63,7 +63,7 @@ namespace {
 	ConstantLocation mLocation;
 
 	// Living room shader
-	bool renderRoom = true;
+	bool renderRoom = false;
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
 	Shader* fragmentShader_living_room;
@@ -119,12 +119,12 @@ namespace {
 
 	bool initCharacter = false;
 
-	const bool setOrientationForFoot = true;
+	const bool setOrientationForFoot = false;
 	const bool renderTrackerAndController = true;
 	const int leftHandBoneIndex = 14;
 	const int rightHandBoneIndex = 24;
-	const int leftFootBoneIndex = 5;
-	const int rightFootBoneIndex = 30;
+	const int leftFootBoneIndex = 6;
+	const int rightFootBoneIndex = 31;
 	const int backBoneIndex = 2;
 	
 	void renderTracker() {
@@ -170,29 +170,29 @@ namespace {
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
-				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.4));
+				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.42));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0.02f, 0);
+				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.6f));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5));
 			}
 			else if (boneIndex == rightHandBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0.02f, 0);
+				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi * 0.6f));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
 			}
 			else if (boneIndex == leftFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.05f);
+				endEffector->offsetPosition = vec3(0.05f, 0, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0, 0.05f);
+				endEffector->offsetPosition = vec3(0.05f, 0, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1));
@@ -270,6 +270,8 @@ namespace {
 			 
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
+				
+				//log(Info, "pos: %f %f %f rot: %f %f %f %f", desPosition[tracker].x(), desPosition[tracker].y(), desPosition[tracker].z(), desRotation[tracker].w, desRotation[tracker].x, desRotation[tracker].y, desRotation[tracker].z);
 				
 				switch (tracker) {
 					case 0:
