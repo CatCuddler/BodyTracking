@@ -21,7 +21,7 @@ Jacobian::Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot) {
 }
 
 float Jacobian::getError() {
-    return calcDeltaP().getLength();
+    return (!deltaP.isZero() ? deltaP : calcDeltaP()).getLength();
 }
 
 std::vector<float> Jacobian::getThetaByPseudoInverse() {
@@ -37,8 +37,8 @@ std::vector<float> Jacobian::getThetaByPseudoInverse() {
     mat_mxn pseudoInvY = calcPseudoInverse(jacobianY);
     mat_mxn pseudoInvZ = calcPseudoInverse(jacobianZ);
      
-     // Get deltaP
-     vec_m deltaP = calcDeltaP();
+    // Get deltaP
+    deltaP = calcDeltaP();
     
     // Calculate the angles
     Kore::vec3 aThetaX = pseudoInvX * deltaP;
@@ -62,24 +62,15 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
     pos_aktuell *= 1.0 / pos_aktuell.w();
     Kore::vec4 deltaPos = pos_soll - pos_aktuell;
     
+    // Calculate difference between desired rotation and actual rotation
     Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
-    // Calculate error between deisred rotation and actual rotation
     Kore::Quaternion rot_aktuell;
     Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
     Kore::Quaternion desQuat = rot_soll;
     desQuat.normalize();
-    
-    //Kore::mat4 rotErr = desQuat.matrix().Transpose() * curQuat.matrix().Transpose().Invert();
-    //Kore::Quaternion quatDiff;
-    //RotationUtility::getOrientation(&rotErr, &quatDiff);
-    
     Kore::Quaternion quatDiff = desQuat.rotated(rot_aktuell.invert());
     if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
-    
     Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
-    
-    // Dont enforce joint limits by clamping if we know the desired rotation
-    //clamp = false;
     
     // position
     deltaP[0] = deltaPos.x();
@@ -89,8 +80,6 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
     deltaP[3] = deltaRot.x();
     deltaP[4] = deltaRot.y();
     deltaP[5] = deltaRot.z();
-    
-    //log(Info, "error %f \t diffPos %f \t error diffRot %f", deltaP.getLength(), diffPos.getLength(), diffRot.getLength());
     
     return deltaP;
 }
