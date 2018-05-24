@@ -119,7 +119,6 @@ namespace {
 
 	bool initCharacter = false;
 
-	const bool setOrientationForFoot = false;
 	const bool renderTrackerAndController = true;
 	const int leftHandBoneIndex = 14;
 	const int rightHandBoneIndex = 24;
@@ -217,19 +216,6 @@ namespace {
 		desPosition = vec3(desPos.x(), desPos.y(), desPos.z());
 	}
 
-	void setDesiredPosition(EndEffector* endEffector, Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
-
-		applyOffset(endEffector, desPosition, desRotation);
-
-		// Transform desired position to the character coordinate system
-		vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		avatar->setDesiredPosition(endEffector->boneIndex, finalPos);
-	}
-
-
 	// desPosition and desRotation are global
 	void setDesiredPositionAndOrientation(EndEffector* endEffector, Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
 		if (logData) {
@@ -284,12 +270,10 @@ namespace {
 						setBackBonePosition(desPosition[tracker], desRotation[tracker]);
 						break;
 					case 3:
-						if (setOrientationForFoot) setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
-						else setDesiredPosition(leftFoot, desPosition[tracker], desRotation[tracker]);
+						setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
 						break;
 					case 4:
-						if (setOrientationForFoot) setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
-						else setDesiredPosition(rightFoot, desPosition[tracker], desRotation[tracker]);
+						setDesiredPositionAndOrientation(rightFoot, desPosition[tracker], desRotation[tracker]);
 						break;
 				}
 			}
@@ -537,8 +521,7 @@ namespace {
 			desPosition[3] = controller.vrPose.position;
 			desRotation[3] = controller.vrPose.orientation;
 
-			if (setOrientationForFoot) setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
-			else setDesiredPosition(leftFoot, desPosition[3], desRotation[3]);
+			setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
 		}
 
 		if (rightFootTrackerIndex != -1) {
@@ -548,8 +531,7 @@ namespace {
 			desPosition[4] = controller.vrPose.position;
 			desRotation[4] = controller.vrPose.orientation;
 
-			if (setOrientationForFoot) setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
-			else setDesiredPosition(rightFoot, desPosition[4], desRotation[4]);
+			setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
 		}
 
 		// Render for both eyes
