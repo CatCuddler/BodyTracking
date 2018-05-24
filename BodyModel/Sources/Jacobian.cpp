@@ -14,7 +14,7 @@
 
 #include <Kore/Log.h>
 
-Jacobian::Jacobian(BoneNode* bone, Kore::vec4* pos, Kore::Quaternion* rot) {
+Jacobian::Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot) {
     endEffektor = bone;
     pos_soll = pos;
     rot_soll = rot;
@@ -60,20 +60,20 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
     // Calculate difference between desired position and actual position of the end effector
     Kore::vec4 pos_aktuell = endEffektor->combined * Kore::vec4(0, 0, 0, 1);
     pos_aktuell *= 1.0 / pos_aktuell.w();
-    Kore::vec4 deltaPos = *pos_soll - pos_aktuell;
+    Kore::vec4 deltaPos = pos_soll - pos_aktuell;
     
     Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
     // Calculate error between deisred rotation and actual rotation
     Kore::Quaternion rot_aktuell;
     Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
-    Kore::Quaternion desQuat = *rot_soll;
+    Kore::Quaternion desQuat = rot_soll;
     desQuat.normalize();
     
     //Kore::mat4 rotErr = desQuat.matrix().Transpose() * curQuat.matrix().Transpose().Invert();
     //Kore::Quaternion quatDiff;
     //RotationUtility::getOrientation(&rotErr, &quatDiff);
     
-    Kore::Quaternion quatDiff = desQuat.rotated((*rot_soll).invert());
+    Kore::Quaternion quatDiff = desQuat.rotated(rot_aktuell.invert());
     if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
     
     Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());

@@ -102,7 +102,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 bool InverseKinematics::inverseKinematicsByPhilipp(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
     if (!targetBone->initialized) return false;
     
-    Jacobian* jacobian = new Jacobian(targetBone, &desiredPosition, &desiredRotation);
+    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation);
     
     for (int i = 0; i < maxSteps; ++i) {
         // if position has reached

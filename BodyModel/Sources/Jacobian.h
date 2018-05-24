@@ -19,7 +19,7 @@ struct BoneNode;
 class Jacobian {
     
 public:
-    Jacobian(BoneNode* bone, Kore::vec4* pos, Kore::Quaternion* rot);
+    Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot);
     float getError();
     std::vector<float> getThetaByPseudoInverse();
     
@@ -41,8 +41,8 @@ private:
     // typedef Kore::Vector<float, nDOFs> vec_m;
     
     BoneNode* endEffektor;
-    Kore::vec4* pos_soll;
-    Kore::Quaternion* rot_soll;
+    Kore::vec4 pos_soll;
+    Kore::Quaternion rot_soll;
     /*
     mat_mxn J_target;
     mat_mxm U; // SVD
