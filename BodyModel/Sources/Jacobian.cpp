@@ -25,6 +25,10 @@ float Jacobian::getError() {
 }
 
 std::vector<float> Jacobian::getThetaByPseudoInverse() {
+    return getThetaByDLS(0.5);
+}
+
+std::vector<float> Jacobian::getThetaByDLS(float lambda) {
     std::vector<float> theta;
     
     // Get Jacobian
@@ -33,9 +37,9 @@ std::vector<float> Jacobian::getThetaByPseudoInverse() {
     mat_mxn jacobianZ = calcJacobian(Kore::vec4(0, 0, 1, 0));
     
     // Get Pseudo Inverse
-    mat_nxm pseudoInvX = calcPseudoInverse(jacobianX);
-    mat_nxm pseudoInvY = calcPseudoInverse(jacobianY);
-    mat_nxm pseudoInvZ = calcPseudoInverse(jacobianZ);
+    mat_nxm pseudoInvX = calcPseudoInverse(jacobianX, lambda);
+    mat_nxm pseudoInvY = calcPseudoInverse(jacobianY, lambda);
+    mat_nxm pseudoInvZ = calcPseudoInverse(jacobianZ, lambda);
      
     // Get deltaP
     deltaP = calcDeltaP();

@@ -22,6 +22,7 @@ public:
     Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot);
     float getError();
     std::vector<float> getThetaByPseudoInverse();
+    std::vector<float> getThetaByDLS(float lambda = 1.0);
     
 private:
     static const int nDOFs = 6; // m = 3k, 3 position + 3 orientation
@@ -48,7 +49,7 @@ private:
     
     vec_m calcDeltaP();
     mat_mxn calcJacobian(Kore::vec4 rotAxis);
-    mat_nxm calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda = 1);
+    mat_nxm calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda);
 };
 
 #endif /* Jacobian_h */
