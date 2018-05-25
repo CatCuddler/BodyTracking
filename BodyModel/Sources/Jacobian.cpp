@@ -33,19 +33,19 @@ std::vector<float> Jacobian::getThetaByPseudoInverse() {
     mat_mxn jacobianZ = calcJacobian(Kore::vec4(0, 0, 1, 0));
     
     // Get Pseudo Inverse
-    mat_mxn pseudoInvX = calcPseudoInverse(jacobianX);
-    mat_mxn pseudoInvY = calcPseudoInverse(jacobianY);
-    mat_mxn pseudoInvZ = calcPseudoInverse(jacobianZ);
+    mat_nxm pseudoInvX = calcPseudoInverse(jacobianX);
+    mat_nxm pseudoInvY = calcPseudoInverse(jacobianY);
+    mat_nxm pseudoInvZ = calcPseudoInverse(jacobianZ);
      
     // Get deltaP
     deltaP = calcDeltaP();
     
     // Calculate the angles
-    Kore::vec3 aThetaX = pseudoInvX * deltaP;
-    Kore::vec3 aThetaY = pseudoInvY * deltaP;
-    Kore::vec3 aThetaZ = pseudoInvZ * deltaP;
+    vec_n aThetaX = pseudoInvX * deltaP;
+    vec_n aThetaY = pseudoInvY * deltaP;
+    vec_n aThetaZ = pseudoInvZ * deltaP;
     
-    for (int i = 0; i < nJointDOFs; ++i) {
+    for (int i = 0; i < nGelenke; ++i) {
         theta.push_back(aThetaX[i]);
         theta.push_back(aThetaY[i]);
         theta.push_back(aThetaZ[i]);
@@ -92,7 +92,7 @@ Jacobian::mat_mxn Jacobian::calcJacobian(Kore::vec4 rotAxis) {
     Kore::vec4 p_aktuell = targetBone->combined * Kore::vec4(0, 0, 0, 1);
     p_aktuell *= 1.0 / p_aktuell.w();
     
-    for (int b = 0; b < nJointDOFs; ++b) {
+    for (int b = 0; b < nGelenke; ++b) {
         Kore::vec4 p_j, v_j, cross;
         BoneNode* bone = targetBone;
         
@@ -110,17 +110,17 @@ Jacobian::mat_mxn Jacobian::calcJacobian(Kore::vec4 rotAxis) {
         
         for (int i = 0; i < nDOFs; ++i) {
             switch(i) {
-                case 0 : jacobianMatrix[b][i] = cross.x();
+                case 0 : jacobianMatrix[i][b] = cross.x();
                     break;
-                case 1 : jacobianMatrix[b][i] = cross.y();
+                case 1 : jacobianMatrix[i][b] = cross.y();
                     break;
-                case 2 : jacobianMatrix[b][i] = cross.z();
+                case 2 : jacobianMatrix[i][b] = cross.z();
                     break;
-                case 3 : jacobianMatrix[b][i] = v_j.x();
+                case 3 : jacobianMatrix[i][b] = v_j.x();
                     break;
-                case 4 : jacobianMatrix[b][i] = v_j.y();
+                case 4 : jacobianMatrix[i][b] = v_j.y();
                     break;
-                case 5 : jacobianMatrix[b][i] = v_j.z();
+                case 5 : jacobianMatrix[i][b] = v_j.z();
                     break;
             }
         }
@@ -131,19 +131,13 @@ Jacobian::mat_mxn Jacobian::calcJacobian(Kore::vec4 rotAxis) {
     return jacobianMatrix;
 }
 
-Jacobian::mat_mxn Jacobian::calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda) { // lambda != 0 => DLS!
-    Jacobian::mat_mxn inv;
-    
-    if (nDOFs <= nJointDOFs) { // m <= n
+Jacobian::mat_nxm Jacobian::calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda) { // lambda != 0 => DLS!
+    if (nDOFs <= nGelenke) { // m <= n
         // Left Damped pseudo-inverse
-        Jacobian::mat_mxm id_m = Jacobian::mat_mxm::Identity();
-        inv = ((jacobian.Transpose() * jacobian + id_m * lambda * lambda).Invert() * jacobian.Transpose()).Transpose();
+        return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * lambda * lambda).Invert() * jacobian.Transpose();
     }
     else {
         // Right Damped pseudo-inverse
-        Jacobian::mat_nxn id_n = Jacobian::mat_nxn::Identity();
-        inv = (jacobian.Transpose() * (jacobian * jacobian.Transpose() + id_n * lambda * lambda).Invert()).Transpose();
+        return jacobian.Transpose() * (jacobian * jacobian.Transpose() + Jacobian::mat_mxm::Identity() * lambda * lambda).Invert();
     }
-    
-    return inv;
 }

@@ -24,13 +24,16 @@ public:
     std::vector<float> getThetaByPseudoInverse();
     
 private:
-    static const int nDOFs = 6; // 3 position + 3 orientation
-    static const int nJointDOFs = 3; // maxBone;
+    static const int nDOFs = 6; // m = 3k, 3 position + 3 orientation
+    static const int nGelenke = 3; // n
+    // static const int nJointDOFs = 3;
     
-    typedef Kore::Matrix<nDOFs, nJointDOFs, float> mat_mxn;
+    typedef Kore::Matrix<nGelenke, nDOFs, float> mat_mxn;
+    typedef Kore::Matrix<nDOFs, nGelenke, float> mat_nxm;
     typedef Kore::Matrix<nDOFs, nDOFs, float> mat_mxm;
-    typedef Kore::Matrix<nJointDOFs, nJointDOFs, float> mat_nxn;
+    typedef Kore::Matrix<nGelenke, nGelenke, float> mat_nxn;
     typedef Kore::Vector<float, nDOFs> vec_m;
+    typedef Kore::Vector<float, nGelenke> vec_n;
     
     BoneNode* endEffektor;
     Kore::vec4 pos_soll;
@@ -45,7 +48,7 @@ private:
     
     vec_m calcDeltaP();
     mat_mxn calcJacobian(Kore::vec4 rotAxis);
-    mat_mxn calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda = 1);
+    mat_nxm calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda = 1);
 };
 
 #endif /* Jacobian_h */
