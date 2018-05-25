@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Kore/Math/Quaternion.h>
-#include "Jacobian.h"
 
 #include <vector>
 

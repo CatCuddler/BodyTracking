@@ -3,6 +3,7 @@
 
 #include "RotationUtility.h"
 #include "MeshObject.h"
+#include "Jacobian.h"
 
 #include <Kore/Log.h>
 
