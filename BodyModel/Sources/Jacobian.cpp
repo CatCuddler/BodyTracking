@@ -24,6 +24,31 @@ float Jacobian::getError() {
     return (!deltaP.isZero() ? deltaP : calcDeltaP()).getLength();
 }
 
+std::vector<float> Jacobian::getThetaByTranspose() {
+    std::vector<float> theta;
+    
+    // Get Jacobian
+    mat_mxn jacobianX = calcJacobian(Kore::vec4(1, 0, 0, 0));
+    mat_mxn jacobianY = calcJacobian(Kore::vec4(0, 1, 0, 0));
+    mat_mxn jacobianZ = calcJacobian(Kore::vec4(0, 0, 1, 0));
+    
+    // Get deltaP
+    deltaP = calcDeltaP();
+    
+    // Calculate the angles
+    vec_n aThetaX = jacobianX.Transpose() * deltaP;
+    vec_n aThetaY = jacobianY.Transpose() * deltaP;
+    vec_n aThetaZ = jacobianZ.Transpose() * deltaP;
+    
+    for (int i = 0; i < nGelenke; ++i) {
+        theta.push_back(aThetaX[i]);
+        theta.push_back(aThetaY[i]);
+        theta.push_back(aThetaZ[i]);
+    }
+    
+    return theta;
+}
+
 std::vector<float> Jacobian::getThetaByPseudoInverse() {
     return getThetaByDLS(0.5);
 }

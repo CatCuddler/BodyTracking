@@ -21,6 +21,7 @@ class Jacobian {
 public:
     Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot);
     float getError();
+    std::vector<float> getThetaByTranspose();
     std::vector<float> getThetaByPseudoInverse();
     std::vector<float> getThetaByDLS(float lambda = 1.0);
     

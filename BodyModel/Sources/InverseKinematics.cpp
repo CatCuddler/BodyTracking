@@ -29,8 +29,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
             return true;
         }
         
+        applyChanges(jacobian->getThetaByTranspose(), targetBone);
         // applyChanges(jacobian->getThetaByPseudoInverse(), targetBone);
-        applyChanges(jacobian->getThetaByDLS(), targetBone);
+        // applyChanges(jacobian->getThetaByDLS(), targetBone);
         applyJointConstraints(targetBone);
         for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
     }
