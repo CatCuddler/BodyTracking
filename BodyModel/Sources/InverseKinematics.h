@@ -20,6 +20,8 @@ private:
 	float maxError;
 	int rootIndex;
 	std::vector<BoneNode*> bones;
+    
+    static const int ikMode = 0; // 0: JT, 1: JPI, 2: DLS
 	
 	void setJointConstraints();
 	void applyChanges(Jacobian::vec_n deltaTheta, BoneNode* targetBone);

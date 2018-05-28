@@ -28,7 +28,7 @@ public:
     
     vec_n getDeltaThetaByTranspose();
     vec_n getDeltaThetaByPseudoInverse();
-    vec_n getDeltaThetaByDLS(float lambda = 1.0);
+    vec_n getDeltaThetaByDLS();
     
 private:
     typedef Kore::Matrix<nJointDOFs, nDOFs, float> mat_mxn;
@@ -51,7 +51,7 @@ private:
     vec_m calcDeltaP();
     mat_mxn calcJacobian();
     vec_m calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis);
-    mat_nxm calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda);
+    mat_nxm calcPseudoInverse(float lambda);
     
     Kore::vec3 getPosition(BoneNode* bone);
 };

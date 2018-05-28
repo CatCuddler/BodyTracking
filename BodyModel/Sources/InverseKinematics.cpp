@@ -28,9 +28,24 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
             return true;
         }
         
-        // applyChanges(jacobian->getDeltaThetaByTranspose(), targetBone);
-        // applyChanges(jacobian->getDeltaThetaByPseudoInverse(), targetBone);
-        applyChanges(jacobian->getDeltaThetaByDLS(), targetBone);
+        Jacobian::vec_n deltaTheta;
+        switch (ikMode) {
+            case 0:
+                deltaTheta = jacobian->getDeltaThetaByTranspose();
+                break;
+            case 1:
+                deltaTheta = jacobian->getDeltaThetaByPseudoInverse();
+                break;
+            case 2:
+                deltaTheta = jacobian->getDeltaThetaByDLS();
+                break;
+                
+            default:
+                deltaTheta = jacobian->getDeltaThetaByTranspose();
+                break;
+        }
+
+        applyChanges(deltaTheta, targetBone);
         applyJointConstraints(targetBone);
         for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
     }

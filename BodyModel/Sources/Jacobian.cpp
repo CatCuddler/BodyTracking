@@ -41,29 +41,16 @@ Jacobian::vec_n Jacobian::getDeltaThetaByTranspose() {
     // Get Jacobian
     mat_mxn jacobian = calcJacobian();
     
-    // Get deltaP
-    deltaP = calcDeltaP();
-    
     // Calculate the angles
-    return jacobian.Transpose() * deltaP;
+    return jacobian.Transpose() * calcDeltaP();
 }
 
 Jacobian::vec_n Jacobian::getDeltaThetaByPseudoInverse() {
-    return getDeltaThetaByDLS(0);
+    return calcPseudoInverse(0.0) * calcDeltaP();
 }
 
-Jacobian::vec_n Jacobian::getDeltaThetaByDLS(float lambda) {
-    // Get Jacobian
-    mat_mxn jacobian = calcJacobian();
-    
-    // Get Pseudo Inverse
-    mat_nxm pseudoInv = calcPseudoInverse(jacobian, lambda);
-     
-    // Get deltaP
-    deltaP = calcDeltaP();
-    
-    // Calculate the angles
-    return pseudoInv * deltaP;
+Jacobian::vec_n Jacobian::getDeltaThetaByDLS() {
+    return calcPseudoInverse(1.0) * calcDeltaP();
 }
 
 Jacobian::vec_m Jacobian::calcDeltaP() {
@@ -154,7 +141,9 @@ Jacobian::vec_m Jacobian::calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuel
     return column;
 }
 
-Jacobian::mat_nxm Jacobian::calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda) { // lambda != 0 => DLS!
+Jacobian::mat_nxm Jacobian::calcPseudoInverse(float lambda) { // lambda != 0 => DLS!
+    Jacobian::mat_mxn jacobian = calcJacobian();
+    
     if (nDOFs <= nJointDOFs) { // m <= n
         // Left Damped pseudo-inverse
         return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * lambda * lambda).Invert() * jacobian.Transpose();
