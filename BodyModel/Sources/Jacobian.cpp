@@ -12,21 +12,14 @@
 #include "RotationUtility.h"
 #include "MeshObject.h"
 
+#include "Jacobian/MatrixRmn.h"
+
 #include <Kore/Log.h>
 
 Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot) {
     endEffektor = targetBone;
     pos_soll = pos;
     rot_soll = rot;
-    
-    for (int m = 0; m < nDOFs; ++m) {
-        for (int n = 0; n < nJointDOFs; ++n) {
-            if (n == m )
-                D[n][m] = 1;
-            else
-                D[n][m] = 0;
-        }
-    }
     
     /* BoneNode* bone = targetBone;
     int counter = 0;
@@ -55,12 +48,44 @@ Jacobian::vec_n Jacobian::calcDeltaThetaByTranspose() {
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByPseudoInverse() {
-    return calcPseudoInverse(0.0) * calcDeltaP();
+    return calcPseudoInverse(lambdaPseudoInverse) * calcDeltaP();
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByDLS() {
-    return calcPseudoInverse(1.0) * calcDeltaP();
+    return calcPseudoInverse(lambdaDLS) * calcDeltaP();
 }
+
+Jacobian::vec_n Jacobian::calcDeltaThetaBySVD() {
+    calcSVD();
+    
+    mat_nxm D;
+    for (int m = 0; m < nDOFs; ++m) {
+        for (int n = 0; n < nJointDOFs; ++n) {
+            D[n][m] = (m == n && d[m] > lambdaPseudoInverse) ? (1 / d[m]) : 0;
+        }
+    }
+    
+    return V * D * U.Transpose() * calcDeltaP();
+}
+
+Jacobian::vec_n Jacobian::calcDeltaThetaBySDLS() {
+    return calcPseudoInverse(lambdaDLS) * calcDeltaP();
+}
+
+Jacobian::vec_n Jacobian::calcDeltaThetaByDLSwithSVD() {
+    calcSVD();
+    
+    mat_nxm E;
+    for (int m = 0; m < nDOFs; ++m) {
+        for (int n = 0; n < nJointDOFs; ++n) {
+            E[n][m] = (m == n) ? (d[m] / (d[m] * d[m] + lambdaDLS * lambdaDLS)) : 0;
+        }
+    }
+    
+    return V * E * U.Transpose() * calcDeltaP();
+}
+
+// ################################################################
 
 Jacobian::vec_m Jacobian::calcDeltaP() {
     vec_m deltaP;
@@ -121,6 +146,7 @@ Jacobian::mat_mxn Jacobian::calcJacobian() {
     }
     
     // fill empty columns with zeros
+    // todo: check if necessary?
     for (int j = joint; j < nJointDOFs; ++j)
         for (int i = 0; i < nDOFs; ++i)
             jacobianMatrix[i][j] = 0;
@@ -175,4 +201,34 @@ Kore::vec3 Jacobian::calcPosition(BoneNode* bone) {
     result.z() = quat.z();
     
     return result;
+}
+
+void Jacobian::calcSVD() {
+    MatrixRmn J = MatrixRmn(nDOFs, nJointDOFs);
+    MatrixRmn U = MatrixRmn(nDOFs, nDOFs);
+    MatrixRmn V = MatrixRmn(nJointDOFs, nJointDOFs);
+    VectorRn d = VectorRn(Min(nDOFs, nJointDOFs));
+    
+    Jacobian::mat_mxn jacobian = calcJacobian();
+    for (int m = 0; m < nDOFs; ++m) {
+        for (int n = 0; n < nJointDOFs; ++n) {
+            J.Set(m, n, (double) jacobian[m][n]);
+        }
+    }
+    
+    J.ComputeSVD(U, d, V);
+    assert(J.DebugCheckSVD(U, d , V));
+    
+    for (int m = 0; m < Max(nDOFs, nJointDOFs); ++m) {
+        for (int n = 0; n < Max(nDOFs, nJointDOFs); ++n) {
+            if (m < nDOFs && n < nDOFs)
+                Jacobian::U[m][n] = (float) U.Get(m, n);
+            
+            if (m < nJointDOFs && n < nJointDOFs)
+                Jacobian::V[m][n] = (float) V.Get(m, n);
+            
+            if (m == n && m < nDOFs)
+                Jacobian::d[m] = (m < Min(nDOFs, nJointDOFs)) ? (float) d.Get(m) : 0;
+        }
+    }
 }

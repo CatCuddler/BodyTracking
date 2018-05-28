@@ -22,9 +22,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
             sumIter += i;
             ++totalNum;
             
-            log(Kore::Info, "Iteration %i", i);
-            log(Kore::Info, "Error %f from %f", jacobian->getError(), maxError);
-            
             return true;
         }
         
@@ -38,6 +35,15 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
                 break;
             case 2:
                 deltaTheta = jacobian->calcDeltaThetaByDLS();
+                break;
+            case 3:
+                deltaTheta = jacobian->calcDeltaThetaBySVD();
+                break;
+            case 4:
+                deltaTheta = jacobian->calcDeltaThetaByDLSwithSVD();
+                break;
+            case 5:
+                deltaTheta = jacobian->calcDeltaThetaBySDLS();
                 break;
                 
             default:
