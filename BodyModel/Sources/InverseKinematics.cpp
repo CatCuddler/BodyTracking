@@ -31,17 +31,17 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
         Jacobian::vec_n deltaTheta;
         switch (ikMode) {
             case 0:
-                deltaTheta = jacobian->getDeltaThetaByTranspose();
+                deltaTheta = jacobian->calcDeltaThetaByTranspose();
                 break;
             case 1:
-                deltaTheta = jacobian->getDeltaThetaByPseudoInverse();
+                deltaTheta = jacobian->calcDeltaThetaByPseudoInverse();
                 break;
             case 2:
-                deltaTheta = jacobian->getDeltaThetaByDLS();
+                deltaTheta = jacobian->calcDeltaThetaByDLS();
                 break;
                 
             default:
-                deltaTheta = jacobian->getDeltaThetaByTranspose();
+                deltaTheta = jacobian->calcDeltaThetaByTranspose();
                 break;
         }
 

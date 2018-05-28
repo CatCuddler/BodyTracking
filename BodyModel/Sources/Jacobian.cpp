@@ -19,6 +19,15 @@ Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot) {
     pos_soll = pos;
     rot_soll = rot;
     
+    for (int m = 0; m < nDOFs; ++m) {
+        for (int n = 0; n < nJointDOFs; ++n) {
+            if (n == m )
+                D[n][m] = 1;
+            else
+                D[n][m] = 0;
+        }
+    }
+    
     /* BoneNode* bone = targetBone;
     int counter = 0;
     while (bone->initialized) {
@@ -37,7 +46,7 @@ float Jacobian::getError() {
     return (!deltaP.isZero() ? deltaP : calcDeltaP()).getLength();
 }
 
-Jacobian::vec_n Jacobian::getDeltaThetaByTranspose() {
+Jacobian::vec_n Jacobian::calcDeltaThetaByTranspose() {
     // Get Jacobian
     mat_mxn jacobian = calcJacobian();
     
@@ -45,11 +54,11 @@ Jacobian::vec_n Jacobian::getDeltaThetaByTranspose() {
     return jacobian.Transpose() * calcDeltaP();
 }
 
-Jacobian::vec_n Jacobian::getDeltaThetaByPseudoInverse() {
+Jacobian::vec_n Jacobian::calcDeltaThetaByPseudoInverse() {
     return calcPseudoInverse(0.0) * calcDeltaP();
 }
 
-Jacobian::vec_n Jacobian::getDeltaThetaByDLS() {
+Jacobian::vec_n Jacobian::calcDeltaThetaByDLS() {
     return calcPseudoInverse(1.0) * calcDeltaP();
 }
 
@@ -57,7 +66,7 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
     vec_m deltaP;
     
     // Calculate difference between desired position and actual position of the end effector
-    Kore::vec3 deltaPos = pos_soll - getPosition(endEffektor);
+    Kore::vec3 deltaPos = pos_soll - calcPosition(endEffektor);
     if (nDOFs > 0) deltaP[0] = deltaPos.x();
     if (nDOFs > 1) deltaP[1] = deltaPos.y();
     if (nDOFs > 2) deltaP[2] = deltaPos.z();
@@ -86,7 +95,7 @@ Jacobian::mat_mxn Jacobian::calcJacobian() {
     BoneNode* targetBone = endEffektor;
     
     // Get current rotation and position of the end-effector
-    Kore::vec3 p_aktuell = getPosition(targetBone);
+    Kore::vec3 p_aktuell = calcPosition(targetBone);
     
     int joint = 0;
     while (targetBone->initialized) {
@@ -123,7 +132,7 @@ Jacobian::vec_m Jacobian::calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuel
     vec_m column;
     
     // Get rotation and position vector of the current bone
-    Kore::vec3 p_j = getPosition(bone);
+    Kore::vec3 p_j = calcPosition(bone);
     
     // get rotation-axis
     Kore::vec4 v_j = bone->combined * Kore::vec4(rotAxis.x(), rotAxis.y(), rotAxis.z(), 0);
@@ -154,7 +163,7 @@ Jacobian::mat_nxm Jacobian::calcPseudoInverse(float lambda) { // lambda != 0 => 
     }
 }
 
-Kore::vec3 Jacobian::getPosition(BoneNode* bone) {
+Kore::vec3 Jacobian::calcPosition(BoneNode* bone) {
     Kore::vec3 result;
     
     // from quat to euler!

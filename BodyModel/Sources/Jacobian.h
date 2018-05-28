@@ -26,34 +26,31 @@ public:
     
     typedef Kore::Vector<float, nJointDOFs> vec_n;
     
-    vec_n getDeltaThetaByTranspose();
-    vec_n getDeltaThetaByPseudoInverse();
-    vec_n getDeltaThetaByDLS();
+    vec_n calcDeltaThetaByTranspose();
+    vec_n calcDeltaThetaByPseudoInverse();
+    vec_n calcDeltaThetaByDLS();
     
 private:
-    typedef Kore::Matrix<nJointDOFs, nDOFs, float> mat_mxn;
-    typedef Kore::Matrix<nDOFs, nJointDOFs, float> mat_nxm;
-    typedef Kore::Matrix<nDOFs, nDOFs, float> mat_mxm;
+    typedef Kore::Matrix<nJointDOFs, nDOFs, float>      mat_mxn;
+    typedef Kore::Matrix<nDOFs, nJointDOFs, float>      mat_nxm;
+    typedef Kore::Matrix<nDOFs, nDOFs, float>           mat_mxm;
     typedef Kore::Matrix<nJointDOFs, nJointDOFs, float> mat_nxn;
-    typedef Kore::Vector<float, nDOFs> vec_m;
+    typedef Kore::Vector<float, nDOFs>                  vec_m;
     
-    BoneNode* endEffektor;
-    Kore::vec3 pos_soll;
-    Kore::Quaternion rot_soll;
-    vec_m deltaP;
+    BoneNode*           endEffektor;
+    Kore::vec3          pos_soll;
+    Kore::Quaternion    rot_soll;
+    vec_m               deltaP;
     
-    /*
-    mat_mxn J_target;
     mat_mxm U; // SVD
     mat_mxn D; // SVD
-    mat_nxn V; // SVD */
+    mat_nxn V; // SVD
     
-    vec_m calcDeltaP();
-    mat_mxn calcJacobian();
-    vec_m calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis);
-    mat_nxm calcPseudoInverse(float lambda);
-    
-    Kore::vec3 getPosition(BoneNode* bone);
+    vec_m       calcDeltaP();
+    mat_mxn     calcJacobian();
+    vec_m       calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis);
+    mat_nxm     calcPseudoInverse(float lambda);
+    Kore::vec3  calcPosition(BoneNode* bone);
 };
 
 #endif /* Jacobian_h */
