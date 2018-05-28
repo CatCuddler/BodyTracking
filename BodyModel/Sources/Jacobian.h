@@ -17,28 +17,28 @@
 struct BoneNode;
 
 class Jacobian {
+    static const int nDOFs = 3; // m = 3k, 3 position + 3 orientation
+    static const int nJointDOFs = 9; // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     
 public:
-    Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot);
+    Jacobian(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll);
     float getError();
-    std::vector<float> getThetaByTranspose();
-    std::vector<float> getThetaByPseudoInverse();
-    std::vector<float> getThetaByDLS(float lambda = 1.0);
+    
+    typedef Kore::Vector<float, nJointDOFs> vec_n;
+    
+    vec_n getDeltaThetaByTranspose();
+    vec_n getDeltaThetaByPseudoInverse();
+    vec_n getDeltaThetaByDLS(float lambda = 1.0);
     
 private:
-    static const int nDOFs = 6; // m = 3k, 3 position + 3 orientation
-    static const int nGelenke = 3; // n
-    // static const int nJointDOFs = 3;
-    
-    typedef Kore::Matrix<nGelenke, nDOFs, float> mat_mxn;
-    typedef Kore::Matrix<nDOFs, nGelenke, float> mat_nxm;
+    typedef Kore::Matrix<nJointDOFs, nDOFs, float> mat_mxn;
+    typedef Kore::Matrix<nDOFs, nJointDOFs, float> mat_nxm;
     typedef Kore::Matrix<nDOFs, nDOFs, float> mat_mxm;
-    typedef Kore::Matrix<nGelenke, nGelenke, float> mat_nxn;
+    typedef Kore::Matrix<nJointDOFs, nJointDOFs, float> mat_nxn;
     typedef Kore::Vector<float, nDOFs> vec_m;
-    typedef Kore::Vector<float, nGelenke> vec_n;
     
     BoneNode* endEffektor;
-    Kore::vec4 pos_soll;
+    Kore::vec3 pos_soll;
     Kore::Quaternion rot_soll;
     vec_m deltaP;
     
@@ -49,8 +49,11 @@ private:
     mat_nxn V; // SVD */
     
     vec_m calcDeltaP();
-    mat_mxn calcJacobian(Kore::vec4 rotAxis);
+    mat_mxn calcJacobian();
+    vec_m calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis);
     mat_nxm calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda);
+    
+    Kore::vec3 getPosition(BoneNode* bone);
 };
 
 #endif /* Jacobian_h */

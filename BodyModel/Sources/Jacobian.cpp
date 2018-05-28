@@ -14,154 +14,148 @@
 
 #include <Kore/Log.h>
 
-Jacobian::Jacobian(BoneNode* bone, Kore::vec4 pos, Kore::Quaternion rot) {
-    endEffektor = bone;
+Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot) {
+    endEffektor = targetBone;
     pos_soll = pos;
     rot_soll = rot;
+    
+    /* BoneNode* bone = targetBone;
+    int counter = 0;
+    while (bone->initialized) {
+        Kore::vec3 axes = bone->axes;
+        
+        if (axes.x() == 1.0) counter += 1;
+        if (axes.y() == 1.0) counter += 1;
+        if (axes.z() == 1.0) counter += 1;
+        
+        bone = bone->parent;
+    }
+    log(Kore::Info, "Die Anzahl der Gelenke-Freiheitsgrade ist %i", counter); */
 }
 
 float Jacobian::getError() {
     return (!deltaP.isZero() ? deltaP : calcDeltaP()).getLength();
 }
 
-std::vector<float> Jacobian::getThetaByTranspose() {
-    std::vector<float> theta;
-    
+Jacobian::vec_n Jacobian::getDeltaThetaByTranspose() {
     // Get Jacobian
-    mat_mxn jacobianX = calcJacobian(Kore::vec4(1, 0, 0, 0));
-    mat_mxn jacobianY = calcJacobian(Kore::vec4(0, 1, 0, 0));
-    mat_mxn jacobianZ = calcJacobian(Kore::vec4(0, 0, 1, 0));
+    mat_mxn jacobian = calcJacobian();
     
     // Get deltaP
     deltaP = calcDeltaP();
     
     // Calculate the angles
-    vec_n aThetaX = jacobianX.Transpose() * deltaP;
-    vec_n aThetaY = jacobianY.Transpose() * deltaP;
-    vec_n aThetaZ = jacobianZ.Transpose() * deltaP;
-    
-    for (int i = 0; i < nGelenke; ++i) {
-        theta.push_back(aThetaX[i]);
-        theta.push_back(aThetaY[i]);
-        theta.push_back(aThetaZ[i]);
-    }
-    
-    return theta;
+    return jacobian.Transpose() * deltaP;
 }
 
-std::vector<float> Jacobian::getThetaByPseudoInverse() {
-    return getThetaByDLS(0.5);
+Jacobian::vec_n Jacobian::getDeltaThetaByPseudoInverse() {
+    return getDeltaThetaByDLS(0);
 }
 
-std::vector<float> Jacobian::getThetaByDLS(float lambda) {
-    std::vector<float> theta;
-    
+Jacobian::vec_n Jacobian::getDeltaThetaByDLS(float lambda) {
     // Get Jacobian
-    mat_mxn jacobianX = calcJacobian(Kore::vec4(1, 0, 0, 0));
-    mat_mxn jacobianY = calcJacobian(Kore::vec4(0, 1, 0, 0));
-    mat_mxn jacobianZ = calcJacobian(Kore::vec4(0, 0, 1, 0));
+    mat_mxn jacobian = calcJacobian();
     
     // Get Pseudo Inverse
-    mat_nxm pseudoInvX = calcPseudoInverse(jacobianX, lambda);
-    mat_nxm pseudoInvY = calcPseudoInverse(jacobianY, lambda);
-    mat_nxm pseudoInvZ = calcPseudoInverse(jacobianZ, lambda);
+    mat_nxm pseudoInv = calcPseudoInverse(jacobian, lambda);
      
     // Get deltaP
     deltaP = calcDeltaP();
     
     // Calculate the angles
-    vec_n aThetaX = pseudoInvX * deltaP;
-    vec_n aThetaY = pseudoInvY * deltaP;
-    vec_n aThetaZ = pseudoInvZ * deltaP;
-    
-    for (int i = 0; i < nGelenke; ++i) {
-        theta.push_back(aThetaX[i]);
-        theta.push_back(aThetaY[i]);
-        theta.push_back(aThetaZ[i]);
-    }
-    
-    return theta;
+    return pseudoInv * deltaP;
 }
 
 Jacobian::vec_m Jacobian::calcDeltaP() {
     vec_m deltaP;
     
     // Calculate difference between desired position and actual position of the end effector
-    Kore::vec4 pos_aktuell = endEffektor->combined * Kore::vec4(0, 0, 0, 1);
-    pos_aktuell *= 1.0 / pos_aktuell.w();
-    Kore::vec4 deltaPos = pos_soll - pos_aktuell;
+    Kore::vec3 deltaPos = pos_soll - getPosition(endEffektor);
+    if (nDOFs > 0) deltaP[0] = deltaPos.x();
+    if (nDOFs > 1) deltaP[1] = deltaPos.y();
+    if (nDOFs > 2) deltaP[2] = deltaPos.z();
     
     // Calculate difference between desired rotation and actual rotation
-    Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
-    Kore::Quaternion rot_aktuell;
-    Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
-    Kore::Quaternion desQuat = rot_soll;
-    desQuat.normalize();
-    Kore::Quaternion quatDiff = desQuat.rotated(rot_aktuell.invert());
-    if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
-    Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
-    
-    // position
-    deltaP[0] = deltaPos.x();
-    deltaP[1] = deltaPos.y();
-    deltaP[2] = deltaPos.z();
-    // orientation
-    deltaP[3] = deltaRot.x();
-    deltaP[4] = deltaRot.y();
-    deltaP[5] = deltaRot.z();
+    if (nDOFs > 3) {
+        Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
+        Kore::Quaternion rot_aktuell;
+        Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
+        Kore::Quaternion desQuat = rot_soll;
+        desQuat.normalize();
+        Kore::Quaternion quatDiff = desQuat.rotated(rot_aktuell.invert());
+        if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
+        Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
+        
+        deltaP[3] = deltaRot.x();
+        if (nDOFs > 4) deltaP[4] = deltaRot.y();
+        if (nDOFs > 5) deltaP[5] = deltaRot.z();
+    }
     
     return deltaP;
 }
 
-Jacobian::mat_mxn Jacobian::calcJacobian(Kore::vec4 rotAxis) {
+Jacobian::mat_mxn Jacobian::calcJacobian() {
     Jacobian::mat_mxn jacobianMatrix;
     BoneNode* targetBone = endEffektor;
     
     // Get current rotation and position of the end-effector
-    Kore::vec4 p_aktuell = targetBone->combined * Kore::vec4(0, 0, 0, 1);
-    p_aktuell *= 1.0 / p_aktuell.w();
+    Kore::vec3 p_aktuell = getPosition(targetBone);
     
-    for (int b = 0; b < nGelenke; ++b) {
-        Kore::vec4 p_j, v_j, cross;
-        BoneNode* bone = targetBone;
+    int joint = 0;
+    while (targetBone->initialized) {
+        Kore::vec3 axes = targetBone->axes;
         
-        Kore::vec3 axes = bone->axes;
-        if ((axes.x() == 1 && rotAxis.x() == 1) || (axes.y() == 1 && rotAxis.y() == 1) || (axes.z() == 1 && rotAxis.z() == 1)) {
-            // Get rotation and position vector of the current bone
-            p_j = bone->combined * Kore::vec4(0, 0, 0, 1);
-            p_j *= 1.0 / p_j.w();
-            
-            v_j = bone->combined * rotAxis;
-            
-            // Calculate cross product
-            cross = v_j.cross(p_aktuell - p_j);
+        if (axes.x() == 1.0) {
+            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(1, 0, 0));
+            for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
+            joint += 1;
         }
-        
-        for (int i = 0; i < nDOFs; ++i) {
-            switch(i) {
-                case 0 : jacobianMatrix[i][b] = cross.x();
-                    break;
-                case 1 : jacobianMatrix[i][b] = cross.y();
-                    break;
-                case 2 : jacobianMatrix[i][b] = cross.z();
-                    break;
-                case 3 : jacobianMatrix[i][b] = v_j.x();
-                    break;
-                case 4 : jacobianMatrix[i][b] = v_j.y();
-                    break;
-                case 5 : jacobianMatrix[i][b] = v_j.z();
-                    break;
-            }
+        if (axes.y() == 1.0) {
+            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(0, 1, 0));
+            for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
+            joint += 1;
+        }
+        if (axes.z() == 1.0) {
+            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(0, 0, 1));
+            for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
+            joint += 1;
         }
         
         targetBone = targetBone->parent;
     }
     
+    // fill empty columns with zeros
+    for (int j = joint; j < nJointDOFs; ++j)
+        for (int i = 0; i < nDOFs; ++i)
+            jacobianMatrix[i][j] = 0;
+    
     return jacobianMatrix;
 }
 
+Jacobian::vec_m Jacobian::calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis) {
+    vec_m column;
+    
+    // Get rotation and position vector of the current bone
+    Kore::vec3 p_j = getPosition(bone);
+    
+    // get rotation-axis
+    Kore::vec4 v_j = bone->combined * Kore::vec4(rotAxis.x(), rotAxis.y(), rotAxis.z(), 0);
+    
+    // cross-product
+    Kore::vec3 pTheta = Kore::vec3(v_j.x(), v_j.y(), v_j.z()).cross(p_aktuell - p_j);
+    
+    if (nDOFs > 0) column[0] = pTheta.x();
+    if (nDOFs > 1) column[1] = pTheta.y();
+    if (nDOFs > 2) column[2] = pTheta.z();
+    if (nDOFs > 3) column[3] = v_j.x();
+    if (nDOFs > 4) column[4] = v_j.y();
+    if (nDOFs > 5) column[5] = v_j.z();
+    
+    return column;
+}
+
 Jacobian::mat_nxm Jacobian::calcPseudoInverse(Jacobian::mat_mxn jacobian, float lambda) { // lambda != 0 => DLS!
-    if (nDOFs <= nGelenke) { // m <= n
+    if (nDOFs <= nJointDOFs) { // m <= n
         // Left Damped pseudo-inverse
         return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * lambda * lambda).Invert() * jacobian.Transpose();
     }
@@ -169,4 +163,18 @@ Jacobian::mat_nxm Jacobian::calcPseudoInverse(Jacobian::mat_mxn jacobian, float 
         // Right Damped pseudo-inverse
         return jacobian.Transpose() * (jacobian * jacobian.Transpose() + Jacobian::mat_mxm::Identity() * lambda * lambda).Invert();
     }
+}
+
+Kore::vec3 Jacobian::getPosition(BoneNode* bone) {
+    Kore::vec3 result;
+    
+    // from quat to euler!
+    Kore::vec4 quat = bone->combined * Kore::vec4(0, 0, 0, 1);
+    quat *= 1.0 / quat.w();
+    
+    result.x() = quat.x();
+    result.y() = quat.y();
+    result.z() = quat.z();
+    
+    return result;
 }

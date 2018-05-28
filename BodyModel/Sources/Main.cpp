@@ -63,7 +63,7 @@ namespace {
 	ConstantLocation mLocation;
 
 	// Living room shader
-	bool renderRoom = true;
+    bool renderRoom = true;
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
 	Shader* fragmentShader_living_room;
