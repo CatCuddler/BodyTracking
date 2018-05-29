@@ -34,8 +34,10 @@ public:
     vec_n calcDeltaThetaBySDLS();
     
 private:
-    const float lambdaPseudoInverse = 0.01; // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
-    const float lambdaDLS = 2; // Lambda für DLS, 0.24 Optimum laut Buss
+    const float lambdaPseudoInverse = 0.1;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
+    const float lambdaSVD = 0.12;           // Lambda für SVD
+    const float lambdaDLS = 2.0;            // Lambda für DLS, 0.24 Optimum laut Buss
+    const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
     
     typedef Kore::Matrix<nJointDOFs, nDOFs, float>      mat_mxn;
     typedef Kore::Matrix<nDOFs, nJointDOFs, float>      mat_nxm;
@@ -58,6 +60,7 @@ private:
     mat_nxm     calcPseudoInverse(float lambda);
     Kore::vec3  calcPosition(BoneNode* bone);
     void        calcSVD();
+    float       MaxAbs(vec_m vec);
 };
 
 #endif /* Jacobian_h */

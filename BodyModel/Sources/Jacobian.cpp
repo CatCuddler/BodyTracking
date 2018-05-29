@@ -56,8 +56,7 @@ Jacobian::vec_n Jacobian::calcDeltaThetaBySVD() {
     
     mat_nxm D;
     for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-        D[i][i] = 1 / (d[i] + lambdaPseudoInverse);
-        // D[i][i] = d[i] > lambdaPseudoInverse ? 1 / d[i] : 0;
+        D[i][i] = fabs(d[i]) > (lambdaSVD * MaxAbs(d)) ? (1 / d[i]) : 0;
     
     return V * D * U.Transpose() * calcDeltaP();
 }
@@ -67,7 +66,7 @@ Jacobian::vec_n Jacobian::calcDeltaThetaByDLSwithSVD() {
     
     mat_nxm E;
     for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-        E[i][i] = d[i] / (d[i] * d[i] + lambdaDLS * lambdaDLS);
+        E[i][i] = d[i] / (d[i] * d[i] + lambdaDLSwithSVD * lambdaDLSwithSVD);
     
     return V * E * U.Transpose() * calcDeltaP();
 }
@@ -216,4 +215,13 @@ void Jacobian::calcSVD() {
                 Jacobian::d[m] = (float) d.Get(m);
         }
     }
+}
+
+float Jacobian::MaxAbs(vec_m vec) {
+    float result = 0;
+    
+    for (int m = 0; m < nDOFs; ++m)
+        result = Max(fabs(vec[m]), result);
+    
+    return result;
 }

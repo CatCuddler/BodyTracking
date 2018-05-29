@@ -21,7 +21,7 @@ private:
 	int rootIndex;
 	std::vector<BoneNode*> bones;
     
-    static const int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+    static const int ikMode = 4; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 	
 	void setJointConstraints();
 	void applyChanges(Jacobian::vec_n deltaTheta, BoneNode* targetBone);
