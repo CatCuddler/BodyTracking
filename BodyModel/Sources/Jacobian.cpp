@@ -40,11 +40,7 @@ float Jacobian::getError() {
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByTranspose() {
-    // Get Jacobian
-    mat_mxn jacobian = calcJacobian();
-    
-    // Calculate the angles
-    return jacobian.Transpose() * calcDeltaP();
+    return calcJacobian().Transpose() * calcDeltaP();
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByPseudoInverse() {
@@ -59,30 +55,25 @@ Jacobian::vec_n Jacobian::calcDeltaThetaBySVD() {
     calcSVD();
     
     mat_nxm D;
-    for (int m = 0; m < nDOFs; ++m) {
-        for (int n = 0; n < nJointDOFs; ++n) {
-            D[n][m] = (m == n && d[m] > lambdaPseudoInverse) ? (1 / d[m]) : 0;
-        }
-    }
+    for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
+        D[i][i] = 1 / (d[i] + lambdaPseudoInverse);
+        // D[i][i] = d[i] > lambdaPseudoInverse ? 1 / d[i] : 0;
     
     return V * D * U.Transpose() * calcDeltaP();
-}
-
-Jacobian::vec_n Jacobian::calcDeltaThetaBySDLS() {
-    return calcPseudoInverse(lambdaDLS) * calcDeltaP();
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByDLSwithSVD() {
     calcSVD();
     
     mat_nxm E;
-    for (int m = 0; m < nDOFs; ++m) {
-        for (int n = 0; n < nJointDOFs; ++n) {
-            E[n][m] = (m == n) ? (d[m] / (d[m] * d[m] + lambdaDLS * lambdaDLS)) : 0;
-        }
-    }
+    for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
+        E[i][i] = d[i] / (d[i] * d[i] + lambdaDLS * lambdaDLS);
     
     return V * E * U.Transpose() * calcDeltaP();
+}
+
+Jacobian::vec_n Jacobian::calcDeltaThetaBySDLS() {
+    return calcPseudoInverse(lambdaDLS) * calcDeltaP();
 }
 
 // ################################################################
@@ -144,12 +135,6 @@ Jacobian::mat_mxn Jacobian::calcJacobian() {
         
         targetBone = targetBone->parent;
     }
-    
-    // fill empty columns with zeros
-    // todo: check if necessary?
-    for (int j = joint; j < nJointDOFs; ++j)
-        for (int i = 0; i < nDOFs; ++i)
-            jacobianMatrix[i][j] = 0;
     
     return jacobianMatrix;
 }
@@ -227,8 +212,8 @@ void Jacobian::calcSVD() {
             if (m < nJointDOFs && n < nJointDOFs)
                 Jacobian::V[m][n] = (float) V.Get(m, n);
             
-            if (m == n && m < nDOFs)
-                Jacobian::d[m] = (m < Min(nDOFs, nJointDOFs)) ? (float) d.Get(m) : 0;
+            if (m == n && m < Min(nDOFs, nJointDOFs))
+                Jacobian::d[m] = (float) d.Get(m);
         }
     }
 }
