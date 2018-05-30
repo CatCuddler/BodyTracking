@@ -18,7 +18,8 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     
     for (int i = 0; i < maxSteps; ++i) {
         // if position has reached
-        if (jacobian->getError() < maxError) {
+        float error = jacobian->getError();
+        if (error && error < maxError) {
             sumIter += i;
             ++totalNum;
             

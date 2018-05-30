@@ -36,7 +36,7 @@ Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot) {
 }
 
 float Jacobian::getError() {
-    return (!deltaP.isZero() ? deltaP : calcDeltaP()).getLength();
+    return error || calcDeltaP().getLength();
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByTranspose() {
@@ -52,7 +52,7 @@ Jacobian::vec_n Jacobian::calcDeltaThetaByDLS() {
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaBySVD() {
-    calcSVD();
+    calcSVD(calcJacobian());
     
     mat_nxm D;
     for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
@@ -62,17 +62,51 @@ Jacobian::vec_n Jacobian::calcDeltaThetaBySVD() {
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByDLSwithSVD() {
-    calcSVD();
+    calcSVD(calcJacobian());
     
     mat_nxm E;
     for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-        E[i][i] = d[i] / (d[i] * d[i] + lambdaDLSwithSVD * lambdaDLSwithSVD);
+        E[i][i] = d[i] / (Square(d[i]) + Square(lambdaDLSwithSVD));
     
     return V * E * U.Transpose() * calcDeltaP();
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaBySDLS() {
-    return calcPseudoInverse(lambdaDLS) * calcDeltaP();
+    Jacobian::mat_mxn jacobian = calcJacobian();
+    vec_m deltaP = calcDeltaP();
+    calcSVD(jacobian);
+    
+    vec_n theta;
+    for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
+        vec_m u_i;
+        for (int j = 0; j < nDOFs; ++j) {
+            u_i[j] = U[j][i];
+        }
+        
+        vec_n v_i;
+        for (int j = 0; j < nJointDOFs; ++j)
+            v_i[j] = V[j][i];
+        
+        // alpha_i = uT_i * deltaP
+        float alpha_i = 0.0;
+        for (int m = 0; m < nDOFs; ++m)
+            alpha_i += u_i[m] * deltaP[m];
+        
+        float omegaInverse_i = 1.0 / d[i];
+        
+        float M_i = 0.0;
+        for (int l = 0; l < (nDOFs / 3); ++l)
+            for (int j = 0; j < nJointDOFs; ++j)
+                M_i += fabs(V[j][i]) * fabs(jacobian[l][j]);
+        M_i *= omegaInverse_i;
+        
+        float N_i = 1.0; // u_i.getLength();
+        float gamma_i = Min(1, N_i / M_i) * lambdaSDLS;
+        
+        theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
+    }
+    
+    return theta;
 }
 
 // ################################################################
@@ -101,6 +135,9 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
         if (nDOFs > 4) deltaP[4] = deltaRot.y();
         if (nDOFs > 5) deltaP[5] = deltaRot.z();
     }
+    
+    // set error
+    error = deltaP.getLength();
     
     return deltaP;
 }
@@ -165,11 +202,11 @@ Jacobian::mat_nxm Jacobian::calcPseudoInverse(float lambda) { // lambda != 0 => 
     
     if (nDOFs <= nJointDOFs) { // m <= n
         // Left Damped pseudo-inverse
-        return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * lambda * lambda).Invert() * jacobian.Transpose();
+        return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * Square(lambda)).Invert() * jacobian.Transpose();
     }
     else {
         // Right Damped pseudo-inverse
-        return jacobian.Transpose() * (jacobian * jacobian.Transpose() + Jacobian::mat_mxm::Identity() * lambda * lambda).Invert();
+        return jacobian.Transpose() * (jacobian * jacobian.Transpose() + Jacobian::mat_mxm::Identity() * Square(lambda)).Invert();
     }
 }
 
@@ -187,13 +224,12 @@ Kore::vec3 Jacobian::calcPosition(BoneNode* bone) {
     return result;
 }
 
-void Jacobian::calcSVD() {
+void Jacobian::calcSVD(Jacobian::mat_mxn jacobian) {
     MatrixRmn J = MatrixRmn(nDOFs, nJointDOFs);
     MatrixRmn U = MatrixRmn(nDOFs, nDOFs);
     MatrixRmn V = MatrixRmn(nJointDOFs, nJointDOFs);
     VectorRn d = VectorRn(Min(nDOFs, nJointDOFs));
     
-    Jacobian::mat_mxn jacobian = calcJacobian();
     for (int m = 0; m < nDOFs; ++m) {
         for (int n = 0; n < nJointDOFs; ++n) {
             J.Set(m, n, (double) jacobian[m][n]);
@@ -217,11 +253,32 @@ void Jacobian::calcSVD() {
     }
 }
 
+Jacobian::vec_n Jacobian::clampMaxAbs(vec_n vec, float gamma_i) {
+    float gammaAbs_i = fabs(gamma_i);
+    float maxValue = MaxAbs(vec, gammaAbs_i);
+    
+    // scale vector to gamma_i as max
+    if (maxValue != gammaAbs_i)
+        for (int n = 0; n < nJointDOFs; ++n)
+            vec[n] = vec[n] / maxValue * gammaAbs_i;
+    
+    return vec;
+}
+
 float Jacobian::MaxAbs(vec_m vec) {
-    float result = 0;
+    float result = 0.0;
     
     for (int m = 0; m < nDOFs; ++m)
         result = Max(fabs(vec[m]), result);
+    
+    return result;
+}
+
+float Jacobian::MaxAbs(vec_n vec, float start) {
+    float result = start;
+    
+    for (int n = 0; n < nJointDOFs; ++n)
+        result = Max(fabs(vec[n]), result);
     
     return result;
 }

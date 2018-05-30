@@ -38,6 +38,7 @@ private:
     const float lambdaSVD = 0.12;           // Lambda für SVD
     const float lambdaDLS = 2.0;            // Lambda für DLS, 0.24 Optimum laut Buss
     const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
+    const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
     typedef Kore::Matrix<nJointDOFs, nDOFs, float>      mat_mxn;
     typedef Kore::Matrix<nDOFs, nJointDOFs, float>      mat_nxm;
@@ -48,7 +49,7 @@ private:
     BoneNode*           endEffektor;
     Kore::vec3          pos_soll;
     Kore::Quaternion    rot_soll;
-    vec_m               deltaP;
+    float               error;
     
     mat_mxm U;
     mat_nxn V;
@@ -59,8 +60,10 @@ private:
     vec_m       calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis);
     mat_nxm     calcPseudoInverse(float lambda);
     Kore::vec3  calcPosition(BoneNode* bone);
-    void        calcSVD();
+    void        calcSVD(Jacobian::mat_mxn jacobian);
+    vec_n       clampMaxAbs(vec_n vec, float gamma_i);
     float       MaxAbs(vec_m vec);
+    float       MaxAbs(vec_n vec, float start = 0);
 };
 
 #endif /* Jacobian_h */
