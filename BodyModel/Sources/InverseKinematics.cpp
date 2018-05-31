@@ -3,6 +3,7 @@
 
 #include "RotationUtility.h"
 #include "MeshObject.h"
+#include "Jacobian.h"
 
 #include <Kore/Log.h>
 
@@ -14,46 +15,35 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
     if (!targetBone->initialized) return false;
     
-    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation);
+    BoneNode* bone = targetBone;
+    int counter = 0;
+    while (bone->initialized) {
+        Kore::vec3 axes = bone->axes;
+        
+        if (axes.x() == 1.0) counter += 1;
+        if (axes.y() == 1.0) counter += 1;
+        if (axes.z() == 1.0) counter += 1;
+        
+        bone = bone->parent;
+    }
+    if (counter != 7 && counter != 9)
+        log(Kore::Info, "Die Anzahl der Gelenke-Freiheitsgrade von %s ist %i", targetBone->boneName, counter);
+    
+    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, counter);
     
     for (int i = 0; i < maxSteps; ++i) {
         // if position has reached
-        float error = jacobian->getError();
-        if (error && error < maxError) {
+        if (jacobian->getError() < maxError) {
             sumIter += i;
             ++totalNum;
             
             return true;
         }
         
-        Jacobian::vec_n deltaTheta;
-        switch (ikMode) {
-            case 0:
-                deltaTheta = jacobian->calcDeltaThetaByTranspose();
-                break;
-            case 1:
-                deltaTheta = jacobian->calcDeltaThetaByPseudoInverse();
-                break;
-            case 2:
-                deltaTheta = jacobian->calcDeltaThetaByDLS();
-                break;
-            case 3:
-                deltaTheta = jacobian->calcDeltaThetaBySVD();
-                break;
-            case 4:
-                deltaTheta = jacobian->calcDeltaThetaByDLSwithSVD();
-                break;
-            case 5:
-                deltaTheta = jacobian->calcDeltaThetaBySDLS();
-                break;
-                
-            default:
-                deltaTheta = jacobian->calcDeltaThetaByTranspose();
-                break;
-        }
-
-        applyChanges(deltaTheta, targetBone);
-        applyJointConstraints(targetBone);
+        // if (std::strcmp(targetBone->boneName, "LeftHand") == 0) {
+            applyChanges(jacobian->calcDeltaTheta(), targetBone);
+            applyJointConstraints(targetBone);
+        // }
         for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
     }
     
@@ -63,22 +53,18 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     return false;
 }
 
-void InverseKinematics::applyChanges(Jacobian::vec_n deltaTheta, BoneNode* targetBone) {
+void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone) {
 	int i = 0;
     
     BoneNode* bone = targetBone;
     while (bone->initialized) {
         Kore::vec3 axes = bone->axes;
         
-        // log(Kore::Info, "Bone %s -> x=%f y=%f z=%f", bone->boneName, radX, radY, radZ);
-        
         if (axes.x() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
         if (axes.y() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), deltaTheta[i++]));
         if (axes.z() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
         
         bone->quaternion.normalize();
-        
-        // log(Kore::Info, "%s %f %f %f %f", bone->boneName, bone->quaternion.w, bone->quaternion.x, bone->quaternion.y, bone->quaternion.z);
         
         Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
         bone->local = bone->transform * rotMat;

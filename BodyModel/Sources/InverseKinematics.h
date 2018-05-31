@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Kore/Math/Quaternion.h>
-#include "Jacobian.h"
 
 #include <vector>
 
@@ -24,7 +23,7 @@ private:
     static const int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 	
 	void setJointConstraints();
-	void applyChanges(Jacobian::vec_n deltaTheta, BoneNode* targetBone);
+	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
 	void updateBonePosition(BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
 	bool clampValue(float minVal, float maxVal, float* value);

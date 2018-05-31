@@ -16,27 +16,47 @@
 
 #include <Kore/Log.h>
 
-Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot) {
+Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot, int n) {
     endEffektor = targetBone;
     pos_soll = pos;
     rot_soll = rot;
-    
-    /* BoneNode* bone = targetBone;
-    int counter = 0;
-    while (bone->initialized) {
-        Kore::vec3 axes = bone->axes;
-        
-        if (axes.x() == 1.0) counter += 1;
-        if (axes.y() == 1.0) counter += 1;
-        if (axes.z() == 1.0) counter += 1;
-        
-        bone = bone->parent;
-    }
-    log(Kore::Info, "Die Anzahl der Gelenke-Freiheitsgrade ist %i", counter); */
+    nJointDOFs = n;
 }
 
 float Jacobian::getError() {
     return error || calcDeltaP().getLength();
+}
+
+std::vector<float> Jacobian::calcDeltaTheta(int ikMode) {
+    std::vector<float> deltaTheta;
+    vec_n vec;
+    
+    switch (ikMode) {
+        case 1:
+            vec = calcDeltaThetaByPseudoInverse();
+            break;
+        case 2:
+            vec = calcDeltaThetaByDLS();
+            break;
+        case 3:
+            vec = calcDeltaThetaBySVD();
+            break;
+        case 4:
+            vec = calcDeltaThetaByDLSwithSVD();
+            break;
+        case 5:
+            vec = calcDeltaThetaBySDLS();
+            break;
+            
+        default:
+            vec = calcDeltaThetaByTranspose();
+            break;
+    }
+    
+    for (int n = 0; n < nJointDOFs; ++n)
+        deltaTheta.push_back(vec[n]);
+    
+    return deltaTheta;
 }
 
 Jacobian::vec_n Jacobian::calcDeltaThetaByTranspose() {
