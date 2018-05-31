@@ -40,10 +40,8 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
             return true;
         }
         
-        // if (std::strcmp(targetBone->boneName, "LeftHand") == 0) {
-            applyChanges(jacobian->calcDeltaTheta(), targetBone);
-            applyJointConstraints(targetBone);
-        // }
+        applyChanges(jacobian->calcDeltaTheta(), targetBone);
+        applyJointConstraints(targetBone);
         for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
     }
     
@@ -54,15 +52,16 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 }
 
 void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone) {
+    unsigned long size = deltaTheta.size();
 	int i = 0;
     
     BoneNode* bone = targetBone;
     while (bone->initialized) {
         Kore::vec3 axes = bone->axes;
         
-        if (axes.x() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
-        if (axes.y() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), deltaTheta[i++]));
-        if (axes.z() == 1.0) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
+        if (axes.x() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
+        if (axes.y() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), deltaTheta[i++]));
+        if (axes.z() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
         
         bone->quaternion.normalize();
         

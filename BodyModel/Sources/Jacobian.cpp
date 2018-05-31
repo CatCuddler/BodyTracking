@@ -164,32 +164,32 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
 
 Jacobian::mat_mxn Jacobian::calcJacobian() {
     Jacobian::mat_mxn jacobianMatrix;
-    BoneNode* targetBone = endEffektor;
+    BoneNode* bone = endEffektor;
     
     // Get current rotation and position of the end-effector
-    Kore::vec3 p_aktuell = calcPosition(targetBone);
+    Kore::vec3 p_aktuell = calcPosition(bone);
     
     int joint = 0;
-    while (targetBone->initialized) {
-        Kore::vec3 axes = targetBone->axes;
+    while (bone->initialized) {
+        Kore::vec3 axes = bone->axes;
         
-        if (axes.x() == 1.0) {
-            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(1, 0, 0));
+        if (axes.x() == 1.0 && joint < nJointDOFs) {
+            vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(1, 0, 0));
             for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
             joint += 1;
         }
-        if (axes.y() == 1.0) {
-            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(0, 1, 0));
+        if (axes.y() == 1.0 && joint < nJointDOFs) {
+            vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(0, 1, 0));
             for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
             joint += 1;
         }
-        if (axes.z() == 1.0) {
-            vec_m column = calcJacobianColumn(targetBone, p_aktuell, Kore::vec3(0, 0, 1));
+        if (axes.z() == 1.0 && joint < nJointDOFs) {
+            vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(0, 0, 1));
             for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
             joint += 1;
         }
         
-        targetBone = targetBone->parent;
+        bone = bone->parent;
     }
     
     return jacobianMatrix;
