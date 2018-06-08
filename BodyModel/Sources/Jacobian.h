@@ -30,8 +30,11 @@ private:
     const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
     const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
-    static const int maxDOFs = 3;       // m = 3k, 3 position + 3 orientation
+    static const int maxDOFs = 6;       // m = 3k, 3 position + 3 orientation
     static const int maxJointDOFs = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    /* static const int maxJointDOFFoot = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const int maxJointDOFHand = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const int maxJointDOFHead = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade! */
     
     typedef Kore::Matrix<maxJointDOFs, maxDOFs, float>      mat_mxn;
     typedef Kore::Matrix<maxDOFs, maxJointDOFs, float>      mat_nxm;

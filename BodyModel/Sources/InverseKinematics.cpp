@@ -32,7 +32,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, counter);
     
     for (int i = 0; i < maxSteps; ++i) {
-        // if position has reached
+        // if position had reached
         if (jacobian->getError() < maxError) {
             sumIter += i;
             ++totalNum;

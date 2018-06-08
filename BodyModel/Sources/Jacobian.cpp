@@ -121,7 +121,7 @@ Jacobian::vec_n Jacobian::calcDeltaThetaBySDLS() {
         M_i *= omegaInverse_i;
         
         float N_i = 1.0; // u_i.getLength();
-        float gamma_i = Min(1, N_i / M_i) * lambdaSDLS;
+        float gamma_i = Min(1, N_i / M_i) * lambdaSDLS; // todo: Kette durchgehen und maximalen Winkel ermitteln statt lambdaSDLS!
         
         theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
     }
@@ -142,14 +142,54 @@ Jacobian::vec_m Jacobian::calcDeltaP() {
     
     // Calculate difference between desired rotation and actual rotation
     if (nDOFs > 3) {
-        Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
         Kore::Quaternion rot_aktuell;
         Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
-        Kore::Quaternion desQuat = rot_soll;
-        desQuat.normalize();
-        Kore::Quaternion quatDiff = desQuat.rotated(rot_aktuell.invert());
-        if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
-        Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
+        
+        Kore::Quaternion rot_soll_temp = rot_soll;
+        rot_soll_temp.normalize();
+        
+        /* Kore::Quaternion deltaRot_quat = rot_soll_temp.rotated(rot_aktuell.invert());
+        if (deltaRot_quat.w < 0) deltaRot_quat = deltaRot_quat.scaled(-1); */
+        
+        Kore::Quaternion test = rot_aktuell.invert().scaled(-1);
+        test.w = - test.w;
+        
+        Kore::Quaternion deltaRot_quat = rot_soll_temp.rotated(test);
+        
+        /* Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
+        Kore::RotationUtility::quatToEuler(&deltaRot_quat, &deltaRot.x(), &deltaRot.y(), &deltaRot.z()); */
+        
+        Kore::vec3 soll = Kore::vec3(0, 0, 0);
+        Kore::RotationUtility::quatToEuler(&rot_soll_temp, &soll.x(), &soll.y(), &soll.z());
+        Kore::vec3 ist = Kore::vec3(0, 0, 0);
+        Kore::RotationUtility::quatToEuler(&rot_aktuell, &ist.x(), &ist.y(), &ist.z());
+        Kore::vec3 deltaRot = soll - ist;
+        if (deltaRot.x() > PI) {
+            deltaRot -= Kore::vec3(2 * PI, 0, 0);
+        } else if (deltaRot.x() < -PI) {
+            deltaRot += Kore::vec3(2 * PI, 0, 0);
+        }
+        if (deltaRot.y() > PI) {
+            deltaRot -= Kore::vec3(0, 2 * PI, 0);
+        } else if (deltaRot.y() < -PI) {
+            deltaRot += Kore::vec3(0, 2 * PI, 0);
+        }
+        if (deltaRot.z() > PI) {
+            deltaRot -= Kore::vec3(0, 0, 2 * PI);
+        } else if (deltaRot.z() < -PI) {
+            deltaRot += Kore::vec3(0, 0, 2 * PI);
+        }
+        
+        if (std::strcmp(endEffektor->boneName, "LeftHand") == 0) {
+            // log(Kore::Info, "Inv: x: %f, y: %f, z: %f, w: %f", test.x, test.y, test.z, test.w);
+            /* // log(Kore::Info, "Soll: x: %f, y: %f, z: %f, w: %f", rot_soll_temp.x, rot_soll_temp.y, rot_soll_temp.z, rot_soll_temp.w);
+            log(Kore::Info, "Soll: x: %g, y: %g, z: %g", (soll.x() / PI * 180), (soll.y() / PI * 180), (soll.z() / PI * 180));
+            // log(Kore::Info, "Ist:  x: %f, y: %f, z: %f, w: %f", rot_aktuell.x, rot_aktuell.y, rot_aktuell.z, rot_aktuell.w);
+            log(Kore::Info, "Ist:  x: %g, y: %g, z: %g", ist.x() / PI * 180, ist.y() / PI * 180, ist.z() / PI * 180);
+            log(Kore::Info, "delta:x: %f, y: %f, z: %f", deltaRot.x() / PI * 180, deltaRot.y() / PI * 180, deltaRot.z() / PI * 180); */
+            
+            log(Kore::Info, "%g - %g = %g =? %g", (soll.x() / PI * 180), (ist.x() / PI * 180), (soll.x() / PI * 180) - (ist.x() / PI * 180), (deltaRot.x() / PI * 180));
+        }
         
         deltaP[3] = deltaRot.x();
         if (nDOFs > 4) deltaP[4] = deltaRot.y();
