@@ -122,8 +122,8 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const int leftHandBoneIndex = 14;
 	const int rightHandBoneIndex = 24;
-	const int leftFootBoneIndex = 6;
-	const int rightFootBoneIndex = 31;
+	const int leftFootBoneIndex = 5; // 6 Fuß
+	const int rightFootBoneIndex = 30; // 31 Fuß
 	const int backBoneIndex = 2;
 	
 	void renderTracker() {
@@ -166,6 +166,8 @@ namespace {
 			endEffector->boneIndex = boneIndex;
 			endEffector->offsetRotation = Quaternion(0, 0, 0, 1);
 			endEffector->offsetPosition = vec3(0, 0, 0);
+            
+            // x: red, y: green, z: blue
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
@@ -185,13 +187,13 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
 			}
 			else if (boneIndex == leftFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0.05f, 0, 0);
+				endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0.05f, 0, 0);
+				endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1));

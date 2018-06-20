@@ -20,7 +20,7 @@ Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot, i
     endEffektor = targetBone;
     pos_soll = pos;
     rot_soll = rot;
-    nJointDOFs = n;
+    nJointDOFs = n < maxJointDOFs ? n : maxJointDOFs;
 }
 
 float Jacobian::getError() {

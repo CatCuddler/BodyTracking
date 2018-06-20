@@ -15,21 +15,18 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
     if (!targetBone->initialized) return false;
     
-    BoneNode* bone = targetBone;
-    int counter = 0;
-    while (bone->initialized) {
-        Kore::vec3 axes = bone->axes;
-        
-        if (axes.x() == 1.0) counter += 1;
-        if (axes.y() == 1.0) counter += 1;
-        if (axes.z() == 1.0) counter += 1;
-        
-        bone = bone->parent;
+    Jacobian* jacobian;
+    if (strncmp(targetBone->boneName, "LeftLeg", 5) == 0 || strncmp(targetBone->boneName, "RightLeg", 6) == 0) {
+        // Füße
+        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 4);
+    } else if (strncmp(targetBone->boneName, "LeftHand", 5) == 0 || strncmp(targetBone->boneName, "RightHand", 6) == 0) {
+        // Arme
+        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 6);
+    } else {
+        // Kopf
+        log(Kore::Info, "Wert für Kopf muss noch angepasst werden!");
+        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 0);
     }
-    if (counter != 7 && counter != 9)
-        log(Kore::Info, "Die Anzahl der Gelenke-Freiheitsgrade von %s ist %i", targetBone->boneName, counter);
-    
-    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, counter);
     
     for (int i = 0; i < maxSteps; ++i) {
         // if position had reached
@@ -123,8 +120,7 @@ void InverseKinematics::setJointConstraints() {
 
 	// hips
 	nodeLeft = bones[2 - 1];
-	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
+	nodeLeft->axes = Kore::vec3(0, 0, 0);
 
 	// shoulder
 	nodeLeft = bones[11 - 1];
@@ -165,7 +161,6 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 
-
 	// thigh
 	nodeLeft = bones[4 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
@@ -188,20 +183,6 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
 
 	nodeRight = bones[30 - 1];
-	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
-
-	// foot
-	nodeLeft = bones[6 - 1];
-	nodeLeft->axes = Kore::vec3(0, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-
-	nodeRight = bones[31 - 1];
 	nodeRight->axes = nodeLeft->axes;
 	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
