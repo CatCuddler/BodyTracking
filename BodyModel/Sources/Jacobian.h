@@ -26,15 +26,15 @@ public:
 private:
     const float lambdaPseudoInverse = 0.1;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
     const float lambdaSVD = 0.12;           // Lambda für SVD
-    const float lambdaDLS = 2.0;            // Lambda für DLS, 0.24 Optimum laut Buss
+    const float lambdaDLS = 1.0;            // Lambda für DLS, 0.24 Optimum laut Buss
     const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
     const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
     static const int maxDOFs = 6;       // m = 3k, 3 position + 3 orientation
     static const int maxJointDOFs = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
-    /* static const int maxJointDOFFoot = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
-    static const int maxJointDOFHand = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade!
-    static const int maxJointDOFHead = 9;  // n, maximale Anzahl an Gelenke-Freiheitsgrade! */
+    /* static const int maxJointDOFFoot = 7;// n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const int maxJointDOFHand = 9;   // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const int maxJointDOFHead = 5;   // n, maximale Anzahl an Gelenke-Freiheitsgrade! */
     
     typedef Kore::Matrix<maxJointDOFs, maxDOFs, float>      mat_mxn;
     typedef Kore::Matrix<maxDOFs, maxJointDOFs, float>      mat_nxm;

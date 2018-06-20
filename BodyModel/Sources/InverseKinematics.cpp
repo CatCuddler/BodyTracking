@@ -40,7 +40,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
             return true;
         }
         
-        applyChanges(jacobian->calcDeltaTheta(), targetBone);
+        applyChanges(jacobian->calcDeltaTheta(ikMode), targetBone);
         applyJointConstraints(targetBone);
         for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
     }
