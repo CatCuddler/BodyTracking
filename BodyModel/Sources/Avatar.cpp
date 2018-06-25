@@ -206,7 +206,12 @@ int Avatar::getJointDOFs(int boneIndex) {
     int result = 0;
     
     while (bone->initialized) {
-        result++;
+        Kore::vec3 axes = bone->axes;
+        
+        if (axes.x() == 1.0) result += 1;
+        if (axes.y() == 1.0) result += 1;
+        if (axes.z() == 1.0) result += 1;
+        
         bone = bone->parent;
     }
     

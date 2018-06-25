@@ -106,18 +106,11 @@ void InverseKinematics::updateBonePosition(BoneNode* bone) {
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
-
-	// hips
-	nodeLeft = bones[2 - 1];
-	nodeLeft->axes = Kore::vec3(0, 0, 0);
-
-	// shoulder
-    // Schulter kann sich normalerweise minimal bewegen
-	nodeLeft = bones[11 - 1];
-	nodeLeft->axes = Kore::vec3(0, 0, 0);
     
-	nodeRight = bones[21 - 1];
-	nodeRight->axes = nodeLeft->axes;
+    // spine
+    nodeLeft = bones[9 - 1];
+    nodeLeft->axes = Kore::vec3(1, 0, 0);
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 36.0f, Kore::pi / 18.0f));  // -5° bis 10° = 15° (NN)
 
 	// upperarm / Schultergelenk
 	nodeLeft = bones[12 - 1];

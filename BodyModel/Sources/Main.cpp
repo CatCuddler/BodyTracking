@@ -261,9 +261,6 @@ namespace {
 			 
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
-                
-                if (!handJointDOFs) handJointDOFs = avatar->getJointDOFs(leftHand->boneIndex);
-                if (!footJointDOFs) footJointDOFs = avatar->getJointDOFs(leftFoot->boneIndex);
 				
 				//log(Info, "pos: %f %f %f rot: %f %f %f %f", desPosition[tracker].x(), desPosition[tracker].y(), desPosition[tracker].z(), desRotation[tracker].w, desRotation[tracker].x, desRotation[tracker].y, desRotation[tracker].z);
 				
@@ -437,6 +434,10 @@ namespace {
 
 			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
 			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+            
+            handJointDOFs = avatar->getJointDOFs(leftHand->boneIndex);
+            footJointDOFs = avatar->getJointDOFs(leftFoot->boneIndex);
+            log(Kore::Info, "Numbers of jointDOFs: \t hand: %i, \t foot: %i", handJointDOFs, footJointDOFs);
 
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
@@ -608,6 +609,10 @@ namespace {
 			if (useIK) {
 				log(Info, "Read data from file %s", initialTransFilename);
 				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+                
+                handJointDOFs = avatar->getJointDOFs(leftHand->boneIndex);
+                footJointDOFs = avatar->getJointDOFs(leftFoot->boneIndex);
+                log(Kore::Info, "Numbers of jointDOFs: \t hand: %i, \t foot: %i", handJointDOFs, footJointDOFs);
 			}
 
 			initRot.normalize();

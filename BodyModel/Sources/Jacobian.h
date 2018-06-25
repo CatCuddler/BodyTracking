@@ -19,7 +19,7 @@ struct BoneNode;
 class Jacobian {
     
 public:
-    Jacobian(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int n = maxJointDOFs, bool posAndOrientation = maxDOFs == 6 ? true : false);
+    Jacobian(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int n = maxJointDOFs, bool orientation = posAndOrientation);
     float getError();
     std::vector<float> calcDeltaTheta(int ikMode = 0);
     
@@ -30,8 +30,11 @@ private:
     const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
     const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
-    static const int maxDOFs = 6;           // m = 3k, 3 position + 3 orientation
-    static const int maxJointDOFs = 6;      // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const bool posAndOrientation = true;
+    
+    static const int maxDOFs = posAndOrientation ? 6 : 3;   // m = 3k, 3 position + 3 orientation
+    static const int maxJointDOFs = 6;                      // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    
     /* static const int maxJointDOFFoot = 4;   // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     static const int maxJointDOFHand = 6;   // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     static const int maxJointDOFHead = ?;   // n, maximale Anzahl an Gelenke-Freiheitsgrade! */

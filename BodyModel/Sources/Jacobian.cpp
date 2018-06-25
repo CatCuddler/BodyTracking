@@ -16,12 +16,12 @@
 
 #include <Kore/Log.h>
 
-Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot, int n, bool posAndOrientation) {
+Jacobian::Jacobian(BoneNode* targetBone, Kore::vec4 pos, Kore::Quaternion rot, int n, bool orientation) {
     endEffektor = targetBone;
     pos_soll = pos;
     rot_soll = rot;
     nJointDOFs = n < maxJointDOFs ? n : maxJointDOFs;
-    nDOFs = posAndOrientation ? 6 : 3;
+    nDOFs = orientation && posAndOrientation ? 6 : 3;
 }
 
 float Jacobian::getError() {
