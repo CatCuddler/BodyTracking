@@ -30,21 +30,19 @@ private:
     const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
     const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
-    static const bool posAndOrientation = true;
-    
-    static const int maxDOFs = posAndOrientation ? 6 : 3;   // m = 3k, 3 position + 3 orientation
-    static const int maxJointDOFs = 6;                      // n, maximale Anzahl an Gelenke-Freiheitsgrade!
+    static const bool posAndOrientation = true; // only position (k = 1, m = 3) OR position & orientation (k = 2, m = 6)
+    static const int  maxJointDOFs = 6;         // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     
     /* static const int maxJointDOFFoot = 4;   // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     static const int maxJointDOFHand = 6;   // n, maximale Anzahl an Gelenke-Freiheitsgrade!
     static const int maxJointDOFHead = ?;   // n, maximale Anzahl an Gelenke-Freiheitsgrade! */
     
-    typedef Kore::Matrix<maxJointDOFs, maxDOFs, float>      mat_mxn;
-    typedef Kore::Matrix<maxDOFs, maxJointDOFs, float>      mat_nxm;
-    typedef Kore::Matrix<maxDOFs, maxDOFs, float>           mat_mxm;
-    typedef Kore::Matrix<maxJointDOFs, maxJointDOFs, float> mat_nxn;
-    typedef Kore::Vector<float, maxDOFs>                    vec_m;
-    typedef Kore::Vector<float, maxJointDOFs>               vec_n;
+    typedef Kore::Matrix<maxJointDOFs, posAndOrientation ? 6 : 3, float>                mat_mxn;
+    typedef Kore::Matrix<posAndOrientation ? 6 : 3, maxJointDOFs, float>                mat_nxm;
+    typedef Kore::Matrix<posAndOrientation ? 6 : 3, posAndOrientation ? 6 : 3, float>   mat_mxm;
+    typedef Kore::Matrix<maxJointDOFs, maxJointDOFs, float>                             mat_nxn;
+    typedef Kore::Vector<float, posAndOrientation ? 6 : 3>                              vec_m;
+    typedef Kore::Vector<float, maxJointDOFs>                                           vec_n;
     
     BoneNode*           endEffektor;
     Kore::vec3          pos_soll;
