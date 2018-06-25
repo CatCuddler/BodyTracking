@@ -38,7 +38,8 @@ public:
 	Kore::Quaternion getBoneLocalRotation(int boneIndex) const;
 	Kore::Quaternion getBoneGlobalRotation(int boneIndex) const;
 	
-	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot);
+    int getJointDOFs(int boneIndex);
+	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, int jointDOFs, bool posAndOrientation = true);
 	
 	BoneNode* getBoneWithIndex(int index) const;
 	

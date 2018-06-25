@@ -10,7 +10,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones, int maxSteps);
-    bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation);
+    bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, int jointDOFs, bool posAndOrientation = true);
 	float getAverageIter();
 	
 private:
@@ -20,7 +20,7 @@ private:
 	int rootIndex;
 	std::vector<BoneNode*> bones;
     
-    static const int ikMode = 2; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+    static const int ikMode = 4; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 	
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);

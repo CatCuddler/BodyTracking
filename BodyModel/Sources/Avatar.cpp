@@ -201,11 +201,23 @@ Quaternion Avatar::getBoneGlobalRotation(int boneIndex) const {
 	return quat;
 }
 
-void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot) {
+int Avatar::getJointDOFs(int boneIndex) {
+    BoneNode* bone = getBoneWithIndex(boneIndex);
+    int result = 0;
+    
+    while (bone->initialized) {
+        result++;
+        bone = bone->parent;
+    }
+    
+    return result;
+}
+
+void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, int jointDOFs, bool posAndOrientation) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	
-	if (useIK) invKin->inverseKinematics(bone, desiredPosition, desiredRot);
+	if (useIK) invKin->inverseKinematics(bone, desiredPosition, desiredRot, jointDOFs, posAndOrientation);
 	else setLocalRotation(boneIndex, desiredRot);
 }
 

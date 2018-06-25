@@ -19,7 +19,7 @@ struct BoneNode;
 class Jacobian {
     
 public:
-    Jacobian(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int n = maxJointDOFs);
+    Jacobian(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int n = maxJointDOFs, bool posAndOrientation = maxDOFs == 6 ? true : false);
     float getError();
     std::vector<float> calcDeltaTheta(int ikMode = 0);
     
@@ -47,8 +47,7 @@ private:
     Kore::vec3          pos_soll;
     Kore::Quaternion    rot_soll;
     float               error;
-    int                 nDOFs = maxDOFs;
-    int                 nJointDOFs;
+    int                 nDOFs, nJointDOFs;
     
     mat_mxm U;
     mat_nxn V;

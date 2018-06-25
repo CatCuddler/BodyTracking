@@ -12,21 +12,10 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, int jointDOFs, bool posAndOrientation) {
     if (!targetBone->initialized) return false;
     
-    Jacobian* jacobian;
-    if (strncmp(targetBone->boneName, "LeftLeg", 5) == 0 || strncmp(targetBone->boneName, "RightLeg", 6) == 0) {
-        // Füße
-        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 4);
-    } else if (strncmp(targetBone->boneName, "LeftHand", 5) == 0 || strncmp(targetBone->boneName, "RightHand", 6) == 0) {
-        // Arme
-        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 6);
-    } else {
-        // Kopf
-        log(Kore::Info, "Wert für Kopf muss noch angepasst werden!");
-        jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, 0);
-    }
+    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, jointDOFs, posAndOrientation);
     
     for (int i = 0; i < maxSteps; ++i) {
         // if position had reached
