@@ -123,71 +123,59 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft->axes = Kore::vec3(0, 0, 0);
 
 	// shoulder
+    // Schulter kann sich normalerweise minimal bewegen
 	nodeLeft = bones[11 - 1];
-	nodeLeft->axes = Kore::vec4(0, 0, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-0.05, 0.05));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-
+	nodeLeft->axes = Kore::vec3(0, 0, 0);
+    
 	nodeRight = bones[21 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain = nodeLeft->constrain;
 
-	// upperarm
+	// upperarm / Schultergelenk
 	nodeLeft = bones[12 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, 2.0f * Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
+    nodeLeft->constrain.push_back(Kore::vec2(-2.0f * Kore::pi / 9.0f, 17.0f * Kore::pi / 18.0f));  // -40° bis 170° = 210° (NN, vorher -90° bis 120° = 210° => 0°)
+    nodeLeft->constrain.push_back(Kore::vec2(-4.0f * Kore::pi / 9.0f, 13.0f * Kore::pi / 18.0f));  // -80° bis 130° = 210° (NN, vorher -90° bis 60° = 150° => 60°)
+    nodeLeft->constrain.push_back(Kore::vec2(-13.0f * Kore::pi / 18.0f, Kore::pi / 2.0f));         // -130° bis 90° = 220° (NN, vorher -30° bis 120° = 150° => 70°)
 
 	nodeRight = bones[22 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 
-	// lowerarm
+	// lowerarm / Ellenbogengelenk
 	nodeLeft = bones[13 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 6.0f, 2.0f * Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 3.0f, Kore::pi / 6.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));//-Kore::pi / 8.0f, Kore::pi / 8.0f));
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 3.0f * Kore::pi / 4.0f));           // -10° bis 135° = 145° (NN, vorher -90° bis 90° = 180° => -35°)
+    nodeLeft->constrain.push_back(Kore::vec2(-7.0f * Kore::pi / 18.0f, 4.0f * Kore::pi / 9.0f));    // -70° bis 80° = 150° (NN, vorher -90° bis 90° = 180° => -30°)
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, 4.0f * Kore::pi / 9.0f));            // -90° bis 80° = 170° (NN, vorher -90° bis 90° = 180° => -10°)
 
 	nodeRight = bones[23 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 
-	// thigh
+	// thigh / Hüftgelenk
 	nodeLeft = bones[4 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-5.0 * Kore::pi / 6.0f, Kore::pi / 3.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 8.0f, Kore::pi / 8.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 2.0f, Kore::pi / 2.0f));
-
+    nodeLeft->constrain.push_back(Kore::vec2(-13.0f * Kore::pi / 18.0f, Kore::pi / 18.0f)); // -130° bis 10° = 145° (NN, vorher -150° bis 60° = 210° => -65°)
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 3.0f, 2.0f * Kore::pi / 9.0f));    // -60° bis 40° = 100° (NN, vorher -22.5° bis 22.5° = 45° => 55°)
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 4.0f, 5.0f * Kore::pi / 6.0f));    // -45° bis 50° = 95° (NN, vorher -90° bis 90° = 180° => -85°)
 	nodeRight = bones[29 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 
-	// calf
+	// calf / Kniegelenk
 	nodeLeft = bones[5 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(0, 5.0 * Kore::pi / 6.0f));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
-	nodeLeft->constrain.push_back(Kore::vec2(0, 0));
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 13.0f * Kore::pi / 18.0f)); // -10° bis 130° = 145° (NN, vorher -0° bis 150° = 150° => -5°)
 
 	nodeRight = bones[30 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	//nodeRight->constrain = nodeLeft->constrain;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
+	nodeRight->constrain = nodeLeft->constrain;
 }
 
 float InverseKinematics::getAverageIter() {
