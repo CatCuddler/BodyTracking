@@ -46,7 +46,13 @@ public:
 	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 	void setLocalRotation(int boneIndex, Kore::vec3 rot);
 	
-	float getAverageIKiterationNum() const;
+    int getTotalNum() const;
+    float getAverageIkIteration() const;
+    float getAverageIkReached() const;
+    float getAverageIkError() const;
+    float getMinIkError() const;
+    float getMaxIkError() const;
+    
 	float getHeight() const;
 	
 	// Mocap

@@ -7,32 +7,58 @@
 
 #include <Kore/Log.h>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps), maxError(0.01f), rootIndex(2), sumIter(0), totalNum(0) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps) {
 	bones = boneVec;
 	setJointConstraints();
 }
 
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, int jointDOFs, bool posAndOrientation) {
+    std::vector<float> deltaTheta;
+    float error = FLT_MAX;
+    
     if (!targetBone->initialized) return false;
     
-    Jacobian* jacobian = new Jacobian(targetBone, desiredPosition, desiredRotation, jointDOFs, posAndOrientation);
-    
-    for (int i = 0; i < maxSteps; ++i) {
-        // if position had reached
-        if (jacobian->getError() < maxError) {
-            sumIter += i;
-            ++totalNum;
+    for (int i = 0; i <= maxSteps; ++i) {
+        if (posAndOrientation && jointDOFs >= 6) {
+            Jacobian<>* jacobian = new Jacobian<>;
             
-            return true;
+            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobian->getError();
+        } else if (!posAndOrientation && jointDOFs >= 6) {
+            Jacobian<6, false>* jacobian = new Jacobian<6, false>;
+            
+            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobian->getError();
+        } else if (posAndOrientation && jointDOFs == 4) {
+            Jacobian<4>* jacobian = new Jacobian<4>;
+            
+            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobian->getError();
+        } else if (!posAndOrientation && jointDOFs == 4) {
+            Jacobian<4, false>* jacobian = new Jacobian<4, false>;
+            
+            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobian->getError();
+        } else {
+            log(Kore::Info, "NICHT VORHANDEN! ");
         }
         
-        applyChanges(jacobian->calcDeltaTheta(ikMode), targetBone);
-        applyJointConstraints(targetBone);
-        for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
+        // if position reached OR maxStep reached
+        if (error < errorMax || i == maxSteps) {
+            sumIter += i;
+            sumReached += error < errorMax ? 1 : 0;
+            sumError += error;
+            minError = error < minError ? error : minError;
+            maxError = error > maxError ? error : maxError;
+            totalNum += 1;
+            
+            return error < errorMax;
+        } else {
+            applyChanges(deltaTheta, targetBone);
+            applyJointConstraints(targetBone);
+            for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
+        }
     }
-    
-    sumIter += maxSteps;
-    ++totalNum;
     
     return false;
 }
@@ -153,15 +179,33 @@ void InverseKinematics::setJointConstraints() {
 	// calf / Kniegelenk
 	nodeLeft = bones[5 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 13.0f * Kore::pi / 18.0f)); // -10° bis 130° = 145° (NN, vorher -0° bis 150° = 150° => -5°)
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 13.0f * Kore::pi / 18.0f)); // -10° bis 130° = 140° (NN, vorher -0° bis 150° = 150° => -10°)
 
 	nodeRight = bones[30 - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain = nodeLeft->constrain;
+    nodeRight->constrain.push_back(nodeLeft->constrain[0]);
+}
+
+int InverseKinematics::getTotalNum() {
+    return totalNum;
 }
 
 float InverseKinematics::getAverageIter() {
-	float average = -1;
-	if (totalNum != 0) average = sumIter / (float)totalNum;
-	return average;
+    return totalNum != 0 ? (float) sumIter / (float) totalNum : -1;
+}
+
+float InverseKinematics::getAverageReached() {
+    return totalNum != 0 ? (float) sumReached / (float) totalNum : -1;
+}
+
+float InverseKinematics::getAverageError() {
+    return totalNum != 0 ? sumError / (float) totalNum : -1;
+}
+
+float InverseKinematics::getMinError() {
+    return minError;
+}
+
+float InverseKinematics::getMaxError() {
+    return maxError;
 }

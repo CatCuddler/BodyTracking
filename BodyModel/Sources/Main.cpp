@@ -50,9 +50,11 @@ namespace {
 	const char* initialTransFilename = "initTransAndRot.csv";
 	const char* positionDataFilename = "positionData.csv";
 	
+    struct timespec start, end;
 	double startTime;
 	double lastTime;
-	float fiveSec;
+	float timer;
+    int totalNum;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -125,8 +127,8 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const int leftHandBoneIndex = 14;
 	const int rightHandBoneIndex = 24;
-	const int leftFootBoneIndex = 5; // 6 Fuß
-	const int rightFootBoneIndex = 30; // 31 Fuß
+	const int leftFootBoneIndex = 6;
+	const int rightFootBoneIndex = 31;
 	const int backBoneIndex = 2;
 	
 	void renderTracker() {
@@ -190,13 +192,15 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5f));
 			}
 			else if (boneIndex == leftFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
+				endEffector->offsetPosition = vec3(0.05f, 0, 0);
+                // endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5f));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1f));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
-				endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
+                endEffector->offsetPosition = vec3(0.05f, 0, 0);
+                // endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.5f));
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), Kore::pi * 0.1f));
@@ -258,11 +262,8 @@ namespace {
 		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
 			
 			for (int tracker = 0; tracker < numOfEndEffectors; ++tracker) {
-			 
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
-				
-				//log(Info, "pos: %f %f %f rot: %f %f %f %f", desPosition[tracker].x(), desPosition[tracker].y(), desPosition[tracker].z(), desRotation[tracker].w, desRotation[tracker].x, desRotation[tracker].y, desRotation[tracker].z);
 				
 				switch (tracker) {
 					case 0:
@@ -367,15 +368,26 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 
-		fiveSec += deltaT;
-		if (fiveSec > 1) {
-			fiveSec = 0;
+        timer += deltaT;
+        // if (timer > 1 && totalNum != avatar->getTotalNum()) {
+        if (avatar->getTotalNum() == 10892 && totalNum != avatar->getTotalNum()) {
+            timer = 0;
+            
+            clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+            uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
-			float averageIt = avatar->getAverageIKiterationNum();
+            totalNum = avatar->getTotalNum();
+            float averageIteration = avatar->getAverageIkIteration();
+            float averageReached = avatar->getAverageIkReached();
+            float averageError = avatar->getAverageIkError();
+            float minError = avatar->getMinIkError();
+            float maxError = avatar->getMaxIkError();
+            float averageTime = (float) deltaUs / (float) totalNum;
 
-			if (logData) logger->saveLogData("it", averageIt);
+            if (logData) logger->saveLogData("it", averageIteration);
 
-			//log(Info, "Average iteration %f", averageIt);
+            log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
+            log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
 		}
 
 		// Move position of camera based on WASD keys, and XZ keys for up and down
@@ -856,6 +868,7 @@ int kore(int argc, char** argv) {
 
 	System::setCallback(update);
 
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	startTime = System::time();
 
 	Keyboard::the()->KeyDown = keyDown;
