@@ -15,7 +15,6 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     if (!targetBone->initialized) return false;
     
     for (int i = 0; i <= maxSteps; ++i) {
-        log(Kore::Info, "%s", targetBone->boneName);
         if (strncmp(targetBone->boneName, "RightH", 6) == 0 || strncmp(targetBone->boneName, "LeftH", 5) == 0) {
             deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
             error = jacobianHand->getError();
