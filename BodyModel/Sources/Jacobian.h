@@ -59,11 +59,11 @@ public:
     }
     
 private:
-    const float lambdaPseudoInverse = 0.1;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
+    const float lambdaPseudoInverse = 0;    // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
+    const float lambdaDLS = 0.18;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
     const float lambdaSVD = 0.12;           // Lambda für SVD
-    const float lambdaDLS = 1.0;            // Lambda für DLS, 0.24 Optimum laut Buss
-    const float lambdaDLSwithSVD = 0.24;    // Lambda für DLS with SVD
-    const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
+    const float lambdaDLSwithSVD = 0.18;    // Lambda für DLS with SVD => optimiert!
+    const float lambdaSDLS = 1.0;           // Lambda für SDLS = 45° * PI / 180°
     
     typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
     typedef Kore::Matrix<posAndOrientation ? 6 : 3, nJointDOFs, float>                  mat_nxm;
@@ -134,7 +134,7 @@ private:
             M_i *= omegaInverse_i;
             
             float N_i = 1.0; // u_i.getLength();
-            float gamma_i = Min(1, N_i / M_i) * lambdaSDLS; // todo: Kette durchgehen und maximalen Winkel ermitteln statt lambdaSDLS!
+            float gamma_i = Min(1, N_i / M_i) * lambdaSDLS;
             
             theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
         }
