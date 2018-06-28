@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "InverseKinematics.h"
 
-#include "RotationUtility.h"
-#include "MeshObject.h"
-#include "Jacobian.h"
-
 #include <Kore/Log.h>
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps) {
@@ -12,35 +8,22 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxStep
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, int jointDOFs, bool posAndOrientation) {
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
     std::vector<float> deltaTheta;
     float error = FLT_MAX;
     
     if (!targetBone->initialized) return false;
     
     for (int i = 0; i <= maxSteps; ++i) {
-        if (posAndOrientation && jointDOFs >= 6) {
-            Jacobian<>* jacobian = new Jacobian<>;
-            
-            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
-            error = jacobian->getError();
-        } else if (!posAndOrientation && jointDOFs >= 6) {
-            Jacobian<6, false>* jacobian = new Jacobian<6, false>;
-            
-            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
-            error = jacobian->getError();
-        } else if (posAndOrientation && jointDOFs == 4) {
-            Jacobian<4>* jacobian = new Jacobian<4>;
-            
-            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
-            error = jacobian->getError();
-        } else if (!posAndOrientation && jointDOFs == 4) {
-            Jacobian<4, false>* jacobian = new Jacobian<4, false>;
-            
-            deltaTheta = jacobian->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
-            error = jacobian->getError();
+        log(Kore::Info, "%s", targetBone->boneName);
+        if (strncmp(targetBone->boneName, "RightH", 6) == 0 || strncmp(targetBone->boneName, "LeftH", 5) == 0) {
+            deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobianHand->getError();
+        } else if (strncmp(targetBone->boneName, "RightF", 6) == 0 || strncmp(targetBone->boneName, "LeftF", 5) == 0) {
+            deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            error = jacobianFoot->getError();
         } else {
-            log(Kore::Info, "NICHT VORHANDEN! ");
+            log(Kore::Info, "NICHT VORHANDEN!");
         }
         
         // if position reached OR maxStep reached

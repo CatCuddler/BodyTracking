@@ -1,9 +1,8 @@
 #pragma once
 
 #include <Kore/Math/Quaternion.h>
-
-#include <vector>
 #include <float.h>
+#include "Jacobian.h"
 
 struct BoneNode;
 
@@ -11,7 +10,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones, int maxSteps);
-    bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation, int jointDOFs, bool posAndOrientation = true);
+    bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation);
     int getTotalNum();
     float getAverageIter();
     float getMinIter();
@@ -23,11 +22,18 @@ public:
 private:
 	int boneCount;
 	int maxSteps;
-	float errorMax = 0.1f;
 	int rootIndex = 2;
 	std::vector<BoneNode*> bones;
     
     static const int ikMode = 4; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+    static const int handJointDOFs = 6;
+    static const bool handWithOrientation = true;
+    static const int footJointDOFs = 4;
+    static const bool footWithOrientation = false;
+    float errorMax = 0.01f;
+    
+    Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
+    Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);

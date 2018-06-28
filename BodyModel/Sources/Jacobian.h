@@ -9,15 +9,9 @@
 #ifndef Jacobian_h
 #define Jacobian_h
 
-#include <Kore/Math/Quaternion.h>
-#include <Kore/Log.h>
-
 #include "MeshObject.h"
 #include "Jacobian/MatrixRmn.h"
 #include "RotationUtility.h"
-
-#include <vector>
-#include <float.h>
 
 struct BoneNode;
 
@@ -67,8 +61,8 @@ public:
 private:
     const float lambdaPseudoInverse = 0.1;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
     const float lambdaSVD = 0.12;           // Lambda für SVD
-    const float lambdaDLS = 2.40;           // Lambda für DLS, 0.24 Optimum laut Buss
-    const float lambdaDLSwithSVD = 1.0;     // Lambda für DLS with SVD
+    const float lambdaDLS = 1.0;            // Lambda für DLS, 0.24 Optimum laut Buss
+    const float lambdaDLSwithSVD = 0.24;    // Lambda für DLS with SVD
     const float lambdaSDLS = 0.7853981634;  // Lambda für SDLS = 45° * PI / 180°
     
     typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
