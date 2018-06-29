@@ -25,7 +25,7 @@ private:
 	int rootIndex = 2;
 	std::vector<BoneNode*> bones;
     
-    static const int ikMode = 4; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+    static const int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
     static const int handJointDOFs = 6;
     static const bool handWithOrientation = true;
     static const int footJointDOFs = 4;

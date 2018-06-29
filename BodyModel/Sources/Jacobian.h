@@ -61,11 +61,11 @@ public:
     }
     
 private:
-    const float lambdaPseudoInverse = 0;    // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
-    const float lambdaDLS = 0.18;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
-    const float lambdaSVD = 0.112;          // Lambda für SVD, 0 bis 1, 0 = alle Werte werden genommen (instabil), 1 = keine Werte
-    const float lambdaDLSwithSVD = 0.18;    // Lambda für DLS with SVD => optimiert!
-    const float lambdaSDLS = 1.0;           // Lambda für SDLS = 45° * PI / 180°
+    const float lambdaPseudoInverse = 0.0f;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
+    const float lambdaDLS = 0.18f;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
+    const float lambdaSVD = 0.112f;          // Lambda für SVD, 0 bis 1, 0 = alle Werte werden genommen (instabil), 1 = keine Werte
+    const float lambdaDLSwithSVD = 0.18f;    // Lambda für DLS with SVD => optimiert!
+    const float lambdaSDLS = 0.7853981634f;  // Lambda für SDLS = 45° * PI / 180°
     
     typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
     typedef Kore::Matrix<posAndOrientation ? 6 : 3, nJointDOFs, float>                  mat_nxm;
@@ -123,21 +123,21 @@ private:
                 v_i[j] = V[j][i];
             
             // alpha_i = uT_i * deltaP
-            float alpha_i = 0.0;
+            float alpha_i = 0.0f;
             for (int m = 0; m < nDOFs; ++m)
                 alpha_i += u_i[m] * deltaP[m];
             
-            float omegaInverse_i = 1.0 / d[i];
+            float omegaInverse_i = d[i] != 0 ? 1.0 / d[i] : 0;
             
-            float M_i = 0.0;
+            float M_i = 0.0f;
             for (int l = 0; l < (nDOFs / 3); ++l)
                 for (int j = 0; j < nJointDOFs; ++j)
                     M_i += fabs(V[j][i]) * fabs(jacobian[l][j]);
             M_i *= omegaInverse_i;
             
             float N_i = 1.0; // u_i.getLength();
-            float gamma_i = fabs(N_i / M_i);
-            gamma_i = gamma_i < 1 ? gamma_i : 1.0;
+            float gamma_i = M_i != 0 ? fabs(N_i / M_i) : 0;
+            gamma_i = gamma_i < 1 ? gamma_i : 1.0f;
             gamma_i *= lambdaSDLS;
             
             theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
@@ -234,7 +234,7 @@ private:
         return column;
     }
     
-    mat_nxm calcPseudoInverse(mat_mxn jacobian, float lambda = 0.0) { // lambda != 0 => DLS!
+    mat_nxm calcPseudoInverse(mat_mxn jacobian, float lambda = 0.0f) { // lambda != 0 => DLS!
         if (nDOFs <= nJointDOFs) { // m <= n
             // Left Damped pseudo-inverse
             return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * Square(lambda)).Invert() * jacobian.Transpose();
@@ -264,11 +264,9 @@ private:
         MatrixRmn V = MatrixRmn(nJointDOFs, nJointDOFs);
         VectorRn d = VectorRn(Min(nDOFs, nJointDOFs));
         
-        for (int m = 0; m < nDOFs; ++m) {
-            for (int n = 0; n < nJointDOFs; ++n) {
+        for (int m = 0; m < nDOFs; ++m)
+            for (int n = 0; n < nJointDOFs; ++n)
                 J.Set(m, n, (double) jacobian[m][n]);
-            }
-        }
         
         J.ComputeSVD(U, d, V);
         assert(J.DebugCheckSVD(U, d , V));
@@ -299,7 +297,7 @@ private:
     }
     
     float MaxAbs(vec_m vec) {
-        float result = 0.0;
+        float result = 0.0f;
         
         for (int m = 0; m < nDOFs; ++m) {
             float temp = fabs(vec[m]);
