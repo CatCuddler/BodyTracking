@@ -13,6 +13,8 @@
 #include "Jacobian/MatrixRmn.h"
 #include "RotationUtility.h"
 
+#include <Kore/Log.h>
+
 struct BoneNode;
 
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
@@ -61,7 +63,7 @@ public:
 private:
     const float lambdaPseudoInverse = 0;    // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
     const float lambdaDLS = 0.18;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
-    const float lambdaSVD = 0.12;           // Lambda für SVD
+    const float lambdaSVD = 0.112;          // Lambda für SVD, 0 bis 1, 0 = alle Werte werden genommen (instabil), 1 = keine Werte
     const float lambdaDLSwithSVD = 0.18;    // Lambda für DLS with SVD => optimiert!
     const float lambdaSDLS = 1.0;           // Lambda für SDLS = 45° * PI / 180°
     
@@ -134,7 +136,9 @@ private:
             M_i *= omegaInverse_i;
             
             float N_i = 1.0; // u_i.getLength();
-            float gamma_i = Min(1, N_i / M_i) * lambdaSDLS;
+            float gamma_i = fabs(N_i / M_i);
+            gamma_i = gamma_i < 1 ? gamma_i : 1.0;
+            gamma_i *= lambdaSDLS;
             
             theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
         }
@@ -207,7 +211,6 @@ private:
         
         return jacobianMatrix;
     }
-    
     
     vec_m calcJacobianColumn(BoneNode* bone, Kore::vec3 p_aktuell, Kore::vec3 rotAxis) {
         vec_m column;
@@ -285,13 +288,12 @@ private:
     }
     
     vec_n clampMaxAbs(vec_n vec, float gamma_i) {
-        float gammaAbs_i = fabs(gamma_i);
-        float maxValue = MaxAbs(vec, gammaAbs_i);
+        float maxValue = MaxAbs(vec, gamma_i);
         
         // scale vector to gamma_i as max
-        if (maxValue != gammaAbs_i)
+        if (maxValue != gamma_i)
             for (int n = 0; n < nJointDOFs; ++n)
-                vec[n] = vec[n] / maxValue * gammaAbs_i;
+                vec[n] = vec[n] / maxValue * gamma_i;
         
         return vec;
     }
@@ -299,8 +301,11 @@ private:
     float MaxAbs(vec_m vec) {
         float result = 0.0;
         
-        for (int m = 0; m < nDOFs; ++m)
-            result = Max(fabs(vec[m]), result);
+        for (int m = 0; m < nDOFs; ++m) {
+            float temp = fabs(vec[m]);
+                              
+            if (temp > result) result = temp;
+        }
         
         return result;
     }
@@ -308,8 +313,11 @@ private:
     float MaxAbs(vec_n vec, float start) {
         float result = start;
         
-        for (int n = 0; n < nJointDOFs; ++n)
-            result = Max(fabs(vec[n]), result);
+        for (int n = 0; n < nDOFs; ++n) {
+            float temp = fabs(vec[n]);
+            
+            if (temp > result) result = temp;
+        }
         
         return result;
     }
