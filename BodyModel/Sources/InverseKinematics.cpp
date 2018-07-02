@@ -3,7 +3,7 @@
 
 #include <Kore/Log.h>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, int maxSteps) : maxSteps(maxSteps) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
 }
@@ -15,14 +15,17 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     if (!targetBone->initialized) return false;
     
     for (int i = 0; i <= maxSteps; ++i) {
-        if (strncmp(targetBone->boneName, "RightH", 6) == 0 || strncmp(targetBone->boneName, "LeftH", 5) == 0) {
-            deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+        if (strncmp(targetBone->boneName, "LowerB", 6) == 0) {
+            deltaTheta = jacobianBack->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, backIkMode);
+            error = jacobianBack->getError();
+            
+            // log(Kore::Info, "%f \t %f \t %f \t %f", deltaTheta[0], deltaTheta[1], deltaTheta[2], error);
+        } else if (strncmp(targetBone->boneName, "RightH", 6) == 0 || strncmp(targetBone->boneName, "LeftH", 5) == 0) {
+            deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, handIkMode);
             error = jacobianHand->getError();
         } else if (strncmp(targetBone->boneName, "RightF", 6) == 0 || strncmp(targetBone->boneName, "LeftF", 5) == 0) {
-            deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, ikMode);
+            deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, footIkMode);
             error = jacobianFoot->getError();
-        } else {
-            log(Kore::Info, "NICHT VORHANDEN!");
         }
         
         // if position reached OR maxStep reached
@@ -115,10 +118,12 @@ void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
     
-    // spine
-    nodeLeft = bones[9 - 1];
-    nodeLeft->axes = Kore::vec3(1, 0, 0);
-    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 36.0f, Kore::pi / 18.0f));  // -5° bis 10° = 15° (NN)
+    // hips
+    nodeLeft = bones[2 - 1];
+    nodeLeft->axes = Kore::vec3(1, 1, 1);
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
+    nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 
 	// upperarm / Schultergelenk
 	nodeLeft = bones[12 - 1];

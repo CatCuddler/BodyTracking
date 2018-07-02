@@ -36,7 +36,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	position *= 1.0/position.w();
 	currentHeight = position.z();
 	
-	if (useIK) invKin = new InverseKinematics(bones, 100);
+	if (useIK) invKin = new InverseKinematics(bones);
 	else mocap = new MoCap(bones);
 	//}
 	

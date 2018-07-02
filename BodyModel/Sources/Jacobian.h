@@ -153,12 +153,13 @@ private:
         
         // Calculate difference between desired position and actual position of the end effector
         Kore::vec3 deltaPos = pos_soll - calcPosition(endEffektor);
-        if (nDOFs > 0) deltaP[0] = deltaPos.x();
-        if (nDOFs > 1) deltaP[1] = deltaPos.y();
-        if (nDOFs > 2) deltaP[2] = deltaPos.z();
+        
+        deltaP[0] = deltaPos.x();
+        deltaP[1] = deltaPos.y();
+        deltaP[2] = deltaPos.z();
         
         // Calculate difference between desired rotation and actual rotation
-        if (nDOFs > 3) {
+        if (nDOFs == 6) {
             Kore::Quaternion rot_aktuell;
             Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
             
@@ -172,8 +173,8 @@ private:
             Kore::RotationUtility::quatToEuler(&deltaRot_quat, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
             
             deltaP[3] = deltaRot.x();
-            if (nDOFs > 4) deltaP[4] = deltaRot.y();
-            if (nDOFs > 5) deltaP[5] = deltaRot.z();
+            deltaP[4] = deltaRot.y();
+            deltaP[5] = deltaRot.z();
         }
         
         return deltaP;
@@ -184,10 +185,10 @@ private:
         BoneNode* bone = endEffektor;
         
         // Get current rotation and position of the end-effector
-        Kore::vec3 p_aktuell = calcPosition(bone);
+        Kore::vec3 p_aktuell = calcPosition(endEffektor);
         
         int joint = 0;
-        while (bone->initialized) {
+        while (bone->initialized && joint < nJointDOFs) {
             Kore::vec3 axes = bone->axes;
             
             if (axes.x() == 1.0 && joint < nJointDOFs) {

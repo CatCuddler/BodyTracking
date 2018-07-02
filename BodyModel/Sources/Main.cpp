@@ -126,7 +126,7 @@ namespace {
 	const int rightHandBoneIndex = 24;
 	const int leftFootBoneIndex = 6;
 	const int rightFootBoneIndex = 31;
-	const int backBoneIndex = 2;
+    const int backBoneIndex = 8;
 	
 	void renderTracker() {
 		// Render desired position
@@ -173,7 +173,7 @@ namespace {
 
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
-				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi * 0.42));
+                endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi * 0.92));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
 			else if (boneIndex == leftHandBoneIndex) {
@@ -190,21 +190,20 @@ namespace {
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0.05f, 0, 0);
-                // endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi * 0.5f));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 0, 1), -Kore::pi * 0.1f));
 			}
 			else if (boneIndex == rightFootBoneIndex) {
                 endEffector->offsetPosition = vec3(0.05f, 0, 0);
-                // endEffector->offsetPosition = vec3(0, -0.1f, 0.05f);
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), Kore::pi));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi * 0.5f));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi * 0.1f));
 			}
-
+            
 			endEffector->offsetRotation.normalize();
 			endEffector->initialized = true;
+            
 			return true;
 		}
 
@@ -237,18 +236,9 @@ namespace {
 		avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 	}
 
-	void setBackBonePosition(Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
-
-		applyOffset(back, desPosition, desRotation);
-		
-		initRot = desRotation;
-		initRot.normalize();
-		initRotInv = initRot.invert();
-		avatar->M = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
-		initTransInv = avatar->M.Invert();
+	void setHipsPosition(Kore::vec3& desPosition) {
+        initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
 	}
 	
 	void readLogData() {
@@ -270,7 +260,8 @@ namespace {
 						setDesiredPositionAndOrientation(rightHand, desPosition[tracker], desRotation[tracker]);
 						break;
 					case 2:
-						setBackBonePosition(desPosition[tracker], desRotation[tracker]);
+                        setHipsPosition(desPosition[tracker]);
+                        setDesiredPositionAndOrientation(back, desPosition[tracker], desRotation[tracker]);
 						break;
 					case 3:
 						setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
@@ -367,7 +358,7 @@ namespace {
 
         timer += deltaT;
         // if (timer > 1 && totalNum != avatar->getTotalNum()) {
-        if (avatar->getTotalNum() == 10892 && totalNum != avatar->getTotalNum()) {
+        if (avatar->getTotalNum() >= 13615 && totalNum != avatar->getTotalNum()) {
             timer = 0;
             
             clock_gettime(CLOCK_MONOTONIC_RAW, &end);
@@ -441,8 +432,8 @@ namespace {
 
 			initRotInv = initRot.invert();
 
-			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+			initTrans = initTrans * initRot.matrix().Transpose() * hmdOffset;
+			initTransInv = initTrans.Invert();
             
             log(Info, "Numbers of jointDOFs: \t hand: %i, \t foot: %i", avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
 			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
@@ -560,7 +551,7 @@ namespace {
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 
 			// Animate avatar
-			Graphics4::setMatrix(mLocation, avatar->M);
+			Graphics4::setMatrix(mLocation, initTrans);
 			avatar->animate(tex, deltaT);
 
 			// Render tracker
@@ -591,11 +582,10 @@ namespace {
 			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
 			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 		}
-		Graphics4::setMatrix(mLocation, avatar->M);
+		Graphics4::setMatrix(mLocation, initTrans);
 
 		// Animate avatar
 		avatar->animate(tex, deltaT);
-		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 
 		// Render tracker
 		if (renderTrackerAndController) renderTracker();
@@ -608,22 +598,19 @@ namespace {
 
 #else
 		if (!initCharacter) {
-			//avatar->setScale(0.95);	// Scale test
-
 			vec3 initPos = vec3(0, 0, 0);
 			
 			if (useIK) {
 				log(Info, "Read data from file %s", initialTransFilename);
 				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
                 
-                log(Info, "Numbers of jointDOFs: \t hand: %i, \t foot: %i", avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
+                log(Info, "Numbers of jointDOFs:\n\tback: %i,\n\thand: %i,\n\tfoot: %i", avatar->getJointDOFs(back->boneIndex), avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
 			}
 
 			initRot.normalize();
 			initRotInv = initRot.invert();
 
 			initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
-			avatar->M = initTrans;
 			initTransInv = initTrans.Invert();
 
 			initCharacter = true;
@@ -639,11 +626,10 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 
-		Graphics4::setMatrix(mLocation, avatar->M);
+		Graphics4::setMatrix(mLocation, initTrans);
 
 		// Animate avatar
 		avatar->animate(tex, deltaT);
-		//avatar->drawJoints(avatar->M, V, P, width, height, true);
 
 		// Render tracker
 		if(renderTrackerAndController) renderTracker();
