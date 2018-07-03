@@ -122,8 +122,8 @@ namespace {
 	bool initCharacter = false;
 
 	const bool renderTrackerAndController = true;
-	const int leftHandBoneIndex = 14;
-	const int rightHandBoneIndex = 24;
+	const int leftHandBoneIndex = 16;
+	const int rightHandBoneIndex = 26;
 	const int leftFootBoneIndex = 6;
 	const int rightFootBoneIndex = 31;
     const int backBoneIndex = 8;
@@ -820,7 +820,7 @@ namespace {
 
 		logger = new Logger();
 
-		// Initialize enf effectors
+		// Initialize end effectors
 		leftHand = new EndEffector();
 		initEndEffector(leftHand, leftHandBoneIndex);
 		rightHand = new EndEffector();

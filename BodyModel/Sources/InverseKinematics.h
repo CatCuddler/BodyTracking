@@ -29,7 +29,7 @@ private:
     static const int backJointDOFs = 3;
     static const bool backWithOrientation = true;
     static const int handIkMode = 2;
-    static const int handJointDOFs = 4;
+    static const int handJointDOFs = 6; // 4 without hands
     static const bool handWithOrientation = true;
     static const int footIkMode = 0;
     static const int footJointDOFs = 4;
