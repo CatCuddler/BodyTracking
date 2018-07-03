@@ -748,7 +748,7 @@ namespace {
 		structure.add("tex", Float2VertexData);
 		structure.add("nor", Float3VertexData);
 
-		pipeline = new PipelineState;
+		pipeline = new PipelineState();
 		pipeline->inputLayout[0] = &structure;
 		pipeline->inputLayout[1] = nullptr;
 		pipeline->vertexShader = vertexShader;
@@ -781,7 +781,7 @@ namespace {
 		structure_living_room.add("tex", Float2VertexData);
 		structure_living_room.add("nor", Float3VertexData);
 
-		pipeline_living_room = new PipelineState;
+		pipeline_living_room = new PipelineState();
 		pipeline_living_room->inputLayout[0] = &structure_living_room;
 		pipeline_living_room->inputLayout[1] = nullptr;
 		pipeline_living_room->vertexShader = vertexShader_living_room;

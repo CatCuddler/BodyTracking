@@ -151,7 +151,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		}
 		
 		// Mesh Vertex Buffer
-		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure, 0);
+		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure);
 		float* vertices = vertexBuffers[j]->lock();
 		setVertexFromMesh(vertices, mesh, scale, material->texScaleX, material->texScaleY);
 		vertexBuffers[j]->unlock();
