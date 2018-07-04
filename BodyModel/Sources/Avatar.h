@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "MeshObject.h"
 #include "InverseKinematics.h"
-#include "MoCap.h"
 
 #include "Kore/Graphics2/Graphics.h"
 
@@ -13,10 +12,6 @@ private:
 	// Inverse Kinematics
 	InverseKinematics* invKin;
 	Kore::vec4 desiredPosition;
-	bool useIK;
-	
-	// MoCap
-	MoCap* mocap;
 	
 	float currentHeight;
 	
@@ -27,7 +22,7 @@ private:
 	Kore::Graphics4::Texture* yellowDot;
 	
 public:
-	Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, bool useIK, float scale = 1.0f);
+	Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	
 	void animate(Kore::Graphics4::TextureUnit tex, float deltaTime);
 	
@@ -48,7 +43,4 @@ public:
 	
 	float getAverageIKiterationNum() const;
 	float getHeight() const;
-	
-	// Mocap
-	void getNextMocapSet(Kore::vec3* rawPos);
 };

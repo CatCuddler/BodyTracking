@@ -35,8 +35,6 @@ struct EndEffector {
 namespace {
 	const int width = 1024;
 	const int height = 768;
-
-	bool useIK = true;
 	
 	Logger* logger;
 	bool logData = false;
@@ -49,7 +47,7 @@ namespace {
 	
 	double startTime;
 	double lastTime;
-	float fiveSec;
+	float timeCounter;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -298,91 +296,15 @@ namespace {
 		//log(Info, "%i", line);
 		line += numOfEndEffectors;
 	}
-	
-	void readMocapData() {
-		vec3 rawRot[29];
-		
-		avatar->getNextMocapSet(rawRot);
-		
-		for (int i = 0; i < 29; ++i) {
-			
-			int boneIndex = -1;
-			switch (i) {
-				// Map indices from mocap to *.ogex
-				// TODO: move this to mocap.h
-				case 0:
-					//boneIndex = 3;
-					break;
-				case 1:				//lowerback
-					boneIndex = 7;	//LowerBack
-					break;
-				case 2:				//upperback
-					boneIndex = 8;	//Spine
-					break;
-				case 3:				//thorax
-					boneIndex = 9;	//Spine1
-					break;
-					
-				case 7:				//rclavicle
-					boneIndex = 21;	//RightShoulder
-					break;
-				case 8:				//rhumerus
-					boneIndex = 22;	//RightArm
-					break;
-				case 9:				//rradius
-					boneIndex = 23;	//RightForeArm
-					break;
-					
-				case 21:			//rfemur
-					boneIndex = 29;	//RightUpLeg
-					break;
-				case 22:			//rtibia
-					boneIndex = 30;	//RightLeg
-					break;
-					
-				case 25:			//lfemur
-					boneIndex = 4;	//LeftUpLeg
-					break;
-				case 26:			//ltibia
-					boneIndex = 5;	//LeftLeg
-					break;
-					
-				case 14:			//lclavicle
-					boneIndex = 11;	//LeftShoulder
-					break;
-				case 15:			//lhumerus
-					boneIndex = 12;	//LeftArm
-					break;
-				case 16:			//lradius
-					boneIndex = 13;	//LeftForeArm
-				default:
-					break;
-			}
-			
-			if (boneIndex != -1) {
-				Kore::vec3 desRotEuler = rawRot[i];
-				Kore::Quaternion desRot;
-				RotationUtility::eulerToQuat(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()), &desRot);
-				avatar->setDesiredPositionAndOrientation(boneIndex, vec3(0, 0, 0), desRot);
-				
-				//vec3 rot = vec3(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()));
-				//avatar->setLocalRotation(boneIndex, rot);
-				
-				
-			}
-			
-			desPosition[0] = rawRot[0];
-		}
-	}
 
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
 
-		fiveSec += deltaT;
-		if (fiveSec > 1) {
-			fiveSec = 0;
+		timeCounter += deltaT;
+		if (timeCounter > 1) {
+			timeCounter = 0;
 
 			float averageIt = avatar->getAverageIKiterationNum();
 
@@ -617,11 +539,9 @@ namespace {
 
 			vec3 initPos = vec3(0, 0, 0);
 			
-			if (useIK) {
-				log(Info, "Read data from file %s", initialTransFilename);
-				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
-			}
-
+			log(Info, "Read data from file %s", initialTransFilename);
+			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+			
 			initRot.normalize();
 			initRotInv = initRot.invert();
 
@@ -632,9 +552,8 @@ namespace {
 			initCharacter = true;
 		}
 		
-		if (useIK) readLogData();
-		else readMocapData();
-
+		readLogData();
+		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
@@ -812,9 +731,9 @@ namespace {
 	void init() {
 		loadAvatarShader();
 #ifdef KORE_STEAMVR
-		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi / 2));

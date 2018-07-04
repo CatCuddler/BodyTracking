@@ -24,7 +24,7 @@ namespace {
 	}
 }
 
-Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, bool useIK, float scale) : MeshObject(meshFile, textureFile, structure, scale), useIK(useIK) {
+Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
@@ -36,8 +36,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	position *= 1.0/position.w();
 	currentHeight = position.z();
 	
-	if (useIK) invKin = new InverseKinematics(bones, 100);
-	else mocap = new MoCap(bones);
+	invKin = new InverseKinematics(bones, 100);
 	//}
 	
 	g2 = new Kore::Graphics2::Graphics2(1024, 768);
@@ -209,8 +208,7 @@ void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredP
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	
-	if (useIK) invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
-	else setLocalRotation(boneIndex, desiredRot);
+	invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
 }
 
 void Avatar::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
@@ -245,14 +243,9 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 }
 
 float Avatar::getAverageIKiterationNum() const {
-	if (useIK) return invKin->getAverageIter();
-	else return -1;
+	return invKin->getAverageIter();
 }
 
 float Avatar::getHeight() const {
 	return currentHeight;
-}
-
-void Avatar::getNextMocapSet(Kore::vec3* rawPos) {
-	mocap->readMocalSet(rawPos);
 }
