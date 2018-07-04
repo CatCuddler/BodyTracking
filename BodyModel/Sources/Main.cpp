@@ -99,8 +99,14 @@ namespace {
 	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
 
+	float currentUserHeight;
+
 	// Buttons
 	bool triggerButton;
+	bool menuButton;
+	bool gripButton;
+
+	// Trackpad
 #endif
 
 	vec3 desPosition[numOfEndEffectors];
@@ -302,7 +308,20 @@ namespace {
 	}
 
 
+#ifdef KORE_STEAMVR
 	void gamepadButton(int buttonNr, float value) {
+		// Menu button
+		if (buttonNr == 1) {
+			if (value == 1) {
+				menuButton = true;
+				log(Info, "Menu Button pressed");
+			}
+			else {
+				menuButton = false;
+				log(Info, "Menu Button unpressed");
+			}
+		}
+
 		// Trigger button
 		if (buttonNr == 33) {
 			if (value == 1) {
@@ -318,15 +337,101 @@ namespace {
 		// Grip button
 		if (buttonNr == 2) {
 			if (value == 1) {
-				triggerButton = true;
+				gripButton = true;
 				log(Info, "Grip Button pressed");
 			}
 			else {
-				triggerButton = false;
+				gripButton = false;
 				log(Info, "Grip Button unpressed");
 			}
 		}
 	}
+
+	void updateControllerIndex() {
+		// Get left and right tracker index
+		VrPoseState controller;
+		for (int i = 0; i < 16; ++i) {
+			controller = VrInterface::getController(i);
+			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
+				vec3 trackerPos = controller.vrPose.position;
+				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				if (trackerPos.y() < currentUserHeight / 4) {
+					//Foot tracker (if y pos is in the lower quarter of the body)
+					if (trackerTransPos.x() > 0) {
+						log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
+						leftFootTrackerIndex = i;
+					}
+					else {
+						log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
+						rightFootTrackerIndex = i;
+					}
+				}
+				else {
+					//back tracker
+					log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
+					backTrackerIndex = i;
+				}
+				//leftHandTrackerIndex = -1;
+				//rightHandTrackerIndex = i;
+			}
+			else if (controller.trackedDevice == TrackedDevice::Controller) {
+				//Hand tracker
+				vec3 trackerPos = controller.vrPose.position;
+				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				if (trackerTransPos.x() > 0) {
+					log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
+					leftHandTrackerIndex = i;
+				}
+				else {
+					log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
+					rightHandTrackerIndex = i;
+				}
+
+				//Gamepad::get(i)->Axis = gamepadAxis;
+				Gamepad::get(i)->Button = gamepadButton;
+			}
+		}
+	}
+
+	void calibrateAvatar() {
+		if (!initCharacter) {
+			float currentAvatarHeight = avatar->getHeight();
+
+			SensorState state = VrInterface::getSensorState(0);
+			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
+			currentUserHeight = hmdPos.y();
+
+			float scale = currentUserHeight / currentAvatarHeight;
+			avatar->setScale(scale);
+
+			// Set initial transformation
+			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+
+			// Set initial orientation
+			Quaternion hmdOrient = state.pose.vrPose.orientation;
+			float zAngle = 2 * Kore::acos(hmdOrient.y);
+			initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
+
+			initRotInv = initRot.invert();
+
+			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
+			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+
+			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+
+			updateControllerIndex();
+
+			if (logData) {
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
+			}
+
+			initCharacter = true;
+		}
+	}
+
+	
+#endif
 
 	void update() {
 		float t = (float)(System::time() - startTime);
@@ -378,82 +483,7 @@ namespace {
 		VrInterface::begin();
 		SensorState state;
 
-		if (!initCharacter) {
-			float currentAvatarHeight = avatar->getHeight();
-
-			state = VrInterface::getSensorState(0);
-			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
-			float currentUserHeight = hmdPos.y();
-
-			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
-
-			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-
-			// Set initial orientation
-			Quaternion hmdOrient = state.pose.vrPose.orientation;
-			float zAngle = 2 * Kore::acos(hmdOrient.y);
-			initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
-
-			initRotInv = initRot.invert();
-
-			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
-
-			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
-
-			// Get left and right tracker index
-			VrPoseState controller;
-			for (int i = 0; i < 16; ++i) {
-				controller = VrInterface::getController(i);
-				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
-					vec3 trackerPos = controller.vrPose.position;
-					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-					if (trackerPos.y() < currentUserHeight / 4) {
-						//Foot tracker (if y pos is in the lower quarter of the body)
-						if (trackerTransPos.x() > 0) {
-							log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
-							leftFootTrackerIndex = i;
-						}
-						else {
-							log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
-							rightFootTrackerIndex = i;
-						}
-					}
-					else {
-						//back tracker
-						log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
-						backTrackerIndex = i;
-					}
-					//leftHandTrackerIndex = -1;
-					//rightHandTrackerIndex = i;
-				}
-				else if (controller.trackedDevice == TrackedDevice::Controller) {
-					//Hand tracker
-					vec3 trackerPos = controller.vrPose.position;
-					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-					if (trackerTransPos.x() > 0) {
-						log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
-						leftHandTrackerIndex = i;
-					}
-					else {
-						log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
-						rightHandTrackerIndex = i;
-					}
-
-					//Gamepad::get(i)->Axis = gamepadAxis;
-					Gamepad::get(i)->Button = gamepadButton;
-				}
-			}
-
-			if (logData) {
-				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-			}
-
-			initCharacter = true;
-		}
+		calibrateAvatar();
 
 		VrPoseState controller;
 		if (leftHandTrackerIndex != -1) {
