@@ -18,6 +18,7 @@
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>
+#include <Kore/Input/Gamepad.h>
 #endif
 
 using namespace Kore;
@@ -97,6 +98,9 @@ namespace {
 	int leftFootTrackerIndex = -1;
 	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
+
+	// Buttons
+	bool triggerButton;
 #endif
 
 	vec3 desPosition[numOfEndEffectors];
@@ -297,6 +301,33 @@ namespace {
 		line += numOfEndEffectors;
 	}
 
+
+	void gamepadButton(int buttonNr, float value) {
+		// Trigger button
+		if (buttonNr == 33) {
+			if (value == 1) {
+				triggerButton = true;
+				log(Info, "Trigger Button pressed");
+			}
+			else {
+				triggerButton = false;
+				log(Info, "Trigger Button unpressed");
+			}
+		}
+
+		// Grip button
+		if (buttonNr == 2) {
+			if (value == 1) {
+				triggerButton = true;
+				log(Info, "Grip Button pressed");
+			}
+			else {
+				triggerButton = false;
+				log(Info, "Grip Button unpressed");
+			}
+		}
+	}
+
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -410,6 +441,9 @@ namespace {
 						log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
 						rightHandTrackerIndex = i;
 					}
+
+					//Gamepad::get(i)->Axis = gamepadAxis;
+					Gamepad::get(i)->Button = gamepadButton;
 				}
 			}
 
