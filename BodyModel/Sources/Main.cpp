@@ -43,8 +43,10 @@ namespace {
 
 	//tracked data of 5 tracker
 	const int numOfEndEffectors = 5;
-	const char* initialTransFilename = "initTransAndRot_1530700240.csv";
-	const char* positionDataFilename = "positionData_1530700240.csv";
+	const char* initialTransFilename = "initTransAndRot.csv";
+	const char* positionDataFilename = "positionData.csv";
+	//const char* initialTransFilename = "initTransAndRot_calibration.csv";
+	//const char* positionDataFilename = "positionData_calibration.csv";
 	
 	double startTime;
 	double lastTime;
