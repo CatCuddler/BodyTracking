@@ -18,6 +18,7 @@
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>
+#include <Kore/Input/Gamepad.h>
 #endif
 
 using namespace Kore;
@@ -35,8 +36,6 @@ struct EndEffector {
 namespace {
 	const int width = 1024;
 	const int height = 768;
-
-	bool useIK = true;
 	
 	Logger* logger;
 	bool logData = false;
@@ -46,12 +45,14 @@ namespace {
 	const int numOfEndEffectors = 5;
 	const char* initialTransFilename = "initTransAndRot.csv";
 	const char* positionDataFilename = "positionData.csv";
+	//const char* initialTransFilename = "initTransAndRot_calibration.csv";
+	//const char* positionDataFilename = "positionData_calibration.csv";
 	
     struct timespec start, end;
 	double startTime;
 	double lastTime;
 	float timer;
-    int totalNum;
+  int totalNum;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -101,6 +102,13 @@ namespace {
 	int leftFootTrackerIndex = -1;
 	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
+
+	float currentUserHeight;
+
+	// Buttons
+	bool triggerButton;
+	bool menuButton;
+	bool gripButton;
 #endif
 
 	vec3 desPosition[numOfEndEffectors];
@@ -115,9 +123,8 @@ namespace {
 
 	mat4 initTrans = mat4::Identity();
 	mat4 initTransInv = mat4::Identity();
-	const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
-	Kore::Quaternion initRot = Kore::Quaternion(0, 0, 0, 1);
-	Kore::Quaternion initRotInv = Kore::Quaternion(0, 0, 0, 1);
+	Quaternion initRot;
+	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
 
 	bool initCharacter = false;
 
@@ -161,7 +168,7 @@ namespace {
 		return V;
 	}
 
-	bool initEndEffector(EndEffector* endEffector, const int boneIndex) {
+	bool calibrate(EndEffector* endEffector, const int boneIndex) {
 		// TODO: calibrate -> should be independent from tracker or controller orientation
 		if (!endEffector->initialized) {
 
@@ -276,68 +283,25 @@ namespace {
 		//log(Info, "%i", line);
 		line += numOfEndEffectors;
 	}
-	
-	void readMocapData() {
-		vec3 rawRot[29];
-		
-		avatar->getNextMocapSet(rawRot);
-		
-		for (int i = 0; i < 29; ++i) {
-			
-			int boneIndex = -1;
-			switch (i) {
-				// Map indices from mocap to *.ogex
-				// TODO: move this to mocap.h
-				case 0:
-					//boneIndex = 3;
-					break;
-				case 1:				//lowerback
-					boneIndex = 7;	//LowerBack
-					break;
-				case 2:				//upperback
-					boneIndex = 8;	//Spine
-					break;
-				case 3:				//thorax
-					boneIndex = 9;	//Spine1
-					break;
-					
-				case 7:				//rclavicle
-					boneIndex = 21;	//RightShoulder
-					break;
-				case 8:				//rhumerus
-					boneIndex = 22;	//RightArm
-					break;
-				case 9:				//rradius
-					boneIndex = 23;	//RightForeArm
-					break;
-					
-				case 21:			//rfemur
-					boneIndex = 29;	//RightUpLeg
-					break;
-				case 22:			//rtibia
-					boneIndex = 30;	//RightLeg
-					break;
-					
-				case 25:			//lfemur
-					boneIndex = 4;	//LeftUpLeg
-					break;
-				case 26:			//ltibia
-					boneIndex = 5;	//LeftLeg
-					break;
-					
-				case 14:			//lclavicle
-					boneIndex = 11;	//LeftShoulder
-					break;
-				case 15:			//lhumerus
-					boneIndex = 12;	//LeftArm
-					break;
-				case 16:			//lradius
-					boneIndex = 13;	//LeftForeArm
-				default:
-					break;
+
+
+#ifdef KORE_STEAMVR
+
+	void calibrateAvatar();
+
+	void gamepadButton(int buttonNr, float value) {
+		// Menu button
+		if (buttonNr == 1) {
+			if (value == 1) {
+				menuButton = true;
+				calibrateAvatar();
+
+				log(Info, "Calibrate avatar");
+			} else {
+				menuButton = false;
 			}
-			
-			if (boneIndex != -1) {
+      
+			/* if (boneIndex != -1) {
 				Kore::vec3 desRotEuler = rawRot[i];
 				Kore::Quaternion desRot;
 				RotationUtility::eulerToQuat(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()), &desRot);
@@ -345,37 +309,147 @@ namespace {
 				
 				//vec3 rot = vec3(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()));
 				//avatar->setLocalRotation(boneIndex, rot);
+      } */
+		}
+
+		// Trigger button
+		if (buttonNr == 33) {
+			if (value == 1) {
+				triggerButton = true;
+				logData = true;
+				log(Info, "Start logging data.");
 			}
-			
-			desPosition[0] = rawRot[0];
+			else {
+				triggerButton = false;
+				logData = false;
+				log(Info, "Stop recording data.");
+			}
+		}
+
+		// Grip button
+		if (buttonNr == 2) {
+			if (value == 1) {
+				gripButton = true;
+				//log(Info, "Grip Button pressed");
+			}
+			else {
+				gripButton = false;
+				//log(Info, "Grip Button unpressed");
+			}
 		}
 	}
+
+
+	void initController() {
+		// Get left and right tracker index
+		VrPoseState controller;
+		for (int i = 0; i < 16; ++i) {
+			controller = VrInterface::getController(i);
+			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
+				vec3 trackerPos = controller.vrPose.position;
+				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				if (trackerPos.y() < currentUserHeight / 4) {
+					//Foot tracker (if y pos is in the lower quarter of the body)
+					if (trackerTransPos.x() > 0) {
+						log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
+						leftFootTrackerIndex = i;
+					}
+					else {
+						log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
+						rightFootTrackerIndex = i;
+					}
+				}
+				else {
+					//back tracker
+					log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
+					backTrackerIndex = i;
+				}
+				//leftHandTrackerIndex = -1;
+				//rightHandTrackerIndex = i;
+			}
+			else if (controller.trackedDevice == TrackedDevice::Controller) {
+				//Hand tracker
+				vec3 trackerPos = controller.vrPose.position;
+				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				if (trackerTransPos.x() > 0) {
+					log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
+					leftHandTrackerIndex = i;
+				}
+				else {
+					log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
+					rightHandTrackerIndex = i;
+				}
+
+				//Gamepad::get(i)->Axis = gamepadAxis;
+				Gamepad::get(i)->Button = gamepadButton;
+			}
+		}
+	}
+
+	void calibrateAvatar() {
+		float currentAvatarHeight = avatar->getHeight();
+
+		SensorState state = VrInterface::getSensorState(0);
+		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
+		currentUserHeight = hmdPos.y();
+
+		float scale = currentUserHeight / currentAvatarHeight;
+		avatar->setScale(scale);
+
+		// Set initial transformation
+		initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+
+		// Set initial orientation
+		Quaternion hmdOrient = state.pose.vrPose.orientation;
+		float zAngle = 2 * Kore::acos(hmdOrient.y);
+		initRot = Quaternion(0, 0, 0, 1);
+		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
+		initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
+
+		initRotInv = initRot.invert();
+
+		const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
+		avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
+		initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+
+		log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+
+		initController();
+
+		if (logData) {
+			vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+			logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
+		}
+	}
+
+	
+#endif
 
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
 
-        timer += deltaT;
-        // if (timer > 1 && totalNum != avatar->getTotalNum()) {
-        if (avatar->getTotalNum() >= 13615 && totalNum != avatar->getTotalNum()) {
-            timer = 0;
-            
-            clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-            uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    timer += deltaT;
+    // if (timer > 1 && totalNum != avatar->getTotalNum()) {
+    if (avatar->getTotalNum() >= 13615 && totalNum != avatar->getTotalNum()) {
+        timer = 0;
 
-            totalNum = avatar->getTotalNum();
-            float averageIteration = avatar->getAverageIkIteration();
-            float averageReached = avatar->getAverageIkReached();
-            float averageError = avatar->getAverageIkError();
-            float minError = avatar->getMinIkError();
-            float maxError = avatar->getMaxIkError();
-            float averageTime = (float) deltaUs / (float) totalNum;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
-            if (logData) logger->saveLogData("it", averageIteration);
+        totalNum = avatar->getTotalNum();
+        float averageIteration = avatar->getAverageIkIteration();
+        float averageReached = avatar->getAverageIkReached();
+        float averageError = avatar->getAverageIkError();
+        float minError = avatar->getMinIkError();
+        float maxError = avatar->getMaxIkError();
+        float averageTime = (float) deltaUs / (float) totalNum;
 
-            log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
-            log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
+        if (logData) logger->saveLogData("it", averageIteration);
+
+        log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
+        log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
 		}
 
 		// Move position of camera based on WASD keys, and XZ keys for up and down
@@ -413,7 +487,7 @@ namespace {
 		SensorState state;
 
 		if (!initCharacter) {
-			float currentAvatarHeight = avatar->getHeight();
+			/* float currentAvatarHeight = avatar->getHeight();
 
 			state = VrInterface::getSensorState(0);
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
@@ -482,8 +556,9 @@ namespace {
 			if (logData) {
 				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
 				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-			}
+			} */
 
+			calibrateAvatar();
 			initCharacter = true;
 		}
 
@@ -599,15 +674,13 @@ namespace {
 #else
 		if (!initCharacter) {
 			vec3 initPos = vec3(0, 0, 0);
+      
+			log(Info, "Read data from file %s", initialTransFilename);
+			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+      
+      log(Info, "Numbers of jointDOFs:\n\tback: %i,\n\thand: %i,\n\tfoot: %i", avatar->getJointDOFs(back->boneIndex), avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
 			
-			if (useIK) {
-				log(Info, "Read data from file %s", initialTransFilename);
-				logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
-                
-                log(Info, "Numbers of jointDOFs:\n\tback: %i,\n\thand: %i,\n\tfoot: %i", avatar->getJointDOFs(back->boneIndex), avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
-			}
-
-			initRot.normalize();
+      initRot.normalize();
 			initRotInv = initRot.invert();
 
 			initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
@@ -616,9 +689,8 @@ namespace {
 			initCharacter = true;
 		}
 		
-		if (useIK) readLogData();
-		else readMocapData();
-
+		readLogData();
+		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
@@ -731,7 +803,7 @@ namespace {
 		structure.add("tex", Float2VertexData);
 		structure.add("nor", Float3VertexData);
 
-		pipeline = new PipelineState;
+		pipeline = new PipelineState();
 		pipeline->inputLayout[0] = &structure;
 		pipeline->inputLayout[1] = nullptr;
 		pipeline->vertexShader = vertexShader;
@@ -764,7 +836,7 @@ namespace {
 		structure_living_room.add("tex", Float2VertexData);
 		structure_living_room.add("nor", Float3VertexData);
 
-		pipeline_living_room = new PipelineState;
+		pipeline_living_room = new PipelineState();
 		pipeline_living_room->inputLayout[0] = &structure_living_room;
 		pipeline_living_room->inputLayout[1] = nullptr;
 		pipeline_living_room->vertexShader = vertexShader_living_room;
@@ -795,15 +867,16 @@ namespace {
 	void init() {
 		loadAvatarShader();
 #ifdef KORE_STEAMVR
-		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure, useIK);
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
 
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot = Quaternion(0, 0, 0, 1);
+		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05);
@@ -822,15 +895,15 @@ namespace {
 
 		// Initialize end effectors
 		leftHand = new EndEffector();
-		initEndEffector(leftHand, leftHandBoneIndex);
+		calibrate(leftHand, leftHandBoneIndex);
 		rightHand = new EndEffector();
-		initEndEffector(rightHand, rightHandBoneIndex);
+		calibrate(rightHand, rightHandBoneIndex);
 		leftFoot = new EndEffector();
-		initEndEffector(leftFoot, leftFootBoneIndex);
+		calibrate(leftFoot, leftFootBoneIndex);
 		rightFoot = new EndEffector();
-		initEndEffector(rightFoot, rightFootBoneIndex);
+		calibrate(rightFoot, rightFootBoneIndex);
 		back = new EndEffector();
-		initEndEffector(back, backBoneIndex);
+		calibrate(back, backBoneIndex);
 
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
