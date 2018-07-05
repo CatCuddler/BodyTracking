@@ -23,8 +23,9 @@ public:
     std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
         std::vector<float> deltaTheta;
         vec_n vec;
-        vec_m deltaP = calcDeltaP(endEffektor, pos_soll, rot_soll);
-        mat_mxn jacobian = calcJacobian(endEffektor);
+        Kore::vec3 p_aktuell = calcPosition(endEffektor); // Get current rotation and position of the end-effector
+        vec_m deltaP = calcDeltaP(endEffektor, p_aktuell, pos_soll, rot_soll);
+        mat_mxn jacobian = calcJacobian(endEffektor, p_aktuell);
         
         // set error
         error = deltaP.getLength();
@@ -61,9 +62,8 @@ public:
     }
     
 private:
-    const float lambdaPseudoInverse = 0.0f;  // Eigentlich 0, da sonst DLS! Bei 0 aber Stabilitätsprobleme!!!
+    const float nearNull = 0.0001f;          // Für Überprüfung float == 0?
     const float lambdaDLS = 0.18f;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
-    const float lambdaSVD = 0.112f;          // Lambda für SVD, 0 bis 1, 0 = alle Werte werden genommen (instabil), 1 = keine Werte
     const float lambdaDLSwithSVD = 0.18f;    // Lambda für DLS with SVD => optimiert!
     const float lambdaSDLS = 0.7853981634f;  // Lambda für SDLS = 45° * PI / 180°
     
@@ -85,7 +85,7 @@ private:
         return jacobian.Transpose() * deltaP;
     }
     vec_n calcDeltaThetaByPseudoInverse(mat_mxn jacobian, vec_m deltaP) {
-        return calcPseudoInverse(jacobian, lambdaPseudoInverse) * deltaP;
+        return calcPseudoInverse(jacobian) * deltaP;
     }
     vec_n calcDeltaThetaByDLS(mat_mxn jacobian, vec_m deltaP) {
         return calcPseudoInverse(jacobian, lambdaDLS) * deltaP;
@@ -93,20 +93,30 @@ private:
     vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
         calcSVD(jacobian);
         
-        mat_nxm D;
+        mat_nxm pseudoInverse;
         for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-            D[i][i] = fabs(d[i]) > (lambdaSVD * MaxAbs(d)) ? (1 / d[i]) : 0;
-        
-        return V * D * U.Transpose() * deltaP;
+            if (fabs(d[i]) > nearNull)
+                for (int n = 0; n < nJointDOFs; ++n)
+                    for (int m = 0; m < nDOFs; ++m)
+                        pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
+            
+        return pseudoInverse * deltaP;
     }
     vec_n calcDeltaThetaByDLSwithSVD(mat_mxn jacobian, vec_m deltaP) {
         calcSVD(jacobian);
         
-        mat_nxm E;
-        for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-            E[i][i] = d[i] / (Square(d[i]) + Square(lambdaDLSwithSVD));
+        mat_nxm dls;
+        for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
+            if (fabs(d[i]) > nearNull){
+                float lambda = d[i] / (Square(d[i]) + Square(lambdaDLSwithSVD));
+                
+                for (int n = 0; n < nJointDOFs; ++n)
+                    for (int m = 0; m < nDOFs; ++m)
+                        dls[n][m] += lambda * V[n][i] * U[m][i];
+            }
+        }
         
-        return V * E * U.Transpose() * deltaP;
+        return dls * deltaP;
     }
     vec_n calcDeltaThetaBySDLS(mat_mxn jacobian, vec_m deltaP) {
         calcSVD(jacobian);
@@ -114,33 +124,39 @@ private:
         vec_n theta;
         for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
             vec_m u_i;
-            for (int j = 0; j < nDOFs; ++j) {
-                u_i[j] = U[j][i];
+            float N_i = 0.0f;
+            float alpha_i = 0.0f;
+            for (int m = 0; m < nDOFs; ++m) {
+                u_i[m] = U[m][i];
+                N_i += fabs(u_i[m]);
+                alpha_i += u_i[m] * deltaP[m];
             }
             
-            vec_n v_i;
-            for (int j = 0; j < nJointDOFs; ++j)
-                v_i[j] = V[j][i];
-            
-            // alpha_i = uT_i * deltaP
-            float alpha_i = 0.0f;
-            for (int m = 0; m < nDOFs; ++m)
-                alpha_i += u_i[m] * deltaP[m];
-            
-            float omegaInverse_i = d[i] != 0 ? 1.0 / d[i] : 0;
-            
-            float M_i = 0.0f;
-            for (int l = 0; l < (nDOFs / 3); ++l)
-                for (int j = 0; j < nJointDOFs; ++j)
-                    M_i += fabs(V[j][i]) * fabs(jacobian[l][j]);
-            M_i *= omegaInverse_i;
-            
-            float N_i = 1.0; // u_i.getLength();
-            float gamma_i = M_i != 0 ? fabs(N_i / M_i) : 0;
-            gamma_i = gamma_i < 1 ? gamma_i : 1.0f;
-            gamma_i *= lambdaSDLS;
-            
-            theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
+            if (
+                fabs(d[i]) > nearNull &&
+                N_i > nearNull &&
+                fabs(alpha_i) > nearNull
+            ) {
+                float omegaInverse_i = 1.0 / d[i];
+                
+                vec_n v_i;
+                float M_i = 0.0f;
+                for (int n = 0; n < nJointDOFs; ++n) {
+                    v_i[n] = V[n][i];
+                    
+                    for (int m = 0; m < nDOFs; ++m)
+                        M_i += fabs(v_i[n]) * fabs(jacobian[m][n]);
+                }
+                M_i *= omegaInverse_i;
+                
+                float gamma_i =
+                    fabs(M_i) > nearNull &&
+                    fabs(M_i) > fabs(N_i) ?
+                        fabs(N_i / M_i) * lambdaSDLS :
+                        lambdaSDLS;
+
+                theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
+            }
         }
         
         return theta;
@@ -148,11 +164,11 @@ private:
     
     // ---------------------------------------------------------
     
-    vec_m calcDeltaP(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll) {
+    vec_m calcDeltaP(BoneNode* endEffektor, Kore::vec3 p_aktuell, Kore::vec3 pos_soll, Kore::Quaternion rot_soll) {
         vec_m deltaP;
         
         // Calculate difference between desired position and actual position of the end effector
-        Kore::vec3 deltaPos = pos_soll - calcPosition(endEffektor);
+        Kore::vec3 deltaPos = pos_soll - p_aktuell;
         
         deltaP[0] = deltaPos.x();
         deltaP[1] = deltaPos.y();
@@ -180,12 +196,9 @@ private:
         return deltaP;
     }
     
-    mat_mxn calcJacobian(BoneNode* endEffektor) {
+    mat_mxn calcJacobian(BoneNode* endEffektor, Kore::vec3 p_aktuell) {
         Jacobian::mat_mxn jacobianMatrix;
         BoneNode* bone = endEffektor;
-        
-        // Get current rotation and position of the end-effector
-        Kore::vec3 p_aktuell = calcPosition(endEffektor);
         
         int joint = 0;
         while (bone->initialized && joint < nJointDOFs) {
@@ -238,10 +251,16 @@ private:
     mat_nxm calcPseudoInverse(mat_mxn jacobian, float lambda = 0.0f) { // lambda != 0 => DLS!
         if (nDOFs <= nJointDOFs) { // m <= n
             // Left Damped pseudo-inverse
-            return (jacobian.Transpose() * jacobian + Jacobian::mat_nxn::Identity() * Square(lambda)).Invert() * jacobian.Transpose();
+            Jacobian::mat_nxn id;
+            if (lambda > nearNull) id = Jacobian::mat_nxn::Identity() * Square(lambda);
+            
+            return (jacobian.Transpose() * jacobian + id).Invert() * jacobian.Transpose();
         } else {
             // Right Damped pseudo-inverse
-            return jacobian.Transpose() * (jacobian * jacobian.Transpose() + Jacobian::mat_mxm::Identity() * Square(lambda)).Invert();
+            Jacobian::mat_mxm id;
+            if (lambda > nearNull) id = Jacobian::mat_mxm::Identity() * Square(lambda);
+            
+            return jacobian.Transpose() * (jacobian * jacobian.Transpose() + id).Invert();
         }
     }
     
@@ -287,38 +306,13 @@ private:
     }
     
     vec_n clampMaxAbs(vec_n vec, float gamma_i) {
-        float maxValue = MaxAbs(vec, gamma_i);
+        float length = vec.getLength();
         
-        // scale vector to gamma_i as max
-        if (maxValue != gamma_i)
+        if (length > gamma_i)
             for (int n = 0; n < nJointDOFs; ++n)
-                vec[n] = vec[n] / maxValue * gamma_i;
+                vec[n] = gamma_i * vec[n] / length;
         
         return vec;
-    }
-    
-    float MaxAbs(vec_m vec) {
-        float result = 0.0f;
-        
-        for (int m = 0; m < nDOFs; ++m) {
-            float temp = fabs(vec[m]);
-                              
-            if (temp > result) result = temp;
-        }
-        
-        return result;
-    }
-    
-    float MaxAbs(vec_n vec, float start) {
-        float result = start;
-        
-        for (int n = 0; n < nDOFs; ++n) {
-            float temp = fabs(vec[n]);
-            
-            if (temp > result) result = temp;
-        }
-        
-        return result;
     }
 };
 
