@@ -51,8 +51,7 @@ namespace {
     struct timespec start, end;
 	double startTime;
 	double lastTime;
-	float timer;
-  int totalNum;
+    int totalNum;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -254,7 +253,6 @@ namespace {
 		
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
-			
 			for (int tracker = 0; tracker < numOfEndEffectors; ++tracker) {
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
@@ -278,17 +276,31 @@ namespace {
 						break;
 				}
 			}
-		}
-		
-		//log(Info, "%i", line);
-		line += numOfEndEffectors;
+        } else {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+            uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+            
+            int totalNum = avatar->getTotalNum();
+            float averageIteration = avatar->getAverageIkIteration();
+            float averageReached = avatar->getAverageIkReached();
+            float averageError = avatar->getAverageIkError();
+            float minError = avatar->getMinIkError();
+            float maxError = avatar->getMaxIkError();
+            float averageTime = (float) deltaUs / (float) totalNum;
+            
+            if (logData) logger->saveLogData("it", averageIteration);
+            
+            log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
+            // log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
+            
+            while(true) {}
+        }
+        
+        line += numOfEndEffectors;
 	}
 
 
 #ifdef KORE_STEAMVR
-
-	void calibrateAvatar();
-
 	void gamepadButton(int buttonNr, float value) {
 		// Menu button
 		if (buttonNr == 1) {
@@ -300,16 +312,6 @@ namespace {
 			} else {
 				menuButton = false;
 			}
-      
-			/* if (boneIndex != -1) {
-				Kore::vec3 desRotEuler = rawRot[i];
-				Kore::Quaternion desRot;
-				RotationUtility::eulerToQuat(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()), &desRot);
-				avatar->setDesiredPositionAndOrientation(boneIndex, vec3(0, 0, 0), desRot);
-				
-				//vec3 rot = vec3(RotationUtility::getRadians(desRotEuler.x()), RotationUtility::getRadians(desRotEuler.y()), RotationUtility::getRadians(desRotEuler.z()));
-				//avatar->setLocalRotation(boneIndex, rot);
-      } */
 		}
 
 		// Trigger button
@@ -421,36 +423,12 @@ namespace {
 			logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 		}
 	}
-
-	
 #endif
 
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
-
-    timer += deltaT;
-    // if (timer > 1 && totalNum != avatar->getTotalNum()) {
-    if (avatar->getTotalNum() >= 13615 && totalNum != avatar->getTotalNum()) {
-        timer = 0;
-
-        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-        uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-
-        totalNum = avatar->getTotalNum();
-        float averageIteration = avatar->getAverageIkIteration();
-        float averageReached = avatar->getAverageIkReached();
-        float averageError = avatar->getAverageIkError();
-        float minError = avatar->getMinIkError();
-        float maxError = avatar->getMaxIkError();
-        float averageTime = (float) deltaUs / (float) totalNum;
-
-        if (logData) logger->saveLogData("it", averageIteration);
-
-        log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
-        log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
-		}
 
 		// Move position of camera based on WASD keys, and XZ keys for up and down
 		const float moveSpeed = 0.1f;
@@ -487,77 +465,6 @@ namespace {
 		SensorState state;
 
 		if (!initCharacter) {
-			/* float currentAvatarHeight = avatar->getHeight();
-
-			state = VrInterface::getSensorState(0);
-			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
-			float currentUserHeight = hmdPos.y();
-
-			float scale = currentUserHeight / currentAvatarHeight;
-			avatar->setScale(scale);
-
-			// Set initial transformation
-			initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-
-			// Set initial orientation
-			Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
-			float zAngle = 2 * Kore::acos(hmdOrient.y);
-			initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
-
-			initRotInv = initRot.invert();
-
-			initTrans = initTrans * initRot.matrix().Transpose() * hmdOffset;
-			initTransInv = initTrans.Invert();
-            
-            log(Info, "Numbers of jointDOFs: \t hand: %i, \t foot: %i", avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
-			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
-
-			// Get left and right tracker index
-			VrPoseState controller;
-			for (int i = 0; i < 16; ++i) {
-				controller = VrInterface::getController(i);
-				if (controller.trackedDevice == TrackedDevice::ViveTracker) {
-					vec3 trackerPos = controller.vrPose.position;
-					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-					if (trackerPos.y() < currentUserHeight / 4) {
-						//Foot tracker (if y pos is in the lower quarter of the body)
-						if (trackerTransPos.x() > 0) {
-							log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
-							leftFootTrackerIndex = i;
-						}
-						else {
-							log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
-							rightFootTrackerIndex = i;
-						}
-					}
-					else {
-						//back tracker
-						log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
-						backTrackerIndex = i;
-					}
-					//leftHandTrackerIndex = -1;
-					//rightHandTrackerIndex = i;
-				}
-				else if (controller.trackedDevice == TrackedDevice::Controller) {
-					//Hand tracker
-					vec3 trackerPos = controller.vrPose.position;
-					vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-					if (trackerTransPos.x() > 0) {
-						log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
-						leftHandTrackerIndex = i;
-					}
-					else {
-						log(Info, "rightHandTrackerIndex: %i -> %i", rightHandTrackerIndex, i);
-						rightHandTrackerIndex = i;
-					}
-				}
-			}
-
-			if (logData) {
-				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-			} */
-
 			calibrateAvatar();
 			initCharacter = true;
 		}
@@ -677,10 +584,8 @@ namespace {
       
 			log(Info, "Read data from file %s", initialTransFilename);
 			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
-      
-      log(Info, "Numbers of jointDOFs:\n\tback: %i,\n\thand: %i,\n\tfoot: %i", avatar->getJointDOFs(back->boneIndex), avatar->getJointDOFs(leftHand->boneIndex), avatar->getJointDOFs(leftFoot->boneIndex));
 			
-      initRot.normalize();
+            initRot.normalize();
 			initRotInv = initRot.invert();
 
 			initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
