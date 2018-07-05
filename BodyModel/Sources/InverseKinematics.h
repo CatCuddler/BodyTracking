@@ -25,10 +25,10 @@ private:
 	std::vector<BoneNode*> bones;
     
     // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-    static const int backIkMode = 2;
+    static const int backIkMode = 5;
     static const int backJointDOFs = 3;
     static const bool backWithOrientation = true;
-    static const int handIkMode = 2;
+    static const int handIkMode = 5;
     static const int handJointDOFs = 6; // 4 without hands
     static const bool handWithOrientation = true;
     static const int footIkMode = 0;

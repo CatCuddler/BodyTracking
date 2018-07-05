@@ -123,8 +123,8 @@ namespace {
 
 	mat4 initTrans = mat4::Identity();
 	mat4 initTransInv = mat4::Identity();
-	Quaternion initRot;
-	Quaternion initRotInv = Quaternion(0, 0, 0, 1);
+    Kore::Quaternion initRot;
+    Kore::Quaternion initRotInv = Kore::Quaternion(0, 0, 0, 1);
 
 	bool initCharacter = false;
 
@@ -875,8 +875,8 @@ namespace {
 		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
 
-		initRot = Quaternion(0, 0, 0, 1);
-		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+        initRot = Kore::Quaternion(0, 0, 0, 1);
+        initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05);
