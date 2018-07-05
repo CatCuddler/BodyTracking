@@ -10,7 +10,7 @@
 #define Jacobian_h
 
 #include "MeshObject.h"
-#include "Jacobian/MatrixRmn.h"
+#include "BussIK/MatrixRmn.h"
 #include "RotationUtility.h"
 
 #include <Kore/Log.h>
