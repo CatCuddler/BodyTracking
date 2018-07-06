@@ -35,6 +35,13 @@ struct EndEffector {
 	EndEffector() : offsetRotation(Kore::Quaternion(0, 0, 0, 1)), offsetPosition(vec3(0, 0, 0)), boneIndex(0), initialized(false) {}
 };
 
+struct DataFile {
+	const char* initialTransFilename;
+	const char* positionDataFilename;
+	
+	DataFile(const char* init, const char* position) : initialTransFilename(init), positionDataFilename(position) {}
+};
+
 namespace {
 	const int width = 1024;
 	const int height = 768;
@@ -45,15 +52,18 @@ namespace {
 	
 	//tracked data of 5 tracker
 	const int numOfEndEffectors = 5;
-	const char* initialTransFilename = "initTransAndRot.csv";
-	const char* positionDataFilename = "positionData.csv";
-	//const char* initialTransFilename = "initTransAndRot_calibration.csv";
-	//const char* positionDataFilename = "positionData_calibration.csv";
+	
+	DataFile* movementFile = new DataFile("initTransAndRot.csv", "positionData.csv");
+	DataFile* calibrationFile = new DataFile("initTransAndRot_calibration.csv", "positionData_calibration.csv");
+	DataFile* joggingFile = new DataFile("initTransAndRot_jogging.csv", "positionData_jogging.csv");
+	DataFile* kicksFile = new DataFile("initTransAndRot_kicks.csv", "positionData_kicks.csv");
+	DataFile* squatsFile = new DataFile("initTransAndRot_squats.csv", "positionData_squats.csv");
+	DataFile* walkingFile = new DataFile("initTransAndRot_walking.csv", "positionData_walking.csv");
+	DataFile* currentFile = movementFile;
 	
 	//struct timespec start, end;
 	double startTime;
 	double lastTime;
-	int totalNum;
 	
 	// Avatar shader
 	VertexStructure structure;
@@ -249,7 +259,7 @@ namespace {
 		Kore::Quaternion rawRot[numOfEndEffectors];
 		
 		// Read line
-		if (logger->readData(line, numOfEndEffectors, positionDataFilename, rawPos, rawRot)) {
+		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, rawPos, rawRot)) {
 			for (int tracker = 0; tracker < numOfEndEffectors; ++tracker) {
 				desPosition[tracker] = rawPos[tracker];
 				desRotation[tracker] = rawRot[tracker];
@@ -588,8 +598,8 @@ namespace {
 		if (!initCharacter) {
 			vec3 initPos = vec3(0, 0, 0);
 			
-			log(Info, "Read data from file %s", initialTransFilename);
-			logger->readInitTransAndRot(initialTransFilename, &initPos, &initRot);
+			log(Info, "Read data from file %s", currentFile->initialTransFilename);
+			logger->readInitTransAndRot(currentFile->initialTransFilename, &initPos, &initRot);
 			
 			initRot.normalize();
 			initRotInv = initRot.invert();
