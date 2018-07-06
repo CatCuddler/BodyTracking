@@ -4,7 +4,7 @@
 #include "MeshObject.h"
 
 class LivingRoom : public MeshObject {
-
+	
 private:
 	
 public:

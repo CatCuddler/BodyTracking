@@ -201,20 +201,20 @@ Kore::Quaternion Avatar::getBoneGlobalRotation(int boneIndex) const {
 }
 
 int Avatar::getJointDOFs(int boneIndex) {
-    BoneNode* bone = getBoneWithIndex(boneIndex);
-    int result = 0;
-    
-    while (bone->initialized) {
-        Kore::vec3 axes = bone->axes;
-        
-        if (axes.x() == 1.0) result += 1;
-        if (axes.y() == 1.0) result += 1;
-        if (axes.z() == 1.0) result += 1;
-        
-        bone = bone->parent;
-    }
-    
-    return result;
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	int result = 0;
+	
+	while (bone->initialized) {
+		Kore::vec3 axes = bone->axes;
+		
+		if (axes.x() == 1.0) result += 1;
+		if (axes.y() == 1.0) result += 1;
+		if (axes.z() == 1.0) result += 1;
+		
+		bone = bone->parent;
+	}
+	
+	return result;
 }
 
 void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot) {
@@ -256,27 +256,27 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 }
 
 int Avatar::getTotalNum() const {
-    return invKin->getTotalNum();
+	return invKin->getTotalNum();
 }
 
 float Avatar::getAverageIkIteration() const {
-    return invKin->getAverageIter();
+	return invKin->getAverageIter();
 }
 
 float Avatar::getAverageIkReached() const {
-    return invKin->getAverageReached();
+	return invKin->getAverageReached();
 }
 
 float Avatar::getAverageIkError() const {
-    return invKin->getAverageError();
+	return invKin->getAverageError();
 }
 
 float Avatar::getMinIkError() const {
-    return invKin->getMinError();
+	return invKin->getMinError();
 }
 
 float Avatar::getMaxIkError() const {
-    return invKin->getMaxError();
+	return invKin->getMaxError();
 }
 
 float Avatar::getHeight() const {

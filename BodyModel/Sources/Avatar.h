@@ -33,7 +33,7 @@ public:
 	Kore::Quaternion getBoneLocalRotation(int boneIndex) const;
 	Kore::Quaternion getBoneGlobalRotation(int boneIndex) const;
 	
-    int getJointDOFs(int boneIndex);
+	int getJointDOFs(int boneIndex);
 	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot);
 	
 	BoneNode* getBoneWithIndex(int index) const;
@@ -41,12 +41,12 @@ public:
 	void setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation);
 	void setLocalRotation(int boneIndex, Kore::vec3 rot);
 	
-    int getTotalNum() const;
-    float getAverageIkIteration() const;
-    float getAverageIkReached() const;
-    float getAverageIkError() const;
-    float getMinIkError() const;
-    float getMaxIkError() const;
-    
+	int getTotalNum() const;
+	float getAverageIkIteration() const;
+	float getAverageIkReached() const;
+	float getAverageIkError() const;
+	float getMinIkError() const;
+	float getMaxIkError() const;
+	
 	float getHeight() const;
 };

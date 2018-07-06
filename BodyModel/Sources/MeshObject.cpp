@@ -37,7 +37,7 @@ namespace {
 			
 			//log(Info, "%i", indices[i]);
 		}
-
+		
 	}
 	
 	void setPosition(Mesh* mesh, int size, const float* data) {
@@ -167,7 +167,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 }
 
 void MeshObject::render(TextureUnit tex) {
-	for (int i = 0; i < meshesCount; ++i) {		
+	for (int i = 0; i < meshesCount; ++i) {
 		Texture* image = images[i];
 		Graphics4::setTexture(tex, image);
 		
@@ -408,7 +408,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				const OGEX::MaterialRefStructure& materialRefStructure = *static_cast<const OGEX::MaterialRefStructure *>(subStructure);
 				const Structure* subSubStructure = materialRefStructure.GetTargetStructure();
 				
-				geometry->materialRef = subSubStructure->GetStructureName();				
+				geometry->materialRef = subSubStructure->GetStructureName();
 				geometry->materialIndex = getIndexFromString(geometry->materialRef, 8);
 				break;
 			}
@@ -419,7 +419,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				
 				geometry->objectRef = subSubStructure->GetStructureName();
 				geometry->geometryIndex = getIndexFromString(geometry->objectRef, 8);
-
+				
 				break;
 			}
 				
@@ -455,7 +455,7 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 					const float* specular = colorStructure.GetColor();
 					material->specular = getVector3(specular);
 				}
-
+				
 				break;
 			}
 				
@@ -569,7 +569,7 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 			mat4 transMat = getMatrix4x4(trans);
 			bone->aniTransformations.push_back(transMat);
 		}
-	
+		
 	}
 	return bone;
 }
