@@ -129,7 +129,7 @@ void Logger::readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore
 	std::string item;
 	while(std::getline(ss, item, ';')) {
 		float num = std::stof(item);
-			
+		
 		//log(Kore::Info, "%i -> %f", column, num);
 		
 		if (column == 0) initPos->x() = num;
