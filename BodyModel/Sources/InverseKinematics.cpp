@@ -17,7 +17,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
 	if (!targetBone->initialized) return false;
 	
 	for (int i = 0; i <= maxSteps; ++i) {
-		if (targetBone->nodeIndex == backBoneIndex) { // LowerBack
+		if (targetBone->nodeIndex == backBoneIndex) {
 			deltaTheta = jacobianBack->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, backIkMode);
 			error = jacobianBack->getError();
 		} else if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
