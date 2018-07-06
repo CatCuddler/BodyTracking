@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "InverseKinematics.h"
 
+#include "Settings.h"
+
 #include <Kore/Log.h>
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
@@ -15,13 +17,13 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desir
     if (!targetBone->initialized) return false;
     
     for (int i = 0; i <= maxSteps; ++i) {
-        if (targetBone->nodeIndex == 8) { // LowerBack
+        if (targetBone->nodeIndex == backBoneIndex) { // LowerBack
             deltaTheta = jacobianBack->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, backIkMode);
             error = jacobianBack->getError();
-        } else if (targetBone->nodeIndex == 16 || targetBone->nodeIndex == 26) { // LeftFingerBase/RightFingerBase
+        } else if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
             deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, handIkMode);
             error = jacobianHand->getError();
-        } else if (targetBone->nodeIndex == 6 || targetBone->nodeIndex == 31) { // LeftFoot/LeftHand
+        } else if (targetBone->nodeIndex == leftFootBoneIndex || targetBone->nodeIndex == rightFootBoneIndex) {
             deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, footIkMode);
             error = jacobianFoot->getError();
         }
