@@ -50,7 +50,7 @@ namespace {
 	//const char* initialTransFilename = "initTransAndRot_calibration.csv";
 	//const char* positionDataFilename = "positionData_calibration.csv";
 	
-	struct timespec start, end;
+	//struct timespec start, end;
 	double startTime;
 	double lastTime;
 	int totalNum;
@@ -274,7 +274,7 @@ namespace {
 				}
 			}
 		} else {
-			clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+			/*clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 			uint64_t deltaUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 			
 			int totalNum = avatar->getTotalNum();
@@ -290,7 +290,7 @@ namespace {
 			log(Info, "\t\t\tAverage \t\tMin \t\t\tMax \niteration \t%f \nreached \t%f \nerror \t\t%f \t\t%f \t\t%f \ntime \t\t%f \nAfter %i lines and %ius \n", averageIteration, averageReached, averageError, minError, maxError, averageTime, totalNum, deltaUs);
 			// log(Info, "%f\t%f\t%f\t%f\t%f\t%f\t%i", averageIteration, averageReached, averageError, minError, maxError, averageTime, deltaUs);
 			
-			while(true) {}
+			while(true) {}*/
 		}
 		
 		line += numOfEndEffectors;
@@ -298,6 +298,8 @@ namespace {
 	
 	
 #ifdef KORE_STEAMVR
+	void calibrateAvatar();
+
 	void gamepadButton(int buttonNr, float value) {
 		// Menu button
 		if (buttonNr == 1) {
@@ -316,6 +318,10 @@ namespace {
 			if (value == 1) {
 				triggerButton = true;
 				logData = true;
+
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
+
 				log(Info, "Start logging data.");
 			}
 			else {
@@ -399,11 +405,11 @@ namespace {
 		initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
 		
 		// Set initial orientation
-		Quaternion hmdOrient = state.pose.vrPose.orientation;
+		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
 		float zAngle = 2 * Kore::acos(hmdOrient.y);
-		initRot = Quaternion(0, 0, 0, 1);
-		initRot.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
-		initRot.rotate(Quaternion(vec3(0, 0, 1), -zAngle));
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
 		
 		initRotInv = initRot.invert();
 		
@@ -494,7 +500,10 @@ namespace {
 			desPosition[2] = controller.vrPose.position;
 			desRotation[2] = controller.vrPose.orientation;
 			
-			setBackBonePosition(desPosition[2], desRotation[2]);
+			//setBackBonePosition(desPosition[2], desRotation[2]);
+
+			setHipsPosition(desPosition[2]);
+			setDesiredPositionAndOrientation(back, desPosition[2], desRotation[2]);
 		}
 		
 		if (leftFootTrackerIndex != -1) {
@@ -821,7 +830,7 @@ int kore(int argc, char** argv) {
 	
 	System::setCallback(update);
 	
-	clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+	//clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	startTime = System::time();
 	
 	Keyboard::the()->KeyDown = keyDown;
