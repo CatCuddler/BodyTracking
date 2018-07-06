@@ -36,7 +36,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	position *= 1.0/position.w();
 	currentHeight = position.z();
 	
-	invKin = new InverseKinematics(bones, 100);
+	invKin = new InverseKinematics(bones);
 	//}
 	
 	g2 = new Kore::Graphics2::Graphics2(1024, 768);
@@ -188,27 +188,40 @@ vec3 Avatar::getBonePosition(int boneIndex) const {
 	return vec3(pos.x(), pos.y(), pos.z());
 }
 
-Quaternion Avatar::getBoneLocalRotation(int boneIndex) const {
+Kore::Quaternion Avatar::getBoneLocalRotation(int boneIndex) const {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	return bone->quaternion;
 }
 
-Quaternion Avatar::getBoneGlobalRotation(int boneIndex) const {
+Kore::Quaternion Avatar::getBoneGlobalRotation(int boneIndex) const {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	Kore::Quaternion quat;
 	Kore::RotationUtility::getOrientation(&bone->combined, &quat);
 	return quat;
 }
 
-void Avatar::setDesiredPosition(int boneIndex, Kore::vec3 desiredPos) {
-	setDesiredPositionAndOrientation(boneIndex, desiredPos, Kore::Quaternion(0, 0, 0, 0), false);
+int Avatar::getJointDOFs(int boneIndex) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	int result = 0;
+	
+	while (bone->initialized) {
+		Kore::vec3 axes = bone->axes;
+		
+		if (axes.x() == 1.0) result += 1;
+		if (axes.y() == 1.0) result += 1;
+		if (axes.z() == 1.0) result += 1;
+		
+		bone = bone->parent;
+	}
+	
+	return result;
 }
 
-void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot, bool posAndRot) {
+void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desiredPos, Kore::Quaternion desiredRot) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	desiredPosition = vec4(desiredPos.x(), desiredPos.y(), desiredPos.z(), 1.0);
 	
-	invKin->inverseKinematics(bone, desiredPosition, desiredRot, posAndRot);
+	invKin->inverseKinematics(bone, desiredPosition, desiredRot);
 }
 
 void Avatar::setLocalRotation(int boneIndex, Kore::Quaternion desiredRotation) {
@@ -242,8 +255,28 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	return bone;
 }
 
-float Avatar::getAverageIKiterationNum() const {
+int Avatar::getTotalNum() const {
+	return invKin->getTotalNum();
+}
+
+float Avatar::getAverageIkIteration() const {
 	return invKin->getAverageIter();
+}
+
+float Avatar::getAverageIkReached() const {
+	return invKin->getAverageReached();
+}
+
+float Avatar::getAverageIkError() const {
+	return invKin->getAverageError();
+}
+
+float Avatar::getMinIkError() const {
+	return invKin->getMinError();
+}
+
+float Avatar::getMaxIkError() const {
+	return invKin->getMaxError();
 }
 
 float Avatar::getHeight() const {

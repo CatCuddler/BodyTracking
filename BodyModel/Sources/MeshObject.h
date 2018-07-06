@@ -98,10 +98,10 @@ struct BoneNode {
 	std::vector<Kore::vec2> constrain;	// <min, max>
 	
 	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
-				 combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
-				 finalTransform(Kore::mat4::Identity()),
-				 quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)),
-				  axes(Kore::vec3(0, 0, 0)) {}
+	combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
+	finalTransform(Kore::mat4::Identity()),
+	quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)),
+	axes(Kore::vec3(0, 0, 0)) {}
 };
 
 struct CompareBones {
@@ -114,7 +114,7 @@ class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
 	void render(Kore::Graphics4::TextureUnit tex);
-
+	
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
 	
@@ -133,10 +133,10 @@ public:
 	std::vector<BoneNode*> bones;
 	std::vector<BoneNode*> children;
 	std::vector<Light*> lights;
-
+	
 	Material* findMaterialWithIndex(const int index);
 	
-private:	
+private:
 	void LoadObj(const char* filename);
 	
 	void ConvertObjects(const Structure& structure);
