@@ -10,21 +10,18 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation) {
+bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta;
 	float error = FLT_MAX;
 	
 	if (!targetBone->initialized) return false;
 	
 	for (int i = 0; i <= maxSteps; ++i) {
-		if (targetBone->nodeIndex == backBoneIndex) {
-			deltaTheta = jacobianBack->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, backIkMode);
-			error = jacobianBack->getError();
-		} else if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
-			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, handIkMode);
+		if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
+			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, handIkMode);
 			error = jacobianHand->getError();
 		} else if (targetBone->nodeIndex == leftFootBoneIndex || targetBone->nodeIndex == rightFootBoneIndex) {
-			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desiredPosition, desiredRotation, footIkMode);
+			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, footIkMode);
 			error = jacobianFoot->getError();
 		}
 		
@@ -53,7 +50,7 @@ void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* ta
 	int i = 0;
 	
 	BoneNode* bone = targetBone;
-	while (bone->initialized) {
+	while (bone->initialized && i < size) {
 		Kore::vec3 axes = bone->axes;
 		
 		if (axes.x() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
@@ -117,13 +114,6 @@ void InverseKinematics::updateBonePosition(BoneNode* bone) {
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
-	
-	// hips
-	nodeLeft = bones[2 - 1];
-	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 	
 	// upperarm / Schultergelenk
 	nodeLeft = bones[12 - 1];

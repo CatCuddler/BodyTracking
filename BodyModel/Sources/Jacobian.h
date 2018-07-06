@@ -20,7 +20,7 @@ struct BoneNode;
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec4 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = calcPosition(endEffektor); // Get current rotation and position of the end-effector

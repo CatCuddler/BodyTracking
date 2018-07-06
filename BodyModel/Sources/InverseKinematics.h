@@ -10,7 +10,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
-	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation);
+	bool inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	int getTotalNum();
 	float getAverageIter();
 	float getMinIter();
@@ -25,20 +25,18 @@ private:
 	std::vector<BoneNode*> bones;
 	
 	// 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-	static const int backIkMode = 5;
-	static const int backJointDOFs = 3;
-	static const bool backWithOrientation = true;
+	
 	static const int handIkMode = 5;
 	static const int handJointDOFs = 6; // 4 without hands
 	static const bool handWithOrientation = true;
-	static const int footIkMode = 0;
+	
+	static const int footIkMode = 5;
 	static const int footJointDOFs = 4;
 	static const bool footWithOrientation = false;
 	
 	int maxSteps = 100;
 	float errorMax = 0.01f;
 	
-	Jacobian<backJointDOFs, backWithOrientation>* jacobianBack = new Jacobian<backJointDOFs, backWithOrientation>;
 	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	

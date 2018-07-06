@@ -134,7 +134,7 @@ namespace {
 	
 	mat4 initTrans = mat4::Identity();
 	mat4 initTransInv = mat4::Identity();
-	Kore::Quaternion initRot;
+	Kore::Quaternion initRot = Kore::Quaternion(0, 0, 0, 1);
 	Kore::Quaternion initRotInv = Kore::Quaternion(0, 0, 0, 1);
 	
 	bool initCharacter = false;
@@ -249,9 +249,17 @@ namespace {
 		avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 	}
 	
-	void setHipsPosition(Kore::vec3& desPosition) {
-		initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
+	void setHipsPosition(Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
+		if (logData) {
+			logger->saveData(desPosition, desRotation);
+		}
+		
+		applyOffset(back, desPosition, desRotation);
+		
+		vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+		
+		avatar->setLocalPositionAndOrientation(backBoneIndex, finalPos, finalRot);
 	}
 	
 	void readLogData() {
@@ -272,8 +280,7 @@ namespace {
 						setDesiredPositionAndOrientation(rightHand, desPosition[tracker], desRotation[tracker]);
 						break;
 					case 2:
-						setHipsPosition(desPosition[tracker]);
-						setDesiredPositionAndOrientation(back, desPosition[tracker], desRotation[tracker]);
+						setHipsPosition(desPosition[tracker], desRotation[tracker]);
 						break;
 					case 3:
 						setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
@@ -417,11 +424,11 @@ namespace {
 		// Set initial orientation
 		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
 		float zAngle = 2 * Kore::acos(hmdOrient.y);
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
-		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
 		
-		initRotInv = initRot.invert();
+		// initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
+		// initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
+		
+		// initRotInv = initRot.invert();
 		
 		const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
 		avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
@@ -792,12 +799,11 @@ namespace {
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
+		
+		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2));
 		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
-		
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05);
