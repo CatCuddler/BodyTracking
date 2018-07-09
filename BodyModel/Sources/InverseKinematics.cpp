@@ -58,9 +58,7 @@ void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* ta
 		if (axes.z() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
 		
 		bone->quaternion.normalize();
-		
-		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
-		bone->local = bone->transform * rotMat;
+		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
 		
 		bone = bone->parent;
 	}
@@ -81,9 +79,7 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		Kore::RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
 		
 		bone->quaternion.normalize();
-		
-		Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
-		bone->local = bone->transform * rotMat;
+		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
 		
 		bone = bone->parent;
 	}
@@ -166,7 +162,7 @@ void InverseKinematics::setJointConstraints() {
 	// calf / Kniegelenk
 	nodeLeft = bones[5 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 7.0f * Kore::pi / 9.0f));           // -10° bis 140° = 150° (LH, vorher -0° bis 150° = 150° => 0°)
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 7.0f * Kore::pi / 9.0f));           // -10° bis 140° = 150° (LH, vorher 0° bis 150° = 150° => 0°)
 	
 	nodeRight = bones[30 - 1];
 	nodeRight->axes = nodeLeft->axes;

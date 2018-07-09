@@ -59,7 +59,7 @@ namespace {
 	DataFile* kicksFile = new DataFile("initTransAndRot_kicks.csv", "positionData_kicks.csv");
 	DataFile* squatsFile = new DataFile("initTransAndRot_squats.csv", "positionData_squats.csv");
 	DataFile* walkingFile = new DataFile("initTransAndRot_walking.csv", "positionData_walking.csv");
-	DataFile* currentFile = movementFile;
+	DataFile* currentFile = squatsFile;
 	
 	//struct timespec start, end;
 	double startTime;
@@ -259,7 +259,8 @@ namespace {
 		vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
-		avatar->setLocalPositionAndOrientation(backBoneIndex, finalPos, finalRot);
+		avatar->setPosition(backBoneIndex, finalPos);
+		avatar->setOrientation(backBoneIndex, finalRot);
 	}
 	
 	void readLogData() {

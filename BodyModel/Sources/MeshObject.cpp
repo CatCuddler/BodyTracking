@@ -547,8 +547,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	if (subStructure != nullptr) {
 		const OGEX::AnimationStructure& animationStructure = *static_cast<const OGEX::AnimationStructure *>(subStructure);
 		const OGEX::TrackStructure& trackStructure = *static_cast<const OGEX::TrackStructure *>(animationStructure.GetFirstSubstructure(OGEX::kStructureTrack));
-		const OGEX::TimeStructure* timeStructure = trackStructure.GetTimeStructure();
-		const OGEX::KeyStructure* keyStructureTime = timeStructure->GetKeyValueStructure();
 		
 		const OGEX::ValueStructure* valueStructure = trackStructure.GetValueStructure();
 		const OGEX::KeyStructure* keyStructureVal = valueStructure->GetKeyValueStructure();

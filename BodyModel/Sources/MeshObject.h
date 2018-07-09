@@ -86,7 +86,6 @@ struct BoneNode {
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	Kore::Quaternion interQuat;
 	Kore::Quaternion quaternion;	// local rotation
 	
 	bool initialized = false;
@@ -104,7 +103,6 @@ struct BoneNode {
 		combinedInv(Kore::mat4::Identity()),
 		finalTransform(Kore::mat4::Identity()),
 		quaternion(Kore::Quaternion(0, 0, 0, 1)),
-		interQuat(Kore::Quaternion(0, 0, 0, 1)),
 		axes(Kore::vec3(0, 0, 0))
 	{}
 };

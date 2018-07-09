@@ -11,11 +11,9 @@ namespace {
 }
 
 Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
-	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 	
-	//if (bones.size() > 0) {
 	// Get the highest position
 	BoneNode* head = getBoneWithIndex(headBoneIndex);
 	Kore::vec4 position = head->combined * Kore::vec4(0, 0, 0, 1);
@@ -23,7 +21,6 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	currentHeight = position.z();
 	
 	invKin = new InverseKinematics(bones);
-	//}
 }
 
 void Avatar::updateBone(BoneNode* bone) {
@@ -38,32 +35,6 @@ void Avatar::updateBone(BoneNode* bone) {
 }
 
 void Avatar::animate(TextureUnit tex, float deltaTime) {
-	// Interpolate
-	/*for (int i = 0; i < bones.size(); ++i) {
-		BoneNode* bone = bones[i];
-		
-		if (bone->interQuat == Quaternion(0, 0, 0, 1)) bone->interQuat = bone->quaternion;
-		
-		Quaternion quatDiff = bone->quaternion.rotated(bone->interQuat.invert());
-		vec3 rot;
-		RotationUtility::quatToEuler(&quatDiff, &rot.x(), &rot.y(), &rot.z());
-		
-		if (rot.getLength() > 0.1) {
-		//if (true) {
-	 //log(Info, "interpolate %s %f", bone->boneName, rot.getLength());
-		
-	 bone->interQuat = bone->interQuat.slerp(0.1, bone->quaternion);
-	 bone->quaternion = bone->interQuat;
-	 
-	 Kore::mat4 rotMat = bone->quaternion.matrix().Transpose();
-	 bone->local = bone->transform * rotMat;
-		
-		} else {
-	 //log(Info, "dont interpolate %s %f", bone->boneName, rot.getLength());
-	 bone->interQuat = bone->quaternion;
-		}
-	 }*/
-	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
 	
@@ -129,17 +100,22 @@ void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosit
 	invKin->inverseKinematics(bone, desPosition, desRotation);
 }
 
-void Avatar::setLocalPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+void Avatar::setPosition(int boneIndex, Kore::vec3 desPosition) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
-	desRotation.normalize();
-	bone->quaternion = desRotation;
-	bone->interQuat = desRotation;
 	bone->transform = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
+}
+
+void Avatar::setOrientation(int boneIndex, Kore::Quaternion desRotation) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	
+	bone->quaternion = desRotation;
+	bone->quaternion.normalize();
 }
 
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	BoneNode* bone = bones[boneIndex - 1];
+	
 	return bone;
 }
 
