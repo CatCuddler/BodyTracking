@@ -372,7 +372,6 @@ namespace {
 		}
 	}
 	
-	
 	void initController() {
 		// Get left and right tracker index
 		VrPoseState controller;
@@ -381,29 +380,28 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				
 				if (trackerPos.y() < currentUserHeight / 4) {
-					//Foot tracker (if y pos is in the lower quarter of the body)
+					// Foot tracker (if y pos is in the lower quarter of the body)
 					if (trackerTransPos.x() > 0) {
 						log(Info, "leftFootTrackerIndex: %i -> %i", leftFootTrackerIndex, i);
 						leftFootTrackerIndex = i;
-					}
-					else {
+					} else {
 						log(Info, "rightFootTrackerIndex: %i -> %i", rightFootTrackerIndex, i);
 						rightFootTrackerIndex = i;
 					}
-				}
-				else {
+				} else {
 					//back tracker
 					log(Info, "backTrackerIndex: %i -> %i", backTrackerIndex, i);
 					backTrackerIndex = i;
 				}
 				//leftHandTrackerIndex = -1;
 				//rightHandTrackerIndex = i;
-			}
-			else if (controller.trackedDevice == TrackedDevice::Controller) {
+			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				//Hand tracker
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+				
 				if (trackerTransPos.x() > 0) {
 					log(Info, "leftHandTrackerIndex: %i -> %i", leftHandTrackerIndex, i);
 					leftHandTrackerIndex = i;
@@ -420,34 +418,31 @@ namespace {
 	}
 	
 	void calibrateAvatar() {
-		float currentAvatarHeight = avatar->getHeight();
+		initController();
+		hipsController = VrInterface::getController(backTrackerIndex);
 		
+		// Set scale
 		SensorState state = VrInterface::getSensorState(0);
 		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 		currentUserHeight = hmdPos.y();
-		
-		float scale = currentUserHeight / currentAvatarHeight;
-		avatar->setScale(scale);
+		float currentAvatarHeight = avatar->getHeight();
+		avatar->setScale(currentUserHeight / currentAvatarHeight / 161.3f * 173.3f); // : ø Augenhöhe * ø Körperhöhe = 1.0744f
 		
 		// Set initial transformation
-		initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
+		vec3 hipsPos hipsController.position;
+		initTrans = mat4::Translation(hipsPos.x(), hipsPos.y(), hipsPos.z());
 		
 		// Set initial orientation
-		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
-		float zAngle = 2 * Kore::acos(hmdOrient.y);
+		Kore::Quaternion hipsOrient = hipsController.orientation;
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -2 * Kore::acos(hipsOrient.y)));
+		initRotInv = initRot.invert();
 		
-		// initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
-		// initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
-		
-		// initRotInv = initRot.invert();
-		
-		const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
-		avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-		initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
+		const mat4 hipsOffset = mat4::Translation(0, 0, 0); // (0, 0.2f, 0)
+		avatar->M = initTrans * initRot.matrix().Transpose() * hipsOffset;
+		initTransInv = avatar->M.Invert();
 		
 		log(Info, "current avatar height %f, current user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
-		
-		initController();
 		
 		if (logData) {
 			vec4 initPos = initTrans * vec4(0, 0, 0, 1);
@@ -811,7 +806,7 @@ namespace {
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
 		
-		avatar->setScale(1.075f);
+		avatar->setScale(1.0744f); // nur für bereits aufgezeichnete Daten!!!
 		
 		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
