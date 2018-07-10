@@ -162,7 +162,8 @@ void InverseKinematics::setJointConstraints() {
 	// calf / Kniegelenk
 	nodeLeft = bones[5 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 7.0f * Kore::pi / 9.0f));           // -10° bis 140° = 150° (LH, vorher 0° bis 150° = 150° => 0°)
+	// nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi / 18.0f, 7.0f * Kore::pi / 9.0f));           // -10° bis 140° = 150° (LH, vorher 0° bis 150° = 150° => 0°)
+	nodeLeft->constrain.push_back(Kore::vec2(0, 7.0f * Kore::pi / 9.0f));           				// 0° bis 140° = 150° (LH, vorher 0° bis 150° = 150° => 0°)
 	
 	nodeRight = bones[30 - 1];
 	nodeRight->axes = nodeLeft->axes;

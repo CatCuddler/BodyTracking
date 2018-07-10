@@ -613,9 +613,9 @@ void MeshObject::setScale(float scaleFactor) {
 	BoneNode* root = bones[0];
 	
 	mat4 scaleMat = mat4::Identity();
-	scaleMat.Set(3, 3, 1.0/scaleFactor);
+	scaleMat.Set(3, 3, 1.0 / scaleFactor);
 	
-	root->transform = root->transform * scaleMat; //T * R * S
+	root->transform = root->transform * scaleMat; // T * R * S
 	root->local = root->transform;
 	
 	scale = scaleFactor;

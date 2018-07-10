@@ -185,7 +185,6 @@ namespace {
 			// x: red, y: green, z: blue
 			
 			if (boneIndex == backBoneIndex) {
-				endEffector->offsetPosition = vec3(0, 0.05f, 0);
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi * 0.92));
 				endEffector->offsetRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
 			}
@@ -800,6 +799,8 @@ namespace {
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
+		
+		avatar->setScale(1.075f);
 		
 		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);

@@ -103,7 +103,7 @@ void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosit
 void Avatar::setPosition(int boneIndex, Kore::vec3 desPosition) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
-	bone->transform = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
+	bone->transform = mat4::Translation(desPosition.x() / scale, desPosition.y() / scale, desPosition.z() / scale);
 }
 
 void Avatar::setOrientation(int boneIndex, Kore::Quaternion desRotation) {
