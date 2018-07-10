@@ -17,7 +17,10 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	if (!targetBone->initialized) return false;
 	
 	for (int i = 0; i <= maxSteps; ++i) {
-		if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
+		if (targetBone->nodeIndex == backBoneIndex) {
+			deltaTheta = jacobianBack->calcDeltaTheta(targetBone, desPosition, desRotation, backIkMode);
+			error = jacobianBack->getError();
+		} else if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
 			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, handIkMode);
 			error = jacobianHand->getError();
 		} else if (targetBone->nodeIndex == leftFootBoneIndex || targetBone->nodeIndex == rightFootBoneIndex) {
@@ -110,6 +113,13 @@ void InverseKinematics::updateBonePosition(BoneNode* bone) {
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
+	
+	// hips
+	nodeLeft = bones[2 - 1];
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
+	nodeLeft->constrain.push_back(Kore::vec2(-Kore::pi, Kore::pi));
 	
 	// upperarm / Schultergelenk
 	nodeLeft = bones[12 - 1];

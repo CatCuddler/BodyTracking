@@ -61,6 +61,8 @@ namespace {
 	DataFile* walkingFile = new DataFile("initTransAndRot_walking.csv", "positionData_walking.csv");
 	DataFile* currentFile = squatsFile;
 	
+	bool hipsWithIK = false;
+	
 	//struct timespec start, end;
 	double startTime;
 	double lastTime;
@@ -255,11 +257,20 @@ namespace {
 		
 		applyOffset(back, desPosition, desRotation);
 		
+		if (hipsWithIK) {
+			initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
+			initTransInv = initTrans.Invert();
+		}
+		
 		vec4 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
-		avatar->setPosition(backBoneIndex, finalPos);
-		avatar->setOrientation(backBoneIndex, finalRot);
+		if (hipsWithIK) {
+			avatar->setDesiredPositionAndOrientation(backBoneIndex, finalPos, finalRot);
+		} else {
+			avatar->setPosition(hipsBoneIndex, finalPos);
+			avatar->setOrientation(hipsBoneIndex, finalRot);
+		}
 	}
 	
 	void readLogData() {
