@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OpenGEX/OpenGEX.h"
+#include "RotationUtility.h"
 
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
@@ -105,6 +106,27 @@ struct BoneNode {
 		quaternion(Kore::Quaternion(0, 0, 0, 1)),
 		axes(Kore::vec3(0, 0, 0))
 	{}
+	
+	Kore::vec3 getPosition() {
+		Kore::vec3 result;
+		
+		// from quat to euler!
+		Kore::vec4 quat = combined * Kore::vec4(0, 0, 0, 1);
+		quat *= 1.0 / quat.w();
+		
+		result.x() = quat.x();
+		result.y() = quat.y();
+		result.z() = quat.z();
+		
+		return result;
+	}
+	
+	Kore::Quaternion getOrientation() {
+		Kore::Quaternion result;
+		Kore::RotationUtility::getOrientation(&combined, &result);
+		
+		return result;
+	}
 };
 
 struct CompareBones {

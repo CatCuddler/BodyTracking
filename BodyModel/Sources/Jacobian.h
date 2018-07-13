@@ -23,7 +23,7 @@ public:
 	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
 		std::vector<float> deltaTheta;
 		vec_n vec;
-		Kore::vec3 p_aktuell = calcPosition(endEffektor); // Get current rotation and position of the end-effector
+		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
 		vec_m deltaP = calcDeltaP(endEffektor, p_aktuell, pos_soll, rot_soll);
 		mat_mxn jacobian = calcJacobian(endEffektor, p_aktuell);
 		
@@ -230,7 +230,7 @@ private:
 		vec_m column;
 		
 		// Get rotation and position vector of the current bone
-		Kore::vec3 p_j = calcPosition(bone);
+		Kore::vec3 p_j = bone->getPosition();
 		
 		// get rotation-axis
 		Kore::vec4 v_j = bone->combined * Kore::vec4(rotAxis.x(), rotAxis.y(), rotAxis.z(), 0);
@@ -262,20 +262,6 @@ private:
 			
 			return jacobian.Transpose() * (jacobian * jacobian.Transpose() + id).Invert();
 		}
-	}
-	
-	Kore::vec3 calcPosition(BoneNode* bone) {
-		Kore::vec3 result;
-		
-		// from quat to euler!
-		Kore::vec4 quat = bone->combined * Kore::vec4(0, 0, 0, 1);
-		quat *= 1.0 / quat.w();
-		
-		result.x() = quat.x();
-		result.y() = quat.y();
-		result.z() = quat.z();
-		
-		return result;
 	}
 	
 	void calcSVD(Jacobian::mat_mxn jacobian) {
