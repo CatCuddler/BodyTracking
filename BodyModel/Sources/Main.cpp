@@ -26,6 +26,7 @@ namespace {
 	
 	Logger* logger;
 	int line = 0;
+	bool logData = false;
 	
 	double startTime;
 	double lastTime;
@@ -72,29 +73,20 @@ namespace {
 	Avatar *avatar;
 	LivingRoom* livingRoom;
 	
-	vec3 desPosition[numOfEndEffectors];
-	Kore::Quaternion desRotation[numOfEndEffectors];
-	
 	mat4 initTrans = mat4::Identity();
 	mat4 initTransInv = mat4::Identity();
 	Kore::Quaternion initRot = Kore::Quaternion(-0.707107, 0.000000, 0.000000, 0.707107);
 	Kore::Quaternion initRotInv = Kore::Quaternion(0.707107, -0.000000, -0.000000, 0.707107);
 	
-	const bool renderTrackerAndController = true;
-	
 #ifdef KORE_STEAMVR
 	float currentUserHeight;
 #endif
 	
-	void renderTracker() {
+	void renderTracker(MeshObject*& cube, vec3 desPosition, Kore::Quaternion desRotation) {
 		// Render desired position
-		for (int i = 0; i < numOfEndEffectors; ++i) {
-			if (cubes[i] != nullptr) {
-				cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
-				Graphics4::setMatrix(mLocation, cubes[i]->M);
-				cubes[i]->render(tex);
-			}
-		}
+		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
+		Graphics4::setMatrix(mLocation, cube->M);
+		cube->render(tex);
 	}
 	
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -161,48 +153,22 @@ namespace {
 		endEffector->offsetRotation = matrixToQuaternion(diffRot);
 	}
 	
-	void executeMovement(int i) {
+	void executeMovement(EndEffector* endEffector, vec3& desPosition, Kore::Quaternion& desRotation) {
 		// Add offset to endeffector
-		desRotation[i].rotate(tracker[i]->offsetRotation);
-		desPosition[i] = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+		desRotation.rotate(endEffector->offsetRotation);
+		desPosition = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose() * mat4::Translation(endEffector->offsetPosition.x(), endEffector->offsetPosition.y(), endEffector->offsetPosition.z()) * vec4(0, 0, 0, 1);
 		
-		if (logData) logger->saveData(desPosition[i], desRotation[i]);
+		if (logData) logger->saveData(desPosition, desRotation);
 		
 		// Transform desired position to the character local coordinate system
-		vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
-		Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
+		vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
-		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex) {
+		if (endEffector->boneIndex == tracker[rootIndex]->boneIndex) {
 			avatar->setPosition(tracker[rootIndex]->boneIndex, finalPos);
 			avatar->setOrientation(tracker[rootIndex]->boneIndex, finalRot);
 		} else
-			avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-	}
-	
-	void readLogData() {
-		vec3 rawPos[numOfEndEffectors];
-		Kore::Quaternion rawRot[numOfEndEffectors];
-		
-		// Read line
-		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, rawPos, rawRot)) {
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				desPosition[i] = rawPos[i];
-				desRotation[i] = rawRot[i];
-				
-				// Calibration
-				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-				if (!currentFile->isCalibrated) {
-					calibrate(tracker[i], desPosition[i], desRotation[i]);
-					
-					if (i == numOfEndEffectors - 1)
-						currentFile->calibrated();
-				}
-				
-				executeMovement(i);
-			}
-		}
-		
-		line += numOfEndEffectors;
+			avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 	}
 	
 	
@@ -210,7 +176,7 @@ namespace {
 	void calibrateAvatar();
 
 	void gamepadButton(int buttonNr, float value) {
-		// Menu button
+		// Menu button => calibrating
 		if (buttonNr == 1) {
 			if (value == 1) {
 				calibrateAvatar();
@@ -219,7 +185,7 @@ namespace {
 			}
 		}
 		
-		// Trigger button
+		// Trigger button => logging
 		if (buttonNr == 33) {
 			if (value == 1) {
 				logData = true;
@@ -294,10 +260,9 @@ namespace {
 		
 		// Set initial orientation
 		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
-		float zAngle = 2 * Kore::acos(hmdOrient.y);
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
-		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -zAngle));
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -2 * Kore::acos(hmdOrient.y)));
 		initRotInv = initRot.invert();
 		
 		// calibrate to T-Pose
@@ -323,7 +288,8 @@ namespace {
 #endif
 	
 	void update() {
-		
+		vec3 desPosition[numOfEndEffectors];
+		Kore::Quaternion desRotation[numOfEndEffectors];
 		
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -374,7 +340,7 @@ namespace {
 				desPosition[i] = controller.vrPose.position;
 				desRotation[i] = controller.vrPose.orientation;
 				
-				executeMovement(i);
+				executeMovement(tracker[i], desPosition[i], desRotation[i]);
 				
 				initTrans = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
 				initTransInv = initTrans.Invert();
@@ -397,7 +363,11 @@ namespace {
 			avatar->animate(tex, deltaT);
 			
 			// Render tracker
-			if (renderTrackerAndController) renderTracker();
+			int i = 0;
+			while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+				renderTracker(cubes[i], desPosition[i], desRotation[i]);
+				i++;
+			}
 			
 			// Render living room
 			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
@@ -430,7 +400,11 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		// Render tracker
-		if (renderTrackerAndController) renderTracker();
+		int i = 0;
+		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+			renderTracker(cubes[i], desPosition[i], desRotation[i]);
+			i++;
+		}
 		
 		// Render living room
 		if (renderRoom) {
@@ -439,7 +413,22 @@ namespace {
 		}
 		
 #else
-		readLogData();
+		// Read line
+		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				// Calibration
+				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
+				if (!currentFile->isCalibrated) {
+					calibrate(tracker[i], desPosition[i], desRotation[i]);
+					
+					if (i == numOfEndEffectors - 1)
+						currentFile->calibrated();
+				}
+				
+				executeMovement(tracker[i], desPosition[i], desRotation[i]);
+			}
+		}
+		line += numOfEndEffectors;
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -454,7 +443,11 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		// Render tracker
-		if (renderTrackerAndController) renderTracker();
+		int i = 0;
+		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+			renderTracker(cubes[i], desPosition[i], desRotation[i]);
+			i++;
+		}
 		
 		// Render living room
 		if (renderRoom) renderLivingRoom(V, P);

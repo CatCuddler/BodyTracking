@@ -61,11 +61,6 @@ namespace {
 						0
 						), // right-foot
 	};
-	const float nearNull = 0.0001f;
-	const int width = 1024;
-	const int height = 768;
-	const int rootIndex = 2;
-	bool logData = false;
 	
 	DataFile* calibrationFile = new DataFile("initTransAndRot_calibration.csv", "positionData_calibration.csv", false);
 	DataFile* joggingFile = new DataFile("initTransAndRot_jogging.csv", "positionData_jogging.csv", false);
@@ -73,4 +68,10 @@ namespace {
 	DataFile* squatsFile = new DataFile("initTransAndRot_squats.csv", "positionData_squats.csv", false);
 	DataFile* walkingFile = new DataFile("initTransAndRot_walking.csv", "positionData_walking.csv", false);
 	DataFile* currentFile = squatsFile;
+	
+	const float nearNull = 0.0001f;
+	const int width = 1024;
+	const int height = 768;
+	const int rootIndex = 2;
+	const bool renderTrackerAndController = true;
 }
