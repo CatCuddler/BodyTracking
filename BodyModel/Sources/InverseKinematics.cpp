@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "InverseKinematics.h"
-
 #include "Settings.h"
 
 #include <Kore/Log.h>
@@ -11,22 +10,33 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 }
 
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
-	std::vector<float> deltaTheta;
+	std::vector<float> deltaTheta, prevDeltaTheta;
 	float error = FLT_MAX;
 	
 	if (!targetBone->initialized) return false;
 	
 	for (int i = 0; i <= maxSteps; ++i) {
-		if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
-			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, handIkMode);
+		prevDeltaTheta = deltaTheta;
+		
+		// todo: better!
+		if (targetBone->nodeIndex == tracker[0]->boneIndex || targetBone->nodeIndex == tracker[1]->boneIndex) {
+			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[0]->ikMode);
 			error = jacobianHand->getError();
-		} else if (targetBone->nodeIndex == leftFootBoneIndex || targetBone->nodeIndex == rightFootBoneIndex) {
-			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, footIkMode);
+		} else if (targetBone->nodeIndex == tracker[3]->boneIndex || targetBone->nodeIndex == tracker[4]->boneIndex) {
+			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode);
 			error = jacobianFoot->getError();
 		}
 		
-		// if position reached OR maxStep reached
-		if (error < errorMax || i == maxSteps) {
+		// check if ik stucked (runned in extrema)
+		bool stucked = false;
+		int j = 0;
+		while (!stucked && j < prevDeltaTheta.size()) {
+			stucked = fabs(prevDeltaTheta[j] - deltaTheta[j]) < nearNull;
+			j++;
+		}
+		
+		// if position reached OR maxStep reached OR stucked
+		if (error < errorMax || i == maxSteps || stucked) {
 			sumIter += i;
 			sumReached += error < errorMax ? 1 : 0;
 			sumError += error;
@@ -34,11 +44,12 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 			maxError = error > maxError ? error : maxError;
 			totalNum += 1;
 			
-			return error < errorMax;
+			return error < errorMax || stucked;
 		} else {
 			applyChanges(deltaTheta, targetBone);
 			applyJointConstraints(targetBone);
-			for (int i = 0; i < bones.size(); ++i) updateBonePosition(bones[i]);
+			for (int i = 0; i < bones.size(); ++i)
+				bones[i]->combined = bones[i]->parent->combined * bones[i]->local;
 		}
 	}
 	
@@ -103,10 +114,6 @@ bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
 	return false;
 }
 
-void InverseKinematics::updateBonePosition(BoneNode* bone) {
-	bone->combined = bone->parent->combined * bone->local;
-}
-
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
@@ -135,17 +142,15 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	
 	// hand
-	if (handJointDOFs == 6) {
-		nodeLeft = bones[14 - 1];
-		nodeLeft->axes = Kore::vec3(1, 0, 1);
-		nodeLeft->constrain.push_back(Kore::vec2(-2.0f * Kore::pi / 9.0f, Kore::pi / 6.0f));        // -40° bis 30° = 75° (NN)
-		nodeLeft->constrain.push_back(Kore::vec2(-7.0f * Kore::pi / 18.0f, Kore::pi / 3.0f));       // -70° bis 60° = 130° (NN)
-		
-		nodeRight = bones[24 - 1];
-		nodeRight->axes = nodeLeft->axes;
-		nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-		nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	}
+	nodeLeft = bones[14 - 1];
+	nodeLeft->axes = Kore::vec3(1, 0, 1);
+	nodeLeft->constrain.push_back(Kore::vec2(-2.0f * Kore::pi / 9.0f, Kore::pi / 6.0f));        // -40° bis 30° = 75° (NN)
+	nodeLeft->constrain.push_back(Kore::vec2(-7.0f * Kore::pi / 18.0f, Kore::pi / 3.0f));       // -70° bis 60° = 130° (NN)
+	
+	nodeRight = bones[24 - 1];
+	nodeRight->axes = nodeLeft->axes;
+	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
+	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	
 	// thigh / Hüftgelenk
 	nodeLeft = bones[4 - 1];

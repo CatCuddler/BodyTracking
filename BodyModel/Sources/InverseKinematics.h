@@ -4,8 +4,6 @@
 #include <float.h>
 #include "Jacobian.h"
 
-struct BoneNode;
-
 class InverseKinematics {
 	
 public:
@@ -20,28 +18,21 @@ public:
 	float getMaxError();
 	
 private:
-	int boneCount;
-	int rootIndex = 2;
 	std::vector<BoneNode*> bones;
 	
-	// 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-	static const int handIkMode = 2;
 	static const int handJointDOFs = 6;
 	static const bool handWithOrientation = true;
+	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
 	
-	static const int footIkMode = 0;
 	static const int footJointDOFs = 4;
 	static const bool footWithOrientation = false;
+	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
 	int maxSteps = 100;
 	float errorMax = 0.01f;
 	
-	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
-	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
-	
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
-	void updateBonePosition(BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
 	bool clampValue(float minVal, float maxVal, float* value);
 	

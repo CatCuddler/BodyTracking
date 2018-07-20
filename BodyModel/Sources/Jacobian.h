@@ -1,17 +1,7 @@
-//
-//  Jacobian.h
-//  BodyTracking
-//
-//  Created by Philipp Achenbach on 16.05.18.
-//  Copyright © 2018 KTX Software Development. All rights reserved.
-//
-
-#ifndef Jacobian_h
-#define Jacobian_h
-
 #include "MeshObject.h"
 #include "BussIK/MatrixRmn.h"
 #include "RotationUtility.h"
+#include "Settings.h"
 
 #include <Kore/Log.h>
 
@@ -62,7 +52,6 @@ public:
 	}
 	
 private:
-	const float nearNull = 0.0001f;          // Für Überprüfung float == 0?
 	const float lambdaDLS = 0.18f;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
 	const float lambdaDLSwithSVD = 0.18f;    // Lambda für DLS with SVD => optimiert!
 	const float lambdaSDLS = 0.7853981634f;  // Lambda für SDLS = 45° * PI / 180°
@@ -301,5 +290,3 @@ private:
 		return vec;
 	}
 };
-
-#endif /* Jacobian_h */
