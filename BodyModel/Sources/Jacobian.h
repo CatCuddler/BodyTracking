@@ -52,10 +52,6 @@ public:
 	}
 	
 private:
-	const float lambdaDLS = 0.18f;           // Lambda für DLS, 0.24 Optimum laut Buss => optimiert!
-	const float lambdaDLSwithSVD = 0.18f;    // Lambda für DLS with SVD => optimiert!
-	const float lambdaSDLS = 0.7853981634f;  // Lambda für SDLS = 45° * PI / 180°
-	
 	typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
 	typedef Kore::Matrix<posAndOrientation ? 6 : 3, nJointDOFs, float>                  mat_nxm;
 	typedef Kore::Matrix<posAndOrientation ? 6 : 3, posAndOrientation ? 6 : 3, float>   mat_mxm;
@@ -77,7 +73,7 @@ private:
 		return calcPseudoInverse(jacobian) * deltaP;
 	}
 	vec_n calcDeltaThetaByDLS(mat_mxn jacobian, vec_m deltaP) {
-		return calcPseudoInverse(jacobian, lambdaDLS) * deltaP;
+		return calcPseudoInverse(jacobian, lambda[2]) * deltaP;
 	}
 	vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
@@ -96,12 +92,12 @@ private:
 		
 		mat_nxm dls;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
-			if (fabs(d[i]) > nearNull){
-				float lambda = d[i] / (Square(d[i]) + Square(lambdaDLSwithSVD));
+			if (fabs(d[i]) > nearNull) {
+				float l = d[i] / (Square(d[i]) + Square(lambda[4]));
 				
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
-						dls[n][m] += lambda * V[n][i] * U[m][i];
+						dls[n][m] += l * V[n][i] * U[m][i];
 			}
 		}
 		
@@ -139,10 +135,10 @@ private:
 				M_i *= omegaInverse_i;
 				
 				float gamma_i =
-				fabs(M_i) > nearNull &&
-				fabs(M_i) > fabs(N_i) ?
-				fabs(N_i / M_i) * lambdaSDLS :
-				lambdaSDLS;
+					fabs(M_i) > nearNull &&
+					fabs(M_i) > fabs(N_i) ?
+					fabs(N_i / M_i) * lambda[5] :
+					lambda[5];
 				
 				theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
 			}

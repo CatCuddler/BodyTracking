@@ -12,6 +12,9 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
 	float error = FLT_MAX;
+	struct timespec start, end;
+	
+	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	
 	if (!targetBone->initialized) return false;
 	
@@ -42,7 +45,12 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 			sumError += error;
 			minError = error < minError ? error : minError;
 			maxError = error > maxError ? error : maxError;
-			totalNum += 1;
+			
+			if (eval) {
+				clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+				sumTime += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+				totalNum += 1;
+			}
 			
 			return error < errorMax || stucked;
 		} else {
@@ -176,10 +184,6 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 }
 
-int InverseKinematics::getTotalNum() {
-	return totalNum;
-}
-
 float InverseKinematics::getAverageIter() {
 	return totalNum != 0 ? (float) sumIter / (float) totalNum : -1;
 }
@@ -192,10 +196,22 @@ float InverseKinematics::getAverageError() {
 	return totalNum != 0 ? sumError / (float) totalNum : -1;
 }
 
+float InverseKinematics::getAverageTime() {
+	return totalNum != 0 ? sumTime / (float) totalNum : -1;
+}
+
 float InverseKinematics::getMinError() {
 	return minError;
 }
 
 float InverseKinematics::getMaxError() {
 	return maxError;
+}
+
+void InverseKinematics::resetStats() {
+	totalNum = 0;
+	sumIter = 0;
+	sumReached = 0;
+	sumError= 0;
+	sumTime = 0;
 }

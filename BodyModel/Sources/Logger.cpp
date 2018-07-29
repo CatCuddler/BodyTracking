@@ -11,11 +11,26 @@ Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData
 	positionDataPath << positionData << "_" << t << ".csv";
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
 	logDataPath << logDataFilename << "_" << t << ".csv";
+	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
+	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
+	
+	if (eval) {
+		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Time ø [us]\n";
+		evaluationDataOutputFile.flush();
+		
+		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
+		evaluationConfigOutputFile << "IK Mode;File;lambda;Error Max;Steps Max\n";
+		evaluationConfigOutputFile << ikMode << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
+		evaluationConfigOutputFile.flush();
+		evaluationConfigOutputFile.close();
+	}
 }
 
 Logger::~Logger() {
 	positionDataOutputFile.close();
 	logDataOutputFile.close();
+	evaluationDataOutputFile.close();
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
@@ -56,16 +71,24 @@ void Logger::saveLogData(const char* str, float num) {
 	logDataOutputFile.flush();
 }
 
+void Logger::saveEvaluationData(Avatar *avatar) {
+	// Save data
+	evaluationDataOutputFile << avatar->getAverageIkIteration() << ";" << avatar->getAverageIkReached() << ";" << avatar->getAverageIkError() << ";" << avatar->getMinIkError() << ";" << avatar->getMaxIkError() << ";" << avatar->getAverageTime() << "\n";
+	evaluationDataOutputFile.flush();
+	
+	avatar->resetStats();
+}
+
 bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
 	int column = 0;
+	
 	if (std::getline(positionDataInputFile, str, '\n')) {
-		
 		std::stringstream ss;
 		ss.str(str);
 		std::string item;
+		
 		while(std::getline(ss, item, ';')) {
 			float num = std::stof(item);
-			//log(Kore::Info, "%f", num);
 			
 			if (column == 0) rawPos->x() = num;
 			else if (column == 1) rawPos->y() = num;
@@ -78,25 +101,18 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 			++column;
 		}
 		
-		++currLineNumber;
 		return true;
-	} else {
-		return false;
 	}
+	
+	return false;
 }
 
 bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
-	if (!positionDataInputFile.is_open()) {
-		positionDataInputFile.open(filename);
-	}
-	
 	std::string str;
+	bool success = false;
 	
-	// Get header
-	if (line == 0) {
-		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
-	}
+	if (!positionDataInputFile.is_open())
+		positionDataInputFile.open(filename);
 	
 	// Skip lines
 	while(line > currLineNumber - 1) {
@@ -105,12 +121,18 @@ bool Logger::readData(int line, const int numOfEndEffectors, const char* filenam
 	}
 	
 	// Read line
-	bool success = false;
 	for (int i = 0; i < numOfEndEffectors; ++i) {
 		rawPos[i] = Kore::vec3(0, 0, 0);
 		rawRot[i] = Kore::Quaternion(0, 0, 0, 1);
 		success = readLine(str, &rawPos[i], &rawRot[i]);
+		if (success) ++currLineNumber;
 	}
+	
+	if (positionDataInputFile.eof()) {
+		positionDataInputFile.close();
+		currLineNumber = 0;
+	}
+	
 	return success;
 }
 

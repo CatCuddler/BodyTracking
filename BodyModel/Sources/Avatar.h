@@ -22,11 +22,13 @@ public:
 	
 	BoneNode* getBoneWithIndex(int index) const;
 	
-	int getTotalNum() const;
 	float getAverageIkIteration() const;
 	float getAverageIkReached() const;
 	float getAverageIkError() const;
+	float getAverageTime() const;
 	float getMinIkError() const;
 	float getMaxIkError() const;
 	float getHeight() const;
+	
+	void resetStats();
 };

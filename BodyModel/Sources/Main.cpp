@@ -427,8 +427,14 @@ namespace {
 				
 				executeMovement(tracker[i], desPosition[i], desRotation[i]);
 			}
+			
+			line += numOfEndEffectors;
+		} else {
+			if (logData) logger->saveLogData("it", avatar->getAverageIkIteration());
+			if (eval) logger->saveEvaluationData(avatar);
+			
+			line = 0;
 		}
-		line += numOfEndEffectors;
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();

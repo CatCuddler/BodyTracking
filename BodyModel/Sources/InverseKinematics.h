@@ -9,13 +9,16 @@ class InverseKinematics {
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
 	bool inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
-	int getTotalNum();
+	
 	float getAverageIter();
 	float getMinIter();
 	float getAverageReached();
 	float getAverageError();
+	float getAverageTime();
 	float getMinError();
 	float getMaxError();
+	
+	void resetStats();
 	
 private:
 	std::vector<BoneNode*> bones;
@@ -28,14 +31,11 @@ private:
 	static const bool footWithOrientation = false;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
-	int maxSteps = 100;
-	float errorMax = 0.01f;
-	
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
 	bool clampValue(float minVal, float maxVal, float* value);
 	
 	int totalNum = 0, sumIter = 0, sumReached = 0;
-	float sumError = 0, minError = FLT_MAX, maxError = 0;
+	float sumError = 0, sumTime = 0, minError = FLT_MAX, maxError = 0;
 };

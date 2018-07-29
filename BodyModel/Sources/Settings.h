@@ -10,7 +10,7 @@ struct EndEffector {
 	EndEffector(int boneIndex,
 				Kore::vec3 offsetPosition = Kore::vec3(0, 0, 0),
 				Kore::Quaternion offsetRotation = Kore::Quaternion(0, 0, 0, 1),
-				int ikMode = 5
+				int ikMode = 4
 	) :
 	boneIndex(boneIndex),
 	offsetPosition(offsetPosition),
@@ -37,28 +37,36 @@ struct DataFile {
 };
 
 namespace {
+	const int ikMode = 4; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+	const int maxSteps = 100;
+	const float errorMax = 0.01f;
+	const float lambda[] = { -1.0f, -1.0f, 0.18f, -1.0f, 0.18f, 0.7853981634f };
+	
 	EndEffector* tracker[] = {
 		new EndEffector(16,
 						Kore::vec3(0.020000, 0.020000, 0.000000),
-						Kore::Quaternion(-0.500000, 0.321020, -0.630037, 0.500000)
+						Kore::Quaternion(-0.500000, 0.321020, -0.630037, 0.500000),
+						ikMode
 						), // left-hand
 		new EndEffector(26,
 						Kore::vec3(-0.020000, 0.020000, 0.000000),
-						Kore::Quaternion(-0.500000, -0.321020, 0.630037, 0.500000)
+						Kore::Quaternion(-0.500000, -0.321020, 0.630037, 0.500000),
+						ikMode
 						), // right-hand
 		new EndEffector(2,
 						Kore::vec3(0.000000, 0.000000, 0.000000),
-						Kore::Quaternion(0.000000, 0.125333, -0.992115, -0.000000)
+						Kore::Quaternion(0.000000, 0.125333, -0.992115, -0.000000),
+						ikMode
 						), // back
 		new EndEffector(6,
 						Kore::vec3(0.050000, 0.000000, 0.000000),
 						Kore::Quaternion(0.698401, 0.110616, -0.698401, -0.110616),
-						0
+						ikMode
 						),	// left-foot
 		new EndEffector(31,
 						Kore::vec3(0.050000, 0.000000, 0.000000),
 						Kore::Quaternion(0.698401, -0.110616, 0.698401, -0.110616),
-						0
+						ikMode
 						), // right-foot
 	};
 	
@@ -74,4 +82,5 @@ namespace {
 	const int height = 768;
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
+	const bool eval = true;
 }

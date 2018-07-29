@@ -119,10 +119,6 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	return bone;
 }
 
-int Avatar::getTotalNum() const {
-	return invKin->getTotalNum();
-}
-
 float Avatar::getAverageIkIteration() const {
 	return invKin->getAverageIter();
 }
@@ -135,6 +131,10 @@ float Avatar::getAverageIkError() const {
 	return invKin->getAverageError();
 }
 
+float Avatar::getAverageTime() const {
+	return invKin->getAverageTime();
+}
+
 float Avatar::getMinIkError() const {
 	return invKin->getMinError();
 }
@@ -145,4 +145,8 @@ float Avatar::getMaxIkError() const {
 
 float Avatar::getHeight() const {
 	return currentHeight;
+}
+
+void Avatar::resetStats() {
+	invKin->resetStats();
 }
