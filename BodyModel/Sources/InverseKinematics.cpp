@@ -48,16 +48,15 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		i++;
 	}
 	
-	sumIter += i;
-	sumReached += error < errorMax ? 1 : 0;
-	sumError += error;
-	minError = error < minError ? error : minError;
-	maxError = error > maxError ? error : maxError;
-	
 	if (eval) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 		sumTime += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 		totalNum += 1;
+		sumIter += i;
+		sumReached += error < errorMax ? 1 : 0;
+		sumError += error;
+		minError = error < minError ? error : minError;
+		maxError = error > maxError ? error : maxError;
 	}
 	
 	return error < errorMax || stucked;
