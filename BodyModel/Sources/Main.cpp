@@ -164,10 +164,9 @@ namespace {
 		vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 		
-		if (endEffector->boneIndex == tracker[rootIndex]->boneIndex) {
-			avatar->setPosition(tracker[rootIndex]->boneIndex, finalPos);
-			avatar->setOrientation(tracker[rootIndex]->boneIndex, finalRot);
-		} else
+		if (endEffector->boneIndex == tracker[rootIndex]->boneIndex)
+			avatar->setFixedPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
+		else
 			avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 	}
 	

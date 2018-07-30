@@ -11,32 +11,21 @@ namespace {
 }
 
 Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
+	invKin = new InverseKinematics(bones);
+	
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
+	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
 	// Get the highest position
 	BoneNode* head = getBoneWithIndex(headBoneIndex);
 	Kore::vec4 position = head->combined * Kore::vec4(0, 0, 0, 1);
 	position *= 1.0/position.w();
 	currentHeight = position.z();
-	
-	invKin = new InverseKinematics(bones);
-}
-
-void Avatar::updateBone(BoneNode* bone) {
-	bone->combined = bone->parent->combined * bone->local;
-	
-	if (!bone->initialized) {
-		bone->initialized = true;
-		bone->combinedInv = bone->combined.Invert();
-	}
-	
-	bone->finalTransform = bone->combined * bone->combinedInv;
 }
 
 void Avatar::animate(TextureUnit tex, float deltaTime) {
 	// Update bones
-	for (int i = 0; i < bones.size(); ++i) updateBone(bones[i]);
+	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
 	for(int j = 0; j < meshesCount; ++j) {
 		int currentBoneIndex = 0;	// Iterate over BoneCountArray
@@ -100,17 +89,14 @@ void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosit
 	invKin->inverseKinematics(bone, desPosition, desRotation);
 }
 
-void Avatar::setPosition(int boneIndex, Kore::vec3 desPosition) {
+void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
 	bone->transform = mat4::Translation(desPosition.x() / scale, desPosition.y() / scale, desPosition.z() / scale);
-}
-
-void Avatar::setOrientation(int boneIndex, Kore::Quaternion desRotation) {
-	BoneNode* bone = getBoneWithIndex(boneIndex);
-	
 	bone->quaternion = desRotation;
+	
 	bone->quaternion.normalize();
+	bone->local = bone->transform * bone->quaternion.matrix().Transpose();
 }
 
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {

@@ -43,7 +43,7 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		applyChanges(deltaTheta, targetBone);
 		applyJointConstraints(targetBone);
 		for (int i = 0; i < bones.size(); ++i)
-			bones[i]->combined = bones[i]->parent->combined * bones[i]->local;
+			updateBone(bones[i]);
 		
 		i++;
 	}
@@ -61,6 +61,23 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	}
 	
 	return error < errorMax || stucked;
+}
+
+void InverseKinematics::updateBone(BoneNode* bone) {
+	if (bone->parent->initialized) {
+		bone->combined = bone->parent->combined * bone->local;
+	}
+}
+
+void InverseKinematics::initializeBone(BoneNode* bone) {
+	updateBone(bone);
+	
+	if (!bone->initialized) {
+		bone->initialized = true;
+		bone->combinedInv = bone->combined.Invert();
+	}
+	
+	bone->finalTransform = bone->combined * bone->combinedInv;
 }
 
 void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone) {
@@ -90,12 +107,13 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		Kore::vec3 rot;
 		Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
 		
-		if (axes.x() == 1.0) clampValue(bone->constrain[0].x(), bone->constrain[0].y(), &rot.x());
-		if (axes.y() == 1.0) clampValue(bone->constrain[1].x(), bone->constrain[1].y(), &rot.y());
-		if (axes.z() == 1.0) clampValue(bone->constrain[2].x(), bone->constrain[2].y(), &rot.z());
+		float x = (axes.x() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.x()) : rot.x();
+		float y = (axes.y() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.y()) : rot.y();
+		float z = (axes.z() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.z()) : rot.z();
 		
-		Kore::RotationUtility::eulerToQuat(rot.x(), rot.y(), rot.z(), &bone->quaternion);
+		Kore::RotationUtility::eulerToQuat(x, y, z, &bone->quaternion);
 		
+		// bone->quaternion = Kore::Quaternion((double) x, (double) y, (double) z, 1);
 		bone->quaternion.normalize();
 		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
 		
@@ -103,22 +121,19 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 	}
 }
 
-bool InverseKinematics::clampValue(float minVal, float maxVal, float* value) {
+float InverseKinematics::clampValue(float minVal, float maxVal, float value) {
 	if (minVal > maxVal) {
 		float temp = minVal;
 		minVal = maxVal;
 		maxVal = temp;
 	}
 	
-	if (*value < minVal) {
-		*value = minVal;
-		return true;
-	}
-	else if (*value > maxVal) {
-		*value = maxVal;
-		return true;
-	}
-	return false;
+	if (value < minVal)
+		return minVal;
+	else if (value > maxVal)
+		return maxVal;
+	
+	return value;
 }
 
 void InverseKinematics::setJointConstraints() {
