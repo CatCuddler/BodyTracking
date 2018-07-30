@@ -20,8 +20,8 @@ Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData
 		evaluationDataOutputFile.flush();
 		
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-		evaluationConfigOutputFile << "IK Mode;File;lambda;Error Max;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
+		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Max;Steps Max\n";
+		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
 		evaluationConfigOutputFile.flush();
 		evaluationConfigOutputFile.close();
 	}
