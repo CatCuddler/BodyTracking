@@ -15,9 +15,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	bool stucked = false;
 	struct timespec start, end;
 	
-	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-	
 	if (!targetBone->initialized) return false;
+	
+	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
@@ -44,6 +44,11 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		applyJointConstraints(targetBone);
 		for (int i = 0; i < bones.size(); ++i)
 			updateBone(bones[i]);
+		
+		if (eval && i == 0) {
+			clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+			sumTimeIteration += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+		}
 		
 		i++;
 	}
@@ -213,6 +218,10 @@ float InverseKinematics::getAverageTime() {
 	return totalNum != 0 ? sumTime / (float) totalNum : -1;
 }
 
+float InverseKinematics::getAverageTimeIteration() {
+	return totalNum != 0 ? sumTimeIteration / (float) totalNum : -1;
+}
+
 float InverseKinematics::getMinError() {
 	return minError;
 }
@@ -227,4 +236,5 @@ void InverseKinematics::resetStats() {
 	sumReached = 0;
 	sumError= 0;
 	sumTime = 0;
+	sumTimeIteration = 0;
 }

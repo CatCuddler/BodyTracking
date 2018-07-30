@@ -121,6 +121,10 @@ float Avatar::getAverageTime() const {
 	return invKin->getAverageTime();
 }
 
+float Avatar::getAverageTimeIteration() const {
+	return invKin->getAverageTimeIteration()();
+}
+
 float Avatar::getMinIkError() const {
 	return invKin->getMinError();
 }

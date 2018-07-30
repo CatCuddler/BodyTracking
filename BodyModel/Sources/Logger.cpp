@@ -16,7 +16,7 @@ Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData
 	
 	if (eval) {
 		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Time ø [us]\n";
+		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Time ø [us];Time/Iteration ø [us]\n";
 		evaluationDataOutputFile.flush();
 		
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
@@ -73,7 +73,7 @@ void Logger::saveLogData(const char* str, float num) {
 
 void Logger::saveEvaluationData(Avatar *avatar) {
 	// Save data
-	evaluationDataOutputFile << avatar->getAverageIkIteration() << ";" << avatar->getAverageIkReached() << ";" << avatar->getAverageIkError() << ";" << avatar->getMinIkError() << ";" << avatar->getMaxIkError() << ";" << avatar->getAverageTime() << "\n";
+	evaluationDataOutputFile << avatar->getAverageIkIteration() << ";" << avatar->getAverageIkReached() << ";" << avatar->getAverageIkError() << ";" << avatar->getMinIkError() << ";" << avatar->getMaxIkError() << ";" << avatar->getAverageTime() << ";" << avatar->getAverageTimeIteration() << "\n";
 	evaluationDataOutputFile.flush();
 	
 	avatar->resetStats();

@@ -23,6 +23,7 @@ public:
 	float getAverageIkReached() const;
 	float getAverageIkError() const;
 	float getAverageTime() const;
+	float getAverageTimeIteration() const;
 	float getMinIkError() const;
 	float getMaxIkError() const;
 	float getHeight() const;

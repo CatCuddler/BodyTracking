@@ -16,6 +16,7 @@ public:
 	float getAverageReached();
 	float getAverageError();
 	float getAverageTime();
+	float getAverageTimeIteration();
 	float getMinError();
 	float getMaxError();
 	
@@ -39,5 +40,5 @@ private:
 	float clampValue(float minVal, float maxVal, float value);
 	
 	int totalNum = 0, sumIter = 0, sumReached = 0;
-	float sumError = 0, sumTime = 0, minError = FLT_MAX, maxError = 0;
+	float sumError = 0, sumTime = 0, sumTimeIteration = 0, minError = FLT_MAX, maxError = 0;
 };
