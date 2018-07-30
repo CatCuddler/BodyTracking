@@ -38,6 +38,7 @@ struct DataFile {
 
 namespace {
 	const int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+	const bool withOrientation = true;
 	const int maxSteps = 100;
 	const float errorMax = 0.01f;
 	const float lambda[] = { -1.0f, -1.0f, 0.18f, -1.0f, 0.18f, 0.7853981634f };
