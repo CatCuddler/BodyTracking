@@ -1,7 +1,7 @@
 ## Installation
 
 - Install node (https://nodejs.org/en/download/)
-- Install yarn
+- Install yarn (https://yarnpkg.com/lang/en/docs/install/#mac-stable)
 
 ## Usage
 
