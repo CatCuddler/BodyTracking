@@ -1,9 +1,18 @@
 ## Installation
 
 - Install node (https://nodejs.org/en/download/)
-- Install yarn (https://yarnpkg.com/lang/en/docs/install/#mac-stable)
+- Install yarn (https://yarnpkg.com/lang/en/docs/install/)
 
 ## Usage
+
+### Log data for evaluation
+
+- Start IK-Project in xcode
+- Set eval = true (settings.h) to log IK for evaluating
+- Run IK at least once until movement has been completely executed, then the algorithm starts automatically from the beginning
+- For every whole iteration one row is added to evaluation file
+
+### Import and analyse files with evaluation tool
 
 - Open Terminal/Console
 - Run "node import" to import data from Deployment-folder (you can change it in config.json)
