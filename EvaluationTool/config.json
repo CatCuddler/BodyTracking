@@ -1,0 +1,5 @@
+{
+  "input": "../BodyModel/Deployment",
+  "output": "json",
+  "_comment": "output-folder has to change manually in chart.js"
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "IK Mode": "5",
+    "File": "positionData_squats.csv",
+    "lambda": "0.785398",
+    "Error Max": "0.01",
+    "Steps Max": "100"
+  }
+]
