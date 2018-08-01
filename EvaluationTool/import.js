@@ -23,7 +23,7 @@ const work = (fromFolder, toFolder) => {
     writeJsonSync(resolve(toFolder, fileName), parse(csv));
   });
 
-  console.log(`${files.length} Files imported!`);
+  console.log(`${files.length / 2} Files imported!`);
 };
 
 work(resolve(__dirname, input), resolve(__dirname, output));

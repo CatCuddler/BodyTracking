@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@alpacka/eslint-config": "^0.12.36",
     "@filou/core": "^0.11.0",
     "@filou/icons": "^0.9.3",
     "@nivo/line": "^0.42.1",
