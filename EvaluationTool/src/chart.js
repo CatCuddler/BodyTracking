@@ -62,7 +62,7 @@ const enhance = compose(
         });
 
         return {
-          data: Object.keys(xData).map(field => {
+          data: Object.keys(xData).map((field, i) => {
             let data = xData[field].map((x, i) => ({
               x: x.toString(),
               y: Math.floor(yData[field][i] * 1000) / 1000
@@ -73,7 +73,7 @@ const enhance = compose(
             return {
               id: field,
               data,
-              color: 'black'
+              color: get(colorsMaterial, [i, 'palette', 6], 'black')
             };
           })
         };
@@ -85,8 +85,8 @@ const enhance = compose(
           data.push({
             id: !large
               ? field
-              : `#${files.findIndex(x => file.name === x.name) +
-                  1} ${groupBy}: ${file[groupBy]}`,
+              : `${field} - #${files.findIndex(x => file.name === x.name) +
+                  1} [${groupBy}: ${file[groupBy]}]`,
             data: file.values[field].map((y, x) => ({ x, y })),
             color: get(colorsMaterial, [i || j, 'palette', 6], 'black')
           });
@@ -131,28 +131,29 @@ const enhance = compose(
   })
 );
 
-const Chart = ({ data, large }) => (
+const Chart = ({ data, acc, large }) => (
   <div style={{ flexGrow: 1 }}>
     {!!data.length && (
       <ResponsiveLine
         data={data}
         margin={{
           top: 20,
-          right: !large ? 125 : 200,
+          right: !large ? 125 : 250,
           bottom: 50,
           left: 50
         }}
         // minY="auto"
         dotSize={10}
         enableDotLabel
+        enableArea={acc}
         animate
         colorBy={e => e.color}
         legends={[
           {
             anchor: 'bottom-right',
             direction: 'column',
-            translateX: !large ? 95 : 170,
-            itemWidth: !large ? 75 : 150,
+            translateX: !large ? 95 : 220,
+            itemWidth: !large ? 75 : 200,
             itemHeight: 20
           }
         ]}

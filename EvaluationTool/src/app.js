@@ -36,7 +36,7 @@ const enhance = compose(
       e,
       field
     ) =>
-      e.shiftKey && selectedFiles.length === 1
+      e.shiftKey // && selectedFiles.length === 1
         ? setSelectedFields(
             selectedFields.includes(field)
               ? selectedFields.filter(x => x !== field)
@@ -58,7 +58,7 @@ const enhance = compose(
             ? selectedFiles.filter(x => x !== file)
             : [...selectedFiles, file]
         );
-        setSelectedFields([get(selectedFields, 0)]);
+        // setSelectedFields([get(selectedFields, 0)]);
       } else setSelectedFiles([file]);
     },
     onClickFiles: ({
@@ -75,7 +75,7 @@ const enhance = compose(
         );
       else setSelectedFiles(files);
 
-      setSelectedFields([get(selectedFields, 0)]);
+      // setSelectedFields([get(selectedFields, 0)]);
     }
   })
 );
