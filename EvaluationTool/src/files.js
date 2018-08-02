@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { Menu, Label } from 'semantic-ui-react';
 import { compose, withPropsOnChange } from 'recompose';
-import { get, groupBy as _groupBy } from 'lodash';
+import { get, groupBy as _groupBy, sortBy } from 'lodash';
 import { colorsMaterial } from '@filou/core';
 
 const enhance = compose(
@@ -19,7 +19,7 @@ const Files = ({
   onClickFiles
 }) => (
   <Menu vertical style={{ width: '20%', overflowY: 'auto' }}>
-    {Object.keys(groups).map(group => (
+    {sortBy(Object.keys(groups)).map(group => (
       <Fragment key={group}>
         <Menu.Item
           header

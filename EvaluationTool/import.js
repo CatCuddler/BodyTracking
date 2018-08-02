@@ -6,7 +6,7 @@ const { input, output } = require('./config');
 
 const parse = csv =>
   csvjson.toObject(csv, {
-    delimiter: ';',
+    delimiter: ';'
   });
 
 const work = (fromFolder, toFolder) => {
@@ -26,4 +26,4 @@ const work = (fromFolder, toFolder) => {
   console.log(`${files.length / 2} Files imported!`);
 };
 
-work(resolve(__dirname, input), resolve(__dirname, output));
+work(resolve(__dirname, input), resolve(__dirname, 'json', output));

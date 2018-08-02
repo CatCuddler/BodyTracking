@@ -18,10 +18,14 @@ const Nav = ({
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
-    <Dropdown item text="json" value={folder}>
+    <Dropdown item text={folder}>
       <Dropdown.Menu>
         {folders.map(x => (
-          <Dropdown.Item key={x} onClick={() => setFolder(x)}>
+          <Dropdown.Item
+            key={x}
+            active={x === folder}
+            onClick={() => setFolder(x)}
+          >
             {x}
           </Dropdown.Item>
         ))}

@@ -96,10 +96,10 @@ const enhance = compose(
       return { data };
     }
   ),
-  withPropsOnChange(['fields', 'data', 'acc'], ({ fields, data, acc }) => ({
+  withPropsOnChange(['fields', 'data', 'acc'], ({ fields, data }) => ({
     // scale values from 0% to 100%
     data:
-      fields.length === 1 || acc
+      fields.length === 1
         ? data
         : data.map(d => {
             const ys = d.data.map(({ y }) => y);

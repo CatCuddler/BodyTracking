@@ -32,41 +32,27 @@ const enhance = compose(
     get(fields, 0)
   ]),
   withHandlers({
-    onClickField: ({ selectedFiles, selectedFields, setSelectedFields }) => (
-      e,
-      field
-    ) =>
-      e.shiftKey // && selectedFiles.length === 1
+    onClickField: ({ selectedFields, setSelectedFields }) => (e, field) =>
+      e.shiftKey
         ? setSelectedFields(
             selectedFields.includes(field)
               ? selectedFields.filter(x => x !== field)
               : [...selectedFields, field]
           )
         : setSelectedFields([field]),
-    onClickFile: ({
-      selectedFields,
-      setSelectedFields,
-      selectedFiles,
-      setSelectedFiles
-    }) => (e, file) => {
+    onClickFile: ({ selectedFiles, setSelectedFiles }) => (e, file) => {
       if (
         e.shiftKey &&
         (selectedFiles.length > 1 || !selectedFiles.includes(file))
-      ) {
+      )
         setSelectedFiles(
           selectedFiles.includes(file)
             ? selectedFiles.filter(x => x !== file)
             : [...selectedFiles, file]
         );
-        // setSelectedFields([get(selectedFields, 0)]);
-      } else setSelectedFiles([file]);
+      else setSelectedFiles([file]);
     },
-    onClickFiles: ({
-      selectedFields,
-      setSelectedFields,
-      selectedFiles,
-      setSelectedFiles
-    }) => (e, files) => {
+    onClickFiles: ({ selectedFiles, setSelectedFiles }) => (e, files) => {
       if (e.shiftKey)
         setSelectedFiles(
           [...selectedFiles, ...files].filter(
@@ -74,8 +60,6 @@ const enhance = compose(
           )
         );
       else setSelectedFiles(files);
-
-      // setSelectedFields([get(selectedFields, 0)]);
     }
   })
 );
