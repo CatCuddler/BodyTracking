@@ -87,7 +87,7 @@ const enhance = compose(
               ? field
               : `${field} - #${files.findIndex(x => file.name === x.name) +
                   1} [${groupBy}: ${file[groupBy]}]`,
-            data: file.values[field].map((y, x) => ({ x, y })),
+            data: file.values[field].map((y, x) => ({ x, y: parseFloat(y) })),
             color: get(colorsMaterial, [i || j, 'palette', 6], 'black')
           });
         });
