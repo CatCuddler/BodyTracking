@@ -1,119 +1,101 @@
 import React from 'react';
 import { Menu, Label, Dropdown, Checkbox } from 'semantic-ui-react';
-import { get } from 'lodash';
-import { colorsMaterial } from '@filou/core';
+import Fields from './fields';
 
 const Nav = ({
-  folders,
-  folder,
-  setFolder,
-  files,
   fields,
   selectedFields,
   onClickField,
+  folders,
+  folder,
+  setFolder,
   groupBy,
   setGroupBy,
   acc,
-  setAcc
+  setAcc,
+  scale,
+  setScale
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
-    <Dropdown item text={folder}>
+
+    <Dropdown item text={`/${folder}`}>
       <Dropdown.Menu>
         {folders.map(x => (
           <Dropdown.Item
             key={x}
+            icon={x === folder ? 'folder open outline' : 'folder outline'}
+            text={`/${x}`}
             active={x === folder}
             onClick={() => setFolder(x)}
-          >
-            {x}
-          </Dropdown.Item>
+          />
         ))}
       </Dropdown.Menu>
     </Dropdown>
 
-    {fields.map(field => (
-      <Menu.Item
-        key={field}
-        active={selectedFields.includes(field)}
-        onClick={e => onClickField(e, field)}
-      >
-        {field}
-        {!!selectedFields.includes(field) && (
-          <Label
-            circular
-            empty
-            style={{
-              backgroundColor: get(colorsMaterial, [
-                selectedFields.findIndex(x => x === field),
-                'palette',
-                6
-              ])
-            }}
-          />
-        )}
-      </Menu.Item>
-    ))}
+    <Dropdown item text={groupBy}>
+      <Dropdown.Menu>
+        <Dropdown.Item
+          onClick={() => setGroupBy('mode')}
+          active={groupBy === 'mode'}
+        >
+          <Label circular empty />
+          mode
+        </Dropdown.Item>
+        <Dropdown.Item
+          onClick={() => setGroupBy('orientation')}
+          active={groupBy === 'orientation'}
+        >
+          <Label circular empty />
+          orientation
+        </Dropdown.Item>
+        <Dropdown.Item
+          onClick={() => setGroupBy('file')}
+          active={groupBy === 'file'}
+        >
+          <Label circular empty />
+          file
+        </Dropdown.Item>
+        <Dropdown.Item
+          onClick={() => setGroupBy('lambda')}
+          active={groupBy === 'lambda'}
+        >
+          <Label color="blue" circular empty />
+          lambda
+        </Dropdown.Item>
+        <Dropdown.Item
+          onClick={() => setGroupBy('error')}
+          active={groupBy === 'error'}
+        >
+          <Label color="red" circular empty />
+          error
+        </Dropdown.Item>
+        <Dropdown.Item
+          onClick={() => setGroupBy('steps')}
+          active={groupBy === 'steps'}
+        >
+          <Label color="green" circular empty />
+          steps
+        </Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
 
-    <Menu.Menu position="right" disabled>
-      <Menu.Item onClick={() => setGroupBy('mode')} active={groupBy === 'mode'}>
-        mode {files.length === 1 && <Label floating>{files[0].mode}</Label>}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => setGroupBy('orientation')}
-        active={groupBy === 'orientation'}
-      >
-        orientation{' '}
-        {files.length === 1 && (
-          <Label floating>{files[0].orientation ? 'true' : 'false'}</Label>
-        )}
-      </Menu.Item>
-      <Menu.Item onClick={() => setGroupBy('file')} active={groupBy === 'file'}>
-        file
-        {files.length === 1 && (
-          <Label floating color="teal">
-            {files[0].file}
-          </Label>
-        )}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => setGroupBy('lambda')}
-        active={groupBy === 'lambda'}
-      >
-        lambda
-        {files.length === 1 &&
-          files[0].lambda !== -1 && (
-            <Label floating color="blue">
-              {files[0].lambda}
-            </Label>
-          )}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => setGroupBy('error')}
-        active={groupBy === 'error'}
-      >
-        error
-        {files.length === 1 && (
-          <Label floating color="red">
-            {files[0].error}
-          </Label>
-        )}
-      </Menu.Item>
-      <Menu.Item
-        onClick={() => setGroupBy('steps')}
-        active={groupBy === 'steps'}
-      >
-        steps
-        {files.length === 1 && (
-          <Label floating color="green">
-            {files[0].steps}
-          </Label>
-        )}
-      </Menu.Item>
-      <Menu.Item>
-        <Checkbox slider checked={acc} onClick={() => setAcc(!acc)} />
-      </Menu.Item>
-    </Menu.Menu>
+    <Menu.Item>
+      <Checkbox checked={acc} onClick={() => setAcc(!acc)} label="merge" />
+    </Menu.Item>
+    <Menu.Item>
+      <Checkbox
+        checked={scale}
+        onClick={() => setScale(!scale)}
+        label="scale"
+      />
+    </Menu.Item>
+
+    <Fields
+      fields={fields}
+      selectedFields={selectedFields}
+      onClickField={onClickField}
+    />
   </Menu>
 );
 

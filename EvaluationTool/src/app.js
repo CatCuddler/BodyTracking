@@ -14,6 +14,7 @@ const enhance = compose(
   withState('groupBy', 'setGroupBy', 'mode'),
   withState('folder', 'setFolder', 'json'),
   withState('acc', 'setAcc'),
+  withState('scale', 'setScale'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
       .map(file => file.folder)
@@ -31,6 +32,9 @@ const enhance = compose(
   withState('selectedFields', 'setSelectedFields', ({ fields }) => [
     get(fields, 0)
   ]),
+  withPropsOnChange(['selectedFields'], ({ selectedFields, setScale }) => {
+    setScale(selectedFields.length > 1);
+  }),
   withHandlers({
     onClickField: ({ selectedFields, setSelectedFields }) => (e, field) =>
       e.shiftKey
@@ -78,7 +82,9 @@ const App = ({
   groupBy,
   setGroupBy,
   acc,
-  setAcc
+  setAcc,
+  scale,
+  setScale
 }) => (
   <div
     style={{
@@ -89,17 +95,18 @@ const App = ({
     }}
   >
     <Nav
-      folders={folders}
-      folder={folder}
-      setFolder={setFolder}
-      files={files.filter(file => selectedFiles.includes(file.name))}
       fields={fields}
       selectedFields={selectedFields}
       onClickField={onClickField}
+      folders={folders}
+      folder={folder}
+      setFolder={setFolder}
       groupBy={groupBy}
       setGroupBy={setGroupBy}
       acc={acc}
       setAcc={setAcc}
+      scale={scale}
+      setScale={setScale}
     />
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
@@ -112,9 +119,10 @@ const App = ({
       />
       <Chart
         files={files.filter(file => selectedFiles.includes(file.name))}
-        fields={selectedFields}
+        selectedFields={selectedFields}
         groupBy={groupBy}
         acc={acc}
+        scale={scale}
       />
     </div>
   </div>

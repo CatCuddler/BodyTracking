@@ -43,14 +43,14 @@ const enhance = compose(
     large: files.length > 1
   })),
   withPropsOnChange(
-    ['files', 'fields', 'groupBy', 'acc'],
-    ({ files, fields, groupBy, acc, large }) => {
+    ['files', 'selectedFields', 'groupBy', 'acc'],
+    ({ files, selectedFields, groupBy, acc, large }) => {
       if (acc) {
         const xData = {};
         const yData = {};
 
         files.forEach(file => {
-          fields.forEach(field => {
+          selectedFields.forEach(field => {
             if (!xData[field]) xData[field] = [];
             if (!yData[field]) yData[field] = [];
 
@@ -63,9 +63,9 @@ const enhance = compose(
 
         return {
           data: Object.keys(xData).map((field, i) => {
-            let data = xData[field].map((x, i) => ({
+            let data = xData[field].map((x, j) => ({
               x: x.toString(),
-              y: Math.floor(yData[field][i] * 1000) / 1000
+              y: Math.floor(yData[field][j] * 1000) / 1000
             }));
             data = averageDuplicates(data);
             data = sortBy(data, d => d.x);
@@ -81,7 +81,7 @@ const enhance = compose(
 
       const data = [];
       files.forEach((file, i) => {
-        fields.forEach((field, j) => {
+        selectedFields.forEach((field, j) => {
           data.push({
             id: !large
               ? field
@@ -96,26 +96,25 @@ const enhance = compose(
       return { data };
     }
   ),
-  withPropsOnChange(['fields', 'data', 'acc'], ({ fields, data }) => ({
+  withPropsOnChange(['scale', 'data'], ({ scale, data }) => ({
     // scale values from 0% to 100%
-    data:
-      fields.length === 1
-        ? data
-        : data.map(d => {
-            const ys = d.data.map(({ y }) => y);
-            const lowest = Math.min(...ys);
-            const highest = Math.max(...ys) - lowest;
+    data: !scale
+      ? data
+      : data.map(d => {
+          const ys = d.data.map(({ y }) => y);
+          const lowest = Math.min(...ys);
+          const highest = Math.max(...ys) - lowest;
 
-            return {
-              ...d,
-              data: d.data.map(({ x, y }) => ({
-                x,
-                y: highest
-                  ? Math.floor(((y - lowest) / highest) * 10000) / 100
-                  : x
-              }))
-            };
-          })
+          return {
+            ...d,
+            data: d.data.map(({ x, y }) => ({
+              x,
+              y: highest
+                ? Math.floor(((y - lowest) / highest) * 10000) / 100
+                : y
+            }))
+          };
+        })
   })),
   withPropsOnChange(['files', 'data', 'acc'], ({ files, data, acc }) => {
     if (files.length === 1 || acc) return {};
@@ -132,14 +131,21 @@ const enhance = compose(
 );
 
 const Chart = ({ data, acc, large }) => (
-  <div style={{ flexGrow: 1 }}>
+  <div
+    style={{
+      flexGrow: 1,
+      marginLeft: '1rem',
+      display: 'flex',
+      flexDirection: 'column'
+    }}
+  >
     {!!data.length && (
       <ResponsiveLine
         data={data}
         margin={{
           top: 20,
           right: !large ? 125 : 250,
-          bottom: 50,
+          bottom: 25,
           left: 50
         }}
         // minY="auto"

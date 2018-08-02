@@ -18,7 +18,7 @@ const Files = ({
   onClickFile,
   onClickFiles
 }) => (
-  <Menu vertical style={{ width: '20%', overflowY: 'auto' }}>
+  <Menu vertical style={{ width: '20%', overflowY: 'auto', marginBottom: 0 }}>
     {sortBy(Object.keys(groups)).map(group => (
       <Fragment key={group}>
         <Menu.Item
