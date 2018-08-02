@@ -9,21 +9,22 @@ const Fields = ({ fields, selectedFields, onClickField }) => (
       <Menu.Item
         key={field}
         active={selectedFields.includes(field)}
-        index={selectedFields.findIndex(x => x === field)}
         onClick={e => onClickField(e, field)}
       >
         {field}
-        <Label
-          circular
-          empty
-          style={{
-            backgroundColor: get(colorsMaterial, [
-              selectedFields.findIndex(x => x === field),
-              'palette',
-              6
-            ])
-          }}
-        />
+        {selectedFields.includes(field) && (
+          <Label
+            circular
+            empty
+            style={{
+              backgroundColor: get(colorsMaterial, [
+                selectedFields.findIndex(x => x === field),
+                'palette',
+                6
+              ])
+            }}
+          />
+        )}
       </Menu.Item>
     ))}
   </Menu.Menu>

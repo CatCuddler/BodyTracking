@@ -24,10 +24,15 @@ const enhance = compose(
   withState('selectedFiles', 'setSelectedFiles', ({ files }) => [
     get(files, [0, 'name'])
   ]),
-  withPropsOnChange(['files'], ({ files }) => ({
+  withPropsOnChange(['selectedFiles', 'files'], ({ selectedFiles, files }) => ({
     fields:
-      intersect(...files.map(file => Object.keys(get(file, 'values', {})))) ||
-      []
+      intersect(
+        ...selectedFiles.map(fileName => {
+          const file = files.find(x => x.name === fileName);
+
+          return Object.keys(get(file, 'values', {}));
+        })
+      ) || []
   })),
   withState('selectedFields', 'setSelectedFields', ({ fields }) => [
     get(fields, 0)
