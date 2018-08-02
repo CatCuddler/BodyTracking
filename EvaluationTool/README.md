@@ -22,3 +22,4 @@
 - Press Shift + Click to select multiple Files/Values (either multiple files OR values)
 - To import new data, simply run "node import" again -> the browser will refresh automatically
 - Click on right tabs to group files by ik-mode, orientation, file, ...
+- To analyse multiple files, select the checkbox on the right (upper nav)

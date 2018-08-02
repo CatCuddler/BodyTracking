@@ -1,18 +1,85 @@
 import React from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { compose, withPropsOnChange } from 'recompose';
-import { get } from 'lodash';
+import { get, sortBy } from 'lodash';
 import { colorsMaterial } from '@filou/core';
+
+const averageDuplicates = (data, searchIndex = 0, values = []) => {
+  // searchIndex is at the end
+  if (searchIndex >= data.length) return data;
+
+  // search duplicate
+  const index = data.findIndex(
+    (d, i) => d.x === data[searchIndex].x && i > searchIndex
+  );
+
+  // duplicates found
+  if (index >= 0) {
+    values.push(data[index].y);
+
+    return averageDuplicates(
+      data.filter((d, i) => i !== index),
+      searchIndex,
+      values
+    );
+  }
+
+  // no more duplicates found
+  values.push(data[searchIndex].y);
+  const newData = [...data];
+  newData[searchIndex] = {
+    x: data[searchIndex].x,
+    y:
+      Math.floor(
+        (values.reduce((acc, value) => acc + value, 0) / values.length) * 1000
+      ) / 1000
+  };
+
+  return averageDuplicates(newData, searchIndex + 1, []);
+};
 
 const enhance = compose(
   withPropsOnChange(['files'], ({ files }) => ({
     large: files.length > 1
   })),
   withPropsOnChange(
-    ['files', 'fields', 'groupBy'],
-    ({ files, fields, groupBy, large }) => {
-      const data = [];
+    ['files', 'fields', 'groupBy', 'acc'],
+    ({ files, fields, groupBy, acc, large }) => {
+      if (acc) {
+        const xData = {};
+        const yData = {};
 
+        files.forEach(file => {
+          fields.forEach(field => {
+            if (!xData[field]) xData[field] = [];
+            if (!yData[field]) yData[field] = [];
+
+            xData[field].push(file[groupBy]);
+            yData[field].push(
+              file.values[field].reduce((p, c, i, a) => p + c / a.length, 0)
+            );
+          });
+        });
+
+        return {
+          data: Object.keys(xData).map(field => {
+            let data = xData[field].map((x, i) => ({
+              x: x.toString(),
+              y: Math.floor(yData[field][i] * 1000) / 1000
+            }));
+            data = averageDuplicates(data);
+            data = sortBy(data, d => d.x);
+
+            return {
+              id: field,
+              data,
+              color: 'black'
+            };
+          })
+        };
+      }
+
+      const data = [];
       files.forEach((file, i) => {
         fields.forEach((field, j) => {
           data.push({
@@ -29,10 +96,10 @@ const enhance = compose(
       return { data };
     }
   ),
-  withPropsOnChange(['fields', 'data'], ({ fields, data }) => ({
+  withPropsOnChange(['fields', 'data', 'acc'], ({ fields, data, acc }) => ({
     // scale values from 0% to 100%
     data:
-      fields.length === 1
+      fields.length === 1 || acc
         ? data
         : data.map(d => {
             const ys = d.data.map(({ y }) => y);
@@ -50,8 +117,8 @@ const enhance = compose(
             };
           })
   })),
-  withPropsOnChange(['files', 'data'], ({ files, data }) => {
-    if (files.length === 1) return {};
+  withPropsOnChange(['files', 'data', 'acc'], ({ files, data, acc }) => {
+    if (files.length === 1 || acc) return {};
 
     // reduce all data to consistent length
     let min;

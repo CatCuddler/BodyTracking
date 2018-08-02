@@ -13,6 +13,7 @@ const intersect = (xs, ys, ...rest) =>
 const enhance = compose(
   withState('groupBy', 'setGroupBy', 'mode'),
   withState('folder', 'setFolder', 'json'),
+  withState('acc', 'setAcc'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
       .map(file => file.folder)
@@ -59,6 +60,22 @@ const enhance = compose(
         );
         setSelectedFields([get(selectedFields, 0)]);
       } else setSelectedFiles([file]);
+    },
+    onClickFiles: ({
+      selectedFields,
+      setSelectedFields,
+      selectedFiles,
+      setSelectedFiles
+    }) => (e, files) => {
+      if (e.shiftKey)
+        setSelectedFiles(
+          [...selectedFiles, ...files].filter(
+            (file, index, self) => self.indexOf(file) === index
+          )
+        );
+      else setSelectedFiles(files);
+
+      setSelectedFields([get(selectedFields, 0)]);
     }
   })
 );
@@ -70,11 +87,14 @@ const App = ({
   files,
   selectedFiles,
   onClickFile,
+  onClickFiles,
   fields,
   selectedFields,
   onClickField,
   groupBy,
-  setGroupBy
+  setGroupBy,
+  acc,
+  setAcc
 }) => (
   <div
     style={{
@@ -94,19 +114,23 @@ const App = ({
       onClickField={onClickField}
       groupBy={groupBy}
       setGroupBy={setGroupBy}
+      acc={acc}
+      setAcc={setAcc}
     />
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
       <Files
         files={files}
         selectedFiles={selectedFiles}
-        onClick={onClickFile}
+        onClickFile={onClickFile}
+        onClickFiles={onClickFiles}
         groupBy={groupBy}
       />
       <Chart
         files={files.filter(file => selectedFiles.includes(file.name))}
         fields={selectedFields}
         groupBy={groupBy}
+        acc={acc}
       />
     </div>
   </div>

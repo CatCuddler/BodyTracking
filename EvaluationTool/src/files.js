@@ -11,11 +11,20 @@ const enhance = compose(
   }))
 );
 
-const Files = ({ selectedFiles, groups, groupBy, onClick }) => (
+const Files = ({
+  selectedFiles,
+  groups,
+  groupBy,
+  onClickFile,
+  onClickFiles
+}) => (
   <Menu vertical style={{ width: '20%', overflowY: 'auto' }}>
     {Object.keys(groups).map(group => (
       <Fragment key={group}>
-        <Menu.Item header>
+        <Menu.Item
+          header
+          onClick={e => onClickFiles(e, groups[group].map(file => file.name))}
+        >
           {group}
           <Label>{groupBy}</Label>
         </Menu.Item>
@@ -26,7 +35,7 @@ const Files = ({ selectedFiles, groups, groupBy, onClick }) => (
             <Menu.Item
               key={file.name}
               active={active}
-              onClick={e => onClick(e, file.name)}
+              onClick={e => onClickFile(e, file.name)}
               style={{
                 backgroundColor:
                   active &&

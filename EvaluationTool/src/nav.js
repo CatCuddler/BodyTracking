@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Label, Dropdown } from 'semantic-ui-react';
+import { Menu, Label, Dropdown, Checkbox } from 'semantic-ui-react';
 import { get } from 'lodash';
 import { colorsMaterial } from '@filou/core';
 
@@ -12,7 +12,9 @@ const Nav = ({
   selectedFields,
   onClickField,
   groupBy,
-  setGroupBy
+  setGroupBy,
+  acc,
+  setAcc
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
@@ -103,6 +105,9 @@ const Nav = ({
             {files[0].steps}
           </Label>
         )}
+      </Menu.Item>
+      <Menu.Item>
+        <Checkbox slider checked={acc} onClick={() => setAcc(!acc)} />
       </Menu.Item>
     </Menu.Menu>
   </Menu>
