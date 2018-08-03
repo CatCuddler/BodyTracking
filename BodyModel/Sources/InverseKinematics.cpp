@@ -11,7 +11,9 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 
 bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
-	float error = FLT_MAX;
+	float error = -1.0f;
+	float errorPos = -1.0f;
+	float errorRot = -1.0f;
 	bool stucked = false;
 	struct timespec start, end;
 	
@@ -21,17 +23,20 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while (i <= maxSteps && error > errorMax && i < maxSteps && !stucked) {
+	while (i <= maxSteps && (error < 0 || error > errorMax) && i < maxSteps && !stucked) {
 		prevDeltaTheta = deltaTheta;
 		
 		// todo: better!
 		if (targetBone->nodeIndex == tracker[0]->boneIndex || targetBone->nodeIndex == tracker[1]->boneIndex) {
 			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[0]->ikMode);
-			error = jacobianHand->getError();
+			errorPos = jacobianHand->getPositionError();
+			errorRot = jacobianHand->getRotationError();
 		} else if (targetBone->nodeIndex == tracker[3]->boneIndex || targetBone->nodeIndex == tracker[4]->boneIndex) {
 			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode);
-			error = jacobianFoot->getError();
+			errorPos = jacobianFoot->getPositionError();
+			errorRot = jacobianFoot->getRotationError();
 		}
+		error = errorRot < 0 ? errorPos : sqrtf(Square(errorPos) + Square(errorRot));
 		
 		// check if ik stucked (runned in extrema)
 		int j = 0;
@@ -59,7 +64,9 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		totalNum += 1;
 		sumIter += i;
 		sumReached += error < errorMax ? 1 : 0;
-		sumError += error;
+		if (error > 0) sumError += error;
+		if (errorPos > 0) sumErrorPos += errorPos;
+		if (errorRot > 0) sumErrorRot += errorRot;
 		minError = error < minError ? error : minError;
 		maxError = error > maxError ? error : maxError;
 	}
@@ -210,16 +217,24 @@ float InverseKinematics::getAverageReached() {
 	return totalNum != 0 ? (float) sumReached / (float) totalNum : -1;
 }
 
-float InverseKinematics::getAverageError() {
-	return totalNum != 0 ? sumError / (float) totalNum : -1;
-}
-
 float InverseKinematics::getAverageTime() {
 	return totalNum != 0 ? sumTime / (float) totalNum : -1;
 }
 
 float InverseKinematics::getAverageTimeIteration() {
 	return totalNum != 0 ? sumTimeIteration / (float) totalNum : -1;
+}
+
+float InverseKinematics::getAverageError() {
+	return totalNum != 0 ? sumError / (float) totalNum : -1;
+}
+
+float InverseKinematics::getAverageErrorPos() {
+	return totalNum != 0 ? sumErrorPos / (float) totalNum : -1;
+}
+
+float InverseKinematics::getAverageErrorRot() {
+	return totalNum != 0 ? sumErrorRot / (float) totalNum : -1;
 }
 
 float InverseKinematics::getMinError() {
@@ -235,6 +250,8 @@ void InverseKinematics::resetStats() {
 	sumIter = 0;
 	sumReached = 0;
 	sumError= 0;
+	sumErrorPos= 0;
+	sumErrorRot= 0;
 	sumTime = 0;
 	sumTimeIteration = 0;
 }

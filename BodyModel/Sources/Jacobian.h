@@ -18,7 +18,12 @@ public:
 		mat_mxn jacobian = calcJacobian(endEffektor, p_aktuell);
 		
 		// set error
-		error = deltaP.getLength();
+		Kore::vec3 errorPosVec = Kore::vec3(deltaP[0], deltaP[1], deltaP[2]);
+		errorPos = errorPosVec.getLength();
+		if (nDOFs == 6) {
+			Kore::vec3 errorRotVec = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]);
+			errorRot = errorRotVec.getLength();
+		}
 		
 		switch (ikMode) {
 			case 1:
@@ -47,8 +52,11 @@ public:
 		
 		return deltaTheta;
 	}
-	float getError() {
-		return error ? error : FLT_MAX;
+	float getPositionError() {
+		return errorPos;
+	}
+	float getRotationError() {
+		return errorRot;
 	}
 	
 private:
@@ -59,7 +67,8 @@ private:
 	typedef Kore::Vector<float, posAndOrientation ? 6 : 3>                              vec_m;
 	typedef Kore::Vector<float, nJointDOFs>                                             vec_n;
 	
-	float   error;
+	float   errorPos = -1.0f;
+	float	errorRot = -1.0f;
 	int     nDOFs = posAndOrientation ? 6 : 3;
 	
 	mat_mxm U;
@@ -80,7 +89,7 @@ private:
 		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			if (fabs(d[i]) > nearNull)
+			if (fabs(d[i]) > (lambda[3] != -1.0f ? lambda[3] : nearNull)) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
@@ -233,20 +242,38 @@ private:
 		return column;
 	}
 	
-	mat_nxm calcPseudoInverse(mat_mxn jacobian, float lambda = 0.0f) { // lambda != 0 => DLS!
+	mat_nxm calcPseudoInverse(mat_mxn jacobian, float l = 0) { // lambda != 0 => DLS!
+		mat_nxm pseudoInverse;
+		mat_nxm transpose = jacobian.Transpose();
+		
 		if (nDOFs <= nJointDOFs) { // m <= n
 			// Left Damped pseudo-inverse
 			Jacobian::mat_nxn id;
-			if (lambda > nearNull) id = Jacobian::mat_nxn::Identity() * Square(lambda);
+			if (l > nearNull) id = Jacobian::mat_nxn::Identity() * Square(l);
 			
-			return (jacobian.Transpose() * jacobian + id).Invert() * jacobian.Transpose();
+			pseudoInverse = (transpose * jacobian + id).Invert() * transpose;
 		} else {
 			// Right Damped pseudo-inverse
 			Jacobian::mat_mxm id;
-			if (lambda > nearNull) id = Jacobian::mat_mxm::Identity() * Square(lambda);
+			if (l > nearNull) id = Jacobian::mat_mxm::Identity() * Square(l);
 			
-			return jacobian.Transpose() * (jacobian * jacobian.Transpose() + id).Invert();
+			pseudoInverse = transpose * (jacobian * transpose + id).Invert();
 		}
+		
+		// modification to stabilize JPI
+		if (l < nearNull & lambda[1] != -1.0f) {
+			int max = lambda[1];
+			for (int n = 0; n < nJointDOFs; ++n)
+				for (int m = 0; m < nDOFs; ++m) {
+					int x = fabs(pseudoInverse[n][m]);
+					if (x > max) max = x;
+				}
+			for (int n = 0; n < nJointDOFs; ++n)
+				for (int m = 0; m < nDOFs; ++m)
+					pseudoInverse[n][m] = pseudoInverse[n][m] / max * lambda[1];
+		}
+		
+		return pseudoInverse;
 	}
 	
 	void calcSVD(Jacobian::mat_mxn jacobian) {

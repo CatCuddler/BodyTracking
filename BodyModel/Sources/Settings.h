@@ -41,7 +41,7 @@ namespace {
 	const bool withOrientation = true;
 	const int maxSteps = 100;
 	const float errorMax = 0.01f;
-	const float lambda[] = { -1.0f, -1.0f, 0.18f, -1.0f, 0.18f, 0.7853981634f };
+	const float lambda[] = { -1.0f, 1.5f, 0.18f, 0.1f, 0.18f, 0.7853981634f };
 	
 	EndEffector* tracker[] = {
 		new EndEffector(16,
