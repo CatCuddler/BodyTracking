@@ -88,7 +88,7 @@ const enhance = compose(
               : `${field} - #${files.findIndex(x => file.name === x.name) +
                   1} [${groupBy}: ${file[groupBy]}]`,
             data: get(file, ['values', field], []).map((y, x) => ({
-              x,
+              x: x + 1,
               y: parseFloat(y)
             })),
             color: get(
