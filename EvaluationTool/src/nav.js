@@ -3,6 +3,7 @@ import { Menu, Label, Dropdown, Checkbox } from 'semantic-ui-react';
 import Fields from './fields';
 
 const Nav = ({
+  selectedFiles,
   fields,
   selectedFields,
   onClickField,
@@ -92,6 +93,7 @@ const Nav = ({
     </Menu.Item>
 
     <Fields
+      selectedFiles={selectedFiles}
       fields={fields}
       selectedFields={selectedFields}
       onClickField={onClickField}

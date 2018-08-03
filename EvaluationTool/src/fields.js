@@ -3,7 +3,7 @@ import { Menu, Label } from 'semantic-ui-react';
 import { colorsMaterial } from '@filou/core';
 import { get } from 'lodash';
 
-const Fields = ({ fields, selectedFields, onClickField }) => (
+const Fields = ({ selectedFiles, fields, selectedFields, onClickField }) => (
   <Menu.Menu position="right">
     {fields.map(field => (
       <Menu.Item
@@ -17,11 +17,13 @@ const Fields = ({ fields, selectedFields, onClickField }) => (
             circular
             empty
             style={{
-              backgroundColor: get(colorsMaterial, [
-                selectedFields.findIndex(x => x === field),
-                'palette',
-                6
-              ])
+              backgroundColor:
+                selectedFiles.length === 1 &&
+                get(colorsMaterial, [
+                  selectedFields.findIndex(x => x === field) * 2,
+                  'palette',
+                  6
+                ])
             }}
           />
         )}

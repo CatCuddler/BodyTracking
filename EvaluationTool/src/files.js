@@ -41,7 +41,7 @@ const Files = ({
                   active &&
                   selectedFiles.length > 1 &&
                   get(colorsMaterial, [
-                    selectedFiles.findIndex(x => x === file.name),
+                    selectedFiles.findIndex(x => x === file.name) * 2,
                     'palette',
                     6
                   ]),
@@ -52,7 +52,7 @@ const Files = ({
               <Label
                 style={{
                   backgroundColor: get(colorsMaterial, [
-                    selectedFiles.findIndex(x => x === file.name),
+                    selectedFiles.findIndex(x => x === file.name) * 2,
                     'palette',
                     6
                   ])

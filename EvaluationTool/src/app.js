@@ -100,6 +100,7 @@ const App = ({
     }}
   >
     <Nav
+      selectedFiles={selectedFiles}
       fields={fields}
       selectedFields={selectedFields}
       onClickField={onClickField}
