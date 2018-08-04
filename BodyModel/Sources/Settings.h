@@ -6,17 +6,8 @@ struct EndEffector {
 	int boneIndex;
 	int trackerIndex = -1;
 	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-	
-	EndEffector(int boneIndex,
-				Kore::vec3 offsetPosition = Kore::vec3(0, 0, 0),
-				Kore::Quaternion offsetRotation = Kore::Quaternion(0, 0, 0, 1),
-				int ikMode = 4
-	) :
-	boneIndex(boneIndex),
-	offsetPosition(offsetPosition),
-	offsetRotation(offsetRotation),
-	ikMode(ikMode)
-	{}
+
+	EndEffector(int boneIndex, int mode = 5) : boneIndex(boneIndex), ikMode(mode) {}
 	
 	void setTrackerIndex(int index) {
 		trackerIndex = index;
@@ -37,38 +28,18 @@ struct DataFile {
 };
 
 namespace {
-	const int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+	const static int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 	const bool withOrientation = true;
 	const int maxSteps = 100;
 	const float errorMax = 0.01f;
 	const float lambda[] = { -1.0f, 1.5f, 0.18f, 0.1f, 0.18f, 0.7853981634f };
 	
 	EndEffector* tracker[] = {
-		new EndEffector(16,
-						Kore::vec3(0.020000, 0.020000, 0.000000),
-						Kore::Quaternion(-0.500000, 0.321020, -0.630037, 0.500000),
-						ikMode
-						), // left-hand
-		new EndEffector(26,
-						Kore::vec3(-0.020000, 0.020000, 0.000000),
-						Kore::Quaternion(-0.500000, -0.321020, 0.630037, 0.500000),
-						ikMode
-						), // right-hand
-		new EndEffector(2,
-						Kore::vec3(0.000000, 0.000000, 0.000000),
-						Kore::Quaternion(0.000000, 0.125333, -0.992115, -0.000000),
-						ikMode
-						), // back
-		new EndEffector(6,
-						Kore::vec3(0.050000, 0.000000, 0.000000),
-						Kore::Quaternion(0.698401, 0.110616, -0.698401, -0.110616),
-						ikMode
-						),	// left-foot
-		new EndEffector(31,
-						Kore::vec3(0.050000, 0.000000, 0.000000),
-						Kore::Quaternion(0.698401, -0.110616, 0.698401, -0.110616),
-						ikMode
-						), // right-foot
+		new EndEffector(16, ikMode), 	// left-hand
+		new EndEffector(26, ikMode), 	// right-hand
+		new EndEffector(2, ikMode), 	// back
+		new EndEffector(6, ikMode),		// left-foot
+		new EndEffector(31, ikMode), 	// right-foot
 	};
 	
 	DataFile* calibrationFile = new DataFile("initTransAndRot_calibration.csv", "positionData_calibration.csv", false);
@@ -84,5 +55,5 @@ namespace {
 	const int height = 768;
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
-	const bool eval = true;
+	const bool eval = false;
 }
