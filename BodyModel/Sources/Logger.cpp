@@ -49,12 +49,12 @@ void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 void Logger::saveEvaluationData(Avatar *avatar) {
 	if (!initEvaluationData) {
 		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Error Pos ø;Error Rot ø;Time ø [us];Time/Iteration ø [us]\n";
+		evaluationDataOutputFile << "Iterations;Reached [%];Error;Error Min;Error Max;Error Pos;Error Rot;Time [us];Time/Iteration [us]\n";
 		evaluationDataOutputFile.flush();
 		
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Max;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
+		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
+		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorPosMax << ";"  << errorRotMax << ";"  << maxSteps << ";" << "\n";
 		evaluationConfigOutputFile.flush();
 		evaluationConfigOutputFile.close();
 		

@@ -31,7 +31,8 @@ namespace {
 	const static int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 	const bool withOrientation = true;
 	const int maxSteps = 100;
-	const float errorMax = 0.01f;
+	const float errorPosMax = 0.01f;
+	const float errorRotMax = 0.01f;
 	const float lambda[] = { -1.0f, 1.5f, 0.18f, 0.1f, 0.18f, 0.7853981634f };
 	
 	EndEffector* tracker[] = {
@@ -55,5 +56,5 @@ namespace {
 	const int height = 768;
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
-	const bool eval = false;
+	const bool eval = true;
 }

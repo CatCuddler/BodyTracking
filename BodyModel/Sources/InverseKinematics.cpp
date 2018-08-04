@@ -9,7 +9,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	setJointConstraints();
 }
 
-bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
 	float error = -1.0f;
 	float errorPos = -1.0f;
@@ -17,13 +17,11 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	bool stucked = false;
 	struct timespec start, end;
 	
-	if (!targetBone->initialized) return false;
-	
 	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while (i <= maxSteps && (error < 0 || error > errorMax) && i < maxSteps && !stucked) {
+	while (i <= maxSteps && ((errorPos < 0 || errorPos > errorPosMax) || (errorRot < 0 || errorRot > errorRotMax)) && i < maxSteps && !stucked) {
 		prevDeltaTheta = deltaTheta;
 		
 		// todo: better!
@@ -63,15 +61,13 @@ bool InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		sumTime += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 		totalNum += 1;
 		sumIter += i;
-		sumReached += error < errorMax ? 1 : 0;
+		sumReached += errorPos < errorPosMax && errorRot < errorRotMax ? 1 : 0;
 		if (error > 0) sumError += error;
 		if (errorPos > 0) sumErrorPos += errorPos;
 		if (errorRot > 0) sumErrorRot += errorRot;
 		minError = error < minError ? error : minError;
 		maxError = error > maxError ? error : maxError;
 	}
-	
-	return error < errorMax || stucked;
 }
 
 void InverseKinematics::updateBone(BoneNode* bone) {
