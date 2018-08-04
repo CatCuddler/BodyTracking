@@ -25,7 +25,6 @@ namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
 	
 	Logger* logger;
-	int line = 0;
 	bool logData = false;
 	
 	double startTime;
@@ -82,6 +81,8 @@ namespace {
 	
 #ifdef KORE_STEAMVR
 	float currentUserHeight;
+#else
+	int line = 0;
 #endif
 	
 	void renderTracker(MeshObject*& cube, vec3 desPosition, Kore::Quaternion desRotation) {
@@ -139,7 +140,7 @@ namespace {
 		return matrixToQuaternion(diffRot, i + 1);
 	}
 	
-	void calibrate(EndEffector* endEffector, vec3 istPos, Kore::Quaternion istRot) {
+	void calibrateTracker(EndEffector* endEffector, vec3 istPos, Kore::Quaternion istRot) {
 		vec3 sollPos, diffPos;
 		mat4 sollRot, diffRot;
 		// todo: im live Betrieb soll der Avatar still in der Mitte in T-Pose stehen, man sieht nur die Endeffektoren die sich bewegen. dann geht man zu dem Avatar und stellt sich "in ihn rein" und drückt den Kalibrierungs-Button. Danach fängt der Avatar sich an zu bewegen!
@@ -154,8 +155,6 @@ namespace {
 		
 		endEffector->offsetPosition = diffPos;
 		endEffector->offsetRotation = matrixToQuaternion(diffRot);
-		
-		calibratedAvatar = true;
 	}
 	
 	void executeMovement(EndEffector* endEffector, vec3& desPosition, Kore::Quaternion& desRotation) {
@@ -189,9 +188,17 @@ namespace {
 		// Menu button => calibrating
 		if (buttonNr == 1) {
 			if (value == 1) {
-				calibrateAvatar();
-				
-				log(Info, "Calibrate avatar");
+				if (!calibratedAvatar) {
+					calibrateAvatar();
+					calibratedAvatar = true;
+					
+					log(Info, "Calibrate avatar");
+				} else {
+					// todo: Avatar "loslassen" (bleibt im Raum stehen und nur die Endeffektoren bewegen sich - notwendig falls man Kalibrierung noch mal machen will)
+					calibratedAvatar = false;
+					
+					log(Info, "Release avatar");
+				}
 			}
 		}
 		
@@ -207,14 +214,6 @@ namespace {
 			} else {
 				logData = false;
 				log(Info, "Stop recording data.");
-			}
-		}
-		
-		// Grip button
-		if (buttonNr == 2) {
-			if (value == 1) {
-				// todo: Avatar "loslassen" (bleibt im Raum stehen und nur die Endeffektoren bewegen sich - notwendig falls man Kalibrierung noch mal machen will)
-				calibratedAvatar = false;
 			}
 		}
 	}
@@ -295,7 +294,7 @@ namespace {
 			// todo: vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			// Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 			
-			calibrate(tracker[i], controller.vrPose.position, controller.vrPose.orientation);
+			calibrateTracker(tracker[i], controller.vrPose.position, controller.vrPose.orientation);
 			
 			/* todo: if (i == 2) {
 			 initTrans = mat4::Translation(controller.vrPose.position.x(), 0, controller.vrPose.position.z()) * initRot.matrix().Transpose();
@@ -315,6 +314,8 @@ namespace {
 	void update() {
 		vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
+		bool firstPersonMonitor = false;
+		mat4 eye, projection;
 		
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -346,10 +347,10 @@ namespace {
 		Graphics4::setPipeline(pipeline);
 		
 #ifdef KORE_STEAMVR
-		bool firstPersonMonitor = false;
-		
 		VrInterface::begin();
 		SensorState state;
+		eye = state.pose.vrPose.eye;
+		projection = state.pose.vrPose.projection;
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i)
@@ -364,16 +365,16 @@ namespace {
 			}
 		
 		// Render for both eyes
-		for (int eye = 0; eye < 2; ++eye) {
-			VrInterface::beginRender(eye);
+		for (int j = 0; j < 2; ++j) {
+			VrInterface::beginRender(j);
 			
 			Graphics4::setPipeline(pipeline);
 			
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 			
-			state = VrInterface::getSensorState(eye);
-			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
-			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+			state = VrInterface::getSensorState(j);
+			Graphics4::setMatrix(vLocation, eye);
+			Graphics4::setMatrix(pLocation, projection);
 			
 			// Animate avatar
 			Graphics4::setMatrix(mLocation, initTrans);
@@ -387,9 +388,9 @@ namespace {
 			}
 			
 			// Render living room
-			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			renderLivingRoom(eye, projection);
 			
-			VrInterface::endRender(eye);
+			VrInterface::endRender(j);
 		}
 		
 		VrInterface::warpSwap();
@@ -399,6 +400,29 @@ namespace {
 		
 		// Render on monitor
 		Graphics4::setPipeline(pipeline);
+#else
+		// Read line
+		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				// Calibration
+				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
+				if (!currentFile->isCalibrated) {
+					calibrateTracker(tracker[i], desPosition[i], desRotation[i]);
+					
+					if (i == numOfEndEffectors - 1)
+						currentFile->calibrated();
+				}
+				
+				executeMovement(tracker[i], desPosition[i], desRotation[i]);
+			}
+			
+			line += numOfEndEffectors;
+		} else {
+			if (eval) logger->saveEvaluationData(avatar);
+			
+			line = 0;
+		}
+#endif
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -408,8 +432,8 @@ namespace {
 			Graphics4::setMatrix(pLocation, P);
 		}
 		else {
-			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
-			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+			Graphics4::setMatrix(vLocation, eye);
+			Graphics4::setMatrix(pLocation, projection);
 		}
 		Graphics4::setMatrix(mLocation, initTrans);
 		
@@ -426,52 +450,8 @@ namespace {
 		// Render living room
 		if (renderRoom) {
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
-			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderLivingRoom(eye, projection);
 		}
-		
-#else
-		// Read line
-		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				// Calibration
-				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-				if (!currentFile->isCalibrated) {
-					calibrate(tracker[i], desPosition[i], desRotation[i]);
-					
-					if (i == numOfEndEffectors - 1)
-						currentFile->calibrated();
-				}
-				
-				executeMovement(tracker[i], desPosition[i], desRotation[i]);
-			}
-			
-			line += numOfEndEffectors;
-		} else {
-			if (eval) logger->saveEvaluationData(avatar);
-			
-			line = 0;
-		}
-		
-		// Get projection and view matrix
-		mat4 P = getProjectionMatrix();
-		mat4 V = getViewMatrix();
-		Graphics4::setMatrix(vLocation, V);
-		Graphics4::setMatrix(pLocation, P);
-		Graphics4::setMatrix(mLocation, initTrans);
-		
-		// Animate avatar
-		avatar->animate(tex, deltaT);
-		
-		// Render tracker
-		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
-			renderTracker(cubes[i], desPosition[i], desRotation[i]);
-			i++;
-		}
-		
-		// Render living room
-		if (renderRoom) renderLivingRoom(V, P);
-#endif
 		
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -634,6 +614,7 @@ namespace {
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
 #else
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		calibratedAvatar = true; // recorded Data are always calibrated!
 		
 		// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
 		if (!currentFile->isCalibrated)
