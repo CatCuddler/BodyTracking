@@ -12,6 +12,7 @@ const enhance = compose(
 );
 
 const Files = ({
+  acc,
   selectedFiles,
   groups,
   groupBy,
@@ -38,6 +39,7 @@ const Files = ({
               onClick={e => onClickFile(e, file.name)}
               style={{
                 backgroundColor:
+                  !acc &&
                   active &&
                   selectedFiles.length > 1 &&
                   get(colorsMaterial, [
@@ -45,17 +47,19 @@ const Files = ({
                     'palette',
                     6
                   ]),
-                color: active && selectedFiles.length > 1 && 'white'
+                color: !acc && active && selectedFiles.length > 1 && 'white'
               }}
             >
               <b>{file.mode}</b> {file.orientation && 'with Orientation'}
               <Label
                 style={{
-                  backgroundColor: get(colorsMaterial, [
-                    selectedFiles.findIndex(x => x === file.name) * 2,
-                    'palette',
-                    6
-                  ])
+                  backgroundColor:
+                    !acc &&
+                    get(colorsMaterial, [
+                      selectedFiles.findIndex(x => x === file.name) * 2,
+                      'palette',
+                      6
+                    ])
                 }}
                 circular
               >

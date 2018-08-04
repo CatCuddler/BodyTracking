@@ -93,6 +93,7 @@ const Nav = ({
     </Menu.Item>
 
     <Fields
+      acc={acc}
       selectedFiles={selectedFiles}
       fields={fields}
       selectedFields={selectedFields}

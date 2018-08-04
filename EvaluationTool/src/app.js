@@ -117,6 +117,7 @@ const App = ({
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
       <Files
+        acc={acc}
         files={files}
         selectedFiles={selectedFiles}
         onClickFile={onClickFile}
