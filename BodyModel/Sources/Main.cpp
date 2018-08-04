@@ -172,9 +172,10 @@ namespace {
 			
 			if (endEffector->boneIndex == tracker[rootIndex]->boneIndex) {
 				avatar->setFixedPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
-				
-				initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
-				initTransInv = initTrans.Invert();
+
+				// todo: live braucht das aber eval von aufgezeichneten Daten hat gezeigt dass bspw. 4,5 Iterationen statt 4 benötigt werden. Kann man auf den Teil irgendwie verzichten?
+				// initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
+				// initTransInv = initTrans.Invert();
 			} else
 				avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
 		}
