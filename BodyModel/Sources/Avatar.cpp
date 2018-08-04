@@ -105,40 +105,28 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	return bone;
 }
 
-float Avatar::getAverageIkIteration() const {
-	return invKin->getAverageIter();
+float Avatar::getReached() const {
+	return invKin->getReached();
 }
 
-float Avatar::getAverageIkReached() const {
-	return invKin->getAverageReached();
+float* Avatar::getIterations() const {
+	return invKin->getIterations();
 }
 
-float Avatar::getAverageTime() const {
-	return invKin->getAverageTime();
+float* Avatar::getErrorPos() const {
+	return invKin->getErrorPos();
 }
 
-float Avatar::getAverageTimeIteration() const {
-	return invKin->getAverageTimeIteration();
+float* Avatar::getErrorRot() const {
+	return invKin->getErrorRot();
 }
 
-float Avatar::getAverageIkError() const {
-	return invKin->getAverageError();
+float* Avatar::getTime() const {
+	return invKin->getTime();
 }
 
-float Avatar::getAverageIkErrorPos() const {
-	return invKin->getAverageErrorPos();
-}
-
-float Avatar::getAverageIkErrorRot() const {
-	return invKin->getAverageErrorRot();
-}
-
-float Avatar::getMinIkError() const {
-	return invKin->getMinError();
-}
-
-float Avatar::getMaxIkError() const {
-	return invKin->getMaxError();
+float* Avatar::getTimeIteration() const {
+	return invKin->getTimeIteration();
 }
 
 float Avatar::getHeight() const {

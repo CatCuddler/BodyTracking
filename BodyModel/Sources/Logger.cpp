@@ -48,21 +48,37 @@ void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 
 void Logger::saveEvaluationData(Avatar *avatar) {
 	if (!initEvaluationData) {
-		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations;Reached [%];Error;Error Min;Error Max;Error Pos;Error Rot;Time [us];Time/Iteration [us]\n";
-		evaluationDataOutputFile.flush();
-		
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
 		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
 		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorPosMax << ";"  << errorRotMax << ";"  << maxSteps << ";" << "\n";
 		evaluationConfigOutputFile.flush();
 		evaluationConfigOutputFile.close();
 		
+		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Time;Time/Iteration;";
+		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Time Min;Time/Iteration Min;";
+		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Time Max;Time/Iteration Max;";
+		evaluationDataOutputFile << "Reached [%];\n";
+		evaluationDataOutputFile.flush();
+		
 		initEvaluationData = true;
 	}
 	
-	// Save data
-	evaluationDataOutputFile << avatar->getAverageIkIteration() << ";" << avatar->getAverageIkReached() << ";" << avatar->getAverageIkError() << ";" << avatar->getMinIkError() << ";" << avatar->getMaxIkError() << ";" << avatar->getAverageIkErrorPos() << ";" << avatar->getAverageIkErrorRot() << ";" << avatar->getAverageTime() << ";" << avatar->getAverageTimeIteration() << "\n";
+	float* iterations = avatar->getIterations();
+	float* errorPos = avatar->getErrorPos();
+	float* errorRot = avatar->getErrorRot();
+	float* time = avatar->getTime();
+	float* timeIteration = avatar->getTimeIteration();
+	
+	// Save datas
+	for (int i = 0; i < 3; ++i) {
+		evaluationDataOutputFile << *(iterations + i) << ";";
+		evaluationDataOutputFile << *(errorPos + i) << ";";
+		evaluationDataOutputFile << *(errorRot + i) << ";";
+		evaluationDataOutputFile << *(time + i) << ";";
+		evaluationDataOutputFile << *(timeIteration + i) << ";";
+	}
+	evaluationDataOutputFile << avatar->getReached() << ";" << "\n";
 	evaluationDataOutputFile.flush();
 	
 	avatar->resetStats();

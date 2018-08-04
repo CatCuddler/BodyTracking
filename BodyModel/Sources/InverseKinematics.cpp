@@ -7,21 +7,24 @@
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
+	resetStats();
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
-	float error = -1.0f;
 	float errorPos = -1.0f;
 	float errorRot = -1.0f;
 	bool stucked = false;
 	struct timespec start, end;
+	struct timespec start2, end2;
 	
 	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
 	while (i <= maxSteps && ((errorPos < 0 || errorPos > errorPosMax) || (errorRot < 0 || errorRot > errorRotMax)) && i < maxSteps && !stucked) {
+		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
+		
 		prevDeltaTheta = deltaTheta;
 		
 		// todo: better!
@@ -34,7 +37,6 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 			errorPos = jacobianFoot->getPositionError();
 			errorRot = jacobianFoot->getRotationError();
 		}
-		error = errorRot < 0 ? errorPos : sqrtf(Square(errorPos) + Square(errorRot));
 		
 		// check if ik stucked (runned in extrema)
 		int j = 0;
@@ -49,8 +51,12 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 			updateBone(bones[i]);
 		
 		if (eval && i == 0) {
-			clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-			sumTimeIteration += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+			// time per iteration
+			clock_gettime(CLOCK_MONOTONIC_RAW, &end2);
+			float time = (end2.tv_sec - start2.tv_sec) * 1000000 + (end2.tv_nsec - start2.tv_nsec) / 1000;
+			evalTimeIteration[0] += time;
+			evalTimeIteration[1] = time < evalTimeIteration[1] ? time : evalTimeIteration[1];
+			evalTimeIteration[2] = time > evalTimeIteration[2] ? time : evalTimeIteration[2];
 		}
 		
 		i++;
@@ -58,15 +64,30 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	if (eval) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-		sumTime += (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+		
 		totalNum += 1;
-		sumIter += i;
-		sumReached += errorPos < errorPosMax && errorRot < errorRotMax ? 1 : 0;
-		if (error > 0) sumError += error;
-		if (errorPos > 0) sumErrorPos += errorPos;
-		if (errorRot > 0) sumErrorRot += errorRot;
-		minError = error < minError ? error : minError;
-		maxError = error > maxError ? error : maxError;
+		evalReached += (errorPos < errorPosMax && errorRot < errorRotMax) ? 1 : 0;
+		
+		// iterations
+		evalIterations[0] += i;
+		evalIterations[1] = i < evalIterations[1] ? (float) i : evalIterations[1];
+		evalIterations[2] = i > evalIterations[2] ? (float) i : evalIterations[2];
+		
+		// pos-error
+		evalErrorPos[0] += errorPos > 0 ? errorPos : 0;
+		evalErrorPos[1] = errorPos < evalErrorPos[1] ? errorPos : evalErrorPos[1];
+		evalErrorPos[2] = errorPos > evalErrorPos[2] ? errorPos : evalErrorPos[2];
+		
+		// rot-error
+		evalErrorRot[0] += errorRot > 0 ? errorRot : 0;
+		evalErrorRot[1] = errorRot < evalErrorRot[1] ? errorRot : evalErrorRot[1];
+		evalErrorRot[2] = errorRot > evalErrorRot[2] ? errorRot : evalErrorRot[2];
+		
+		// time
+		float time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+		evalTime[0] += time;
+		evalTime[1] = time < evalTime[1] ? time : evalTime[1];
+		evalTime[2] = time > evalTime[2] ? time : evalTime[2];
 	}
 }
 
@@ -203,49 +224,66 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 }
 
-float InverseKinematics::getAverageIter() {
-	return totalNum != 0 ? (float) sumIter / (float) totalNum : -1;
+float InverseKinematics::getReached() {
+	return totalNum != 0 ? (float) evalReached / (float) totalNum : -1;
 }
 
-float InverseKinematics::getAverageReached() {
-	return totalNum != 0 ? (float) sumReached / (float) totalNum : -1;
+float* InverseKinematics::getIterations() {
+	evalIterations[0] = totalNum != 0 ? (float) evalIterations[0] / (float) totalNum : -1;
+	
+	return evalIterations;
 }
 
-float InverseKinematics::getAverageTime() {
-	return totalNum != 0 ? sumTime / (float) totalNum : -1;
+float* InverseKinematics::getErrorPos() {
+	evalErrorPos[0] = totalNum != 0 ? evalErrorPos[0] / (float) totalNum : -1;
+	
+	return evalErrorPos;
 }
 
-float InverseKinematics::getAverageTimeIteration() {
-	return totalNum != 0 ? sumTimeIteration / (float) totalNum : -1;
+float* InverseKinematics::getErrorRot() {
+	evalErrorRot[0] = totalNum != 0 ? evalErrorRot[0] / (float) totalNum : -1;
+	
+	return evalErrorRot;
 }
 
-float InverseKinematics::getAverageError() {
-	return totalNum != 0 ? sumError / (float) totalNum : -1;
+float* InverseKinematics::getTime() {
+	evalTime[0] = totalNum != 0 ? evalTime[0] / (float) totalNum : -1;
+	
+	return evalTime;
 }
 
-float InverseKinematics::getAverageErrorPos() {
-	return totalNum != 0 ? sumErrorPos / (float) totalNum : -1;
-}
-
-float InverseKinematics::getAverageErrorRot() {
-	return totalNum != 0 ? sumErrorRot / (float) totalNum : -1;
-}
-
-float InverseKinematics::getMinError() {
-	return minError;
-}
-
-float InverseKinematics::getMaxError() {
-	return maxError;
+float* InverseKinematics::getTimeIteration() {
+	evalTimeIteration[0] = totalNum != 0 ? evalTimeIteration[0] / (float) totalNum : -1;
+	
+	return evalTimeIteration;
 }
 
 void InverseKinematics::resetStats() {
 	totalNum = 0;
-	sumIter = 0;
-	sumReached = 0;
-	sumError= 0;
-	sumErrorPos= 0;
-	sumErrorRot= 0;
-	sumTime = 0;
-	sumTimeIteration = 0;
+	evalReached = 0;
+	
+	// iterations
+	evalIterations[0] = 0;
+	evalIterations[1] = FLT_MAX;
+	evalIterations[2] = FLT_MIN;
+	
+	// pos-error
+	evalErrorPos[0] = 0;
+	evalErrorPos[1] = FLT_MAX;
+	evalErrorPos[2] = FLT_MIN;
+	
+	// rot-error
+	evalErrorRot[0] = 0;
+	evalErrorRot[1] = FLT_MAX;
+	evalErrorRot[2] = FLT_MIN;
+	
+	// time
+	evalTime[0] = 0;
+	evalTime[1] = FLT_MAX;
+	evalTime[2] = FLT_MIN;
+	
+	// time per iteration
+	evalTimeIteration[0] = 0;
+	evalTimeIteration[1] = FLT_MAX;
+	evalTimeIteration[2] = FLT_MIN;
 }

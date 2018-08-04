@@ -11,16 +11,12 @@ public:
 	void inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
-	float getAverageIter();
-	float getMinIter();
-	float getAverageReached();
-	float getAverageTime();
-	float getAverageTimeIteration();
-	float getAverageError();
-	float getAverageErrorPos();
-	float getAverageErrorRot();
-	float getMinError();
-	float getMaxError();
+	float getReached();
+	float* getIterations();
+	float* getErrorPos();
+	float* getErrorRot();
+	float* getTime();
+	float* getTimeIteration();
 	
 	void resetStats();
 	
@@ -41,6 +37,6 @@ private:
 	void applyJointConstraints(BoneNode* targetBone);
 	float clampValue(float minVal, float maxVal, float value);
 	
-	int totalNum = 0, sumIter = 0, sumReached = 0;
-	float sumError = 0, sumErrorPos = 0, sumErrorRot = 0, sumTime = 0, sumTimeIteration = 0, minError = FLT_MAX, maxError = 0;
+	int totalNum = 0, evalReached = 0;
+	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];
 };

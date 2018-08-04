@@ -19,16 +19,14 @@ public:
 	
 	BoneNode* getBoneWithIndex(int index) const;
 	
-	float getAverageIkIteration() const;
-	float getAverageIkReached() const;
-	float getAverageTime() const;
-	float getAverageTimeIteration() const;
-	float getAverageIkError() const;
-	float getAverageIkErrorPos() const;
-	float getAverageIkErrorRot() const;
-	float getMinIkError() const;
-	float getMaxIkError() const;
-	float getHeight() const;
+	float getReached() const;
+	float* getIterations() const;
+	float* getErrorPos() const;
+	float* getErrorRot() const;
+	float* getTime() const;
+	float* getTimeIteration() const;
 	
 	void resetStats();
+	
+	float getHeight() const;
 };
