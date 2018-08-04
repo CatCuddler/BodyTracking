@@ -72,6 +72,7 @@ namespace {
 	};
 	
 	DataFile* calibrationFile = new DataFile("initTransAndRot_calibration.csv", "positionData_calibration.csv", false);
+	DataFile* calibrationTestFile = new DataFile("initTransAndRot_calibration-test.csv", "positionData_calibration-test.csv", false);
 	DataFile* joggingFile = new DataFile("initTransAndRot_jogging.csv", "positionData_jogging.csv", false);
 	DataFile* kicksFile = new DataFile("initTransAndRot_kicks.csv", "positionData_kicks.csv", false);
 	DataFile* squatsFile = new DataFile("initTransAndRot_squats.csv", "positionData_squats.csv", false);
