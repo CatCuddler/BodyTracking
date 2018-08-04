@@ -447,7 +447,6 @@ namespace {
 			
 			line += numOfEndEffectors;
 		} else {
-			if (logData) logger->saveLogData("it", avatar->getAverageIkIteration()); // todo:remove!
 			if (eval) logger->saveEvaluationData(avatar);
 			
 			line = 0;

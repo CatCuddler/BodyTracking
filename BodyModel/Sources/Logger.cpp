@@ -6,30 +6,16 @@
 
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false) {
+Logger::Logger() : initPositionData(false), initTransRotData(false), initEvaluationData(false) {
 	time_t t = time(0);   // Get time now
 	positionDataPath << positionData << "_" << t << ".csv";
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
-	logDataPath << logDataFilename << "_" << t << ".csv";
 	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
 	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
-	
-	if (eval) {
-		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Error Pos ø;Error Rot ø;Time ø [us];Time/Iteration ø [us]\n";
-		evaluationDataOutputFile.flush();
-		
-		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Max;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
-		evaluationConfigOutputFile.flush();
-		evaluationConfigOutputFile.close();
-	}
 }
 
 Logger::~Logger() {
 	positionDataOutputFile.close();
-	logDataOutputFile.close();
 	evaluationDataOutputFile.close();
 }
 
@@ -60,18 +46,21 @@ void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 	initTransRotDataOutputFile.close();
 }
 
-void Logger::saveLogData(const char* str, float num) {
-	if (!initLogData) {
-		logDataOutputFile.open(logDataPath.str(), std::ios::app);
-		initLogData = true;
+void Logger::saveEvaluationData(Avatar *avatar) {
+	if (!initEvaluationData) {
+		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+		evaluationDataOutputFile << "Iterations ø;Reached [%];Error ø;Error Min;Error Max;Error Pos ø;Error Rot ø;Time ø [us];Time/Iteration ø [us]\n";
+		evaluationDataOutputFile.flush();
+		
+		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
+		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Max;Steps Max\n";
+		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMax << ";"  << maxSteps << ";" << "\n";
+		evaluationConfigOutputFile.flush();
+		evaluationConfigOutputFile.close();
+		
+		initEvaluationData = true;
 	}
 	
-	// Save data
-	logDataOutputFile << str << ";" << num << "\n";
-	logDataOutputFile.flush();
-}
-
-void Logger::saveEvaluationData(Avatar *avatar) {
 	// Save data
 	evaluationDataOutputFile << avatar->getAverageIkIteration() << ";" << avatar->getAverageIkReached() << ";" << avatar->getAverageIkError() << ";" << avatar->getMinIkError() << ";" << avatar->getMaxIkError() << ";" << avatar->getAverageIkErrorPos() << ";" << avatar->getAverageIkErrorRot() << ";" << avatar->getAverageTime() << ";" << avatar->getAverageTimeIteration() << "\n";
 	evaluationDataOutputFile.flush();

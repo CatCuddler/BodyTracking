@@ -22,12 +22,8 @@ private:
 	std::fstream initTransRotDataOutputFile;
 	std::stringstream initTransRotPath;
 	
-	const char* logDataFilename = "logData";
-	bool initLogData;
-	std::fstream logDataOutputFile;
-	std::stringstream logDataPath;
-	
 	const char* evaluationDataFilename = "evaluationData";
+	bool initEvaluationData;
 	std::fstream evaluationDataOutputFile;
 	std::stringstream evaluationDataPath;
 	
