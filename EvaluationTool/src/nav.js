@@ -14,6 +14,10 @@ const Nav = ({
   setGroupBy,
   acc,
   setAcc,
+  min,
+  setMin,
+  max,
+  setMax,
   scale,
   setScale
 }) => (
@@ -90,6 +94,12 @@ const Nav = ({
         onClick={() => setScale(!scale)}
         label="scale"
       />
+    </Menu.Item>
+    <Menu.Item>
+      <Checkbox checked={min} onClick={() => setMin(!min)} label="min" />
+    </Menu.Item>
+    <Menu.Item>
+      <Checkbox checked={max} onClick={() => setMax(!max)} label="max" />
     </Menu.Item>
 
     <Fields

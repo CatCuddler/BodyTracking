@@ -39,17 +39,38 @@ const averageDuplicates = (data, searchIndex = 0, values = []) => {
 };
 
 const enhance = compose(
-  withPropsOnChange(['files'], ({ files }) => ({
-    large: files.length > 1
+  withPropsOnChange(['selectedFiles'], ({ selectedFiles }) => ({
+    large: selectedFiles.length > 1
   })),
   withPropsOnChange(
-    ['files', 'selectedFields', 'groupBy', 'acc'],
-    ({ files, selectedFields, groupBy, acc, large }) => {
+    [
+      'files',
+      'selectedFiles',
+      'selectedFields',
+      'groupBy',
+      'acc',
+      'min',
+      'max'
+    ],
+    ({
+      files,
+      selectedFiles,
+      selectedFields,
+      groupBy,
+      acc,
+      min,
+      max,
+      large
+    }) => {
+      const filteredFiles = files.filter(file =>
+        selectedFiles.includes(file.name)
+      );
+
       if (acc) {
         const xData = {};
         const yData = {};
 
-        files.forEach(file => {
+        filteredFiles.forEach(file => {
           selectedFields.forEach(field => {
             if (!xData[field]) xData[field] = [];
             if (!yData[field]) yData[field] = [];
@@ -80,20 +101,60 @@ const enhance = compose(
       }
 
       const data = [];
-      files.forEach((file, i) => {
+      filteredFiles.forEach(file => {
         selectedFields.forEach((field, j) => {
+          const index = selectedFiles.findIndex(
+            fileName => file.name === fileName
+          );
+          const minValues = min
+            ? get(file, ['values', `${field} Min`], [])
+            : [];
+          const maxValues = max
+            ? get(file, ['values', `${field} Max`], [])
+            : [];
+
+          if (minValues.length)
+            data.push({
+              id: !large
+                ? `${field} Min`
+                : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}] Min`,
+              data: minValues.map((y, x) => ({
+                x: x + 1,
+                y: parseFloat(y)
+              })),
+              color: get(
+                colorsMaterial,
+                [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 1],
+                'black'
+              )
+            });
+          if (maxValues.length)
+            data.push({
+              id: !large
+                ? `${field} Max`
+                : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}] Max`,
+              data: maxValues.map((y, x) => ({
+                x: x + 1,
+                y: parseFloat(y)
+              })),
+              color: get(
+                colorsMaterial,
+                [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 1],
+                'black'
+              )
+            });
+
           data.push({
             id: !large
               ? field
-              : `${field} - #${files.findIndex(x => file.name === x.name) +
-                  1} [${groupBy}: ${file[groupBy]}]`,
+              : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}]`,
             data: get(file, ['values', field], []).map((y, x) => ({
               x: x + 1,
               y: parseFloat(y)
             })),
             color: get(
               colorsMaterial,
-              [(files.length === 1 ? j : i) * 2, 'palette', 6],
+              [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 6],
               'black'
             )
           });
@@ -151,7 +212,7 @@ const Chart = ({ data, acc, large }) => (
         data={data}
         margin={{
           top: 20,
-          right: !large ? 125 : 250,
+          right: !large ? 150 : 250,
           bottom: 25,
           left: 50
         }}
@@ -165,8 +226,8 @@ const Chart = ({ data, acc, large }) => (
           {
             anchor: 'bottom-right',
             direction: 'column',
-            translateX: !large ? 95 : 220,
-            itemWidth: !large ? 75 : 200,
+            translateX: !large ? 120 : 220,
+            itemWidth: !large ? 100 : 200,
             itemHeight: 20
           }
         ]}

@@ -14,6 +14,8 @@ const enhance = compose(
   withState('groupBy', 'setGroupBy', 'mode'),
   withState('folder', 'setFolder', 'json'),
   withState('acc', 'setAcc'),
+  withState('min', 'setMin'),
+  withState('max', 'setMax'),
   withState('scale', 'setScale'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
@@ -88,6 +90,10 @@ const App = ({
   setGroupBy,
   acc,
   setAcc,
+  min,
+  setMin,
+  max,
+  setMax,
   scale,
   setScale
 }) => (
@@ -111,6 +117,10 @@ const App = ({
       setGroupBy={setGroupBy}
       acc={acc}
       setAcc={setAcc}
+      min={min}
+      setMin={setMin}
+      max={max}
+      setMax={setMax}
       scale={scale}
       setScale={setScale}
     />
@@ -125,10 +135,13 @@ const App = ({
         groupBy={groupBy}
       />
       <Chart
-        files={files.filter(file => selectedFiles.includes(file.name))}
+        files={files}
+        selectedFiles={selectedFiles}
         selectedFields={selectedFields}
         groupBy={groupBy}
         acc={acc}
+        min={min}
+        max={max}
         scale={scale}
       />
     </div>

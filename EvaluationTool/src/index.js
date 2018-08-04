@@ -38,11 +38,13 @@ const files = sources
     const values = {};
     let length = 0;
     source.forEach(value => {
-      Object.keys(value).forEach(field => {
-        if (!values[field]) values[field] = [];
+      Object.keys(value)
+        .filter(x => x)
+        .forEach(field => {
+          if (!values[field]) values[field] = [];
 
-        values[field].push(value[field]);
-      });
+          values[field].push(value[field]);
+        });
 
       length += 1;
     });
@@ -50,7 +52,8 @@ const files = sources
     return {
       name,
       folder,
-      error: parseFloat(config['Error Max']),
+      errorPos: parseFloat(config['Error Pos Max']),
+      errorRot: parseFloat(config['Error Rot Max']),
       steps: parseFloat(config['Steps Max']),
       lambda: Math.floor(config.lambda * 10000) / 10000,
       file: get(

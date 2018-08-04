@@ -11,30 +11,32 @@ const Fields = ({
   onClickField
 }) => (
   <Menu.Menu position="right">
-    {fields.map(field => (
-      <Menu.Item
-        key={field}
-        active={selectedFields.includes(field)}
-        onClick={e => onClickField(e, field)}
-      >
-        {field}
-        {selectedFields.includes(field) && (
-          <Label
-            circular
-            empty
-            style={{
-              backgroundColor:
-                (selectedFiles.length === 1 || acc) &&
-                get(colorsMaterial, [
-                  selectedFields.findIndex(x => x === field) * 2,
-                  'palette',
-                  6
-                ])
-            }}
-          />
-        )}
-      </Menu.Item>
-    ))}
+    {fields
+      .filter(field => !field.includes(' Min') && !field.includes(' Max'))
+      .map(field => (
+        <Menu.Item
+          key={field}
+          active={selectedFields.includes(field)}
+          onClick={e => onClickField(e, field)}
+        >
+          {field}
+          {selectedFields.includes(field) && (
+            <Label
+              circular
+              empty
+              style={{
+                backgroundColor:
+                  (selectedFiles.length === 1 || acc) &&
+                  get(colorsMaterial, [
+                    selectedFields.findIndex(x => x === field) * 2,
+                    'palette',
+                    6
+                  ])
+              }}
+            />
+          )}
+        </Menu.Item>
+      ))}
   </Menu.Menu>
 );
 

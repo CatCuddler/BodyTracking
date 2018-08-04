@@ -51,35 +51,41 @@ const Files = ({
               }}
             >
               <b>{file.mode}</b> {file.orientation && 'with Orientation'}
-              <Label
-                style={{
-                  backgroundColor:
-                    !acc &&
-                    get(colorsMaterial, [
-                      selectedFiles.findIndex(x => x === file.name) * 2,
-                      'palette',
-                      6
-                    ])
-                }}
-                circular
-              >
-                {selectedFiles.length > 1
-                  ? `#${selectedFiles.findIndex(x => x === file.name) + 1}`
-                  : file.length}
-              </Label>
-              <div style={{ marginTop: '0.25rem', marginLeft: '-0.25rem' }}>
-                <Label color="teal" size="small" horizontal>
-                  {file.file}
-                </Label>
-                <Label color="blue" size="small" horizontal>
-                  {file.lambda}
-                </Label>
-                <Label color="red" size="small" horizontal>
-                  {file.error}
-                </Label>
-                <Label color="green" size="small" horizontal>
-                  {file.steps}
-                </Label>
+              <div style={{ marginTop: '0.5rem' }}>
+                <Label.Group size="small">
+                  <Label
+                    horizontal
+                    style={{
+                      color:
+                        !acc &&
+                        selectedFiles.findIndex(x => x === file.name) >= 0 &&
+                        'white',
+                      backgroundColor:
+                        !acc &&
+                        get(colorsMaterial, [
+                          selectedFiles.findIndex(x => x === file.name) * 2,
+                          'palette',
+                          6
+                        ])
+                    }}
+                  >
+                    {selectedFiles.length > 1
+                      ? `#${selectedFiles.findIndex(x => x === file.name) + 1}`
+                      : file.length}
+                  </Label>
+                  <Label color="teal" horizontal>
+                    {file.file || '-'}
+                  </Label>
+                  <Label color="blue" horizontal>
+                    {file.lambda || '-'}
+                  </Label>
+                  <Label color="red" horizontal>
+                    {file.errorPos || '-'} / {file.errorRot || '-'}
+                  </Label>
+                  <Label color="green" horizontal>
+                    {file.steps || '-'}
+                  </Label>
+                </Label.Group>
               </div>
             </Menu.Item>
           );

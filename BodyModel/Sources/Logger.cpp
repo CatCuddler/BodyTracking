@@ -50,7 +50,7 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	if (!initEvaluationData) {
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
 		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorPosMax << ";"  << errorRotMax << ";"  << maxSteps << ";" << "\n";
+		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorPosMax << ";"  << errorRotMax << ";"  << maxSteps << "\n";
 		evaluationConfigOutputFile.flush();
 		evaluationConfigOutputFile.close();
 		
@@ -58,7 +58,7 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Time;Time/Iteration;";
 		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Time Min;Time/Iteration Min;";
 		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Time Max;Time/Iteration Max;";
-		evaluationDataOutputFile << "Reached [%];\n";
+		evaluationDataOutputFile << "Reached [%]\n";
 		evaluationDataOutputFile.flush();
 		
 		initEvaluationData = true;
