@@ -50,14 +50,14 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	if (!initEvaluationData) {
 		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
 		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorPosMax << ";"  << errorRotMax << ";"  << maxSteps << "\n";
+		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMaxPos << ";"  << errorMaxRot << ";"  << maxSteps << "\n";
 		evaluationConfigOutputFile.flush();
 		evaluationConfigOutputFile.close();
 		
 		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Time;Time/Iteration;";
-		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Time Min;Time/Iteration Min;";
-		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Time Max;Time/Iteration Max;";
+		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time;Time/Iteration;";
+		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time Min;Time/Iteration Min;";
+		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time Max;Time/Iteration Max;";
 		evaluationDataOutputFile << "Reached [%]\n";
 		evaluationDataOutputFile.flush();
 		
@@ -72,9 +72,12 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	
 	// Save datas
 	for (int i = 0; i < 3; ++i) {
+		float error = sqrtf(Square(*(errorPos + i)) + Square(*(errorRot + i)));
+		
 		evaluationDataOutputFile << *(iterations + i) << ";";
 		evaluationDataOutputFile << *(errorPos + i) << ";";
 		evaluationDataOutputFile << *(errorRot + i) << ";";
+		evaluationDataOutputFile << error << ";";
 		evaluationDataOutputFile << *(time + i) << ";";
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}

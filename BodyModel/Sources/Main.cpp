@@ -145,8 +145,7 @@ namespace {
 	void calibrateTracker(int i) {
 		vec3 sollPos, diffPos, istPos = desPosition[i];
 		mat4 sollRot, diffRot, istRot = desRotation[i].matrix();
-		// todo: im live Betrieb soll der Avatar still in der Mitte in T-Pose stehen, man sieht nur die Endeffektoren die sich bewegen. dann geht man zu dem Avatar und stellt sich "in ihn rein" und drückt den Kalibrierungs-Button. Danach fängt der Avatar sich an zu bewegen!
-		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
+		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex); // todo: im live Betrieb soll der Avatar still in der Mitte in T-Pose stehen, man sieht nur die Endeffektoren die sich bewegen. dann geht man zu dem Avatar und stellt sich "in ihn rein" und drückt den Kalibrierungs-Button. Danach fängt der Avatar sich an zu bewegen!
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
 		diffRot = sollRot * istRot.Transpose();
@@ -632,8 +631,9 @@ namespace {
 		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2.0f));
 		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6.0f));
 		
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f));
+		// todo: check in live & remove!
+		// initRot = Kore::Quaternion(0, 0, 0, 1);
+		// initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f));
 		
 		for (int i = 0; i < numOfEndEffectors; ++i)
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);

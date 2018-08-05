@@ -49,7 +49,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while (i <= maxSteps && ((errorPos < 0 || errorPos > errorPosMax) || (errorRot < 0 || errorRot > errorRotMax)) && i < maxSteps && !stucked) {
+	while (i <= maxSteps && ((errorPos < 0 || errorPos > errorMaxPos) || (errorRot < 0 || errorRot > errorMaxRot)) && i < maxSteps && !stucked) {
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 		
 		prevDeltaTheta = deltaTheta;
@@ -93,7 +93,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 		
 		totalNum += 1;
-		evalReached += (errorPos < errorPosMax && errorRot < errorRotMax) ? 1 : 0;
+		evalReached += (errorPos < errorMaxPos && errorRot < errorMaxRot) ? 1 : 0;
 		
 		// iterations
 		evalIterations[0] += i;
