@@ -125,10 +125,15 @@ bool Logger::readData(int line, const int numOfEndEffectors, const char* filenam
 	
 	// Read line
 	for (int i = 0; i < numOfEndEffectors; ++i) {
-		rawPos[i] = Kore::vec3(0, 0, 0);
-		rawRot[i] = Kore::Quaternion(0, 0, 0, 1);
-		success = readLine(str, &rawPos[i], &rawRot[i]);
-		if (success) ++currLineNumber;
+		Kore::vec3 pos = Kore::vec3(0, 0, 0);
+		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
+		
+		success = readLine(str, &pos, &rot);
+		if (success) {
+			++currLineNumber;
+			rawPos[i] = pos;
+			rawRot[i] = rot;
+		}
 	}
 	
 	if (positionDataInputFile.eof()) {

@@ -57,4 +57,5 @@ namespace {
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
 	const bool eval = true;
+	const bool loop = true;
 }

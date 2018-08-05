@@ -23,6 +23,8 @@ using namespace Kore::Graphics4;
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
+	vec3 desPosition[numOfEndEffectors];
+	Kore::Quaternion desRotation[numOfEndEffectors];
 	
 	Logger* logger;
 	bool logData = false;
@@ -85,11 +87,11 @@ namespace {
 	int line = 0;
 #endif
 	
-	void renderTracker(MeshObject*& cube, vec3 desPosition, Kore::Quaternion desRotation) {
+	void renderTracker(int i) {
 		// Render desired position
-		cube->M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
-		Graphics4::setMatrix(mLocation, cube->M);
-		cube->render(tex);
+		cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
+		Graphics4::setMatrix(mLocation, cubes[i]->M);
+		cubes[i]->render(tex);
 	}
 	
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -140,44 +142,44 @@ namespace {
 		return matrixToQuaternion(diffRot, i + 1);
 	}
 	
-	void calibrateTracker(EndEffector* endEffector, vec3 istPos, Kore::Quaternion istRot) {
-		vec3 sollPos, diffPos;
-		mat4 sollRot, diffRot;
+	void calibrateTracker(int i) {
+		vec3 sollPos, diffPos, istPos = desPosition[i];
+		mat4 sollRot, diffRot, istRot = desRotation[i].matrix();
 		// todo: im live Betrieb soll der Avatar still in der Mitte in T-Pose stehen, man sieht nur die Endeffektoren die sich bewegen. dann geht man zu dem Avatar und stellt sich "in ihn rein" und drückt den Kalibrierungs-Button. Danach fängt der Avatar sich an zu bewegen!
-		BoneNode* bone = avatar->getBoneWithIndex(endEffector->boneIndex);
+		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
-		diffRot = sollRot * istRot.matrix().Transpose();
+		diffRot = sollRot * istRot.Transpose();
 		
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		diffPos = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
 		
-		endEffector->offsetPosition = diffPos;
-		endEffector->offsetRotation = matrixToQuaternion(diffRot);
+		tracker[i]->offsetPosition = diffPos;
+		tracker[i]->offsetRotation = matrixToQuaternion(diffRot);
 	}
 	
-	void executeMovement(EndEffector* endEffector, vec3& desPosition, Kore::Quaternion& desRotation) {
+	void executeMovement(int i) {
 		// Add offset to endeffector
-		desRotation.rotate(endEffector->offsetRotation);
-		desPosition = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose() * mat4::Translation(endEffector->offsetPosition.x(), endEffector->offsetPosition.y(), endEffector->offsetPosition.z()) * vec4(0, 0, 0, 1);
+		desRotation[i].rotate(tracker[i]->offsetRotation);
+		desPosition[i] = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
 		
-		if (logData) logger->saveData(desPosition, desRotation);
+		if (logData) logger->saveData(desPosition[i], desRotation[i]);
 		
 		// avatar movement
 		if (calibratedAvatar) {
 			// Transform desired position to the character local coordinate system
-			vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
+			vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
+			Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
 			
-			if (endEffector->boneIndex == tracker[rootIndex]->boneIndex) {
-				avatar->setFixedPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
+			if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex) {
+				avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
 
 				// todo: live braucht das aber eval von aufgezeichneten Daten hat gezeigt dass bspw. 4,5 Iterationen statt 4 benötigt werden. Kann man auf den Teil irgendwie verzichten?
 				// initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
 				// initTransInv = initTrans.Invert();
 			} else
-				avatar->setDesiredPositionAndOrientation(endEffector->boneIndex, finalPos, finalRot);
+				avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
 		}
 	}
 	
@@ -338,8 +340,6 @@ namespace {
 	}
 	
 	void update() {
-		vec3 desPosition[numOfEndEffectors];
-		Kore::Quaternion desRotation[numOfEndEffectors];
 		bool firstPersonMonitor = false;
 		mat4 eye, projection;
 		
@@ -349,24 +349,12 @@ namespace {
 		
 		// Move position of camera based on WASD keys, and XZ keys for up and down
 		const float moveSpeed = 0.1f;
-		if (S) {
-			cameraPosition.z() += moveSpeed;
-		}
-		else if (W) {
-			cameraPosition.z() -= moveSpeed;
-		}
-		if (A) {
-			cameraPosition.x() -= moveSpeed;
-		}
-		else if (D) {
-			cameraPosition.x() += moveSpeed;
-		}
-		if (Z) {
-			cameraPosition.y() += moveSpeed;
-		}
-		else if (X) {
-			cameraPosition.y() -= moveSpeed;
-		}
+		if (A) cameraPosition.x() -= moveSpeed;
+		else if (D) cameraPosition.x() += moveSpeed;
+		if (Z) cameraPosition.y() += moveSpeed;
+		else if (X) cameraPosition.y() -= moveSpeed;
+		if (S) cameraPosition.z() += moveSpeed;
+		else if (W) cameraPosition.z() -= moveSpeed;
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -387,7 +375,7 @@ namespace {
 				desPosition[i] = controller.vrPose.position;
 				desRotation[i] = controller.vrPose.orientation;
 				
-				executeMovement(tracker[i], desPosition[i], desRotation[i]);
+				executeMovement(i);
 			}
 		
 		// Render for both eyes
@@ -409,7 +397,7 @@ namespace {
 			// Render tracker
 			int i = 0;
 			while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
-				renderTracker(cubes[i], desPosition[i], desRotation[i]);
+				renderTracker(i);
 				i++;
 			}
 			
@@ -433,20 +421,19 @@ namespace {
 				// Calibration
 				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
 				if (!currentFile->isCalibrated) {
-					calibrateTracker(tracker[i], desPosition[i], desRotation[i]);
+					calibrateTracker(i);
 					
 					if (i == numOfEndEffectors - 1)
 						currentFile->calibrated();
 				}
 				
-				executeMovement(tracker[i], desPosition[i], desRotation[i]);
+				executeMovement(i);
 			}
 			
 			line += numOfEndEffectors;
 		} else {
 			if (eval) logger->saveEvaluationData(avatar);
-			
-			initVars();
+			if (loop) initVars();
 		}
 #endif
 		
@@ -456,8 +443,7 @@ namespace {
 		if (!firstPersonMonitor) {
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
-		}
-		else {
+		} else {
 			Graphics4::setMatrix(vLocation, eye);
 			Graphics4::setMatrix(pLocation, projection);
 		}
@@ -469,7 +455,7 @@ namespace {
 		// Render tracker
 		int i = 0;
 		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
-			renderTracker(cubes[i], desPosition[i], desRotation[i]);
+			renderTracker(i);
 			i++;
 		}
 		
@@ -643,14 +629,14 @@ namespace {
 		
 		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
-		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2));
-		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6));
+		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2.0f));
+		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6.0f));
 		
 		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f));
 		
 		for (int i = 0; i < numOfEndEffectors; ++i)
-			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05);
+			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);
 		
 		if (renderRoom) {
 			loadLivingRoomShader();
