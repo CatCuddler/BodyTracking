@@ -80,8 +80,6 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	}
 	evaluationDataOutputFile << avatar->getReached() << ";" << "\n";
 	evaluationDataOutputFile.flush();
-	
-	avatar->resetStats();
 }
 
 bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {

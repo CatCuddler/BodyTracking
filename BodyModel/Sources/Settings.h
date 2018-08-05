@@ -22,8 +22,8 @@ struct DataFile {
 	DataFile(const char* init, const char* position, bool isCalibrated = true) : initialTransFilename(init), positionDataFilename(position), isCalibrated(isCalibrated) {}
 	
 	// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-	void calibrated() {
-		isCalibrated = true;
+	void calibrated(bool state = true) {
+		isCalibrated = state;
 	}
 };
 

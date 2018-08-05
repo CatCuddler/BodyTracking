@@ -7,7 +7,34 @@
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
-	resetStats();
+	
+	totalNum = 0;
+	evalReached = 0;
+	
+	// iterations
+	evalIterations[0] = 0;
+	evalIterations[1] = FLT_MAX;
+	evalIterations[2] = FLT_MIN;
+	
+	// pos-error
+	evalErrorPos[0] = 0;
+	evalErrorPos[1] = FLT_MAX;
+	evalErrorPos[2] = FLT_MIN;
+	
+	// rot-error
+	evalErrorRot[0] = 0;
+	evalErrorRot[1] = FLT_MAX;
+	evalErrorRot[2] = FLT_MIN;
+	
+	// time
+	evalTime[0] = 0;
+	evalTime[1] = FLT_MAX;
+	evalTime[2] = FLT_MIN;
+	
+	// time per iteration
+	evalTimeIteration[0] = 0;
+	evalTimeIteration[1] = FLT_MAX;
+	evalTimeIteration[2] = FLT_MIN;
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
@@ -256,34 +283,4 @@ float* InverseKinematics::getTimeIteration() {
 	evalTimeIteration[0] = totalNum != 0 ? evalTimeIteration[0] / (float) totalNum : -1;
 	
 	return evalTimeIteration;
-}
-
-void InverseKinematics::resetStats() {
-	totalNum = 0;
-	evalReached = 0;
-	
-	// iterations
-	evalIterations[0] = 0;
-	evalIterations[1] = FLT_MAX;
-	evalIterations[2] = FLT_MIN;
-	
-	// pos-error
-	evalErrorPos[0] = 0;
-	evalErrorPos[1] = FLT_MAX;
-	evalErrorPos[2] = FLT_MIN;
-	
-	// rot-error
-	evalErrorRot[0] = 0;
-	evalErrorRot[1] = FLT_MAX;
-	evalErrorRot[2] = FLT_MIN;
-	
-	// time
-	evalTime[0] = 0;
-	evalTime[1] = FLT_MAX;
-	evalTime[2] = FLT_MIN;
-	
-	// time per iteration
-	evalTimeIteration[0] = 0;
-	evalTimeIteration[1] = FLT_MAX;
-	evalTimeIteration[2] = FLT_MIN;
 }

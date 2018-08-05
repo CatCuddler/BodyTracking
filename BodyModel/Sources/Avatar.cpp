@@ -132,7 +132,3 @@ float* Avatar::getTimeIteration() const {
 float Avatar::getHeight() const {
 	return currentHeight;
 }
-
-void Avatar::resetStats() {
-	invKin->resetStats();
-}

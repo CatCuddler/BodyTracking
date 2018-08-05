@@ -26,7 +26,5 @@ public:
 	float* getTime() const;
 	float* getTimeIteration() const;
 	
-	void resetStats();
-	
 	float getHeight() const;
 };

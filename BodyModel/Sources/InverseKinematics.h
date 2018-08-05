@@ -18,8 +18,6 @@ public:
 	float* getTime();
 	float* getTimeIteration();
 	
-	void resetStats();
-	
 private:
 	std::vector<BoneNode*> bones;
 	

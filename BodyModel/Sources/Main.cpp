@@ -312,6 +312,31 @@ namespace {
 	}
 #endif
 	
+	void initVars() {
+		// init & calibrate avatar
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		calibratedAvatar = true; // recorded Data are always calibrated!
+		
+		currentFile->calibrated(false);
+		
+		// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
+		if (!currentFile->isCalibrated)
+			avatar->setScale(1.0744f);
+		
+		vec3 initPos = vec3(0, 0, 0);
+		
+		log(Info, "Read data from file %s", currentFile->initialTransFilename);
+		logger->readInitTransAndRot(currentFile->initialTransFilename, &initPos, &initRot);
+		
+		initRot.normalize();
+		initRotInv = initRot.invert();
+		
+		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
+		
+		line = 0;
+	}
+	
 	void update() {
 		vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
@@ -421,7 +446,7 @@ namespace {
 		} else {
 			if (eval) logger->saveEvaluationData(avatar);
 			
-			line = 0;
+			initVars();
 		}
 #endif
 		
@@ -611,15 +636,9 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
+		
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
-#else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		calibratedAvatar = true; // recorded Data are always calibrated!
-		
-		// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-		if (!currentFile->isCalibrated)
-			avatar->setScale(1.0744f);
 #endif
 		
 		// camera
@@ -647,17 +666,7 @@ namespace {
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 #else
-		// init & calibrate avatar
-		vec3 initPos = vec3(0, 0, 0);
-		
-		log(Info, "Read data from file %s", currentFile->initialTransFilename);
-		logger->readInitTransAndRot(currentFile->initialTransFilename, &initPos, &initRot);
-		
-		initRot.normalize();
-		initRotInv = initRot.invert();
-		
-		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
+		initVars();
 #endif
 	}
 }
