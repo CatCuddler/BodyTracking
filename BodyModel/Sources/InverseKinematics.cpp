@@ -49,7 +49,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while (i <= maxSteps && ((errorPos < 0 || errorPos > errorMaxPos) || (errorRot < 0 || errorRot > errorMaxRot)) && i < maxSteps && !stucked) {
+	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < maxSteps && !stucked) {
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 		
 		prevDeltaTheta = deltaTheta;
@@ -66,10 +66,14 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		}
 		
 		// check if ik stucked (runned in extrema)
-		int j = 0;
-		while (!stucked && j < prevDeltaTheta.size()) {
-			stucked = fabs(prevDeltaTheta[j] - deltaTheta[j]) < nearNull;
-			j++;
+		if (i) {
+			float sum = 0;
+			int j = 0;
+			while (!stucked && j < prevDeltaTheta.size()) {
+				sum += fabs(prevDeltaTheta[j] - deltaTheta[j]);
+				j++;
+			}
+			stucked = sum < nearNull;
 		}
 		
 		applyChanges(deltaTheta, targetBone);
