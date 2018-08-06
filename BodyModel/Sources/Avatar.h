@@ -20,6 +20,7 @@ public:
 	BoneNode* getBoneWithIndex(int index) const;
 	
 	float getReached() const;
+	float getStucked() const;
 	float* getIterations() const;
 	float* getErrorPos() const;
 	float* getErrorRot() const;

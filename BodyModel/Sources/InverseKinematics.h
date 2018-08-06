@@ -12,6 +12,7 @@ public:
 	void initializeBone(BoneNode* bone);
 	
 	float getReached();
+	float getStucked();
 	float* getIterations();
 	float* getErrorPos();
 	float* getErrorRot();
@@ -35,6 +36,6 @@ private:
 	void applyJointConstraints(BoneNode* targetBone);
 	float clampValue(float minVal, float maxVal, float value);
 	
-	int totalNum = 0, evalReached = 0;
+	int totalNum = 0, evalReached = 0, evalStucked = 0;
 	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];
 };

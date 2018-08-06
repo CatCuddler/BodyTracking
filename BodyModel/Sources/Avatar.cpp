@@ -109,6 +109,10 @@ float Avatar::getReached() const {
 	return invKin->getReached();
 }
 
+float Avatar::getStucked() const {
+	return invKin->getStucked();
+}
+
 float* Avatar::getIterations() const {
 	return invKin->getIterations();
 }

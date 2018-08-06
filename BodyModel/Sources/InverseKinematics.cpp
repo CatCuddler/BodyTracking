@@ -10,6 +10,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	
 	totalNum = 0;
 	evalReached = 0;
+	evalStucked = 0;
 	
 	// iterations
 	evalIterations[0] = 0;
@@ -98,6 +99,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		
 		totalNum += 1;
 		evalReached += (errorPos < errorMaxPos && errorRot < errorMaxRot) ? 1 : 0;
+		evalStucked += stucked ? 1 : 0;
 		
 		// iterations
 		evalIterations[0] += i;
@@ -257,6 +259,10 @@ void InverseKinematics::setJointConstraints() {
 
 float InverseKinematics::getReached() {
 	return totalNum != 0 ? (float) evalReached / (float) totalNum : -1;
+}
+
+float InverseKinematics::getStucked() {
+	return totalNum != 0 ? (float) evalStucked / (float) totalNum : -1;
 }
 
 float* InverseKinematics::getIterations() {

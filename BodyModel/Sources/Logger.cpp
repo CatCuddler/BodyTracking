@@ -55,10 +55,10 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 		evaluationConfigOutputFile.close();
 		
 		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time;Time/Iteration;";
-		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time Min;Time/Iteration Min;";
-		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time Max;Time/Iteration Max;";
-		evaluationDataOutputFile << "Reached [%]\n";
+		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
+		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
+		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
+		evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
 		evaluationDataOutputFile.flush();
 		
 		initEvaluationData = true;
@@ -81,7 +81,7 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 		evaluationDataOutputFile << *(time + i) << ";";
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}
-	evaluationDataOutputFile << avatar->getReached() << ";" << "\n";
+	evaluationDataOutputFile << avatar->getReached() << ";" << avatar->getStucked() << "\n";
 	evaluationDataOutputFile.flush();
 }
 
