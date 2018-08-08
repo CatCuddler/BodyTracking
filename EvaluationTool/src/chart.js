@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { compose, withPropsOnChange } from 'recompose';
-import { get, sortBy } from 'lodash';
+import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
 import { colorsMaterial } from '@filou/core';
 
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
@@ -47,8 +47,8 @@ const enhance = compose(
       'files',
       'selectedFiles',
       'selectedFields',
+      'sortBy',
       'groupBy',
-      'acc',
       'min',
       'max'
     ],
@@ -56,8 +56,8 @@ const enhance = compose(
       files,
       selectedFiles,
       selectedFields,
+      sortBy,
       groupBy,
-      acc,
       min,
       max,
       large
@@ -66,40 +66,79 @@ const enhance = compose(
         selectedFiles.includes(file.name)
       );
 
-      if (acc) {
-        const xData = {};
-        const yData = {};
+      // group multiple files to one
+      if (groupBy) {
+        const data = [];
+        const groups = _groupBy(filteredFiles, sortBy);
 
-        filteredFiles.forEach(file => {
-          selectedFields.forEach(field => {
-            if (!xData[field]) xData[field] = [];
-            if (!yData[field]) yData[field] = [];
+        const extendedFields = [];
+        selectedFields.forEach(field => {
+          extendedFields.push(field);
 
-            xData[field].push(file[groupBy]);
-            yData[field].push(
-              file.values[field].reduce((p, c, i, a) => p + c / a.length, 0)
-            );
-          });
+          if (min && get(selectedFiles, [0, 'values', `${field} Min`], []))
+            extendedFields.push(`${field} Min`);
+          if (max && get(selectedFiles, [0, 'values', `${field} Max`], []))
+            extendedFields.push(`${field} Max`);
         });
 
-        return {
-          data: Object.keys(xData).map((field, i) => {
-            let data = xData[field].map((x, j) => ({
+        Object.keys(groups).forEach((group, index) => {
+          const xData = {};
+          const yData = {};
+
+          groups[group].forEach(file => {
+            extendedFields.forEach(field => {
+              if (!xData[field]) xData[field] = [];
+              if (!yData[field]) yData[field] = [];
+
+              xData[field].push(file[groupBy]);
+              yData[field].push(
+                get(file, ['values', field], []).reduce(
+                  (p, c, i, a) => p + c / a.length,
+                  0
+                )
+              );
+            });
+          });
+
+          Object.keys(xData).forEach(field => {
+            const groupNames = Object.keys(groups);
+            let chartData = xData[field].map((x, j) => ({
               x: x.toString(),
               y: Math.floor(yData[field][j] * 1000) / 1000
             }));
-            data = averageDuplicates(data);
-            data = sortBy(data, d => d.x);
+            chartData = averageDuplicates(chartData);
+            chartData = _sortBy(chartData, d => d.x);
 
-            return {
-              id: field,
-              data,
-              color: get(colorsMaterial, [i * 2, 'palette', 6], 'black')
-            };
-          })
-        };
+            const color =
+              groupNames.length > 1
+                ? index
+                : Object.keys(xData).findIndex(
+                    x => x === field.replace(' Min', '').replace(' Max', '')
+                  );
+            const palette =
+              (min && field.includes(' Min')) || (max && field.includes(' Max'))
+                ? 1
+                : 6;
+
+            data.push({
+              id:
+                groupNames.length > 1
+                  ? `${field} - [${sortBy}: ${group}]`
+                  : field,
+              data: chartData,
+              color: get(
+                colorsMaterial,
+                [color * 2, 'palette', palette],
+                'black'
+              )
+            });
+          });
+        });
+
+        return { data };
       }
 
+      // generate min/normal/max-charts
       const data = [];
       filteredFiles.forEach(file => {
         selectedFields.forEach((field, j) => {
@@ -117,7 +156,7 @@ const enhance = compose(
             data.push({
               id: !large
                 ? `${field} Min`
-                : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}] Min`,
+                : `${field} - #${index + 1} [${sortBy}: ${file[sortBy]}] Min`,
               data: minValues.map((y, x) => ({
                 x: x + 1,
                 y: parseFloat(y)
@@ -132,7 +171,7 @@ const enhance = compose(
             data.push({
               id: !large
                 ? `${field} Max`
-                : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}] Max`,
+                : `${field} - #${index + 1} [${sortBy}: ${file[sortBy]}] Max`,
               data: maxValues.map((y, x) => ({
                 x: x + 1,
                 y: parseFloat(y)
@@ -147,7 +186,7 @@ const enhance = compose(
           data.push({
             id: !large
               ? field
-              : `${field} - #${index + 1} [${groupBy}: ${file[groupBy]}]`,
+              : `${field} - #${index + 1} [${sortBy}: ${file[sortBy]}]`,
             data: get(file, ['values', field], []).map((y, x) => ({
               x: x + 1,
               y: parseFloat(y)
@@ -184,21 +223,24 @@ const enhance = compose(
           };
         })
   })),
-  withPropsOnChange(['files', 'data', 'acc'], ({ files, data, acc }) => {
-    if (files.length === 1 || acc) return {};
+  withPropsOnChange(
+    ['files', 'data', 'groupBy'],
+    ({ files, data, groupBy }) => {
+      if (files.length === 1 || groupBy) return {};
 
-    // reduce all data to consistent length
-    let min;
-    data.forEach(d => {
-      const length = get(d, ['data', 'length']);
-      if (!min || length < min) min = length;
-    });
+      // reduce all data to consistent length
+      let min;
+      data.forEach(d => {
+        const length = get(d, ['data', 'length']);
+        if (!min || length < min) min = length;
+      });
 
-    return { data: data.map(d => ({ ...d, data: d.data.slice(0, min) })) };
-  })
+      return { data: data.map(d => ({ ...d, data: d.data.slice(0, min) })) };
+    }
+  )
 );
 
-const Chart = ({ data, acc, large }) => (
+const Chart = ({ data, groupBy, large }) => (
   <div
     style={{
       flexGrow: 1,
@@ -219,7 +261,7 @@ const Chart = ({ data, acc, large }) => (
         // minY="auto"
         dotSize={10}
         enableDotLabel
-        enableArea={acc}
+        enableArea={!!groupBy}
         animate
         colorBy={e => e.color}
         legends={[

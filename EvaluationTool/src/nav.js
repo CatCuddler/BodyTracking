@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, Label, Dropdown, Checkbox } from 'semantic-ui-react';
+import { Menu, Dropdown, Checkbox } from 'semantic-ui-react';
 import Fields from './fields';
+import Select from './select';
 
 const Nav = ({
   selectedFiles,
@@ -10,10 +11,10 @@ const Nav = ({
   folders,
   folder,
   setFolder,
+  sortBy,
+  setSortBy,
   groupBy,
   setGroupBy,
-  acc,
-  setAcc,
   min,
   setMin,
   max,
@@ -38,56 +39,10 @@ const Nav = ({
       </Dropdown.Menu>
     </Dropdown>
 
-    <Dropdown item text={groupBy}>
-      <Dropdown.Menu>
-        <Dropdown.Item
-          onClick={() => setGroupBy('mode')}
-          active={groupBy === 'mode'}
-        >
-          <Label circular empty />
-          mode
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => setGroupBy('orientation')}
-          active={groupBy === 'orientation'}
-        >
-          <Label circular empty />
-          orientation
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => setGroupBy('file')}
-          active={groupBy === 'file'}
-        >
-          <Label circular empty />
-          file
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => setGroupBy('lambda')}
-          active={groupBy === 'lambda'}
-        >
-          <Label color="blue" circular empty />
-          lambda
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => setGroupBy('error')}
-          active={groupBy === 'error'}
-        >
-          <Label color="red" circular empty />
-          error
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => setGroupBy('steps')}
-          active={groupBy === 'steps'}
-        >
-          <Label color="green" circular empty />
-          steps
-        </Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
+    <Select value={sortBy} setValue={setSortBy} />
 
-    <Menu.Item>
-      <Checkbox checked={acc} onClick={() => setAcc(!acc)} label="merge" />
-    </Menu.Item>
+    <Select value={groupBy} setValue={setGroupBy} allowNull />
+
     <Menu.Item>
       <Checkbox
         checked={scale}
@@ -103,7 +58,7 @@ const Nav = ({
     </Menu.Item>
 
     <Fields
-      acc={acc}
+      groupBy={groupBy}
       selectedFiles={selectedFiles}
       fields={fields}
       selectedFields={selectedFields}

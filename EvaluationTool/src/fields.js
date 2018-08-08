@@ -4,7 +4,7 @@ import { colorsMaterial } from '@filou/core';
 import { get } from 'lodash';
 
 const Fields = ({
-  acc,
+  groupBy,
   selectedFiles,
   fields,
   selectedFields,
@@ -26,7 +26,7 @@ const Fields = ({
               empty
               style={{
                 backgroundColor:
-                  (selectedFiles.length === 1 || acc) &&
+                  (selectedFiles.length === 1 || !!groupBy) &&
                   get(colorsMaterial, [
                     selectedFields.findIndex(x => x === field) * 2,
                     'palette',

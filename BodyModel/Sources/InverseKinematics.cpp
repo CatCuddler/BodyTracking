@@ -125,9 +125,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 }
 
 void InverseKinematics::updateBone(BoneNode* bone) {
-	if (bone->parent->initialized) {
+	if (bone->parent->initialized)
 		bone->combined = bone->parent->combined * bone->local;
-	}
 }
 
 void InverseKinematics::initializeBone(BoneNode* bone) {

@@ -11,9 +11,9 @@ const intersect = (xs, ys, ...rest) =>
     : intersect(xs.filter(x => ys.some(y => y === x), ...rest));
 
 const enhance = compose(
-  withState('groupBy', 'setGroupBy', 'mode'),
+  withState('sortBy', 'setSortBy', 'mode'),
+  withState('groupBy', 'setGroupBy'),
   withState('folder', 'setFolder', 'json'),
-  withState('acc', 'setAcc'),
   withState('min', 'setMin'),
   withState('max', 'setMax'),
   withState('scale', 'setScale'),
@@ -86,10 +86,10 @@ const App = ({
   fields,
   selectedFields,
   onClickField,
+  sortBy,
+  setSortBy,
   groupBy,
   setGroupBy,
-  acc,
-  setAcc,
   min,
   setMin,
   max,
@@ -113,10 +113,10 @@ const App = ({
       folders={folders}
       folder={folder}
       setFolder={setFolder}
+      sortBy={sortBy}
+      setSortBy={setSortBy}
       groupBy={groupBy}
       setGroupBy={setGroupBy}
-      acc={acc}
-      setAcc={setAcc}
       min={min}
       setMin={setMin}
       max={max}
@@ -127,19 +127,19 @@ const App = ({
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
       <Files
-        acc={acc}
         files={files}
         selectedFiles={selectedFiles}
         onClickFile={onClickFile}
         onClickFiles={onClickFiles}
+        sortBy={sortBy}
         groupBy={groupBy}
       />
       <Chart
         files={files}
         selectedFiles={selectedFiles}
         selectedFields={selectedFields}
+        sortBy={sortBy}
         groupBy={groupBy}
-        acc={acc}
         min={min}
         max={max}
         scale={scale}
