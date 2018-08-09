@@ -28,6 +28,7 @@ namespace {
 	
 	Logger* logger;
 	bool logData = false;
+	int line = 0;
 	
 	double startTime;
 	double lastTime;
@@ -83,12 +84,10 @@ namespace {
 	
 #ifdef KORE_STEAMVR
 	float currentUserHeight;
-#else
-	int line = 0;
+	bool initedButtons = false;
 #endif
 	
 	void renderTracker(int i) {
-		// Render desired position
 		cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
 		Graphics4::setMatrix(mLocation, cubes[i]->M);
 		cubes[i]->render(tex);
@@ -165,66 +164,48 @@ namespace {
 		
 		if (logData) logger->saveData(desPosition[i], desRotation[i]);
 		
-		// avatar movement
-		if (calibratedAvatar) {
-			// Transform desired position to the character local coordinate system
-			vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
-			Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
+		// Transform desired position to the character local coordinate system
+		vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
+		Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
+		
+		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex) {
+			avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
 			
-			if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex) {
-				avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-
-				// todo: live braucht das aber eval von aufgezeichneten Daten hat gezeigt dass bspw. 4,5 Iterationen statt 4 benötigt werden. Kann man auf den Teil irgendwie verzichten?
-				// initTrans = mat4::Translation(desPosition.x(), 0, desPosition.z()) * initRot.matrix().Transpose();
-				// initTransInv = initTrans.Invert();
-			} else
-				avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-		}
+			// todo: live braucht das aber eval von aufgezeichneten Daten hat gezeigt dass bspw. 4,5 Iterationen statt 4 benötigt werden. Kann man auf den Teil irgendwie verzichten?
+			initTrans = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
+			initTransInv = initTrans.Invert();
+		} else
+			avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
 	}
 	
 	
 #ifdef KORE_STEAMVR
 	void calibrateAvatar();
-
-	void gamepadButton(int buttonNr, float value) {
-		// Menu button => calibrating
-		if (buttonNr == 1) {
-			if (value == 1) {
-				if (!calibratedAvatar) {
-					calibrateAvatar();
-					calibratedAvatar = true;
-					
-					log(Info, "Calibrate avatar");
-				} else {
-					// todo: Avatar "loslassen" (bleibt im Raum stehen und nur die Endeffektoren bewegen sich - notwendig falls man Kalibrierung noch mal machen will)
-					calibratedAvatar = false;
-					
-					log(Info, "Release avatar");
-				}
-			}
-		}
+	
+	void setSize() {
+		float currentAvatarHeight = avatar->getHeight();
 		
-		// Trigger button => logging
-		if (buttonNr == 33) {
-			if (value == 1) {
-				logData = true;
-
-				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-
-				log(Info, "Start logging data.");
-			} else {
-				logData = false;
-				log(Info, "Stop recording data.");
-			}
-		}
+		SensorState state = VrInterface::getSensorState(0);
+		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
+		currentUserHeight = hmdPos.y();
+		
+		// todo: float factor = 173.3f / 161.3f; // ø Körperhöhe / ø Augenhöhe = 1.0744f
+		float scale = currentUserHeight / currentAvatarHeight;
+		avatar->setScale(scale);
+		
+		log(Info, "current avatar height %f, current user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
 	void initController() {
-		// Get left and right tracker index
 		VrPoseState controller;
+		
+		// set Avatar size
+		setSize();
+		
+		// Get left and right tracker index
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
+			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
@@ -234,16 +215,19 @@ namespace {
 					if (trackerTransPos.x() > 0) {
 						log(Info, "leftFootTrackerIndex: %i -> %i", tracker[3]->trackerIndex, i);
 						tracker[3]->setTrackerIndex(i);
-					} else {
+					}
+					else {
 						log(Info, "rightFootTrackerIndex: %i -> %i", tracker[4]->trackerIndex, i);
 						tracker[4]->setTrackerIndex(i);
 					}
-				} else {
+				}
+				else {
 					//back tracker
 					log(Info, "backTrackerIndex: %i -> %i", tracker[2]->trackerIndex, i);
 					tracker[2]->setTrackerIndex(i);
 				}
-			} else if (controller.trackedDevice == TrackedDevice::Controller) {
+			}
+			else if (controller.trackedDevice == TrackedDevice::Controller) {
 				//Hand tracker
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
@@ -256,22 +240,65 @@ namespace {
 					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[1]->trackerIndex, i);
 					tracker[1]->setTrackerIndex(i);
 				}
-				
-				//Gamepad::get(i)->Axis = gamepadAxis;
-				Gamepad::get(i)->Button = gamepadButton;
 			}
 		}
 	}
 	
-	void calibrateAvatar() {
-		float currentAvatarHeight = avatar->getHeight();
+	void gamepadButton(int buttonNr, float value) {
+		// Menu button => calibrating
+		if (buttonNr == 1 && value == 1) {
+			if (!currentUserHeight)
+				initController();
+			
+			if (!calibratedAvatar) {
+				calibrateAvatar();
+				calibratedAvatar = true;
+				
+				log(Info, "Calibrate avatar");
+			} else {
+				calibratedAvatar = false;
+				
+				log(Info, "Release avatar");
+			}
+		}
 		
+		// Trigger button => logging
+		if (buttonNr == 33) {
+			if (value == 1) {
+				logData = true;
+				
+				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
+				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
+				
+				log(Info, "Start logging data.");
+			} else {
+				logData = false;
+				log(Info, "Stop recording data.");
+			}
+		}
+		
+		// Grip button => init Controller
+		if (buttonNr == 2 && value == 1 && !calibratedAvatar) {
+			initController();
+			log(Info, "Init Controller");
+		}
+	}
+	
+	void initButtons() {
+		VrPoseState controller;
+		
+		for (int i = 0; i < 16; ++i) {
+			controller = VrInterface::getController(i);
+			
+			if (controller.trackedDevice == TrackedDevice::Controller)
+				Gamepad::get(i)->Button = gamepadButton;
+		}
+		initedButtons = true;
+	}
+	
+	void calibrateAvatar() {
 		SensorState state = VrInterface::getSensorState(0);
 		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
-		currentUserHeight = hmdPos.y();
-		
-		float scale = currentUserHeight / currentAvatarHeight; // todo: / 161.3f * 173.3f; // : ø Augenhöhe * ø Körperhöhe = 1.0744f
-		avatar->setScale(scale);
 		
 		// Set initial transformation
 		initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
@@ -287,24 +314,23 @@ namespace {
 		avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
 		initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
 		
-		log(Info, "current avatar height %f, current user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
-		
 		// calibrate to T-Pose
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			VrPoseState controller = VrInterface::getController(tracker[i]->trackerIndex);
 			
+			desPosition[i] = controller.vrPose.position;
+			desRotation[i] = controller.vrPose.orientation;
+			
 			// todo: vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			// Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
 			
-			calibrateTracker(tracker[i], controller.vrPose.position, controller.vrPose.orientation);
+			calibrateTracker(i);
 			
 			/* todo: if (i == 2) {
 			 initTrans = mat4::Translation(controller.vrPose.position.x(), 0, controller.vrPose.position.z()) * initRot.matrix().Transpose();
 			 initTransInv = initTrans.Invert();
 			 } */
 		}
-		
-		initController();
 		
 		if (logData) {
 			vec4 initPos = initTrans * vec4(0, 0, 0, 1);
@@ -340,7 +366,6 @@ namespace {
 	
 	void update() {
 		bool firstPersonMonitor = false;
-		mat4 eye, projection;
 		
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -362,8 +387,9 @@ namespace {
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
 		SensorState state;
-		eye = state.pose.vrPose.eye;
-		projection = state.pose.vrPose.projection;
+		
+		if (!initedButtons)
+			initButtons();
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i)
@@ -374,7 +400,8 @@ namespace {
 				desPosition[i] = controller.vrPose.position;
 				desRotation[i] = controller.vrPose.orientation;
 				
-				executeMovement(i);
+				if (calibratedAvatar)
+					executeMovement(i);
 			}
 		
 		// Render for both eyes
@@ -386,8 +413,8 @@ namespace {
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 			
 			state = VrInterface::getSensorState(j);
-			Graphics4::setMatrix(vLocation, eye);
-			Graphics4::setMatrix(pLocation, projection);
+			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
+			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 			
 			// Animate avatar
 			Graphics4::setMatrix(mLocation, initTrans);
@@ -401,7 +428,7 @@ namespace {
 			}
 			
 			// Render living room
-			renderLivingRoom(eye, projection);
+			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -413,6 +440,35 @@ namespace {
 		
 		// Render on monitor
 		Graphics4::setPipeline(pipeline);
+		
+		// Get projection and view matrix
+		mat4 P = getProjectionMatrix();
+		mat4 V = getViewMatrix();
+		if (!firstPersonMonitor) {
+			Graphics4::setMatrix(vLocation, V);
+			Graphics4::setMatrix(pLocation, P);
+		}
+		else {
+			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
+			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
+		}
+		Graphics4::setMatrix(mLocation, initTrans);
+		
+		// Animate avatar
+		avatar->animate(tex, deltaT);
+		
+		// Render tracker
+		int i = 0;
+		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+			renderTracker(i);
+			i++;
+		}
+		
+		// Render living room
+		if (renderRoom) {
+			if (!firstPersonMonitor) renderLivingRoom(V, P);
+			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		}
 #else
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
@@ -434,18 +490,12 @@ namespace {
 			if (eval) logger->saveEvaluationData(avatar);
 			if (loop) initVars();
 		}
-#endif
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
-		if (!firstPersonMonitor) {
-			Graphics4::setMatrix(vLocation, V);
-			Graphics4::setMatrix(pLocation, P);
-		} else {
-			Graphics4::setMatrix(vLocation, eye);
-			Graphics4::setMatrix(pLocation, projection);
-		}
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
 		
 		// Animate avatar
@@ -459,11 +509,8 @@ namespace {
 		}
 		
 		// Render living room
-		if (renderRoom) {
-			if (!firstPersonMonitor) renderLivingRoom(V, P);
-			else renderLivingRoom(eye, projection);
-		}
-		
+		if (renderRoom) renderLivingRoom(V, P);
+#endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
@@ -624,16 +671,27 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		
+		BoneNode* bone = avatar->getBoneWithIndex(rootIndex);
+		
+		vec3 test = initTrans * vec4(0, 0, 0, 1);
+		log(Kore::Info, "%f, %f, %f", test.x(), test.y(), test.z());
+		log(Kore::Info, "%f, %f, %f, %f", initRot.x, initRot.y, initRot.z, initRot.w);
+		
+		initRot = Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f);
+		
+		bone->transform = mat4::Translation(0, 0.9f, 0);
+		// bone->quaternion = Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f);
+		bone->quaternion = Kore::Quaternion(vec3(1, 0, 0), -0.4f);
+		bone->quaternion.normalize();
+		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
+		
 #endif
 		
 		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
 		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2.0f));
 		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6.0f));
-		
-		// todo: check in live & remove!
-		// initRot = Kore::Quaternion(0, 0, 0, 1);
-		// initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f));
 		
 		for (int i = 0; i < numOfEndEffectors; ++i)
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);

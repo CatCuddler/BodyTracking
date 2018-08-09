@@ -43,15 +43,19 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	float errorPos = -1.0f;
 	float errorRot = -1.0f;
 	bool stucked = false;
+#ifdef MACOS
 	struct timespec start, end;
 	struct timespec start2, end2;
 	
 	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+#endif
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
 	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < maxSteps && !stucked) {
+#ifdef MACOS
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
+#endif
 		
 		prevDeltaTheta = deltaTheta;
 		
@@ -82,6 +86,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		for (int i = 0; i < bones.size(); ++i)
 			updateBone(bones[i]);
 		
+#ifdef MACOS
 		if (eval && i == 0) {
 			// time per iteration
 			clock_gettime(CLOCK_MONOTONIC_RAW, &end2);
@@ -90,13 +95,12 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 			evalTimeIteration[1] = time < evalTimeIteration[1] ? time : evalTimeIteration[1];
 			evalTimeIteration[2] = time > evalTimeIteration[2] ? time : evalTimeIteration[2];
 		}
+#endif // MACOS
 		
 		i++;
 	}
 	
 	if (eval) {
-		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-		
 		totalNum += 1;
 		evalReached += (errorPos < errorMaxPos && errorRot < errorMaxRot) ? 1 : 0;
 		evalStucked += stucked ? 1 : 0;
@@ -116,11 +120,15 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		evalErrorRot[1] = errorRot < evalErrorRot[1] ? errorRot : evalErrorRot[1];
 		evalErrorRot[2] = errorRot > evalErrorRot[2] ? errorRot : evalErrorRot[2];
 		
+#ifdef MACOS
+		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+		
 		// time
 		float time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 		evalTime[0] += time;
 		evalTime[1] = time < evalTime[1] ? time : evalTime[1];
 		evalTime[2] = time > evalTime[2] ? time : evalTime[2];
+#endif
 	}
 }
 
