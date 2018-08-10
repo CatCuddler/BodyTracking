@@ -23,8 +23,8 @@ using namespace Kore::Graphics4;
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
-	vec3 desPosition[numOfEndEffectors];
-	Kore::Quaternion desRotation[numOfEndEffectors];
+	vec3 desPosition[numOfEndEffectors], trackerPosition[numOfEndEffectors];
+	Kore::Quaternion desRotation[numOfEndEffectors], trackerRotation[numOfEndEffectors];
 	
 	Logger* logger;
 	bool logData = false;
@@ -88,7 +88,7 @@ namespace {
 #endif
 	
 	void renderTracker(int i) {
-		cubes[i]->M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
+		cubes[i]->M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
 		Graphics4::setMatrix(mLocation, cubes[i]->M);
 		cubes[i]->render(tex);
 	}
@@ -144,7 +144,7 @@ namespace {
 	void calibrateTracker(int i) {
 		vec3 sollPos, diffPos, istPos = desPosition[i];
 		mat4 sollRot, diffRot, istRot = desRotation[i].matrix();
-		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex); // todo: im live Betrieb soll der Avatar still in der Mitte in T-Pose stehen, man sieht nur die Endeffektoren die sich bewegen. dann geht man zu dem Avatar und stellt sich "in ihn rein" und drückt den Kalibrierungs-Button. Danach fängt der Avatar sich an zu bewegen!
+		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
 		diffRot = sollRot * istRot.Transpose();
@@ -158,6 +158,9 @@ namespace {
 	}
 	
 	void executeMovement(int i) {
+		trackerPosition[i] = desPosition[i];
+		trackerRotation[i] = desRotation[i];
+		
 		// Add offset to endeffector
 		desRotation[i].rotate(tracker[i]->offsetRotation);
 		desPosition[i] = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
@@ -168,13 +171,9 @@ namespace {
 		vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
 		Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
 		
-		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex) {
+		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex)
 			avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-			
-			// todo: live braucht das aber eval von aufgezeichneten Daten hat gezeigt dass bspw. 4,5 Iterationen statt 4 benötigt werden. Kann man auf den Teil irgendwie verzichten?
-			initTrans = mat4::Translation(desPosition[i].x(), 0, desPosition[i].z()) * initRot.matrix().Transpose();
-			initTransInv = initTrans.Invert();
-		} else
+		else
 			avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
 	}
 	
@@ -306,7 +305,6 @@ namespace {
 		// Set initial orientation
 		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
 		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0)); // Make the avatar stand on the feet
 		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -2 * Kore::acos(hmdOrient.y)));
 		initRotInv = initRot.invert();
 		
@@ -321,15 +319,7 @@ namespace {
 			desPosition[i] = controller.vrPose.position;
 			desRotation[i] = controller.vrPose.orientation;
 			
-			// todo: vec3 finalPos = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			// Kore::Quaternion finalRot = initRotInv.rotated(desRotation);
-			
 			calibrateTracker(i);
-			
-			/* todo: if (i == 2) {
-			 initTrans = mat4::Translation(controller.vrPose.position.x(), 0, controller.vrPose.position.z()) * initRot.matrix().Transpose();
-			 initTransInv = initTrans.Invert();
-			 } */
 		}
 		
 		if (logData) {
@@ -365,8 +355,6 @@ namespace {
 	}
 	
 	void update() {
-		bool firstPersonMonitor = false;
-		
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
@@ -674,14 +662,7 @@ namespace {
 		
 		BoneNode* bone = avatar->getBoneWithIndex(rootIndex);
 		
-		vec3 test = initTrans * vec4(0, 0, 0, 1);
-		log(Kore::Info, "%f, %f, %f", test.x(), test.y(), test.z());
-		log(Kore::Info, "%f, %f, %f, %f", initRot.x, initRot.y, initRot.z, initRot.w);
-		
-		initRot = Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f);
-		
 		bone->transform = mat4::Translation(0, 0.9f, 0);
-		// bone->quaternion = Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0f);
 		bone->quaternion = Kore::Quaternion(vec3(1, 0, 0), -0.4f);
 		bone->quaternion.normalize();
 		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
