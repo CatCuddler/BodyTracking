@@ -5,7 +5,7 @@ import { get } from 'lodash';
 import App from './app';
 import registerServiceWorker from './registerServiceWorker';
 
-const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'DLS-SVD', 'SDLS'];
+const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'DLS-SVD', 'SDLS', 'SDLSmod'];
 const req = require.context('../json');
 const sources = req.keys();
 
@@ -54,6 +54,9 @@ const files = sources
       folder,
       errorPos: parseFloat(config['Error Pos Max']),
       errorRot: parseFloat(config['Error Rot Max']),
+      dMaxPos: parseFloat(config['dMax Pos']),
+      dMaxRot: parseFloat(config['dMax Rot']),
+      usingClampMag: config.usingClampMag === '1',
       steps: parseFloat(config['Steps Max']),
       lambda: Math.floor(config.lambda * 10000) / 10000,
       file: get(

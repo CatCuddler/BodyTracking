@@ -21,6 +21,13 @@ const Select = ({ allowNull, value, setValue }) => (
         <Label circular empty />
         orientation
       </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => setValue('usingClampMag')}
+        active={value === 'usingClampMag'}
+      >
+        <Label circular empty />
+        usingClampMag
+      </Dropdown.Item>
       <Dropdown.Item onClick={() => setValue('file')} active={value === 'file'}>
         <Label circular empty />
         file
@@ -33,11 +40,18 @@ const Select = ({ allowNull, value, setValue }) => (
         lambda
       </Dropdown.Item>
       <Dropdown.Item
-        onClick={() => setValue('error')}
-        active={value === 'error'}
+        onClick={() => setValue('errorPos')}
+        active={value === 'errorPos'}
       >
         <Label color="red" circular empty />
-        error
+        errorPos
+      </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => setValue('errorRot')}
+        active={value === 'errorRot'}
+      >
+        <Label color="red" circular empty />
+        errorRot
       </Dropdown.Item>
       <Dropdown.Item
         onClick={() => setValue('steps')}
@@ -45,6 +59,20 @@ const Select = ({ allowNull, value, setValue }) => (
       >
         <Label color="green" circular empty />
         steps
+      </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => setValue('dMaxPos')}
+        active={value === 'dMaxPos'}
+      >
+        <Label color="violet" circular empty />
+        dMaxPos
+      </Dropdown.Item>
+      <Dropdown.Item
+        onClick={() => setValue('dMaxRot')}
+        active={value === 'dMaxRot'}
+      >
+        <Label color="violet" circular empty />
+        dMaxRot
       </Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>

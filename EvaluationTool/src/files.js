@@ -20,7 +20,7 @@ const Files = ({
   onClickFile,
   onClickFiles
 }) => (
-  <Menu vertical style={{ width: '20%', overflowY: 'auto', marginBottom: 0 }}>
+  <Menu vertical style={{ width: '25%', overflowY: 'auto', marginBottom: 0 }}>
     {_sortBy(Object.keys(groups)).map(group => (
       <Fragment key={group}>
         <Menu.Item
@@ -69,6 +69,28 @@ const Files = ({
                   x => x.steps === get(groups, [group, 0, 'steps'])
                 ) &&
                   get(groups, [group, 0, 'steps'])) ||
+                '-'
+              }
+              dMaxPos={
+                (groups[group].every(
+                  x => x.dMaxPos === get(groups, [group, 0, 'dMaxPos'])
+                ) &&
+                  get(groups, [group, 0, 'dMaxPos'])) ||
+                '-'
+              }
+              dMaxRot={
+                (groups[group].every(
+                  x => x.dMaxRot === get(groups, [group, 0, 'dMaxRot'])
+                ) &&
+                  get(groups, [group, 0, 'dMaxRot'])) ||
+                '-'
+              }
+              usingClampMag={
+                (groups[group].every(
+                  x =>
+                    x.usingClampMag === get(groups, [group, 0, 'usingClampMag'])
+                ) &&
+                  get(groups, [group, 0, 'usingClampMag'])) ||
                 '-'
               }
               selectedFiles={selectedFiles}
