@@ -1,5 +1,7 @@
 #pragma once
 
+extern int ikMode;
+
 struct EndEffector {
 	Kore::vec3 offsetPosition;
 	Kore::Quaternion offsetRotation;
@@ -28,16 +30,6 @@ struct DataFile {
 };
 
 namespace {
-	const static int ikMode = 5;
-	const bool withOrientation = true;
-	const bool usingClampMag = true;
-	const int maxSteps = 100;
-	const float errorMaxPos = 0.01f;
-	const float errorMaxRot = 0.01f;
-	const float dMaxPos = 0.25f;
-	const float dMaxRot = 1.25f;
-	const float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4 };
-	
 	EndEffector* tracker[] = {
 		new EndEffector(17, ikMode), 	// left-hand // todo: oder 16?
 		new EndEffector(27, ikMode), 	// right-hand // todo: oder 26?
@@ -59,6 +51,8 @@ namespace {
 	const int height = 768;
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
-	const bool eval = false;
-	const bool loop = false;
+	const bool eval = true;
+	const bool withOrientation = true;
+	const float errorMaxPos = 0.01f;
+	const float errorMaxRot = 0.01f;
 }

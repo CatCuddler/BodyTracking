@@ -1,22 +1,36 @@
 #include "pch.h"
-
 #include "Logger.h"
 
 #include <Kore/Log.h>
-
 #include <ctime>
 
 Logger::Logger() : initPositionData(false), initTransRotData(false), initEvaluationData(false) {
 	time_t t = time(0);   // Get time now
+	
 	positionDataPath << positionData << "_" << t << ".csv";
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
-	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
-	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
 }
 
 Logger::~Logger() {
 	positionDataOutputFile.close();
+}
+
+void Logger::startEvaluationLogger() {
+	time_t t = time(0);   // Get time now
+	
+	evaluationDataPath.str(std::string());
+	evaluationConfigPath.str(std::string());
+	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
+	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
+	
+	log(Kore::Info, "start eval-logging!");
+}
+
+void Logger::endEvaluationLogger() {
 	evaluationDataOutputFile.close();
+	initEvaluationData = false;
+	
+	log(Kore::Info, "stop eval-logging!");
 }
 
 void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {

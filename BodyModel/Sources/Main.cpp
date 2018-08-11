@@ -10,7 +10,6 @@
 #include "Avatar.h"
 #include "LivingRoom.h"
 #include "Logger.h"
-#include "Settings.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -21,6 +20,14 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
+// dynamic ik-parameter
+int ikMode = 0;
+bool usingClampMag = true;
+int maxSteps = 100;
+float dMaxPos = 0.25f;
+float dMaxRot = 1.25f;
+float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
+
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
 	vec3 desPosition[numOfEndEffectors], trackerPosition[numOfEndEffectors];
@@ -29,6 +36,7 @@ namespace {
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
+	int loop = 0;
 	
 	double startTime;
 	double lastTime;
@@ -475,8 +483,23 @@ namespace {
 			
 			line += numOfEndEffectors;
 		} else {
-			if (eval) logger->saveEvaluationData(avatar);
-			if (loop) initVars();
+			if (loop >= 0) {
+				if (eval) logger->saveEvaluationData(avatar);
+				initVars();
+				log(Kore::Info, "%i more iterations!", loop);
+				loop--;
+				
+				if (loop < 0) {
+					if (eval) logger->endEvaluationLogger();
+					
+					 // todo: remove after eval
+					if (ikMode < 6) {
+						ikMode++;
+						loop = 0;
+					}
+					if (eval) logger->startEvaluationLogger();
+				}
+			}
 		}
 		
 		// Get projection and view matrix
@@ -687,6 +710,7 @@ namespace {
 		}
 		
 		logger = new Logger();
+		if (eval) logger->startEvaluationLogger();
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove

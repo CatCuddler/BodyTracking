@@ -7,6 +7,9 @@
 
 struct BoneNode;
 
+extern bool usingClampMag;
+extern float dMaxPos, dMaxRot, lambda[];
+
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
 public:
@@ -203,8 +206,8 @@ private:
 				float gamma_i =
 				fabs(M_i) > nearNull &&
 				fabs(M_i) > fabs(N_i) ?
-				fabs(N_i / M_i) * lambda[5] :
-				lambda[5];
+				fabs(N_i / M_i) * lambda[6] :
+				lambda[6];
 				
 				theta += clampMag(omegaInverse_i * alpha_i * v_i, gamma_i);
 			}

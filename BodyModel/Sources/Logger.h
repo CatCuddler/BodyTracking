@@ -9,6 +9,10 @@
 #include <fstream>
 #include <sstream>
 
+extern int ikMode, maxSteps;
+extern bool usingClampMag;
+extern float dMaxPos, dMaxRot, lambda[];
+
 class Logger {
 	
 private:
@@ -37,6 +41,9 @@ private:
 public:
 	Logger();
 	~Logger();
+	
+	void startEvaluationLogger();
+	void endEvaluationLogger();
 	
 	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
 	void saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot);
