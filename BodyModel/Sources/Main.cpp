@@ -12,6 +12,8 @@
 #include "Logger.h"
 #include "Settings.h"
 
+#define MAC_OS
+
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>

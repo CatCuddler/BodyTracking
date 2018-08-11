@@ -5,7 +5,7 @@ struct EndEffector {
 	Kore::Quaternion offsetRotation;
 	int boneIndex;
 	int trackerIndex = -1;
-	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
 
 	EndEffector(int boneIndex, int mode = 5) : boneIndex(boneIndex), ikMode(mode) {}
 	
@@ -28,12 +28,15 @@ struct DataFile {
 };
 
 namespace {
-	const static int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+	const static int ikMode = 5;
 	const bool withOrientation = true;
+	const bool usingClampMag = true;
 	const int maxSteps = 100;
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
-	const float lambda[] = { -1.0f, 1.5f, 0.18f, 0.1f, 0.18f, 0.7853981634f };
+	const float dMaxPos = 0.25f;
+	const float dMaxRot = 1.25f;
+	const float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4 };
 	
 	EndEffector* tracker[] = {
 		new EndEffector(17, ikMode), 	// left-hand // todo: oder 16?

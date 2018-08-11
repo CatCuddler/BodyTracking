@@ -23,11 +23,11 @@ private:
 	std::vector<BoneNode*> bones;
 	
 	static const int handJointDOFs = 6;
-	static const bool handWithOrientation = ikMode == 0 ? false : withOrientation;
+	static const bool handWithOrientation = withOrientation;
 	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
 	
 	static const int footJointDOFs = 4;
-	static const bool footWithOrientation = ikMode == 0 ? false : withOrientation;
+	static const bool footWithOrientation = withOrientation;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
 	void updateBone(BoneNode* bone);

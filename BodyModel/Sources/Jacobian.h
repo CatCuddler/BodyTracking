@@ -18,11 +18,20 @@ public:
 		mat_mxn jacobian = calcJacobian(endEffektor, p_aktuell);
 		
 		// set error
-		Kore::vec3 errorPosVec = Kore::vec3(deltaP[0], deltaP[1], deltaP[2]);
-		errorPos = errorPosVec.getLength();
-		if (nDOFs == 6) {
-			Kore::vec3 errorRotVec = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]);
-			errorRot = errorRotVec.getLength();
+		errorPos = Kore::vec3(deltaP[0], deltaP[1], deltaP[2]).getLength();
+		if (nDOFs == 6)
+			errorRot = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]).getLength();
+		
+		// clampMag
+		if (usingClampMag) {
+			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMaxPos);
+			Kore::vec3 clampedRot = clampMag(Kore::vec3(deltaP[3], deltaP[4], deltaP[5]), dMaxRot);
+			deltaP[0] = clampedPos[0];
+			deltaP[1] = clampedPos[1];
+			deltaP[2] = clampedPos[2];
+			deltaP[3] = clampedRot[0];
+			deltaP[4] = clampedRot[1];
+			deltaP[5] = clampedRot[2];
 		}
 		
 		switch (ikMode) {
@@ -40,6 +49,9 @@ public:
 				break;
 			case 5:
 				vec = calcDeltaThetaBySDLS(jacobian, deltaP);
+				break;
+			case 6:
+				vec = calcDeltaThetaBySDLSModified(jacobian, deltaP);
 				break;
 				
 			default:
@@ -76,10 +88,16 @@ private:
 	vec_m   d;
 	
 	vec_n calcDeltaThetaByTranspose(mat_mxn jacobian, vec_m deltaP) {
-		return jacobian.Transpose() * deltaP;
+		mat_nxm jacobianTranspose = jacobian.Transpose();
+		vec_n theta = jacobianTranspose * deltaP;
+		
+		return lambda[0] * theta;
 	}
 	vec_n calcDeltaThetaByPseudoInverse(mat_mxn jacobian, vec_m deltaP) {
-		return calcPseudoInverse(jacobian) * deltaP;
+		mat_nxm pseudoInverse = calcPseudoInverse(jacobian);
+		vec_n theta = pseudoInverse * deltaP;
+		
+		return lambda[1] * theta;
 	}
 	vec_n calcDeltaThetaByDLS(mat_mxn jacobian, vec_m deltaP) {
 		return calcPseudoInverse(jacobian, lambda[2]) * deltaP;
@@ -89,7 +107,7 @@ private:
 		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			if (fabs(d[i]) > (lambda[3] != -1.0f ? lambda[3] : nearNull)) // modification to stabilize SVD
+			if (fabs(d[i]) > lambda[3]) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
@@ -113,6 +131,45 @@ private:
 		return dls * deltaP;
 	}
 	vec_n calcDeltaThetaBySDLS(mat_mxn jacobian, vec_m deltaP) {
+		calcSVD(jacobian);
+		
+		vec_n phi;
+		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
+			vec_m u_i;
+			vec_m s_i;
+			float alpha_i = 0;
+			for (int m = 0; m < nDOFs; ++m) {
+				u_i[m] = U[m][i];
+				s_i[m] = jacobian[m][i];
+				alpha_i += u_i[m] * deltaP[m];
+			}
+			float N_i = u_i.getLength();
+			
+			if (
+				fabs(d[i]) > nearNull &&
+				N_i > nearNull &&
+				fabs(alpha_i) > nearNull
+				) {
+				float omegaInverse_i = 1.0 / d[i];
+				
+				vec_n v_i;
+				float M_i = 0.0f;
+				for (int n = 0; n < nJointDOFs; ++n) {
+					v_i[n] = V[n][i];
+					M_i += fabs(v_i[n]) * s_i.getLength();
+				}
+				M_i *= omegaInverse_i;
+				
+				float gamma_i = M_i > N_i ? N_i / M_i : 1;
+				gamma_i *= lambda[5];
+				
+				phi += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
+			}
+		}
+		
+		return clampMaxAbs(phi, lambda[5]);
+	}
+	vec_n calcDeltaThetaBySDLSModified(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
 		vec_n theta;
@@ -144,12 +201,12 @@ private:
 				M_i *= omegaInverse_i;
 				
 				float gamma_i =
-					fabs(M_i) > nearNull &&
-					fabs(M_i) > fabs(N_i) ?
-					fabs(N_i / M_i) * lambda[5] :
-					lambda[5];
+				fabs(M_i) > nearNull &&
+				fabs(M_i) > fabs(N_i) ?
+				fabs(N_i / M_i) * lambda[5] :
+				lambda[5];
 				
-				theta += clampMaxAbs(omegaInverse_i * alpha_i * v_i, gamma_i);
+				theta += clampMag(omegaInverse_i * alpha_i * v_i, gamma_i);
 			}
 		}
 		
@@ -260,19 +317,6 @@ private:
 			pseudoInverse = transpose * (jacobian * transpose + id).Invert();
 		}
 		
-		// modification to stabilize JPI
-		if (l < nearNull & lambda[1] != -1.0f) {
-			int max = lambda[1];
-			for (int n = 0; n < nJointDOFs; ++n)
-				for (int m = 0; m < nDOFs; ++m) {
-					int x = fabs(pseudoInverse[n][m]);
-					if (x > max) max = x;
-				}
-			for (int n = 0; n < nJointDOFs; ++n)
-				for (int m = 0; m < nDOFs; ++m)
-					pseudoInverse[n][m] = pseudoInverse[n][m] / max * lambda[1];
-		}
-		
 		return pseudoInverse;
 	}
 	
@@ -303,12 +347,37 @@ private:
 		}
 	}
 	
-	vec_n clampMaxAbs(vec_n vec, float gamma_i) {
+	Kore::vec3 clampMag(Kore::vec3 vec, float gamma_i) {
+		float length = vec.getLength();
+		
+		if (length > gamma_i)
+			for (int n = 0; n < 3; ++n)
+				vec[n] = gamma_i * vec[n] / length;
+		
+		return vec;
+	}
+	
+	vec_n clampMag(vec_n vec, float gamma_i) {
 		float length = vec.getLength();
 		
 		if (length > gamma_i)
 			for (int n = 0; n < nJointDOFs; ++n)
 				vec[n] = gamma_i * vec[n] / length;
+		
+		return vec;
+	}
+	
+	vec_n clampMaxAbs(vec_n vec, float gamma_i) {
+		float max = 0;
+		for (int n = 0; n < nJointDOFs; ++n) {
+			float val = fabs(vec[n]);
+			
+			if (val > max) max = val;
+		}
+		
+		if (max > gamma_i)
+			for (int n = 0; n < nJointDOFs; ++n)
+				vec[n] = gamma_i * vec[n] / max;
 		
 		return vec;
 	}
