@@ -85,14 +85,6 @@ const Files = ({
                   get(groups, [group, 0, 'dMaxRot'])) ||
                 '-'
               }
-              usingClampMag={
-                (groups[group].every(
-                  x =>
-                    x.usingClampMag === get(groups, [group, 0, 'usingClampMag'])
-                ) &&
-                  get(groups, [group, 0, 'usingClampMag'])) ||
-                '-'
-              }
               selectedFiles={selectedFiles}
               groupBy={groupBy}
             />

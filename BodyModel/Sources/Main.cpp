@@ -21,11 +21,10 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // dynamic ik-parameter
-int ikMode = 0;
-bool usingClampMag = true;
-int maxSteps = 100;
-float dMaxPos = 0.25f;
-float dMaxRot = 1.25f;
+int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+int maxSteps[] = {100, 100, 100, 100, 100, 100};
+float dMaxPos[] = {0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f};
+float dMaxRot[] = {1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f};
 float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
@@ -36,7 +35,7 @@ namespace {
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
-	int loop = 0;
+	int loop = 5;
 	
 	double startTime;
 	double lastTime;
@@ -489,16 +488,16 @@ namespace {
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
 				
-				if (loop < 0) {
+				/* if (loop < 0) {
 					if (eval) logger->endEvaluationLogger();
 					
 					 // todo: remove after eval
 					if (ikMode < 6) {
 						ikMode++;
-						loop = 0;
+						loop = 5;
 					}
 					if (eval) logger->startEvaluationLogger();
-				}
+				} */
 			}
 		}
 		

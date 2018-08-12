@@ -56,7 +56,6 @@ const files = sources
       errorRot: parseFloat(config['Error Rot Max']),
       dMaxPos: parseFloat(config['dMax Pos']),
       dMaxRot: parseFloat(config['dMax Rot']),
-      usingClampMag: config.usingClampMag === '1',
       steps: parseFloat(config['Steps Max']),
       lambda: Math.floor(config.lambda * 10000) / 10000,
       file: get(

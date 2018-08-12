@@ -51,7 +51,7 @@ namespace {
 	const int height = 768;
 	const int rootIndex = 2;
 	const bool renderTrackerAndController = true;
-	const bool eval = true;
+	const bool eval = false;
 	const bool withOrientation = true;
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;

@@ -51,7 +51,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < maxSteps && !stucked) {
+	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < maxSteps[ikMode] && !stucked) {
 #ifdef KORE_MACOS
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 #endif

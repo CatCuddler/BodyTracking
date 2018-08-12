@@ -7,8 +7,7 @@
 
 struct BoneNode;
 
-extern bool usingClampMag;
-extern float dMaxPos, dMaxRot, lambda[];
+extern float dMaxPos[], dMaxRot[], lambda[];
 
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
@@ -26,12 +25,14 @@ public:
 			errorRot = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]).getLength();
 		
 		// clampMag
-		if (usingClampMag) {
-			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMaxPos);
-			Kore::vec3 clampedRot = clampMag(Kore::vec3(deltaP[3], deltaP[4], deltaP[5]), dMaxRot);
+		if (dMaxPos[ikMode] > nearNull) {
+			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMaxPos[ikMode]);
 			deltaP[0] = clampedPos[0];
 			deltaP[1] = clampedPos[1];
 			deltaP[2] = clampedPos[2];
+		}
+		if (dMaxRot[ikMode] > nearNull) {
+			Kore::vec3 clampedRot = clampMag(Kore::vec3(deltaP[3], deltaP[4], deltaP[5]), dMaxRot[ikMode]);
 			deltaP[3] = clampedRot[0];
 			deltaP[4] = clampedRot[1];
 			deltaP[5] = clampedRot[2];

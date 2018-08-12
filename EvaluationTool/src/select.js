@@ -6,8 +6,7 @@ const Select = ({ allowNull, value, setValue }) => (
     <Dropdown.Menu>
       {!!allowNull && (
         <Dropdown.Item onClick={() => setValue()} active={!value}>
-          <Label circular empty />
-          -
+          <Label circular empty />-
         </Dropdown.Item>
       )}
       <Dropdown.Item onClick={() => setValue('mode')} active={value === 'mode'}>
@@ -20,13 +19,6 @@ const Select = ({ allowNull, value, setValue }) => (
       >
         <Label circular empty />
         orientation
-      </Dropdown.Item>
-      <Dropdown.Item
-        onClick={() => setValue('usingClampMag')}
-        active={value === 'usingClampMag'}
-      >
-        <Label circular empty />
-        usingClampMag
       </Dropdown.Item>
       <Dropdown.Item onClick={() => setValue('file')} active={value === 'file'}>
         <Label circular empty />
