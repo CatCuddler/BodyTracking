@@ -21,10 +21,10 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // dynamic ik-parameter
-int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
-int maxSteps[] = {100, 100, 100, 100, 100, 100};
-float dMaxPos[] = {0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f};
-float dMaxRot[] = {1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f};
+int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
+float dMaxPos[] = { 0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f };
+float dMaxRot[] = { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
 float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
@@ -35,7 +35,7 @@ namespace {
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
-	int loop = 5;
+	int loop = 0;
 	
 	double startTime;
 	double lastTime;
@@ -149,34 +149,50 @@ namespace {
 	}
 	
 	void calibrateTracker(int i) {
-		vec3 sollPos, diffPos, istPos = desPosition[i];
-		mat4 sollRot, diffRot, istRot = desRotation[i].matrix();
+		vec3 sollPos, istPos = desPosition[i];
+		mat4 sollRot, istRot = desRotation[i].matrix();
 		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
-		diffRot = sollRot * istRot.Transpose();
-		
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
-		diffPos = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
 		
-		tracker[i]->offsetPosition = diffPos;
-		tracker[i]->offsetRotation = matrixToQuaternion(diffRot);
+		/* switch (i) {
+			case 0:
+				break;
+			case 1:
+				break;
+			case 2:
+				istPos.z() -= 0.2f;
+				break;
+			case 3:
+				istPos.x() -= 0.2f;
+				istPos.y() -= 0.2f;
+				break;
+			case 4:
+				istPos.x() += 0.2f;
+				istPos.y() -= 0.2f;
+				break;
+		} */
+		
+		tracker[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
+		tracker[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
 	}
 	
 	void executeMovement(int i) {
+		// set Tracker-Position
 		trackerPosition[i] = desPosition[i];
 		trackerRotation[i] = desRotation[i];
 		
 		// Add offset to endeffector
-		desRotation[i].rotate(tracker[i]->offsetRotation);
-		desPosition[i] = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+		Kore::Quaternion finalRot = desRotation[i].rotated(tracker[i]->offsetRotation);
+		vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
 		
-		if (logData) logger->saveData(desPosition[i], desRotation[i]);
+		if (logData) logger->saveData(finalPos, finalRot);
 		
 		// Transform desired position to the character local coordinate system
-		vec3 finalPos = initTransInv * vec4(desPosition[i].x(), desPosition[i].y(), desPosition[i].z(), 1);
-		Kore::Quaternion finalRot = initRotInv.rotated(desRotation[i]);
+		finalRot = initRotInv.rotated(finalRot);
+		finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 		
 		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex)
 			avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
@@ -467,18 +483,21 @@ namespace {
 #else
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				// Calibration
-				// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-				if (!currentFile->isCalibrated) {
-					calibrateTracker(i);
-					
-					if (i == numOfEndEffectors - 1)
-						currentFile->calibrated();
-				}
-				
-				executeMovement(i);
-			}
+			// Calibration
+			// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
+			if (line < numOfEndEffectors)
+				for (int i = 0; i < numOfEndEffectors; ++i)
+					if (!currentFile->isCalibrated) {
+						calibrateTracker(i);
+						
+						if (i == numOfEndEffectors - 1)
+							currentFile->calibrated();
+					}
+			
+			executeMovement(rootIndex); // todo: rootIndex löschen und root immer auf Pos 1 setzen, sodass Wurzel immer als erstes bewegt wird!!! Dies muss auch noch im Live-Mode geändert werden!
+			for (int i = 0; i < numOfEndEffectors; ++i)
+				if (i != rootIndex)
+					executeMovement(i);
 			
 			line += numOfEndEffectors;
 		} else {
