@@ -157,24 +157,6 @@ namespace {
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
-		/* switch (i) {
-			case 0:
-				break;
-			case 1:
-				break;
-			case 2:
-				istPos.z() -= 0.2f;
-				break;
-			case 3:
-				istPos.x() -= 0.2f;
-				istPos.y() -= 0.2f;
-				break;
-			case 4:
-				istPos.x() += 0.2f;
-				istPos.y() -= 0.2f;
-				break;
-		} */
-		
 		tracker[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
 		tracker[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
 	}
