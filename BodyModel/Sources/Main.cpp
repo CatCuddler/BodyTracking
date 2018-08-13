@@ -341,10 +341,6 @@ namespace {
 		
 		currentFile->calibrated(false);
 		
-		// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-		if (!currentFile->isCalibrated)
-			avatar->setScale(1.0744f);
-		
 		vec3 initPos = vec3(0, 0, 0);
 		
 		log(Info, "Read data from file %s", currentFile->initialTransFilename);
@@ -485,7 +481,7 @@ namespace {
 		} else {
 			if (loop >= 0) {
 				if (eval) logger->saveEvaluationData(avatar);
-				initVars();
+				if (loop > 0) initVars();
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
 				
