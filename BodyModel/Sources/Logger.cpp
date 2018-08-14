@@ -4,11 +4,10 @@
 #include <Kore/Log.h>
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initTransRotData(false), initEvaluationData(false) {
+Logger::Logger() : initPositionData(false), initEvaluationData(false) {
 	time_t t = time(0);   // Get time now
 	
 	positionDataPath << positionData << "_" << t << ".csv";
-	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
 }
 
 Logger::~Logger() {
@@ -44,20 +43,6 @@ void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
 	// Save positional and rotation data
 	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
 	positionDataOutputFile.flush();
-}
-
-void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
-	if (!initTransRotData) {
-		initTransRotDataOutputFile.open(initTransRotPath.str(), std::ios::app);
-		initTransRotDataOutputFile << "initPosX;initPosY;initPosZ;initRotX;initRotY;initRotZ;initRotW\n";
-		initTransRotDataOutputFile.flush();
-		initTransRotData = true;
-	}
-	
-	// Save initial position rotation
-	initTransRotDataOutputFile << initPos.x() << ";" << initPos.y() << ";" << initPos.z() << ";" << initRot.x << ";" << initRot.y << ";" << initRot.z << ";" << initRot.w << "\n";
-	initTransRotDataOutputFile.flush();
-	initTransRotDataOutputFile.close();
 }
 
 void Logger::saveEvaluationData(Avatar *avatar) {
@@ -159,34 +144,4 @@ bool Logger::readData(int line, const int numOfEndEffectors, const char* filenam
 	}
 	
 	return success;
-}
-
-void Logger::readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot) {
-	std::fstream inputFile(filename);
-	
-	// Get header
-	int column = 0;
-	std::string str;
-	std::getline(inputFile, str, '\n');
-	
-	// Get initial positional vector and rotation
-	std::getline(inputFile, str, '\n');
-	std::stringstream ss;
-	ss.str(str);
-	std::string item;
-	while(std::getline(ss, item, ';')) {
-		float num = std::stof(item);
-		
-		//log(Kore::Info, "%i -> %f", column, num);
-		
-		if (column == 0) initPos->x() = num;
-		else if (column == 1) initPos->y() = num;
-		else if (column == 2) initPos->z() = num;
-		else if (column == 3) initRot->x = num;
-		else if (column == 4) initRot->y = num;
-		else if (column == 5) initRot->z = num;
-		else if (column == 6) initRot->w = num;
-		
-		++column;
-	}
 }

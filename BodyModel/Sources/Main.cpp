@@ -35,7 +35,6 @@ namespace {
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
-	int loop = 0;
 	
 	double startTime;
 	double lastTime;
@@ -92,6 +91,9 @@ namespace {
 #ifdef KORE_STEAMVR
 	float currentUserHeight;
 	bool initedButtons = false;
+	bool firstPersonMonitor = false;
+#else
+	int loop = 0;
 #endif
 	
 	void renderTracker(int i) {
@@ -124,6 +126,34 @@ namespace {
 		return V;
 	}
 	
+	void executeMovement(int i) {
+		// set Tracker-Position
+		trackerPosition[i] = desPosition[i];
+		trackerRotation[i] = desRotation[i];
+		
+		if (calibratedAvatar) {
+			// Add offset to endeffector
+#ifdef KORE_STEAMVR
+			Kore::Quaternion finalRot = desRotation[i].rotated(tracker[i]->offsetRotation);
+			vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+#else
+			Kore::Quaternion finalRot = desRotation[i];
+			vec3 finalPos = desPosition[i];
+#endif
+			if (logData) logger->saveData(finalPos, finalRot);
+			
+			// Transform desired position to the character local coordinate system
+			finalRot = initRotInv.rotated(finalRot);
+			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
+			
+			if (!i)
+				avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
+			else
+				avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
+		}
+	}
+	
+#ifdef KORE_STEAMVR
 	Kore::Quaternion matrixToQuaternion(mat4 diffRot, int i = 0) {
 		vec4 result;
 		int j = i < 2 ? i + 1 : 0;
@@ -160,31 +190,6 @@ namespace {
 		tracker[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
 		tracker[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
 	}
-	
-	void executeMovement(int i) {
-		// set Tracker-Position
-		trackerPosition[i] = desPosition[i];
-		trackerRotation[i] = desRotation[i];
-		
-		// Add offset to endeffector
-		Kore::Quaternion finalRot = desRotation[i].rotated(tracker[i]->offsetRotation);
-		vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
-		
-		if (logData) logger->saveData(finalPos, finalRot);
-		
-		// Transform desired position to the character local coordinate system
-		finalRot = initRotInv.rotated(finalRot);
-		finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
-		
-		if (tracker[i]->boneIndex == tracker[rootIndex]->boneIndex)
-			avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-		else
-			avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
-	}
-	
-	
-#ifdef KORE_STEAMVR
-	void calibrateAvatar();
 	
 	void setSize() {
 		float currentAvatarHeight = avatar->getHeight();
@@ -227,8 +232,8 @@ namespace {
 				}
 				else {
 					//back tracker
-					log(Info, "backTrackerIndex: %i -> %i", tracker[2]->trackerIndex, i);
-					tracker[2]->setTrackerIndex(i);
+					log(Info, "backTrackerIndex: %i -> %i", tracker[0]->trackerIndex, i);
+					tracker[0]->setTrackerIndex(i);
 				}
 			}
 			else if (controller.trackedDevice == TrackedDevice::Controller) {
@@ -237,12 +242,12 @@ namespace {
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHandTrackerIndex: %i -> %i", tracker[0]->trackerIndex, i);
-					tracker[0]->setTrackerIndex(i);
+					log(Info, "leftHandTrackerIndex: %i -> %i", tracker[1]->trackerIndex, i);
+					tracker[1]->setTrackerIndex(i);
 				}
 				else {
-					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[1]->trackerIndex, i);
-					tracker[1]->setTrackerIndex(i);
+					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[2]->trackerIndex, i);
+					tracker[2]->setTrackerIndex(i);
 				}
 			}
 		}
@@ -255,14 +260,21 @@ namespace {
 				initController();
 			
 			if (!calibratedAvatar) {
-				calibrateAvatar();
-				calibratedAvatar = true;
+				// calibrate to T-Pose
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					VrPoseState controller = VrInterface::getController(tracker[i]->trackerIndex);
+					
+					desPosition[i] = controller.vrPose.position;
+					desRotation[i] = controller.vrPose.orientation;
+					
+					calibrateTracker(i);
+				}
 				
 				log(Info, "Calibrate avatar");
+				calibratedAvatar = true;
 			} else {
-				calibratedAvatar = false;
-				
 				log(Info, "Release avatar");
+				calibratedAvatar = false;
 			}
 		}
 		
@@ -270,10 +282,6 @@ namespace {
 		if (buttonNr == 33) {
 			if (value == 1) {
 				logData = true;
-				
-				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-				
 				log(Info, "Start logging data.");
 			} else {
 				logData = false;
@@ -299,57 +307,18 @@ namespace {
 		}
 		initedButtons = true;
 	}
-	
-	void calibrateAvatar() {
-		SensorState state = VrInterface::getSensorState(0);
-		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
-		
-		// Set initial transformation
-		initTrans = mat4::Translation(hmdPos.x(), 0, hmdPos.z());
-		
-		// Set initial orientation
-		Kore::Quaternion hmdOrient = state.pose.vrPose.orientation;
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -2 * Kore::acos(hmdOrient.y)));
-		initRotInv = initRot.invert();
-		
-		const mat4 hmdOffset = mat4::Translation(0, 0.2f, 0);
-		avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
-		initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
-		
-		// calibrate to T-Pose
-		for (int i = 0; i < numOfEndEffectors; ++i) {
-			VrPoseState controller = VrInterface::getController(tracker[i]->trackerIndex);
-			
-			desPosition[i] = controller.vrPose.position;
-			desRotation[i] = controller.vrPose.orientation;
-			
-			calibrateTracker(i);
-		}
-		
-		if (logData) {
-			vec4 initPos = initTrans * vec4(0, 0, 0, 1);
-			logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
-		}
-	}
 #endif
 	
 	void initVars() {
 		// init & calibrate avatar
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar->setScale(currentFile->scale);
 		calibratedAvatar = true; // recorded Data are always calibrated!
-		
-		currentFile->calibrated(false);
-		
-		vec3 initPos = vec3(0, 0, 0);
-		
-		log(Info, "Read data from file %s", currentFile->initialTransFilename);
-		logger->readInitTransAndRot(currentFile->initialTransFilename, &initPos, &initRot);
 		
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		
-		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
+		initTrans = mat4::Translation(0, 0, 0) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 		
 		line = 0;
@@ -389,8 +358,7 @@ namespace {
 				desPosition[i] = controller.vrPose.position;
 				desRotation[i] = controller.vrPose.orientation;
 				
-				if (calibratedAvatar)
-					executeMovement(i);
+				executeMovement(i);
 			}
 		
 		// Render for both eyes
@@ -461,21 +429,8 @@ namespace {
 #else
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
-			// Calibration
-			// todo: entfernen wenn alle alten Daten neu aufgezeichnet wurden
-			if (line < numOfEndEffectors)
-				for (int i = 0; i < numOfEndEffectors; ++i)
-					if (!currentFile->isCalibrated) {
-						calibrateTracker(i);
-						
-						if (i == numOfEndEffectors - 1)
-							currentFile->calibrated();
-					}
-			
-			executeMovement(rootIndex); // todo: rootIndex löschen und root immer auf Pos 1 setzen, sodass Wurzel immer als erstes bewegt wird!!! Dies muss auch noch im Live-Mode geändert werden!
 			for (int i = 0; i < numOfEndEffectors; ++i)
-				if (i != rootIndex)
-					executeMovement(i);
+				executeMovement(i);
 			
 			line += numOfEndEffectors;
 		} else {
@@ -486,15 +441,15 @@ namespace {
 				loop--;
 				
 				/* if (loop < 0) {
-					if (eval) logger->endEvaluationLogger();
-					
-					 // todo: remove after eval
-					if (ikMode < 6) {
-						ikMode++;
-						loop = 5;
-					}
-					if (eval) logger->startEvaluationLogger();
-				} */
+				 if (eval) logger->endEvaluationLogger();
+				 
+				 // todo: remove after eval
+				 if (ikMode < 6) {
+				 ikMode++;
+				 loop = 5;
+				 }
+				 if (eval) logger->startEvaluationLogger();
+				 } */
 			}
 		}
 		
@@ -678,15 +633,15 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
-		
-		BoneNode* bone = avatar->getBoneWithIndex(rootIndex);
-		
-		bone->transform = mat4::Translation(0, 0.9f, 0);
-		bone->quaternion = Kore::Quaternion(vec3(1, 0, 0), -0.4f);
-		bone->quaternion.normalize();
-		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
-		
 #endif
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.normalize();
+		initRotInv = initRot.invert();
+		
+		vec3 initPos = initTrans * vec4(0, 0, 0, 1);
+		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
 		
 		// camera
 		cameraPosition = vec3(-1.1, 1.6, 4.5);
