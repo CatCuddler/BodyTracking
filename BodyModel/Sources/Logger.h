@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Avatar.h"
+
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
@@ -7,41 +9,39 @@
 #include <fstream>
 #include <sstream>
 
+extern int ikMode, maxSteps[];
+extern float dMaxPos[], dMaxRot[], lambda[];
+
 class Logger {
 	
 private:
 	const char* positionData = "positionData";
-	const char* initTransRotFilename = "initTransAndRot";
-	const char* logDataFilename = "logData";
-	
-	const char* logData = "logData";
-	
-	std::stringstream positionDataPath;
-	std::stringstream initTransRotPath;
-	std::stringstream logDataPath;
-	
 	bool initPositionData;
 	std::fstream positionDataOutputFile;
+	std::stringstream positionDataPath;
 	
-	bool initTransRotData;
-	std::fstream initTransRotDataOutputFile;
+	const char* evaluationDataFilename = "evaluationData";
+	bool initEvaluationData;
+	std::fstream evaluationDataOutputFile;
+	std::stringstream evaluationDataPath;
 	
-	bool initLogData;
-	std::fstream logDataOutputFile;
+	const char* evaluationConfigFilename = "evaluationConfig";
+	std::fstream evaluationConfigOutputFile;
+	std::stringstream evaluationConfigPath;
 	
 	int currLineNumber = 0;
 	std::fstream positionDataInputFile;
 	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	
 public:
 	Logger();
 	~Logger();
+	
+	void startEvaluationLogger();
+	void endEvaluationLogger();
+	
 	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
-	void saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot);
+	void saveEvaluationData(Avatar *avatar);
 	
-	void saveLogData(const char* str, float num);
-	
+	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
 	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	void readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot);
 };
