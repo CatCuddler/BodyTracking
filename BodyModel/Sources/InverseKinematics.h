@@ -4,50 +4,40 @@
 #include <float.h>
 #include "Jacobian.h"
 
-struct BoneNode;
+extern int ikMode, maxSteps[];
 
 class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
-	bool inverseKinematics(BoneNode* targetBone, Kore::vec4 desiredPosition, Kore::Quaternion desiredRotation);
-	int getTotalNum();
-	float getAverageIter();
-	float getMinIter();
-	float getAverageReached();
-	float getAverageError();
-	float getMinError();
-	float getMaxError();
+	void inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
+	void initializeBone(BoneNode* bone);
+	
+	float getReached();
+	float getStucked();
+	float* getIterations();
+	float* getErrorPos();
+	float* getErrorRot();
+	float* getTime();
+	float* getTimeIteration();
 	
 private:
-	int boneCount;
-	int rootIndex = 2;
 	std::vector<BoneNode*> bones;
 	
-	// 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-	static const int backIkMode = 5;
-	static const int backJointDOFs = 3;
-	static const bool backWithOrientation = true;
-	static const int handIkMode = 5;
-	static const int handJointDOFs = 6; // 4 without hands
-	static const bool handWithOrientation = true;
-	static const int footIkMode = 0;
-	static const int footJointDOFs = 4;
-	static const bool footWithOrientation = false;
-	
-	int maxSteps = 100;
-	float errorMax = 0.01f;
-	
-	Jacobian<backJointDOFs, backWithOrientation>* jacobianBack = new Jacobian<backJointDOFs, backWithOrientation>;
+	static const int handJointDOFs = 6;
+	static const bool handWithOrientation = withOrientation;
 	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
+	
+	static const int footJointDOFs = 4;
+	static const bool footWithOrientation = withOrientation;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
+	void updateBone(BoneNode* bone);
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
-	void updateBonePosition(BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
-	bool clampValue(float minVal, float maxVal, float* value);
+	float clampValue(float minVal, float maxVal, float value);
 	
-	int totalNum = 0, sumIter = 0, sumReached = 0;
-	float sumError = 0, minError = FLT_MAX, maxError = 0;
+	int totalNum = 0, evalReached = 0, evalStucked = 0;
+	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];
 };

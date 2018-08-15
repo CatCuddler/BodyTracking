@@ -553,8 +553,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	if (subStructure != nullptr) {
 		const OGEX::AnimationStructure& animationStructure = *static_cast<const OGEX::AnimationStructure *>(subStructure);
 		const OGEX::TrackStructure& trackStructure = *static_cast<const OGEX::TrackStructure *>(animationStructure.GetFirstSubstructure(OGEX::kStructureTrack));
-		const OGEX::TimeStructure* timeStructure = trackStructure.GetTimeStructure();
-		const OGEX::KeyStructure* keyStructureTime = timeStructure->GetKeyValueStructure();
 		
 		const OGEX::ValueStructure* valueStructure = trackStructure.GetValueStructure();
 		const OGEX::KeyStructure* keyStructureVal = valueStructure->GetKeyValueStructure();
@@ -621,9 +619,9 @@ void MeshObject::setScale(float scaleFactor) {
 	BoneNode* root = bones[0];
 	
 	mat4 scaleMat = mat4::Identity();
-	scaleMat.Set(3, 3, 1.0/scaleFactor);
+	scaleMat.Set(3, 3, 1.0 / scaleFactor);
 	
-	root->transform = root->transform * scaleMat; //T * R * S
+	root->transform = root->transform * scaleMat; // T * R * S
 	root->local = root->transform;
 	
 	scale = scaleFactor;
