@@ -1,3 +1,4 @@
 /build
 /Deployment/*.frag
 /Deployment/*.vert
+*.blend1
