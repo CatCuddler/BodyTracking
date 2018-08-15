@@ -73,8 +73,11 @@ namespace {
 	bool W, A, S, D = false;
 	bool Z, X = false;
 	
-	Kore::Quaternion cameraRotation = Kore::Quaternion(0, 0, 0, 1);
-	vec3 cameraPosition = vec3(0, 0, 0);
+	vec4 camUp(0.0f, 1.0f, 0.0f, 0.0f);
+	vec4 camForward(0.0f, 0.0f, 1.0f, 0.0f);
+	vec4 camRight(1.0f, 0.0f, 0.0f, 0.0f);
+	
+	vec3 cameraPos(0, 0, 0);
 	
 	// Null terminated array of MeshObject pointers
 	MeshObject* cubes[] = { nullptr, nullptr, nullptr, nullptr, nullptr };
@@ -119,10 +122,7 @@ namespace {
 	}
 	
 	Kore::mat4 getViewMatrix() {
-		vec3 lookAt = cameraPosition + vec3(0, 0, -1);
-		mat4 V = mat4::lookAt(cameraPosition, lookAt, vec3(0, 1, 0));
-		V *= cameraRotation.matrix();
-		
+		mat4 V = mat4::lookAlong(camForward.xyz(), cameraPos, vec3(0.0f, 1.0f, 0.0f));
 		return V;
 	}
 	
@@ -329,14 +329,12 @@ namespace {
 		double deltaT = t - lastTime;
 		lastTime = t;
 		
-		// Move position of camera based on WASD keys, and XZ keys for up and down
-		const float moveSpeed = 0.1f;
-		if (A) cameraPosition.x() -= moveSpeed;
-		else if (D) cameraPosition.x() += moveSpeed;
-		if (Z) cameraPosition.y() += moveSpeed;
-		else if (X) cameraPosition.y() -= moveSpeed;
-		if (S) cameraPosition.z() += moveSpeed;
-		else if (W) cameraPosition.z() -= moveSpeed;
+		// Move position of camera based on WASD keys
+		float cameraMoveSpeed = 4.f;
+		if (S) cameraPos -= camForward * (float) deltaT * cameraMoveSpeed;
+		if (W) cameraPos += camForward * (float) deltaT * cameraMoveSpeed;
+		if (A) cameraPos += camRight * (float)deltaT * cameraMoveSpeed;
+		if (D) cameraPos -= camRight * (float)deltaT * cameraMoveSpeed;
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
@@ -503,8 +501,8 @@ namespace {
 #endif
 				break;
 			case KeyL:
-				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
-				Kore::log(Kore::LogLevel::Info, "Rotation: (%f, %f, %f, %f)", cameraRotation.w, cameraRotation.x, cameraRotation.y, cameraRotation.z);
+				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
+				Kore::log(Kore::LogLevel::Info, "Looking at: (%f, %f %f %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
@@ -541,12 +539,17 @@ namespace {
 	}
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
-		if (rotate) {
-			const float mouseSensitivity = 0.01f;
-			cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), movementX * mouseSensitivity));
-			cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), movementY * mouseSensitivity));
-		}
+		Kore::Quaternion q1(vec3(0.0f, 1.0f, 0.0f), 0.01f * movementX);
+		Kore::Quaternion q2(camRight, 0.01f * -movementY);
+		
+		camUp = q2.matrix() * camUp;
+		camRight = q1.matrix() * camRight;
+		
+		q2.rotate(q1);
+		mat4 mat = q2.matrix();
+		camForward = mat * camForward;
 	}
+	
 	
 	void mousePress(int windowId, int button, int x, int y) {
 		rotate = true;
@@ -643,10 +646,15 @@ namespace {
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 		
-		// camera
-		cameraPosition = vec3(-1.1, 1.6, 4.5);
-		cameraRotation.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi / 2.0f));
-		cameraRotation.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 6.0f));
+		// Set camera initial position and orientation
+		cameraPos = vec3(3.0, 3.5, 0.3);
+		Kore::Quaternion q1(vec3(0.0f, 1.0f, 0.0f), Kore::pi / 2.0f);
+		Kore::Quaternion q2(vec3(1.0f, 0.0f, 0.0f), -Kore::pi / 6.0f);
+		camUp = q2.matrix() * camUp;
+		camRight = q1.matrix() * camRight;
+		q2.rotate(q1);
+		mat4 mat = q2.matrix();
+		camForward = mat * camForward;
 		
 		for (int i = 0; i < numOfEndEffectors; ++i)
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);
