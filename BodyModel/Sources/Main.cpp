@@ -23,8 +23,8 @@ using namespace Kore::Graphics4;
 // dynamic ik-parameter
 int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
 int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
-float dMaxPos[] = { 0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f };
-float dMaxRot[] = { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
+float dMaxPos[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+float dMaxRot[] = { 0, 0, 0, 0, 0, 0, 0 };
 float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
@@ -436,20 +436,25 @@ namespace {
 		} else {
 			if (loop >= 0) {
 				if (eval) logger->saveEvaluationData(avatar);
-				if (loop > 0) initVars();
+				initVars();
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
 				
-				/* if (loop < 0) {
-				 if (eval) logger->endEvaluationLogger();
-				 
-				 // todo: remove after eval
-				 if (ikMode < 6) {
-				 ikMode++;
-				 loop = 5;
-				 }
-				 if (eval) logger->startEvaluationLogger();
-				 } */
+				if (loop < 0) {
+					if (eval) logger->endEvaluationLogger();
+
+					if (ikMode < 6 || dMaxPos == 0.1f) {
+						if (dMaxPos == 0.1f)
+							dMaxPos = 0.0f;
+						else {
+							ikMode++;
+							dMaxPos = 0.1f;
+						}
+						loop = 1;
+						log(Kore::Info, "%i: %f", ikMode, dMaxPos);
+						if (eval) logger->startEvaluationLogger();
+					}
+				}
 			}
 		}
 		
