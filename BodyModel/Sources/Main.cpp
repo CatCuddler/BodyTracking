@@ -738,8 +738,8 @@ namespace {
 	
 	void loadLivingRoomShader() {
 		// Load shader for living room
-		FileReader vs("shader_living_room.vert");
-		FileReader fs("shader_living_room.frag");
+		FileReader vs("shader_basic_shading.vert");
+		FileReader fs("shader_basic_shading.frag");
 		vertexShader_living_room = new Shader(vs.readAll(), vs.size(), VertexShader);
 		fragmentShader_living_room = new Shader(fs.readAll(), fs.size(), FragmentShader);
 		
