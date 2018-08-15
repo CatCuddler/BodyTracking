@@ -5,6 +5,9 @@ This project implements an accurate, low-latency body tracking approach for VR-b
 Compile for VR:
 node Kore/make --vr steamvr
 
+Currently Metal does not work. Use Opengl or Direct3D.
+-g opengl or -g direct3d11
+
 If you are using Xcode, you have to set custom working directory:
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
 
