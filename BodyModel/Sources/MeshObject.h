@@ -57,7 +57,7 @@ struct Light {
 };
 
 struct Material {
-	const char* materialName;
+	char* materialName;
 	char* textureName;
 	unsigned int materialIndex;
 	

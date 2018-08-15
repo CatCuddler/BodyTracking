@@ -435,8 +435,14 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
 	Material* material = new Material();
 	
-	material->materialName = materialStructure.GetStructureName();
-	material->materialIndex = getIndexFromString(material->materialName, 8);
+	const char* materialName = static_cast<const char*>(materialStructure.GetMaterialName());
+	int length = (int)strlen(materialName) + 1;
+	material->materialName = new char[length]();
+	copyString(materialName, material->materialName, length);
+	
+	const char* mat = materialStructure.GetStructureName();
+	material->materialIndex = getIndexFromString(mat, 8);
+	
 	//log(Info, "Material name %s, index %i", material->materialName, material->materialIndex);
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
