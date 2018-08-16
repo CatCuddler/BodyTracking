@@ -39,7 +39,6 @@ namespace {
 	const float nearNull = 0.0001f;
 	const int width = 1024;
 	const int height = 768;
-	const bool renderTrackerAndController = true;
 	const bool eval = false;
 	const bool withOrientation = true;
 	const float errorMaxPos = 0.01f;

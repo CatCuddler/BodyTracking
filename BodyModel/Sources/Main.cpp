@@ -21,11 +21,11 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // dynamic ik-parameter
-int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+int ikMode = 2; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
 int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
-float dMaxPos[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+float dMaxPos[] = { 0.1f, 0.1f, 0, 0.1f, 0, 0.1f, 0.1f };
 float dMaxRot[] = { 0, 0, 0, 0, 0, 0, 0 };
-float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
+float lambda[] = { 0.25f, 0.01f, 0.12f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
@@ -35,6 +35,8 @@ namespace {
 	Logger* logger;
 	bool logData = false;
 	int line = 0;
+	
+	bool showTracker = false;
 	
 	double startTime;
 	double lastTime;
@@ -51,7 +53,7 @@ namespace {
 	ConstantLocation mLocation;
 	
 	// Living room shader
-	bool renderRoom = true;
+	bool showLivingRoom = true;
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
 	Shader* fragmentShader_living_room;
@@ -379,7 +381,7 @@ namespace {
 			
 			// Render tracker
 			int i = 0;
-			while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+			while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
 				renderTracker(i);
 				i++;
 			}
@@ -416,7 +418,7 @@ namespace {
 		
 		// Render tracker
 		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+		while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
 			renderTracker(i);
 			i++;
 		}
@@ -443,17 +445,12 @@ namespace {
 				if (loop < 0) {
 					if (eval) logger->endEvaluationLogger();
 
-					if (ikMode < 6 || dMaxPos == 0.1f) {
-						if (dMaxPos == 0.1f)
-							dMaxPos = 0.0f;
-						else {
-							ikMode++;
-							dMaxPos = 0.1f;
-						}
-						loop = 1;
-						log(Kore::Info, "%i: %f", ikMode, dMaxPos);
+					/* if (lambda[ikMode] < 0.3f) {
+						loop = 0;
+						lambda[ikMode] += 0.03f;
+						log(Kore::Info, "%i: %f", ikMode, lambda);
 						if (eval) logger->startEvaluationLogger();
-					}
+					} */
 				}
 			}
 		}
@@ -470,13 +467,13 @@ namespace {
 		
 		// Render tracker
 		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+		while (i < numOfEndEffectors && showTracker && cubes[i] != nullptr) {
 			renderTracker(i);
 			i++;
 		}
 		
 		// Render living room
-		if (renderRoom) renderLivingRoom(V, P);
+		if (showLivingRoom) renderLivingRoom(V, P);
 #endif
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -656,7 +653,7 @@ namespace {
 		for (int i = 0; i < numOfEndEffectors; ++i)
 			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);
 		
-		if (renderRoom) {
+		if (showLivingRoom) {
 			loadLivingRoomShader();
 			livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 1);
 			Kore::Quaternion livingRoomRot = Kore::Quaternion(0, 0, 0, 1);
