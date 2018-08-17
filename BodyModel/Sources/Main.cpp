@@ -21,7 +21,8 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // dynamic ik-parameter
-int ikMode = 2; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+int currentFile = 0;
+int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
 float dMaxPos[] = { 0.1f, 0.1f, 0, 0.1f, 0, 0.1f, 0.1f };
 float dMaxRot[] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -200,7 +201,6 @@ namespace {
 		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 		currentUserHeight = hmdPos.y();
 		
-		// todo: float factor = 173.3f / 161.3f; // ø Körperhöhe / ø Augenhöhe = 1.0744f
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
 		
@@ -221,8 +221,8 @@ namespace {
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
-				if (trackerPos.y() < currentUserHeight / 4) {
-					// Foot tracker (if y pos is in the lower quarter of the body)
+				if (trackerPos.y() < currentUserHeight / 3) {
+					// Foot tracker (if y pos is in the lower triple of the body)
 					if (trackerTransPos.x() > 0) {
 						log(Info, "leftFootTrackerIndex: %i -> %i", tracker[3]->trackerIndex, i);
 						tracker[3]->setTrackerIndex(i);
@@ -281,14 +281,13 @@ namespace {
 		}
 		
 		// Trigger button => logging
-		if (buttonNr == 33) {
-			if (value == 1) {
-				logData = true;
-				log(Info, "Start logging data.");
-			} else {
-				logData = false;
-				log(Info, "Stop recording data.");
-			}
+		if (buttonNr == 33 && value == 1) {
+			logData = !logData;
+			
+			if (logData)
+				logger->startLogger();
+			else
+				logger->endLogger();
 		}
 		
 		// Grip button => init Controller
@@ -314,7 +313,6 @@ namespace {
 	void initVars() {
 		// init & calibrate avatar
 		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
-		avatar->setScale(currentFile->scale);
 		calibratedAvatar = true; // recorded Data are always calibrated!
 		
 		initRot.normalize();
@@ -381,7 +379,7 @@ namespace {
 			
 			// Render tracker
 			int i = 0;
-			while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
+			while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
 				renderTracker(i);
 				i++;
 			}
@@ -424,13 +422,16 @@ namespace {
 		}
 		
 		// Render living room
-		if (renderRoom) {
+		if (showLivingRoom) {
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 #else
 		// Read line
-		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
+		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation)) {
+			if (!line)
+				avatar->setScale(logger->getScale());
+				
 			for (int i = 0; i < numOfEndEffectors; ++i)
 				executeMovement(i);
 			
@@ -438,21 +439,34 @@ namespace {
 		} else {
 			if (loop >= 0) {
 				if (eval) logger->saveEvaluationData(avatar);
-				initVars();
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
 				
 				if (loop < 0) {
 					if (eval) logger->endEvaluationLogger();
-
-					/* if (lambda[ikMode] < 0.15f) {
+					
+					if (currentFile < sizeof(currentGroup)/sizeof(currentGroup[0]) - 1) {
 						loop = 0;
-						lambda[ikMode] += 0.01f;
-						log(Kore::Info, "%i: %f", ikMode, lambda);
 						if (eval) logger->startEvaluationLogger();
-					} else
-						exit(0); */
+						log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, lambda);
+						
+						if (ikMode < 5) {
+							if (lambda[ikMode] < 1.0f) {
+								lambda[ikMode] += 0.1f;
+							} else {
+								ikMode++;
+								lambda[ikMode] = 0;
+							}
+						} else {
+							currentFile++;
+							ikMode = 0;
+						}
+					} else {
+						exit(0);
+					}
 				}
+				
+				if (loop >= 0) initVars();
 			}
 		}
 		

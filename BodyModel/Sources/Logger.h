@@ -9,19 +9,17 @@
 #include <fstream>
 #include <sstream>
 
-extern int ikMode, maxSteps[];
+extern int currentFile, ikMode, maxSteps[];
 extern float dMaxPos[], dMaxRot[], lambda[];
 
 class Logger {
 	
 private:
 	const char* positionData = "positionData";
-	bool initPositionData;
 	std::fstream positionDataOutputFile;
 	std::stringstream positionDataPath;
 	
 	const char* evaluationDataFilename = "evaluationData";
-	bool initEvaluationData;
 	std::fstream evaluationDataOutputFile;
 	std::stringstream evaluationDataPath;
 	
@@ -33,10 +31,13 @@ private:
 	std::fstream positionDataInputFile;
 	
 	float prevScale;
+	float scale;
 	
 public:
-	Logger();
 	~Logger();
+	
+	void startLogger();
+	void endLogger();
 	
 	void startEvaluationLogger();
 	void endEvaluationLogger();
@@ -46,4 +47,8 @@ public:
 	
 	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
 	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
+	
+	float getScale() {
+		return scale;
+	}
 };

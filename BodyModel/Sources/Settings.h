@@ -18,28 +18,28 @@ struct EndEffector {
 
 struct DataFile {
 	const char* positionDataFilename;
-	const float scale;
 	
-	DataFile(const char* position, float scale = 1.0f) : positionDataFilename(position), scale(scale) {}
+	DataFile(const char* position, float scale = 1.0f) : positionDataFilename(position) {}
 };
 
 namespace {
 	EndEffector* tracker[] = {
 		new EndEffector(2), 	// back
-		new EndEffector(17), 	// left-hand // todo: oder 16?
-		new EndEffector(27), 	// right-hand // todo: oder 26?
+		new EndEffector(17), 	// left-hand
+		new EndEffector(27), 	// right-hand
 		new EndEffector(6),		// left-foot
 		new EndEffector(31), 	// right-foot
 	};
 	
-	DataFile* testFile = new DataFile("positionData_mix.csv", 1.08f);
-	DataFile* squatsFile = new DataFile("positionData_squats.csv", 1.08f);
-	DataFile* currentFile = squatsFile;
+	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
+	const char* laufen[] = {"laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv"};
+	const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
+	const char** currentGroup = squats;
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
 	const int height = 768;
-	const bool eval = false;
+	const bool eval = true;
 	const bool withOrientation = true;
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
