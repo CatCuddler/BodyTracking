@@ -152,7 +152,8 @@ private:
 			if (
 				fabs(d[i]) > nearNull &&
 				N_i > nearNull &&
-				fabs(alpha_i) > nearNull
+				fabs(alpha_i) > nearNull &&
+				lambda[5] > nearNull
 				) {
 				float omegaInverse_i = 1.0 / d[i];
 				

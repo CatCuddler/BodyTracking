@@ -24,7 +24,7 @@ const files = sources
   )
   .map(file => {
     // get data-source an config-source
-    const source = req(file);
+    let source = req(file);
     const [config] = req(get(sources, getConfigIndex(file)));
 
     // get name & folder
@@ -37,6 +37,15 @@ const files = sources
     // get values from evaluationData_x.json
     const values = {};
     let length = 0;
+
+    if (get(source, [0, 'Iterations']) && get(source, [0, 'Error']))
+      source = source.map(x => ({
+        Validation: x.Iterations * x.Error,
+        'Validation Min': x.Iterations * x['Error Min'],
+        'Validation Max': x.Iterations * x['Error Max'],
+        ...x
+      }));
+
     source.forEach(value => {
       Object.keys(value)
         .filter(x => x)

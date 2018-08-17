@@ -25,7 +25,7 @@ int ikMode = 2; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: S
 int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
 float dMaxPos[] = { 0.1f, 0.1f, 0, 0.1f, 0, 0.1f, 0.1f };
 float dMaxRot[] = { 0, 0, 0, 0, 0, 0, 0 };
-float lambda[] = { 0.25f, 0.01f, 0.12f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
+float lambda[] = { 0.25f, 0.01f, 0.13f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
@@ -445,12 +445,13 @@ namespace {
 				if (loop < 0) {
 					if (eval) logger->endEvaluationLogger();
 
-					/* if (lambda[ikMode] < 0.3f) {
+					/* if (lambda[ikMode] < 0.15f) {
 						loop = 0;
-						lambda[ikMode] += 0.03f;
+						lambda[ikMode] += 0.01f;
 						log(Kore::Info, "%i: %f", ikMode, lambda);
 						if (eval) logger->startEvaluationLogger();
-					} */
+					} else
+						exit(0); */
 				}
 			}
 		}
