@@ -32,6 +32,8 @@ private:
 	int currLineNumber = 0;
 	std::fstream positionDataInputFile;
 	
+	float prevScale;
+	
 public:
 	Logger();
 	~Logger();
@@ -39,7 +41,7 @@ public:
 	void startEvaluationLogger();
 	void endEvaluationLogger();
 	
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
+	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	void saveEvaluationData(Avatar *avatar);
 	
 	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);

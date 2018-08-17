@@ -142,7 +142,7 @@ namespace {
 			Kore::Quaternion finalRot = desRotation[i];
 			vec3 finalPos = desPosition[i];
 #endif
-			if (logData) logger->saveData(finalPos, finalRot);
+			if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 			
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);

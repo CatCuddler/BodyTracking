@@ -32,16 +32,20 @@ void Logger::endEvaluationLogger() {
 	log(Kore::Info, "stop eval-logging!");
 }
 
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
+void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	if (!initPositionData) {
 		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
 		positionDataOutputFile.flush();
 		initPositionData = true;
 	}
 	
 	// Save positional and rotation data
-	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
+	if (scale != prevScale) {
+		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+		prevScale = scale;
+	} else
+		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
 	positionDataOutputFile.flush();
 }
 
