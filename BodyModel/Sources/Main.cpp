@@ -24,9 +24,11 @@ using namespace Kore::Graphics4;
 int currentFile = 0;
 int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
 int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
-float dMaxPos[] = { 0.1f, 0.1f, 0, 0.1f, 0, 0.1f, 0.1f };
-float dMaxRot[] = { 0, 0, 0, 0, 0, 0, 0 };
-float lambda[] = { 0.25f, 0.01f, 0.13f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
+// float dMaxPos[] = { 0.1f, 0.1f, 0, 0.1f, 0, 0.1f };
+float dMaxPos[] = { 0, 0, 0, 0, 0, 0 };
+float dMaxRot[] = { 0, 0, 0, 0, 0, 0 };
+// float lambda[] = { 0.25f, 0.01f, 0.13f, 0.1f, 0.18f, Kore::pi / 4 };
+float lambda[] = { 0, 0, 0, 0, 0, 0 };
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
@@ -442,15 +444,15 @@ namespace {
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
 				
-				if (loop < 0) {
+				/* if (loop < 0) {
 					if (eval) logger->endEvaluationLogger();
 					
-					if (currentFile < sizeof(currentGroup)/sizeof(currentGroup[0]) - 1) {
+					if (currentFile < 5 && lambda[ikMode] < 1.0f) {
 						loop = 0;
 						if (eval) logger->startEvaluationLogger();
-						log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, lambda);
+						log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, lambda[ikMode]);
 						
-						if (ikMode < 5) {
+						if (ikMode < 5 && lambda[ikMode] < 1.0f) {
 							if (lambda[ikMode] < 1.0f) {
 								lambda[ikMode] += 0.1f;
 							} else {
@@ -464,7 +466,7 @@ namespace {
 					} else {
 						exit(0);
 					}
-				}
+				} */
 				
 				if (loop >= 0) initVars();
 			}
