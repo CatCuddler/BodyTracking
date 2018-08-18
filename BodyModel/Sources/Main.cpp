@@ -443,30 +443,34 @@ namespace {
 				if (eval) logger->saveEvaluationData(avatar);
 				log(Kore::Info, "%i more iterations!", loop);
 				loop--;
-				
-				/* if (loop < 0) {
-					if (eval) logger->endEvaluationLogger();
-					
-					if (currentFile < 5 && lambda[ikMode] < 1.0f) {
-						loop = 0;
-						if (eval) logger->startEvaluationLogger();
-						log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, lambda[ikMode]);
-						
-						if (ikMode < 5 && lambda[ikMode] < 1.0f) {
-							if (lambda[ikMode] < 1.0f) {
-								lambda[ikMode] += 0.1f;
-							} else {
-								ikMode++;
-								lambda[ikMode] = 0;
-							}
-						} else {
-							currentFile++;
-							ikMode = 0;
-						}
-					} else {
-						exit(0);
-					}
-				} */
+                
+                if (eval && loop < 0) {
+                    if (eval) logger->endEvaluationLogger();
+                    
+                    if (currentFile < evalFilesInGroup) {
+                        evalFiles++;
+                        loop = 0;
+                        if (eval) logger->startEvaluationLogger();
+                        log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
+                        
+                        if (ikMode <= 5) {
+                            evalValue[ikMode] += evalStep;
+                            
+                            if (evalValue[ikMode] >= evalEnd + evalStep / 2.0f) {
+                                evalValue[ikMode] = 0;
+                                ikMode++;
+                                
+                                if (ikMode > 5) {
+                                    ikMode = 0;
+                                    currentFile++;
+                                }
+                            }
+                        }
+                    } else {
+                        log(Kore::Info, "%i files created!", evalFiles);
+                        exit(0);
+                    }
+                }
 				
 				if (loop >= 0) initVars();
 			}

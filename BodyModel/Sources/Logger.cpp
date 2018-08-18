@@ -24,6 +24,7 @@ void Logger::startLogger() {
 
 void Logger::endLogger() {
 	positionDataOutputFile.close();
+    prevScale = 0;
 	
 	log(Kore::Info, "stop logging!");
 }
