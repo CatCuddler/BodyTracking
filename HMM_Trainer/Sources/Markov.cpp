@@ -15,6 +15,7 @@
 #include <sstream>
 #include <time.h>
 #include <algorithm>    // std::min
+#include <cmath>
 using std::ofstream;
 using std::ifstream;
 using std::cout;
