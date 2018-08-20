@@ -48,6 +48,8 @@ struct EndEffector {
 	int boneIndex;
 	bool initialized;
 
+	string boneName;
+
 	EndEffector() : offsetRotation(Quaternion(0, 0, 0, 1)), offsetPosition(vec3(0, 0, 0)), boneIndex(0), initialized(false) {}
 };
 
@@ -127,17 +129,6 @@ namespace {
 
 	// Movement recording
 #ifdef KORE_STEAMVR
-	// Save path for data text file
-	const string filePath = "../../Tracking";
-	// File name of saved file followed by number of current recording
-	const string fileName = "Yoga_Krieger";
-	// Counter for current saved file to avoid overwriting data
-	int fileNumber = 0;
-	// File name and path for the HMM to be used in recognition
-	const string hmmPath = "./../Tracking";
-	const string hmmName = "Yoga_Krieger";
-	int movementIndex = 0;
-
 	// List of identifiers for sensors;  those will be used as a prefix for every row according to which sensor is being recorded. Unused sensors will not be mentioned
 	const string headIdentifier = "HMD";
 	const string leftIdentifier = "lhC";
@@ -145,10 +136,7 @@ namespace {
 	const string leftFootIdentifier = "lfT";
 	const string rightFootIdentifier = "rfT";
 	const string backIdentifier = "bac";
-	// Counter for the number of lines written to a file. Used for file reading in HMM_Trainer.
-	int lineNumber = 0;
-	// Stream for recording of data to the current text file
-	ofstream recordingFile;
+	
 	// Vector of data points logged in real time movement recognition
 	vector<vector<Point>> recognitionPoints(6);
 #endif
@@ -247,21 +235,24 @@ namespace {
 			endEffector->boneIndex = boneIndex;
 			endEffector->offsetRotation = Quaternion(0, 0, 0, 1);
 			endEffector->offsetPosition = vec3(0, 0, 0);
-
+	
 			if (boneIndex == backBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0.05f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), Kore::pi * 1.57)); //red
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi));
+				endEffector->boneName = backIdentifier;
 			}
 			else if (boneIndex == leftHandBoneIndex) {
 				endEffector->offsetPosition = vec3(0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), Kore::pi * 0.1)); //green
+				endEffector->boneName = leftIdentifier;
 			}
 			else if (boneIndex == rightHandBoneIndex) {
 				endEffector->offsetPosition = vec3(-0.02f, 0.02f, 0);
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), -Kore::pi / 1.5f)); //red
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), -Kore::pi * 0.1)); //green
+				endEffector->boneName = rightIdentifier;
 			}
 			else if (boneIndex == leftFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
@@ -269,6 +260,7 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.0f))); //green
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * 0.125f))); //blue
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
+				endEffector->boneName = leftFootIdentifier;
 			}
 			else if (boneIndex == rightFootBoneIndex) {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
@@ -276,6 +268,7 @@ namespace {
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //green
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * -0.125f))); //blue
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
+				endEffector->boneName = rightIdentifier;
 			}
 
 			endEffector->initialized = true;
@@ -297,10 +290,6 @@ namespace {
 	}
 
 	void setDesiredPosition(EndEffector* endEffector, Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
-
 		applyOffset(endEffector, desPosition, desRotation);
 
 		// Transform desired position to the character coordinate system
@@ -311,10 +300,6 @@ namespace {
 
 	// desPosition and desRotation are global
 	void setDesiredPositionAndOrientation(EndEffector* endEffector, Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
-
 		applyOffset(endEffector, desPosition, desRotation);
 
 		// Transform desired position to the character local coordinate system
@@ -325,10 +310,6 @@ namespace {
 	}
 
 	void setBackBonePosition(Kore::vec3& desPosition, Kore::Quaternion& desRotation) {
-		if (logData) {
-			logger->saveData(desPosition, desRotation);
-		}
-
 		applyOffset(back, desPosition, desRotation);
 
 		initRot = desRotation;
@@ -358,8 +339,9 @@ namespace {
 
 			if (record) { // data is recorded
 
-				recordingFile << identifier << " " << lastTime << " " << (transitionX * startRotCos - transitionZ * startRotSin) << " " << ((transitionY / currentUserHeight) * 1.8) << " " << (transitionZ * startRotCos + transitionX * startRotSin) << '\n';
-				lineNumber++;
+				vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
+				// TODO: why dont we use raw data?
+				logger->saveData(lastTime, identifier, hmmPos, Quaternion(0, 0, 0, 1));
 			}
 
 			if (recognition) { // data is stored internally for evaluation at the end of recognition
@@ -817,25 +799,20 @@ namespace {
 				record = !record;
 
 				if (record) {
+					log(Info, "Start recording data");
 					Audio1::play(startRecordingSound);
-					lineNumber = 0;
-					// make sure a new file is created everytime the recording starts
-					while (ifstream(filePath + fileName + std::to_string(fileNumber) + ".txt")) {
-						fileNumber++;
-					}
-					recordingFile.open(filePath + fileName + std::to_string(fileNumber) + ".txt", ios::out);
-					recordingFile << "N=        \n"; // placeholder for line number that will be overwritten when the file is closed
-					// save current HMD position and rotation for data normalisation
+					
 					startX = hmdPosition.x();
 					startZ = hmdPosition.z();
 					startRotCos = cos(hmdRotation.y * 3.141592653589793238);
 					startRotSin = sin(hmdRotation.y * 3.141592653589793238);
+
 				}
 				else {
+					log(Info, "Stop recording data");
 					Audio1::play(stopRecordingSound);
-					recordingFile.seekp(0);
-					recordingFile << "N= " << lineNumber; // store number of lines / datapoints
-					recordingFile.close();
+
+					logger->closeFile();
 				}
 			}
 #endif
@@ -864,7 +841,8 @@ namespace {
 				}
 				else { // stoping and evaluation recognition
 
-					ofstream filestream;
+					// TODO
+					/*ofstream filestream;
 					filestream.open(hmmPath + hmmName + "_analysis.txt", ios::out | ios::app);
 
 					// read clusters for all trackers from file
@@ -896,7 +874,7 @@ namespace {
 					else { 
 						Audio1::play(wrongSound);
 					}
-					filestream.close();
+					filestream.close();*/
 				}
 		}
 #endif

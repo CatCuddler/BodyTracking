@@ -18,16 +18,28 @@ Logger::~Logger() {
 	logDataOutputFile.close();
 }
 
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
+void Logger::saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot) {
 	if (!initPositionData) {
+		time_t t = time(0);   // Get time now
+		positionDataPath.str(std::string());
+		positionDataPath << positionData << "_" << t << ".csv";
+
+		currLineNumber = 0;
+		
 		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+		positionDataOutputFile << "name;timestemp;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+
+		// placeholder for line number that will be overwritten when the file is closed
+		positionDataOutputFile << "N=" << currLineNumber << "\n";
+
 		positionDataOutputFile.flush();
 		initPositionData = true;
 	}
 	
+	currLineNumber++;
+
 	// Save positional and rotation data
-	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
+	positionDataOutputFile << name << ";" << timestamp << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
 	positionDataOutputFile.flush();
 }
 
@@ -43,6 +55,17 @@ void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 	initTransRotDataOutputFile << initPos.x() << ";" << initPos.y() << ";" << initPos.z() << ";" << initRot.x << ";" << initRot.y << ";" << initRot.z << ";" << initRot.w << "\n";
 	initTransRotDataOutputFile.flush();
 	initTransRotDataOutputFile.close();
+}
+
+void Logger::closeFile() {
+	initPositionData = false;
+	
+	positionDataOutputFile.clear();
+	positionDataOutputFile.seekg(1, std::ios::beg);		// TODO: does not work 
+	
+	positionDataOutputFile << "N=" << currLineNumber << "\n"; // store number of lines / datapoints
+	positionDataOutputFile.flush();
+	positionDataOutputFile.close();
 }
 
 void Logger::saveLogData(const char* str, float num) {

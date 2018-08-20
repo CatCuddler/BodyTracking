@@ -3,6 +3,7 @@
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,7 +13,10 @@ class Logger {
 private:
 	const char* positionData = "positionData";
 	const char* initTransRotFilename = "initTransAndRot";
-	const char* logDataFilename = "logData";
+//	const char* logDataFilename = "logData";
+	const char* logDataFilename = "Yoga_Krieger";
+
+	const char* analysisFile = "Yoga_Krieger_analysis.txt";
 	
 	const char* logData = "logData";
 	
@@ -37,8 +41,9 @@ private:
 public:
 	Logger();
 	~Logger();
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
+	void saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot);
 	void saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot);
+	void closeFile();
 	
 	void saveLogData(const char* str, float num);
 	
