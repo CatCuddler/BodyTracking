@@ -6,8 +6,24 @@
 #include <Kore/Graphics1/Color.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
+#include <Kore/Audio2/Audio.h>
+#include <Kore/Audio1/Audio.h>
+#include <Kore/Audio1/Sound.h>
+#include <Kore/Audio1/SoundStream.h>
 #include <Kore/System.h>
 #include <Kore/Log.h>
+
+#include <iostream>
+#include <fstream>
+#include <algorithm>    // std::all_of
+#include <string>
+#include <vector>
+
+#include "kMeans.h"
+#include "kMeans.cpp"
+#include "Markov.h"
+#include "Markov.cpp"
+#include "matrix.h"
 
 #include "MeshObject.h"
 #include "Avatar.h"
@@ -19,6 +35,9 @@
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>
 #endif
+
+
+using namespace std;
 
 using namespace Kore;
 using namespace Kore::Graphics4;
@@ -50,6 +69,33 @@ namespace {
 	double startTime;
 	double lastTime;
 	float fiveSec;
+
+	// Initial tracked position as base for rotation of any futher data points
+	double startX;
+	double startZ;
+	double startRotCos;
+	double startRotSin;
+	double transitionX;
+	double transitionY;
+	double transitionZ;
+	int dataPointNumber; // x-th point of data collected in current recording/recognition
+
+	// swapped to namespace to be accessible to adjust y tracking
+	float currentUserHeight;
+
+	// audio cues for Markov
+	Sound* startRecordingSound; 
+	Sound* stopRecordingSound;
+	Sound* correctSound;
+	Sound* wrongSound;
+	Sound* startRecognitionSound;
+	Sound* leftArmWrongSound;
+	Sound* rightArmWrongSound;
+	Sound* armsWrongSound;
+	Sound* leftLegWrongSound;
+	Sound* rightLegWrongSound;
+	Sound* legsWrongSound;
+	Sound* headWrongSound;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -83,6 +129,36 @@ namespace {
 	bool rotate = false;
 	bool W, A, S, D = false;
 	bool Z, X = false;
+	bool record = false;
+	bool recognition = false;
+
+	// Movement recording
+#ifdef KORE_STEAMVR
+	// Save path for data text file
+	const string filePath = "C:\\Users\\VRPC\\Desktop\\Tracking\\";
+	// File name of saved file followed by number of current recording
+	const string fileName = "Yoga_Krieger";
+	// Counter for current saved file to avoid overwriting data
+	int fileNumber = 0;
+	// File name and path for the HMM to be used in recognition
+	const string hmmPath = "C:\\Users\\VRPC\\Desktop\\Tracking\\";
+	const string hmmName = "Yoga_Krieger";
+	int movementIndex = 0;
+
+	// List of identifiers for sensors;  those will be used as a prefix for every row according to which sensor is being recorded. Unused sensors will not be mentioned
+	const string headIdentifier = "HMD";
+	const string leftIdentifier = "lhC";
+	const string rightIdentifier = "rhC";
+	const string leftFootIdentifier = "lfT";
+	const string rightFootIdentifier = "rfT";
+	const string backIdentifier = "bac";
+	// Counter for the number of lines written to a file. Used for file reading in HMM_Trainer.
+	int lineNumber = 0;
+	// Stream for recording of data to the current text file
+	ofstream recordingFile;
+	// Vector of data points logged in real time movement recognition
+	vector<vector<Point>> recognitionPoints(6);
+#endif
 
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
@@ -98,10 +174,15 @@ namespace {
 	int leftFootTrackerIndex = -1;
 	int rightFootTrackerIndex = -1;
 	int backTrackerIndex = -1;
+	int hmdIndex = -1; // HMD index to be able to record its movement
 #endif
 
 	vec3 desPosition[numOfEndEffectors];
 	Quaternion desRotation[numOfEndEffectors];
+
+	//used for tracking the head movement
+	vec3 hmdPosition;
+	Quaternion hmdRotation;
 
 	// End-effectors
 	EndEffector* leftHand;
@@ -200,7 +281,7 @@ namespace {
 				endEffector->offsetPosition = vec3(0, 0, 0.05f);
 
 				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 1, 0), (Kore::pi * -0.5f) + (Kore::pi * 0.0f))); //green
-				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f)  + (Kore::pi * -0.125f))); //blue
+				endEffector->offsetRotation.rotate(Quaternion(vec3(0, 0, 1), (Kore::pi * 0.0f) + (Kore::pi * -0.125f))); //blue
 				endEffector->offsetRotation.rotate(Quaternion(vec3(1, 0, 0), (Kore::pi * 0.5f) + (Kore::pi * 0.15f))); //red  //0.16f
 			}
 
@@ -256,7 +337,7 @@ namespace {
 		}
 
 		applyOffset(back, desPosition, desRotation);
-		
+
 		initRot = desRotation;
 		initRot.normalize();
 		initRotInv = initRot.invert();
@@ -264,6 +345,53 @@ namespace {
 		initTransInv = avatar->M.Invert();
 	}
 
+	// record the current position and rotation of a tracker - works for controllers, trackers and HMD - and save it into a file
+#ifdef KORE_STEAMVR
+	void recordMovement(string identifier, int currentIndex = 0) {
+		if (record || recognition) { // either recording or recognition is active
+
+			// check for HMD as it is not part of desPosition/desRotation array
+			if (identifier == headIdentifier) {
+				transitionX = hmdPosition.x() - startX;
+				transitionY = hmdPosition.y();
+				transitionZ = hmdPosition.z() - startZ;
+			}
+			// check for index based position in array of desRotation and desPosition. Only controllers and trackers are part of this array
+			else {
+				transitionX = desPosition[currentIndex].x() - startX;
+				transitionY = desPosition[currentIndex].y();
+				transitionZ = desPosition[currentIndex].z() - startZ;
+			}
+
+			if (record) { // data is recorded
+
+				recordingFile << identifier << " " << lastTime << " " << (transitionX * startRotCos - transitionZ * startRotSin) << " " << ((transitionY / currentUserHeight) * 1.8) << " " << (transitionZ * startRotCos + transitionX * startRotSin) << '\n';
+				lineNumber++;
+			}
+
+			if (recognition) { // data is stored internally for evaluation at the end of recognition
+
+				double x, y, z;
+				x = (transitionX * startRotCos - transitionZ * startRotSin);
+				y = (transitionY / currentUserHeight) * 1.8;
+				z = (transitionZ * startRotCos + transitionX * startRotSin);
+
+				vector<double> values = { x, y, z };
+				Point point = Point(dataPointNumber, values);
+				dataPointNumber++;
+
+				if (identifier.compare("HMD") == 0)      recognitionPoints.at(0).push_back(point);
+				else if (identifier.compare("lhC") == 0) recognitionPoints.at(1).push_back(point);
+				else if (identifier.compare("rhC") == 0) recognitionPoints.at(2).push_back(point);
+				else if (identifier.compare("bac") == 0) recognitionPoints.at(3).push_back(point);
+				else if (identifier.compare("lfT") == 0) recognitionPoints.at(4).push_back(point);
+				else if (identifier.compare("rfT") == 0) recognitionPoints.at(5).push_back(point);
+			}
+
+		}
+	}
+#endif
+	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -319,7 +447,7 @@ namespace {
 
 			state = VrInterface::getSensorState(0);
 			vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
-			float currentUserHeight = hmdPos.y();
+			currentUserHeight = hmdPos.y();
 
 			float scale = currentUserHeight / currentAvatarHeight;
 			avatar->setScale(scale);
@@ -337,7 +465,7 @@ namespace {
 			avatar->M = initTrans * initRot.matrix().Transpose() * hmdOffset;
 			initTransInv = (initTrans * initRot.matrix().Transpose() * hmdOffset).Invert();
 
-			log(Info, "current avatar height %f, currend user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+			log(Info, "current avatar height %f, current user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
 
 			// Get left and right tracker index
 			VrPoseState controller;
@@ -378,6 +506,11 @@ namespace {
 						rightTrackerIndex = i;
 					}
 				}
+				else if (controller.trackedDevice == TrackedDevice::HMD) {
+					//Head mounted display
+					log(Info, "hmdIndex: %i -> %i", hmdIndex, i);
+					hmdIndex = i;
+				}
 			}
 
 			if (logData) {
@@ -389,6 +522,20 @@ namespace {
 		}
 
 		VrPoseState controller;
+		if (hmdIndex != -1) {
+			SensorState state = VrInterface::getSensorState(0);
+			controller = VrInterface::getController(hmdIndex);
+
+			// Get controller position and rotation
+			hmdPosition = state.pose.vrPose.position;
+			hmdRotation = state.pose.vrPose.orientation;
+
+			// print controller position to file (if recording is enabled)
+			recordMovement(headIdentifier);
+
+			// currently this is only recorded and not used in any way
+		}
+
 		if (leftTrackerIndex != -1) {
 			controller = VrInterface::getController(leftTrackerIndex);
 
@@ -396,7 +543,10 @@ namespace {
 			desPosition[0] = controller.vrPose.position;
 			desRotation[0] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
+			// print controller position to file (if recording is enabled)
+			recordMovement(leftIdentifier, 0);
+
+			//setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
 		}
 
 		if (rightTrackerIndex != -1) {
@@ -406,7 +556,10 @@ namespace {
 			desPosition[1] = controller.vrPose.position;
 			desRotation[1] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
+			// print controller position to file (if recording is enabled)
+			recordMovement(rightIdentifier, 1);
+
+			//setDesiredPositionAndOrientation(rightHand, desPosition[1], desRotation[1]);
 		}
 
 		if (backTrackerIndex != -1) {
@@ -416,7 +569,11 @@ namespace {
 			desPosition[2] = controller.vrPose.position;
 			desRotation[2] = controller.vrPose.orientation;
 
-			setBackBonePosition(desPosition[2], desRotation[2]);
+			// print controller position to file (if recording is enabled)
+			recordMovement(backIdentifier, 2);
+
+
+			//setBackBonePosition(desPosition[2], desRotation[2]);
 		}
 
 		if (leftFootTrackerIndex != -1) {
@@ -426,7 +583,10 @@ namespace {
 			desPosition[3] = controller.vrPose.position;
 			desRotation[3] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
+			// print controller position to file (if recording is enabled)
+			recordMovement(leftFootIdentifier, 3);
+
+			//setDesiredPositionAndOrientation(leftFoot, desPosition[3], desRotation[3]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(leftHand, desPosition[0], desRotation[0]);
@@ -443,7 +603,10 @@ namespace {
 			desPosition[4] = controller.vrPose.position;
 			desRotation[4] = controller.vrPose.orientation;
 
-			setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
+			// print controller position to file (if recording is enabled)
+			recordMovement(rightFootIdentifier, 4);
+
+			//setDesiredPositionAndOrientation(rightFoot, desPosition[4], desRotation[4]);
 
 			//if (track == 0) {
 			//	setDesiredPositionAndOrientation(rightHand, desPosition[0], desRotation[0]);
@@ -467,7 +630,7 @@ namespace {
 
 			// Animate avatar
 			Graphics4::setMatrix(mLocation, avatar->M);
-			avatar->animate(tex, deltaT);
+//			avatar->animate(tex, deltaT);
 
 			// Render tracker
 			renderTracker();
@@ -500,7 +663,7 @@ namespace {
 		Graphics4::setMatrix(mLocation, avatar->M);
 
 		// Animate avatar
-		avatar->animate(tex, deltaT);
+		//avatar->animate(tex, deltaT);
 		//avatar->drawJoints(avatar->M, state.pose.vrPose.eye, state.pose.vrPose.projection, width, height, true);
 
 		// Render tracker
@@ -655,6 +818,97 @@ namespace {
 		case KeyQ:
 			System::stop();
 			break;
+		case Kore::KeyE:
+#ifdef KORE_STEAMVR
+			if (!recognition) { // recording is only possible while there is no recognition in progress
+				record = !record;
+
+				if (record) {
+					Audio1::play(startRecordingSound);
+					lineNumber = 0;
+					// make sure a new file is created everytime the recording starts
+					while (ifstream(filePath + fileName + std::to_string(fileNumber) + ".txt")) {
+						fileNumber++;
+					}
+					recordingFile.open(filePath + fileName + std::to_string(fileNumber) + ".txt", ios::out);
+					recordingFile << "N=        \n"; // placeholder for line number that will be overwritten when the file is closed
+					// save current HMD position and rotation for data normalisation
+					startX = hmdPosition.x();
+					startZ = hmdPosition.z();
+					startRotCos = cos(hmdRotation.y * 3.141592653589793238);
+					startRotSin = sin(hmdRotation.y * 3.141592653589793238);
+				}
+				else {
+					Audio1::play(stopRecordingSound);
+					recordingFile.seekp(0);
+					recordingFile << "N= " << lineNumber; // store number of lines / datapoints
+					recordingFile.close();
+				}
+			}
+#endif
+			break;
+
+		case Kore::KeyT:
+#ifdef KORE_STEAMVR
+			if (!record) { // recognition is only possible while there is no recording in progress
+				recognition = !recognition;
+
+				if (recognition) { // starting recognition
+					Audio1::play(startRecognitionSound);
+					// clear prievously stored points
+					recognitionPoints.at(0).clear();
+					recognitionPoints.at(1).clear();
+					recognitionPoints.at(2).clear();
+					recognitionPoints.at(3).clear();
+					recognitionPoints.at(4).clear();
+					recognitionPoints.at(5).clear();
+					dataPointNumber = 0;
+					// save current HMD position and rotation for data normalisation
+					startX = hmdPosition.x();
+					startZ = hmdPosition.z();
+					startRotCos = cos(hmdRotation.y * 3.141592653589793238);
+					startRotSin = sin(hmdRotation.y * 3.141592653589793238);
+				}
+				else { // stoping and evaluation recognition
+
+					ofstream filestream;
+					filestream.open(hmmPath + hmmName + "_analysis.txt", ios::out | ios::app);
+
+					// read clusters for all trackers from file
+					bool trackersPresent[6];
+					vector<KMeans> kmeanVector(6);
+					for (int ii = 0; ii < 6; ii++) {
+						try {
+							KMeans kmeans(hmmPath, hmmName + "_" + to_string(ii));
+							kmeanVector.at(ii) = kmeans;
+							trackersPresent[ii] = true;
+						}
+						catch (std::invalid_argument) {
+							trackersPresent[ii] = false;
+						}
+					}
+					vector<bool> trackerMovementRecognised(6, true); // store which trackers were recognised as the correct movement
+					for (int ii = 0; ii < 6; ii++) { // check all trackers
+						if (!recognitionPoints.at(ii).empty() && trackersPresent[ii]) { // make sure the tracker is currently present and there is a HMM for it
+							vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints())); // clustering data
+							HMM model(hmmPath, hmmName + "_" + to_string(ii)); // reading HMM
+							trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin())); // calculating probability and comparing with probability threshold as well as applying restfix
+							filestream << model.calculateProbability(clusteredPoints) << ";" ;
+						}
+					}
+					filestream << "\n";
+					if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
+						Audio1::play(correctSound);
+					}
+					else { 
+						Audio1::play(wrongSound);
+					}
+					filestream.close();
+				}
+		}
+#endif
+			break;
+			
 		default:
 			break;
 		}
@@ -824,6 +1078,22 @@ int kore(int argc, char** argv) {
 	init();
 
 	System::setCallback(update);
+
+	// Sound initiation
+	Audio1::init();
+	Audio2::init();
+	startRecordingSound = new Sound("sound/start.wav");
+	stopRecordingSound = new Sound("sound/stop.wav");
+	correctSound = new Sound("sound/correct.wav");
+	wrongSound = new Sound("sound/wrong.wav");
+	startRecognitionSound = new Sound("sound/start recognition.wav");
+	leftArmWrongSound = new Sound("sound/left arm another look.wav");
+	rightArmWrongSound = new Sound("sound/right arm another look.wav");
+	armsWrongSound = new Sound("sound/arms another look.wav");
+	leftLegWrongSound = new Sound("sound/left leg another look.wav");
+	rightLegWrongSound = new Sound("sound/right leg another look.wav");
+	legsWrongSound = new Sound("sound/legs another look.wav");
+	headWrongSound = new Sound("sound/head straight.wav");
 
 	startTime = System::time();
 
