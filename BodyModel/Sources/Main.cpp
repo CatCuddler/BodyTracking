@@ -89,13 +89,6 @@ namespace {
 	Sound* correctSound;
 	Sound* wrongSound;
 	Sound* startRecognitionSound;
-	Sound* leftArmWrongSound;
-	Sound* rightArmWrongSound;
-	Sound* armsWrongSound;
-	Sound* leftLegWrongSound;
-	Sound* rightLegWrongSound;
-	Sound* legsWrongSound;
-	Sound* headWrongSound;
 
 	// Avatar shader
 	VertexStructure structure;
@@ -135,13 +128,13 @@ namespace {
 	// Movement recording
 #ifdef KORE_STEAMVR
 	// Save path for data text file
-	const string filePath = "C:\\Users\\VRPC\\Desktop\\Tracking\\";
+	const string filePath = "../../Tracking";
 	// File name of saved file followed by number of current recording
 	const string fileName = "Yoga_Krieger";
 	// Counter for current saved file to avoid overwriting data
 	int fileNumber = 0;
 	// File name and path for the HMM to be used in recognition
-	const string hmmPath = "C:\\Users\\VRPC\\Desktop\\Tracking\\";
+	const string hmmPath = "./../Tracking";
 	const string hmmName = "Yoga_Krieger";
 	int movementIndex = 0;
 
@@ -1086,14 +1079,7 @@ int kore(int argc, char** argv) {
 	stopRecordingSound = new Sound("sound/stop.wav");
 	correctSound = new Sound("sound/correct.wav");
 	wrongSound = new Sound("sound/wrong.wav");
-	startRecognitionSound = new Sound("sound/start recognition.wav");
-	leftArmWrongSound = new Sound("sound/left arm another look.wav");
-	rightArmWrongSound = new Sound("sound/right arm another look.wav");
-	armsWrongSound = new Sound("sound/arms another look.wav");
-	leftLegWrongSound = new Sound("sound/left leg another look.wav");
-	rightLegWrongSound = new Sound("sound/right leg another look.wav");
-	legsWrongSound = new Sound("sound/legs another look.wav");
-	headWrongSound = new Sound("sound/head straight.wav");
+	startRecognitionSound = new Sound("sound/start_recognition.wav");
 
 	startTime = System::time();
 

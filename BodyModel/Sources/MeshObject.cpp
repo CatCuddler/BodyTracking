@@ -37,7 +37,7 @@ namespace {
 			
 			//log(Info, "%i", indices[i]);
 		}
-
+		
 	}
 	
 	void setPosition(Mesh* mesh, int size, const float* data) {
@@ -151,7 +151,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 		}
 		
 		// Mesh Vertex Buffer
-		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure, 0);
+		vertexBuffers[j] = new VertexBuffer(mesh->numVertices, structure);
 		float* vertices = vertexBuffers[j]->lock();
 		setVertexFromMesh(vertices, mesh, scale, material->texScaleX, material->texScaleY);
 		vertexBuffers[j]->unlock();
@@ -167,7 +167,7 @@ MeshObject::MeshObject(const char* meshFile, const char* textureFile, const Vert
 }
 
 void MeshObject::render(TextureUnit tex) {
-	for (int i = 0; i < meshesCount; ++i) {		
+	for (int i = 0; i < meshesCount; ++i) {
 		Texture* image = images[i];
 		Graphics4::setTexture(tex, image);
 		
@@ -196,11 +196,6 @@ void MeshObject::LoadObj(const char* filename) {
 	}
 	
 	delete[] buffer;
-}
-
-BoneNode* MeshObject::getBoneWithIndex(int boneIndex) const {
-	BoneNode* bone = bones[boneIndex - 1];
-	return bone;
 }
 
 void MeshObject::ConvertObjects(const Structure& rootStructure) {
@@ -413,7 +408,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				const OGEX::MaterialRefStructure& materialRefStructure = *static_cast<const OGEX::MaterialRefStructure *>(subStructure);
 				const Structure* subSubStructure = materialRefStructure.GetTargetStructure();
 				
-				geometry->materialRef = subSubStructure->GetStructureName();				
+				geometry->materialRef = subSubStructure->GetStructureName();
 				geometry->materialIndex = getIndexFromString(geometry->materialRef, 8);
 				break;
 			}
@@ -424,7 +419,7 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 				
 				geometry->objectRef = subSubStructure->GetStructureName();
 				geometry->geometryIndex = getIndexFromString(geometry->objectRef, 8);
-
+				
 				break;
 			}
 				
@@ -440,8 +435,14 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
 	Material* material = new Material();
 	
-	material->materialName = materialStructure.GetStructureName();
-	material->materialIndex = getIndexFromString(material->materialName, 8);
+	const char* materialName = static_cast<const char*>(materialStructure.GetMaterialName());
+	int length = (int)strlen(materialName) + 1;
+	material->materialName = new char[length]();
+	copyString(materialName, material->materialName, length);
+	
+	const char* mat = materialStructure.GetStructureName();
+	material->materialIndex = getIndexFromString(mat, 8);
+	
 	//log(Info, "Material name %s, index %i", material->materialName, material->materialIndex);
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
@@ -460,7 +461,7 @@ Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStr
 					const float* specular = colorStructure.GetColor();
 					material->specular = getVector3(specular);
 				}
-
+				
 				break;
 			}
 				
@@ -552,8 +553,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	if (subStructure != nullptr) {
 		const OGEX::AnimationStructure& animationStructure = *static_cast<const OGEX::AnimationStructure *>(subStructure);
 		const OGEX::TrackStructure& trackStructure = *static_cast<const OGEX::TrackStructure *>(animationStructure.GetFirstSubstructure(OGEX::kStructureTrack));
-		const OGEX::TimeStructure* timeStructure = trackStructure.GetTimeStructure();
-		const OGEX::KeyStructure* keyStructureTime = timeStructure->GetKeyValueStructure();
 		
 		const OGEX::ValueStructure* valueStructure = trackStructure.GetValueStructure();
 		const OGEX::KeyStructure* keyStructureVal = valueStructure->GetKeyValueStructure();
@@ -574,7 +573,7 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 			mat4 transMat = getMatrix4x4(trans);
 			bone->aniTransformations.push_back(transMat);
 		}
-	
+		
 	}
 	return bone;
 }
@@ -620,13 +619,12 @@ void MeshObject::setScale(float scaleFactor) {
 	BoneNode* root = bones[0];
 	
 	mat4 scaleMat = mat4::Identity();
-	scaleMat.Set(3, 3, 1.0/scaleFactor);
+	scaleMat.Set(3, 3, 1.0 / scaleFactor);
 	
-	root->transform = root->transform * scaleMat; //T * R * S
+	root->transform = root->transform * scaleMat; // T * R * S
 	root->local = root->transform;
 	
 	scale = scaleFactor;
 }
-
 
 

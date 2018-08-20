@@ -28,6 +28,8 @@ public:
 	void drawVertices(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight);
 	void drawJoints(const Kore::mat4& modelMatrix, const Kore::mat4& viewMatrix, const Kore::mat4& projectionMatrix, int screenWidth, int screenHeight, bool skeleton);
 	
+	BoneNode* getBoneWithIndex(int index) const;
+	
 	Kore::vec3 getBonePosition(int boneIndex) const;
 	Kore::Quaternion getBoneLocalRotation(int boneIndex) const;
 	Kore::Quaternion getBoneGlobalRotation(int boneIndex) const;
