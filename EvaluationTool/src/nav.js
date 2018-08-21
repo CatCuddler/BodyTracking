@@ -22,7 +22,11 @@ const Nav = ({
   scale,
   setScale,
   interpolate,
-  setInterpolate
+  setInterpolate,
+  notnull,
+  setNotNull,
+  average,
+  setAverage
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
@@ -47,10 +51,22 @@ const Nav = ({
     <Dropdown item text="options">
       <Dropdown.Menu>
         <Dropdown.Item
-          icon={scale ? 'check' : undefined}
-          text="scale"
-          active={!!scale}
-          onClick={() => setScale(!scale)}
+          icon={scale === 1 || scale === -1 ? 'check' : undefined}
+          text="scale (min-max norm)"
+          active={scale === 1 || scale === -1}
+          onClick={() => setScale(scale === 1 || scale === -1 ? 0 : 1)}
+        />
+        <Dropdown.Item
+          icon={scale === 2 ? 'check' : undefined}
+          text="scale (zero-mean/unit-variance standardization)"
+          active={scale === 2}
+          onClick={() => setScale(scale === 2 ? 0 : 2)}
+        />
+        <Dropdown.Item
+          icon={average ? 'check' : undefined}
+          text="average"
+          active={!!average}
+          onClick={() => setAverage(!average)}
         />
         <Dropdown.Item
           icon={min ? 'check' : undefined}
@@ -69,6 +85,12 @@ const Nav = ({
           text="interpolate"
           active={!!interpolate}
           onClick={() => setInterpolate(!interpolate)}
+        />
+        <Dropdown.Item
+          icon={notnull ? 'check' : undefined}
+          text="not null"
+          active={!!notnull}
+          onClick={() => setNotNull(!notnull)}
         />
       </Dropdown.Menu>
     </Dropdown>

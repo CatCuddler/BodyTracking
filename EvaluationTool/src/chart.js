@@ -1,7 +1,7 @@
 import React from 'react';
-import { ResponsiveLine } from '@nivo/line';
-import { compose, withPropsOnChange } from 'recompose';
+import { compose, withPropsOnChange, withHandlers } from 'recompose';
 import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
+import { ResponsiveLine } from './line';
 import colorsMaterial from './colors';
 
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
@@ -198,23 +198,24 @@ const enhance = compose(
   ),
   withPropsOnChange(['scale', 'data'], ({ scale, data }) => ({
     // scale values from 0% to 100%
-    data: !scale
-      ? data
-      : data.map(d => {
-          const ys = d.data.map(({ y }) => y);
-          const lowest = Math.min(...ys);
-          const highest = Math.max(...ys) - lowest;
+    data:
+      scale === 1 || scale === -1
+        ? data.map(d => {
+            const ys = d.data.map(({ y }) => y);
+            const lowest = Math.min(...ys);
+            const highest = Math.max(...ys) - lowest;
 
-          return {
-            ...d,
-            data: d.data.map(({ x, y }) => ({
-              x,
-              y: highest
-                ? Math.round(((y - lowest) / highest) * 10000) / 100
-                : y
-            }))
-          };
-        })
+            return {
+              ...d,
+              data: d.data.map(({ x, y }) => ({
+                x,
+                y: highest
+                  ? Math.round(((y - lowest) / highest) * 10000) / 100
+                  : y
+              }))
+            };
+          })
+        : data
   })),
   withPropsOnChange(
     ['files', 'data', 'groupBy'],
@@ -233,7 +234,7 @@ const enhance = compose(
   ),
   withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
     const tickValues = [];
-    let min = 0;
+    let min = Infinity;
     let max = 0;
 
     if (interpolate) {
@@ -279,10 +280,161 @@ const enhance = compose(
     }
 
     return { data, tickValues };
+  }),
+  withPropsOnChange(['data', 'notnull'], ({ data: d, notnull }) => ({
+    data: notnull
+      ? d.map(({ data, ...rest }) => ({
+          ...rest,
+          data: data.filter(({ x }) => x)
+        }))
+      : d
+  })),
+  withPropsOnChange(['data', 'scale'], ({ data: d, scale }) => {
+    if (scale === 2)
+      return {
+        data: d.map(({ data, ...rest }) => {
+          let mittelwert = 0;
+          data.forEach(({ y }) => {
+            mittelwert += y;
+          });
+          mittelwert /= data.length;
+
+          let standardabweichung = 0;
+          data.forEach(({ y }) => {
+            standardabweichung += (y - mittelwert) ** 2;
+          });
+          standardabweichung /= data.length;
+          standardabweichung = Math.sqrt(standardabweichung);
+
+          return {
+            ...rest,
+            standardabweichung,
+            mittelwert,
+            data: data.map(({ x, y }) => ({
+              x,
+              y:
+                Math.round(((y - mittelwert) / standardabweichung) * 1000) /
+                1000
+            }))
+          };
+        })
+      };
+
+    return { data: d };
+  }),
+  withPropsOnChange(['data', 'average'], ({ data: d, average: a }) => {
+    if (a) {
+      const average = {
+        id: 'Average',
+        color: get(colorsMaterial, [d.length, 'palette', 6], 'black'),
+        data: []
+      };
+
+      d.forEach(({ data }) => {
+        data.forEach(({ x, y }, i) => {
+          if (!average.data[i]) average.data[i] = { x, y };
+          else average.data[i].y += y;
+        });
+      });
+      average.data = average.data.map(({ x, y }) => ({
+        x,
+        y: Math.round((y / d.length) * 100) / 100
+      }));
+
+      return { data: [...d, average] };
+    }
+
+    return {};
+  }),
+  withPropsOnChange(['data', 'average'], ({ data: d, average }) => {
+    const markers = [];
+
+    d.forEach(({ data, id }, i) => {
+      let min = Infinity;
+      let minX;
+      let max = -Infinity;
+      let maxX;
+
+      if (id === 'Average' || !average)
+        data.forEach(({ x, y }) => {
+          if (y < min) {
+            min = y;
+            minX = x;
+          }
+          if (y > max) {
+            max = y;
+            maxX = x;
+          }
+        });
+
+      if (minX !== undefined) {
+        const index = markers.findIndex(m => m.value === minX);
+
+        if (index >= 0) {
+          markers[index].legend = 'multiple extrema';
+          markers[index].lineStyle.stroke = 'black';
+        } else
+          markers.push({
+            axis: 'x',
+            value: minX,
+            lineStyle: {
+              stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+              strokeWidth: 1
+            },
+            legend: `min ${id} [${minX}, ${min}]`,
+            legendOrientation: 'vertical'
+          });
+      }
+      if (maxX !== undefined) {
+        const index = markers.findIndex(m => m.value === maxX);
+
+        if (index >= 0) {
+          markers[index].legend = 'multiple extrema';
+          markers[index].lineStyle.stroke = 'black';
+        } else
+          markers.push({
+            axis: 'x',
+            value: maxX,
+            lineStyle: {
+              stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+              strokeWidth: 1
+            },
+            legend: `max ${id} [${maxX}, ${max}]`,
+            legendOrientation: 'vertical'
+          });
+      }
+    });
+
+    return {
+      markers
+    };
+  }),
+  withHandlers({
+    tooltipFormat: ({ scale, data }) => (x, i, p) => {
+      const { standardabweichung, mittelwert } =
+        data.find(({ id }) => id === p.id) || {};
+
+      switch (scale) {
+        case -1:
+          return `${x}%`;
+
+        case 1:
+          return `${x}%`;
+
+        case 2:
+          return standardabweichung
+            ? `${x} [${Math.round((x * standardabweichung + mittelwert) * 100) /
+                100}]`
+            : x;
+
+        default:
+          return x;
+      }
+    }
   })
 );
 
-const Chart = ({ data, tickValues, large, scale }) => {
+const Chart = ({ data, tickValues, markers, large, scale, tooltipFormat }) => {
   const axisBottom = tickValues.length > 1 ? { tickValues } : undefined;
 
   return (
@@ -299,15 +451,17 @@ const Chart = ({ data, tickValues, large, scale }) => {
           data={data}
           margin={{
             top: 20,
-            right: 20,
+            right: 25,
             bottom: 50,
             left: 50
           }}
+          markers={markers}
           enableDots={false}
           animate
           colorBy={e => e.color}
           axisBottom={axisBottom}
-          tooltipFormat={x => (scale ? `${x}%` : x)}
+          tooltipFormat={tooltipFormat}
+          minY={scale === 2 ? 'auto' : 0}
           legends={[
             {
               anchor: 'bottom-left',
