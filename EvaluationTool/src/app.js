@@ -17,6 +17,7 @@ const enhance = compose(
   withState('min', 'setMin'),
   withState('max', 'setMax'),
   withState('scale', 'setScale'),
+  withState('interpolate', 'setInterpolate'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
       .map(file => file.folder)
@@ -37,7 +38,7 @@ const enhance = compose(
       ) || []
   })),
   withState('selectedFields', 'setSelectedFields', ({ fields }) => [
-    get(fields, 0)
+    get(fields, 0) || 'Iterations'
   ]),
   withPropsOnChange(['selectedFields'], ({ selectedFields, setScale }) => {
     setScale(selectedFields.length > 1);
@@ -95,7 +96,9 @@ const App = ({
   max,
   setMax,
   scale,
-  setScale
+  setScale,
+  interpolate,
+  setInterpolate
 }) => (
   <div
     style={{
@@ -123,6 +126,8 @@ const App = ({
       setMax={setMax}
       scale={scale}
       setScale={setScale}
+      interpolate={interpolate}
+      setInterpolate={setInterpolate}
     />
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
@@ -143,6 +148,8 @@ const App = ({
         min={min}
         max={max}
         scale={scale}
+        interpolate={interpolate}
+        setInterpolate={setInterpolate}
       />
     </div>
   </div>

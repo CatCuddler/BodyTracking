@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Dropdown, Checkbox } from 'semantic-ui-react';
+import { Menu, Dropdown } from 'semantic-ui-react';
 import Fields from './fields';
 import Select from './select';
 
@@ -20,7 +20,9 @@ const Nav = ({
   max,
   setMax,
   scale,
-  setScale
+  setScale,
+  interpolate,
+  setInterpolate
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
@@ -40,22 +42,36 @@ const Nav = ({
     </Dropdown>
 
     <Select value={sortBy} setValue={setSortBy} />
-
     <Select value={groupBy} setValue={setGroupBy} allowNull />
 
-    <Menu.Item>
-      <Checkbox
-        checked={scale}
-        onClick={() => setScale(!scale)}
-        label="scale"
-      />
-    </Menu.Item>
-    <Menu.Item>
-      <Checkbox checked={min} onClick={() => setMin(!min)} label="min" />
-    </Menu.Item>
-    <Menu.Item>
-      <Checkbox checked={max} onClick={() => setMax(!max)} label="max" />
-    </Menu.Item>
+    <Dropdown item text="options">
+      <Dropdown.Menu>
+        <Dropdown.Item
+          icon={scale ? 'check' : undefined}
+          text="scale"
+          active={!!scale}
+          onClick={() => setScale(!scale)}
+        />
+        <Dropdown.Item
+          icon={min ? 'check' : undefined}
+          text="min"
+          active={!!min}
+          onClick={() => setMin(!min)}
+        />
+        <Dropdown.Item
+          icon={max ? 'check' : undefined}
+          text="max"
+          active={!!max}
+          onClick={() => setMax(!max)}
+        />
+        <Dropdown.Item
+          icon={interpolate ? 'check' : undefined}
+          text="interpolate"
+          active={!!interpolate}
+          onClick={() => setInterpolate(!interpolate)}
+        />
+      </Dropdown.Menu>
+    </Dropdown>
 
     <Fields
       groupBy={groupBy}

@@ -34,7 +34,8 @@ namespace {
 	
 	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
 	const char* laufen[] = {"laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv"};
-	const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
+    const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
+    const char* alle[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv", "laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv", "joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
 	const char** currentGroup = squats;
 	
 	const float nearNull = 0.0001f;
@@ -47,8 +48,7 @@ namespace {
     // eval
     const bool eval = true;
     float* evalValue = lambda;
-    float evalStep = 0.1f;
-    float evalEnd = 1.0f;
+    float evalStep = 0.01f;
+    int evalSteps = 9;
     int evalFilesInGroup = 5;
-    int evalFiles = 0;
 }

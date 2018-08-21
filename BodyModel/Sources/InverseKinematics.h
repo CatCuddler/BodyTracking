@@ -4,7 +4,8 @@
 #include <float.h>
 #include "Jacobian.h"
 
-extern int ikMode, maxSteps[];
+extern int ikMode;
+extern float maxSteps[];
 
 class InverseKinematics {
 	

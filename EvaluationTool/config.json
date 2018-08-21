@@ -1,4 +1,5 @@
 {
   "input": "../BodyModel/Deployment",
-  "output": ""
+  "output": "lambda",
+  "groupByFiles": true
 }

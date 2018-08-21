@@ -5,7 +5,7 @@ import { get } from 'lodash';
 import App from './app';
 import registerServiceWorker from './registerServiceWorker';
 
-const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'DLS-SVD', 'SDLS', 'SDLSmod'];
+const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'DLS-SVD', 'SDLS'];
 const req = require.context('../json');
 const sources = req.keys();
 
@@ -25,7 +25,7 @@ const files = sources
   .map(file => {
     // get data-source an config-source
     let source = req(file);
-    const [config] = req(get(sources, getConfigIndex(file)));
+    const config = req(get(sources, getConfigIndex(file)));
 
     // get name & folder
     const path = file.split('/');
@@ -40,10 +40,10 @@ const files = sources
 
     if (get(source, [0, 'Iterations']) && get(source, [0, 'Error']))
       source = source.map(x => ({
+        ...x,
         Validation: x.Iterations * x.Error,
         'Validation Min': x.Iterations * x['Error Min'],
-        'Validation Max': x.Iterations * x['Error Max'],
-        ...x
+        'Validation Max': x.Iterations * x['Error Max']
       }));
 
     source.forEach(value => {
@@ -66,12 +66,8 @@ const files = sources
       dMaxPos: parseFloat(config['dMax Pos']),
       dMaxRot: parseFloat(config['dMax Rot']),
       steps: parseFloat(config['Steps Max']),
-      lambda: Math.floor(config.lambda * 10000) / 10000,
-      file: get(
-        get(config.File.split('positionData_'), 1, '').split('.csv'),
-        0,
-        '-'
-      ),
+      lambda: Math.round(config.lambda * 10000) / 10000,
+      file: config.File,
       orientation: config['with Orientation'] !== '0',
       mode: ikMode[config['IK Mode']] || 'NA',
       values,

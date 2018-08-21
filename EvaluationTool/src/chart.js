@@ -2,7 +2,7 @@ import React from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { compose, withPropsOnChange } from 'recompose';
 import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
-import { colorsMaterial } from '@filou/core';
+import colorsMaterial from './colors';
 
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
   // searchIndex is at the end
@@ -30,7 +30,7 @@ const averageDuplicates = (data, searchIndex = 0, values = []) => {
   newData[searchIndex] = {
     x: data[searchIndex].x,
     y:
-      Math.floor(
+      Math.round(
         (values.reduce((acc, value) => acc + value, 0) / values.length) * 1000
       ) / 1000
   };
@@ -103,8 +103,8 @@ const enhance = compose(
           Object.keys(xData).forEach(field => {
             const groupNames = Object.keys(groups);
             let chartData = xData[field].map((x, j) => ({
-              x: x.toString(),
-              y: Math.floor(yData[field][j] * 1000) / 1000
+              x,
+              y: Math.round(yData[field][j] * 1000) / 1000
             }));
             chartData = averageDuplicates(chartData);
             chartData = _sortBy(chartData, d => d.x);
@@ -121,16 +121,9 @@ const enhance = compose(
                 : 6;
 
             data.push({
-              id:
-                groupNames.length > 1
-                  ? `${field} - [${sortBy}: ${group}]`
-                  : field,
+              id: groupNames.length > 1 ? `${field} [${group}]` : field,
               data: chartData,
-              color: get(
-                colorsMaterial,
-                [color * 2, 'palette', palette],
-                'black'
-              )
+              color: get(colorsMaterial, [color, 'palette', palette], 'black')
             });
           });
         });
@@ -163,7 +156,7 @@ const enhance = compose(
               })),
               color: get(
                 colorsMaterial,
-                [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 1],
+                [selectedFiles.length === 1 ? j : index, 'palette', 1],
                 'black'
               )
             });
@@ -178,7 +171,7 @@ const enhance = compose(
               })),
               color: get(
                 colorsMaterial,
-                [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 1],
+                [selectedFiles.length === 1 ? j : index, 'palette', 1],
                 'black'
               )
             });
@@ -193,7 +186,7 @@ const enhance = compose(
             })),
             color: get(
               colorsMaterial,
-              [(selectedFiles.length === 1 ? j : index) * 2, 'palette', 6],
+              [selectedFiles.length === 1 ? j : index, 'palette', 6],
               'black'
             )
           });
@@ -217,7 +210,7 @@ const enhance = compose(
             data: d.data.map(({ x, y }) => ({
               x,
               y: highest
-                ? Math.floor(((y - lowest) / highest) * 10000) / 100
+                ? Math.round(((y - lowest) / highest) * 10000) / 100
                 : y
             }))
           };
@@ -237,45 +230,98 @@ const enhance = compose(
 
       return { data: data.map(d => ({ ...d, data: d.data.slice(0, min) })) };
     }
-  )
+  ),
+  withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
+    const tickValues = [];
+    let min = 0;
+    let max = 0;
+
+    if (interpolate) {
+      const newData = data.map(d => {
+        const data2 = [];
+
+        d.data.forEach(({ x, y }, i) => {
+          min = x < min ? x : min;
+          max = x > max ? x : max;
+
+          if (i) {
+            let x0 = d.data[i - 1].x;
+            const y0 = d.data[i - 1].y;
+            const m = (y - y0) / (x - x0);
+
+            while (Math.round((x - x0) * 100) / 100 > 0.01) {
+              x0 += 0.01;
+
+              data2.push({
+                x: Math.round(x0 * 100) / 100,
+                y: Math.round((y - m * (x - x0)) * 100) / 100
+              });
+            }
+          }
+
+          data2.push({ x, y });
+        });
+
+        return {
+          ...d,
+          data: data2
+        };
+      });
+
+      for (let i = min; i < max; i += (max - min) / 20)
+        tickValues.push(Math.round(i * 100) / 100);
+      tickValues.push(Math.round(max * 100) / 100);
+
+      return {
+        data: newData,
+        tickValues
+      };
+    }
+
+    return { data, tickValues };
+  })
 );
 
-const Chart = ({ data, groupBy, large }) => (
-  <div
-    style={{
-      flexGrow: 1,
-      marginLeft: '1rem',
-      display: 'flex',
-      flexDirection: 'column'
-    }}
-  >
-    {!!data.length && (
-      <ResponsiveLine
-        data={data}
-        margin={{
-          top: 20,
-          right: !large ? 150 : 250,
-          bottom: 25,
-          left: 50
-        }}
-        // minY="auto"
-        dotSize={10}
-        enableDotLabel
-        enableArea={!!groupBy}
-        animate
-        colorBy={e => e.color}
-        legends={[
-          {
-            anchor: 'bottom-right',
-            direction: 'column',
-            translateX: !large ? 120 : 220,
-            itemWidth: !large ? 100 : 200,
-            itemHeight: 20
-          }
-        ]}
-      />
-    )}
-  </div>
-);
+const Chart = ({ data, tickValues, large, scale }) => {
+  const axisBottom = tickValues.length > 1 ? { tickValues } : undefined;
+
+  return (
+    <div
+      style={{
+        flexGrow: 1,
+        marginLeft: '1rem',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      {!!data.length && (
+        <ResponsiveLine
+          data={data}
+          margin={{
+            top: 20,
+            right: 20,
+            bottom: 50,
+            left: 50
+          }}
+          enableDots={false}
+          animate
+          colorBy={e => e.color}
+          axisBottom={axisBottom}
+          tooltipFormat={x => (scale ? `${x}%` : x)}
+          legends={[
+            {
+              anchor: 'bottom-left',
+              direction: 'row',
+              translateX: -50,
+              translateY: 50,
+              itemWidth: !large ? 100 : 180,
+              itemHeight: 20
+            }
+          ]}
+        />
+      )}
+    </div>
+  );
+};
 
 export default enhance(Chart);
