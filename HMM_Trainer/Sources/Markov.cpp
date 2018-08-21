@@ -278,7 +278,7 @@ double HMM::calculateProbability(vector<int>& sequence) {
 	// Calculate probability
 	double probability = 0;
 	for (int t = 0; t < sequence.size(); t++) {
-		probability -= log(c.at(t));
+		probability -= std::log(c.at(t));
 	}
 
 	return probability;
@@ -387,7 +387,7 @@ void HMM::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
 		prevProbability = probability;
 		probability = 0;
 		for (int t = 0; t < sequence.at(0).size(); t++) {
-			probability -= log(c.at(0).at(t));
+			probability -= std::log(c.at(0).at(t));
 		}
 
 	}
