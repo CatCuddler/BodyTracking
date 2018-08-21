@@ -58,20 +58,17 @@ namespace {
 	const int height = 768;
 
 	Logger* logger;
-	bool logData = false;
 	int line = 0;
 
 	const int numOfEndEffectors = 5;
 
-	//tracked data of 5 tracker
-	const int numOfEndEffectorsToRead = 5;
 	const char* initialTransFilename = "initTransAndRot_1511178843.csv";
 	const char* positionDataFilename = "positionData_1511178843.csv";
 
 	double startTime;
 	double lastTime;
-	float fiveSec;
 
+#ifdef KORE_STEAMVR
 	// Initial tracked position as base for rotation of any futher data points
 	double startX;
 	double startZ;
@@ -81,6 +78,7 @@ namespace {
 	double transitionY;
 	double transitionZ;
 	int dataPointNumber; // x-th point of data collected in current recording/recognition
+#endif
 
 	// swapped to namespace to be accessible to adjust y tracking
 	float currentUserHeight;
@@ -127,8 +125,6 @@ namespace {
 	bool record = false;
 	bool recognition = false;
 
-	// Movement recording
-#ifdef KORE_STEAMVR
 	// List of identifiers for sensors;  those will be used as a prefix for every row according to which sensor is being recorded. Unused sensors will not be mentioned
 	const string headIdentifier = "HMD";
 	const string leftIdentifier = "lhC";
@@ -139,7 +135,6 @@ namespace {
 	
 	// Vector of data points logged in real time movement recognition
 	vector<vector<Point>> recognitionPoints(6);
-#endif
 
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
@@ -355,12 +350,12 @@ namespace {
 				Point point = Point(dataPointNumber, values);
 				dataPointNumber++;
 
-				if (identifier.compare("HMD") == 0)      recognitionPoints.at(0).push_back(point);
-				else if (identifier.compare("lhC") == 0) recognitionPoints.at(1).push_back(point);
-				else if (identifier.compare("rhC") == 0) recognitionPoints.at(2).push_back(point);
-				else if (identifier.compare("bac") == 0) recognitionPoints.at(3).push_back(point);
-				else if (identifier.compare("lfT") == 0) recognitionPoints.at(4).push_back(point);
-				else if (identifier.compare("rfT") == 0) recognitionPoints.at(5).push_back(point);
+				if (identifier.compare(headIdentifier) == 0)			recognitionPoints.at(0).push_back(point);
+				else if (identifier.compare(leftIdentifier) == 0)		recognitionPoints.at(1).push_back(point);
+				else if (identifier.compare(rightIdentifier) == 0)		recognitionPoints.at(2).push_back(point);
+				else if (identifier.compare(backIdentifier) == 0)		recognitionPoints.at(3).push_back(point);
+				else if (identifier.compare(leftFootIdentifier) == 0)	recognitionPoints.at(4).push_back(point);
+				else if (identifier.compare(rightFootIdentifier) == 0)	recognitionPoints.at(5).push_back(point);
 			}
 
 		}
@@ -371,17 +366,6 @@ namespace {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
 		lastTime = t;
-
-		fiveSec += deltaT;
-		if (fiveSec > 1) {
-			fiveSec = 0;
-
-			float averageIt = avatar->getAverageIKiterationNum();
-
-			if (logData) logger->saveLogData("it", averageIt);
-
-			//log(Info, "Average iteration %f", averageIt);
-		}
 
 		// Move position of camera based on WASD keys, and XZ keys for up and down
 		const float moveSpeed = 0.1f;
@@ -480,6 +464,8 @@ namespace {
 						log(Info, "rightTrackerIndex: %i -> %i", rightTrackerIndex, i);
 						rightTrackerIndex = i;
 					}
+					
+					Gamepad::get(i)->Button = gamepadButton;
 				}
 				else if (controller.trackedDevice == TrackedDevice::HMD) {
 					//Head mounted display
@@ -487,8 +473,10 @@ namespace {
 					hmdIndex = i;
 				}
 			}
+			
+			initedButtons = true;
 
-			if (logData) {
+			if (record) {
 				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
 				logger->saveInitTransAndRot(vec3(initPos.x(), initPos.y(), initPos.z()), initRot);
 			}
@@ -669,7 +657,8 @@ namespace {
 
 			initCharacter = true;
 		}
-		 
+		
+		const int numOfEndEffectorsToRead = 5;	// TODO: record new data (with HMD) and change to 6
 		vec3 rawPos[numOfEndEffectorsToRead];
 		Quaternion rawRot[numOfEndEffectorsToRead];
 		// Read line
@@ -686,9 +675,7 @@ namespace {
 				bool rightHandTracker = false;
 				bool backTracker = false;
 
-				if (numOfEndEffectorsToRead == 5) {
-					//Data contains all 5 trackers
-					switch (tracker) {
+				switch (tracker) {
 					case 0: leftHandTracker = true;
 						break;
 					case 1: rightHandTracker = true;
@@ -696,25 +683,11 @@ namespace {
 					case 2: backTracker = true;
 						break;
 					case 3: leftFootTracker = true;
-						break; 
+						break;
 					case 4: rightFootTracker = true;
 						break;
-					}
 				}
-				else {
-					//Only 4 tracker
-					//Walk with tracker on right foot, back and both hands
-					switch (tracker) {
-					case 0: leftHandTracker = true;
-						break;
-					case 1: rightHandTracker = true;
-						break;
-					case 2: backTracker = true;
-						break;
-					case 3: rightFootTracker = true;
-						break;
-					}
-				}
+				
 
 				if (leftFootTracker) {
 					setDesiredPositionAndOrientation(leftFoot, desPosition[tracker], desRotation[tracker]);
@@ -804,8 +777,8 @@ namespace {
 					
 					startX = hmdPosition.x();
 					startZ = hmdPosition.z();
-					startRotCos = cos(hmdRotation.y * 3.141592653589793238);
-					startRotSin = sin(hmdRotation.y * 3.141592653589793238);
+					startRotCos = cos(hmdRotation.y * Kore::pi);
+					startRotSin = sin(hmdRotation.y * Kore::pi);
 
 				}
 				else {
@@ -925,6 +898,38 @@ namespace {
 	void mouseRelease(int windowId, int button, int x, int y) {
 		rotate = false;
 	}
+	
+#ifdef KORE_STEAMVR
+	void gamepadButton(int buttonNr, float value) {
+		// Menu button
+		if (buttonNr == 1) {
+			if (value == 1) {
+				log(Info, "Menu button released");
+			} else {
+				log(Info, "Menu button pressed");
+			}
+		}
+		
+		// Trigger button
+		if (buttonNr == 33) {
+			// TODO: Dont use keyboard keys to start/stop recording data; use trigger button on the controller
+			if (value == 1) {
+				log(Info, "Trigger button released");
+			} else {
+				log(Info, "Trigger button pressed");
+			}
+		}
+		
+		// Grip button
+		if (buttonNr == 2) {
+			if (value == 1) {
+				log(Info, "Grip button released");
+			} else {
+				log(Info, "Grip button pressed");
+			}
+		}
+	}
+#endif
 
 	void loadAvatarShader() {
 		FileReader vs("shader.vert");
