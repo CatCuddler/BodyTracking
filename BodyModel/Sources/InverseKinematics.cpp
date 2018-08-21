@@ -175,13 +175,23 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		Kore::vec3 rot;
 		Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
 		
-		float x = (axes.x() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.x()) : rot.x();
-		float y = (axes.y() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.y()) : rot.y();
-		float z = (axes.z() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.z()) : rot.z();
+        int i = 0;
+        float x = rot.x(), y = rot.y(), z = rot.z();
+        if (axes.x() == 1.0) {
+            x = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.x());
+            i++;
+        }
+        if (axes.y() == 1.0) {
+            y = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.y());
+            i++;
+        }
+        if (axes.z() == 1.0) {
+            z = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.z());
+            i++;
+        }
 		
 		Kore::RotationUtility::eulerToQuat(x, y, z, &bone->quaternion);
 		
-		// bone->quaternion = Kore::Quaternion((double) x, (double) y, (double) z, 1);
 		bone->quaternion.normalize();
 		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
 		
