@@ -135,6 +135,8 @@ namespace {
 	
 	// Vector of data points logged in real time movement recognition
 	vector<vector<Point>> recognitionPoints(6);
+	
+	const char* hmmName = "Yoga_Krieger";
 
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
@@ -809,14 +811,13 @@ namespace {
 					// save current HMD position and rotation for data normalisation
 					startX = hmdPosition.x();
 					startZ = hmdPosition.z();
-					startRotCos = cos(hmdRotation.y * 3.141592653589793238);
-					startRotSin = sin(hmdRotation.y * 3.141592653589793238);
+					startRotCos = cos(hmdRotation.y * Kore::pi);
+					startRotSin = sin(hmdRotation.y * Kore::pi);
 				}
 				else { // stoping and evaluation recognition
 
 					// TODO
-					/*ofstream filestream;
-					filestream.open(hmmPath + hmmName + "_analysis.txt", ios::out | ios::app);
+					logger->analyseHMM(hmmName, std::vector<double>());
 
 					// read clusters for all trackers from file
 					bool trackersPresent[6];
@@ -837,17 +838,14 @@ namespace {
 							vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints())); // clustering data
 							HMM model(hmmPath, hmmName + "_" + to_string(ii)); // reading HMM
 							trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin())); // calculating probability and comparing with probability threshold as well as applying restfix
-							filestream << model.calculateProbability(clusteredPoints) << ";" ;
+							logger->analyseHMM(hmmName, model.calculateProbability(clusteredPoints));
 						}
 					}
-					filestream << "\n";
 					if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
 						Audio1::play(correctSound);
-					}
-					else { 
+					} else {
 						Audio1::play(wrongSound);
 					}
-					filestream.close();*/
 				}
 		}
 #endif
