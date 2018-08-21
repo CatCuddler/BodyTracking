@@ -9,8 +9,14 @@
 Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false) {
 	time_t t = time(0);   // Get time now
 	positionDataPath << positionData << "_" << t << ".csv";
+	headerTrackingData = "name;timestamp;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+	headerTrackingDataLength = (int)strlen(headerTrackingData);
+	
 	initTransRotPath << initTransRotFilename << "_" << t << ".csv";
 	logDataPath << logDataFilename << "_" << t << ".csv";
+	
+	curentFileNumber = 0;
+	curentLineNumber = 0;
 }
 
 Logger::~Logger() {
@@ -20,23 +26,23 @@ Logger::~Logger() {
 
 void Logger::saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot) {
 	if (!initPositionData) {
-		time_t t = time(0);   // Get time now
 		positionDataPath.str(std::string());
-		positionDataPath << positionData << "_" << t << ".csv";
+		positionDataPath << positionData << "_" << curentFileNumber << ".csv";
 
-		currLineNumber = 0;
+		curentFileNumber++;
+		curentLineNumber = 0;
 		
-		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-		positionDataOutputFile << "name;timestemp;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
+		positionDataOutputFile.open(positionDataPath.str(), std::ios::out);
+		positionDataOutputFile << headerTrackingData;
 
 		// placeholder for line number that will be overwritten when the file is closed
-		positionDataOutputFile << "N=" << currLineNumber << "\n";
+		positionDataOutputFile << "N=        \n";
 
 		positionDataOutputFile.flush();
 		initPositionData = true;
 	}
 	
-	currLineNumber++;
+	curentLineNumber++;
 
 	// Save positional and rotation data
 	positionDataOutputFile << name << ";" << timestamp << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
@@ -60,10 +66,9 @@ void Logger::saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot) {
 void Logger::closeFile() {
 	initPositionData = false;
 	
-	positionDataOutputFile.clear();
-	positionDataOutputFile.seekg(1, std::ios::beg);		// TODO: does not work 
+	positionDataOutputFile.seekp(headerTrackingDataLength);
 	
-	positionDataOutputFile << "N=" << currLineNumber << "\n"; // store number of lines / datapoints
+	positionDataOutputFile << "N=" << curentLineNumber;	// store number of lines / datapoints
 	positionDataOutputFile.flush();
 	positionDataOutputFile.close();
 }
@@ -101,7 +106,7 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 			++column;
 		}
 		
-		++currLineNumber;
+		++curentLineNumber;
 		return true;
 	} else {
 		return false;
@@ -118,13 +123,7 @@ bool Logger::readData(int line, const int numOfEndEffectors, const char* filenam
 	// Get header
 	if (line == 0) {
 		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
-	}
-	
-	// Skip lines
-	while(line > currLineNumber - 1) {
-		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
+		++curentLineNumber;
 	}
 	
 	// Read line

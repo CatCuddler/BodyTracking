@@ -11,7 +11,7 @@
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
+	const char* positionData = "Yoga_Krieger";
 	const char* initTransRotFilename = "initTransAndRot";
 //	const char* logDataFilename = "logData";
 	const char* logDataFilename = "Yoga_Krieger";
@@ -25,16 +25,20 @@ private:
 	std::stringstream logDataPath;
 	
 	bool initPositionData;
-	std::fstream positionDataOutputFile;
+	std::ofstream positionDataOutputFile;
+	const char* headerTrackingData;
+	int headerTrackingDataLength;
 	
 	bool initTransRotData;
-	std::fstream initTransRotDataOutputFile;
+	std::ofstream initTransRotDataOutputFile;
 	
 	bool initLogData;
-	std::fstream logDataOutputFile;
+	std::ofstream logDataOutputFile;
 	
-	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
+	int curentFileNumber = 0;
+	int curentLineNumber = 0;
+	
+	std::ifstream positionDataInputFile;
 	
 	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
 	
