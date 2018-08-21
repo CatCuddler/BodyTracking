@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 class Logger {
 	
@@ -23,6 +24,7 @@ private:
 	std::stringstream positionDataPath;
 	std::stringstream initTransRotPath;
 	std::stringstream logDataPath;
+	std::stringstream hmmAnalysisPath;
 	
 	bool initPositionData;
 	std::ofstream positionDataOutputFile;
@@ -31,6 +33,9 @@ private:
 	
 	bool initTransRotData;
 	std::ofstream initTransRotDataOutputFile;
+	
+	bool initHmmAnalysisData;
+	std::ofstream hmmAnalysisOutputFile;
 	
 	bool initLogData;
 	std::ofstream logDataOutputFile;
@@ -51,6 +56,8 @@ public:
 	
 	void saveLogData(const char* str, float num);
 	
+	void analyseHMM(const char* hmmName, std::vector<double> probabilities);
+
 	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
 	void readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot);
 };

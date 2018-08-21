@@ -6,7 +6,7 @@
 
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false) {
+Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData(false), initHmmAnalysisData(false) {
 	time_t t = time(0);   // Get time now
 	positionDataPath << positionData << "_" << t << ".csv";
 	headerTrackingData = "name;timestamp;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
@@ -22,6 +22,7 @@ Logger::Logger() : initPositionData(false), initTransRotData(false), initLogData
 Logger::~Logger() {
 	positionDataOutputFile.close();
 	logDataOutputFile.close();
+	hmmAnalysisOutputFile.close();
 }
 
 void Logger::saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot) {
@@ -82,6 +83,23 @@ void Logger::saveLogData(const char* str, float num) {
 	// Save data
 	logDataOutputFile << str << ";" << num << "\n";
 	logDataOutputFile.flush();
+}
+
+void Logger::analyseHMM(const char* hmmName, std::vector<double> probabilities) {
+	if (!initHmmAnalysisData) {
+		hmmAnalysisPath << hmmName << "_analysis.txt";
+		hmmAnalysisOutputFile.open(hmmAnalysisPath.str(), std::ios::out | std::ios::app);
+		initHmmAnalysisData = true;
+	}
+	
+	if (!probabilities.empty()) {
+		for(std::vector<double>::iterator it = probabilities.begin(); it != probabilities.end(); ++it) {
+			hmmAnalysisOutputFile << *it << ";" ;
+		}
+	}
+	
+	hmmAnalysisOutputFile << "\n";
+	hmmAnalysisOutputFile.flush();
 }
 
 bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
