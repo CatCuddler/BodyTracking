@@ -44,11 +44,11 @@ bool debug = false;
 // File name of the data set to be used used for single probability calculation
 string currentMovement = "Yoga_Krieger5";
 // Path for the source files
-string trainingFilePath = "../../Tracking/";
+string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger";
 // Path for HMM and clusters to be saved in
-string writeFilePath = "../../Tracking/";
+string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
