@@ -85,20 +85,16 @@ void Logger::saveLogData(const char* str, float num) {
 	logDataOutputFile.flush();
 }
 
-void Logger::analyseHMM(const char* hmmName, std::vector<double> probabilities) {
+void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	if (!initHmmAnalysisData) {
 		hmmAnalysisPath << hmmName << "_analysis.txt";
 		hmmAnalysisOutputFile.open(hmmAnalysisPath.str(), std::ios::out | std::ios::app);
 		initHmmAnalysisData = true;
 	}
-	
-	if (!probabilities.empty()) {
-		for(std::vector<double>::iterator it = probabilities.begin(); it != probabilities.end(); ++it) {
-			hmmAnalysisOutputFile << *it << ";" ;
-		}
-	}
-	
-	hmmAnalysisOutputFile << "\n";
+
+	if (newLine) hmmAnalysisOutputFile << "\n";
+	else hmmAnalysisOutputFile << probability << ";";
+
 	hmmAnalysisOutputFile.flush();
 }
 

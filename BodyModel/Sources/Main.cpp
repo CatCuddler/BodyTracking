@@ -34,6 +34,7 @@
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>
+#include <Kore/Input/Gamepad.h>
 #endif
 
 
@@ -64,6 +65,9 @@ namespace {
 
 	const char* initialTransFilename = "initTransAndRot_1511178843.csv";
 	const char* positionDataFilename = "positionData_1511178843.csv";
+
+	const string hmmPath = "../Tracking/";
+	const string hmmName = "Yoga_Krieger";
 
 	double startTime;
 	double lastTime;
@@ -135,8 +139,6 @@ namespace {
 	
 	// Vector of data points logged in real time movement recognition
 	vector<vector<Point>> recognitionPoints(6);
-	
-	const char* hmmName = "Yoga_Krieger";
 
 	Quaternion cameraRotation = Quaternion(0, 0, 0, 1);
 	vec3 cameraPosition = vec3(0, 0, 0);
@@ -338,7 +340,7 @@ namespace {
 
 				vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
 				// TODO: why dont we use raw data?
-				logger->saveData(lastTime, identifier, hmmPos, Quaternion(0, 0, 0, 1));
+				logger->saveData(lastTime, identifier, hmmPos);
 			}
 
 			if (recognition) { // data is stored internally for evaluation at the end of recognition
@@ -362,6 +364,8 @@ namespace {
 
 		}
 	}
+
+	void gamepadButton(int buttonNr, float value);
 #endif
 	
 	void update() {
@@ -467,7 +471,7 @@ namespace {
 						rightTrackerIndex = i;
 					}
 					
-					Gamepad::get(i)->Button = gamepadButton;
+					Kore::Gamepad::get(i)->Button = gamepadButton;
 				}
 				else if (controller.trackedDevice == TrackedDevice::HMD) {
 					//Head mounted display
@@ -475,8 +479,6 @@ namespace {
 					hmdIndex = i;
 				}
 			}
-			
-			initedButtons = true;
 
 			if (record) {
 				vec4 initPos = initTrans * vec4(0, 0, 0, 1);
@@ -779,8 +781,8 @@ namespace {
 					
 					startX = hmdPosition.x();
 					startZ = hmdPosition.z();
-					startRotCos = cos(hmdRotation.y * Kore::pi);
-					startRotSin = sin(hmdRotation.y * Kore::pi);
+					startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
+					startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
 
 				}
 				else {
@@ -811,13 +813,9 @@ namespace {
 					// save current HMD position and rotation for data normalisation
 					startX = hmdPosition.x();
 					startZ = hmdPosition.z();
-					startRotCos = cos(hmdRotation.y * Kore::pi);
-					startRotSin = sin(hmdRotation.y * Kore::pi);
-				}
-				else { // stoping and evaluation recognition
-
-					// TODO
-					logger->analyseHMM(hmmName, std::vector<double>());
+					startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
+					startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
+				} else { // stoping and evaluation recognition
 
 					// read clusters for all trackers from file
 					bool trackersPresent[6];
@@ -838,9 +836,11 @@ namespace {
 							vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints())); // clustering data
 							HMM model(hmmPath, hmmName + "_" + to_string(ii)); // reading HMM
 							trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin())); // calculating probability and comparing with probability threshold as well as applying restfix
-							logger->analyseHMM(hmmName, model.calculateProbability(clusteredPoints));
+							logger->analyseHMM(hmmName.c_str(), model.calculateProbability(clusteredPoints), false);
 						}
 					}
+					logger->analyseHMM(hmmName.c_str(), 0, true);
+
 					if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
 						Audio1::play(correctSound);
 					} else {

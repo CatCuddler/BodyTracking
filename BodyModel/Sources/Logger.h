@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
 
 class Logger {
 	
@@ -50,13 +49,13 @@ private:
 public:
 	Logger();
 	~Logger();
-	void saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot);
+	void saveData(float timestamp, std::string name, Kore::vec3 rawPos, Kore::Quaternion rawRot = Kore::Quaternion(0, 0, 0, 1));
 	void saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot);
 	void closeFile();
 	
 	void saveLogData(const char* str, float num);
 	
-	void analyseHMM(const char* hmmName, std::vector<double> probabilities);
+	void analyseHMM(const char* hmmName, double probability, bool newLine);
 
 	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
 	void readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot);
