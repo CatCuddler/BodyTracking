@@ -79,8 +79,14 @@ namespace {
 	
 	vec3 cameraPos(0, 0, 0);
 	
-	// Null terminated array of MeshObject pointers
-	MeshObject* cubes[] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+	const int backTrackerIndex = 0;
+	const int leftHandTrackerIndex = 1;
+	const int rightHandTrackerIndex = 2;
+	const int leftFootTrackerIndex = 3;
+	const int rightFootTrackerIndex = 4;
+	
+	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
+	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
 	Avatar *avatar;
 	LivingRoom* livingRoom;
 	
@@ -100,9 +106,17 @@ namespace {
 #endif
 	
 	void renderTracker(int i) {
-		cubes[i]->M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
-		Graphics4::setMatrix(mLocation, cubes[i]->M);
-		cubes[i]->render(tex);
+		Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
+		Graphics4::setMatrix(mLocation, M);
+		
+		/*if (i == backTrackerIndex || i == leftFootTrackerIndex || i == rightFootTrackerIndex)
+			viveObjects[0]->render(tex);
+		else if (i == rightHandTrackerIndex || i == leftHandTrackerIndex)
+			viveObjects[1]->render(tex);
+		else
+			log(Info, "Something is wrong");*/
+		
+		viveObjects[2]->render(tex); // TODO delete this when tested in VR
 	}
 	
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -222,17 +236,17 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 4) {
 					// Foot tracker (if y pos is in the lower quarter of the body)
 					if (trackerTransPos.x() > 0) {
-						log(Info, "leftFootTrackerIndex: %i -> %i", tracker[3]->trackerIndex, i);
+						log(Info, "leftFootTrackerIndex: %i -> %i", tracker[leftFootTrackerIndex]->trackerIndex, i);
 						tracker[3]->setTrackerIndex(i);
 					}
 					else {
-						log(Info, "rightFootTrackerIndex: %i -> %i", tracker[4]->trackerIndex, i);
+						log(Info, "rightFootTrackerIndex: %i -> %i", tracker[rightFootTrackerIndex]->trackerIndex, i);
 						tracker[4]->setTrackerIndex(i);
 					}
 				}
 				else {
 					//back tracker
-					log(Info, "backTrackerIndex: %i -> %i", tracker[0]->trackerIndex, i);
+					log(Info, "backTrackerIndex: %i -> %i", tracker[backTrackerIndex]->trackerIndex, i);
 					tracker[0]->setTrackerIndex(i);
 				}
 			}
@@ -242,11 +256,11 @@ namespace {
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHandTrackerIndex: %i -> %i", tracker[1]->trackerIndex, i);
+					log(Info, "leftHandTrackerIndex: %i -> %i", tracker[leftHandTrackerIndex]->trackerIndex, i);
 					tracker[1]->setTrackerIndex(i);
 				}
 				else {
-					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[2]->trackerIndex, i);
+					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[rightHandTrackerIndex]->trackerIndex, i);
 					tracker[2]->setTrackerIndex(i);
 				}
 			}
@@ -377,7 +391,7 @@ namespace {
 			
 			// Render tracker
 			int i = 0;
-			while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+			while (i < numOfEndEffectors && renderTrackerAndController && viveObjects[i] != nullptr) {
 				renderTracker(i);
 				i++;
 			}
@@ -414,7 +428,7 @@ namespace {
 		
 		// Render tracker
 		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+		while (i < numOfEndEffectors && renderTrackerAndController && viveObjects[i] != nullptr) {
 			renderTracker(i);
 			i++;
 		}
@@ -463,7 +477,7 @@ namespace {
 		
 		// Render tracker
 		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && cubes[i] != nullptr) {
+		while (i < numOfEndEffectors && renderTrackerAndController) {
 			renderTracker(i);
 			i++;
 		}
@@ -656,8 +670,9 @@ namespace {
 		mat4 mat = q2.matrix();
 		camForward = mat * camForward;
 		
-		for (int i = 0; i < numOfEndEffectors; ++i)
-			cubes[i] = new MeshObject("cube.ogex", "", structure, 0.05f);
+		viveObjects[0] = new MeshObject("vivemodels/vivetracker.ogex", "vivemodels/", structure, 1);
+		viveObjects[1] = new MeshObject("vivemodels/vivecontroller.ogex", "vivemodels/", structure, 1);
+		viveObjects[2] = new MeshObject("cube.ogex", "", structure, 0.05);
 		
 		if (renderRoom) {
 			loadLivingRoomShader();
