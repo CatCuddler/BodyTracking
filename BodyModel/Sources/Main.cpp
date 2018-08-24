@@ -105,7 +105,7 @@ namespace {
 			Graphics4::setMatrix(mLocation, M);
 			
 			// Tender a tracker for both feet and back
-			if (i == hip || i == rightHand || i == rightFoot) {
+			if (i == hip || i == rightFoot || i == leftFoot) {
 				viveObjects[0]->render(tex);
 				// Render a controller for both hands
 			} else if (i == rightHand || i == leftHand) {
@@ -120,8 +120,6 @@ namespace {
 	void renderCSForEndEffector() {
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
-			
-			log(Info, "%s", bone->boneName);
 			
 			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
 			vec3 endEffectorPos = bone->getPosition();;

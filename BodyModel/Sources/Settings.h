@@ -10,7 +10,7 @@ struct DataFile {
 };
 
 namespace {
-	enum BlockColor {
+	enum EndEffectorIndices {
 		hip, leftHand, rightHand, leftFoot, rightFoot
 	};
 	
@@ -29,11 +29,11 @@ namespace {
 	const float nearNull = 0.0001f;
 	const int width = 1024;
 	const int height = 768;
-	const bool renderRoom = false;
+	const bool renderRoom = true;
 	const bool renderTrackerAndController = false;
-	const bool renderAxisForEndEffector = true;
+	const bool renderAxisForEndEffector = false;
 	const bool eval = false;
-	const bool withOrientation = false;
+	const bool withOrientation = true;
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
 }
