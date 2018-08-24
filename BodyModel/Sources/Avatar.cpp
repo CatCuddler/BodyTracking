@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Avatar.h"
 
 #include "RotationUtility.h"
@@ -96,6 +97,14 @@ void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPositio
 	bone->quaternion = desRotation;
 	bone->quaternion.normalize();
 	bone->local = bone->transform * bone->quaternion.matrix().Transpose();
+}
+
+Kore::Quaternion Avatar::getLocalCoordinateSystem(int boneIndex) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+
+	//Kore::Quaternion localRot = new Quaternion(0, 0, 0, 1);
+	
+	return bone->quaternion;
 }
 
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
