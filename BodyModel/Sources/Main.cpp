@@ -29,7 +29,7 @@ float dMaxRot[] = { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
 float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
-	EndEffector** tracker;
+	EndEffector** endEffector;
 	vec3 desPosition[numOfEndEffectors], trackerPosition[numOfEndEffectors];
 	Kore::Quaternion desRotation[numOfEndEffectors], trackerRotation[numOfEndEffectors];
 	
@@ -119,12 +119,16 @@ namespace {
 	
 	void renderCSForEndEffector() {
 		for(int i = 0; i < numOfEndEffectors; ++i) {
-			//Kore::Quaternion localRot = avatar->getLocalCoordinateSystem(tracker[i]->getBoneIndex());
-			BoneNode* node = avatar->getBoneWithIndex(tracker[i]->getBoneIndex());
+			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
-			log(Info, "%s", node->boneName);
+			log(Info, "%s", bone->boneName);
 			
-			Graphics4::setMatrix(mLocation, node->transform);
+			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
+			vec3 endEffectorPos = bone->getPosition();;
+			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
+			
+			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * endEffectorRot.matrix().Transpose();
+			Graphics4::setMatrix(mLocation, M);
 			viveObjects[2]->render(tex);
 		}
 	}
@@ -151,15 +155,14 @@ namespace {
 	}
 	
 	void executeMovement(int i) {
-		// set Tracker-Position
 		trackerPosition[i] = desPosition[i];
 		trackerRotation[i] = desRotation[i];
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
 #ifdef KORE_STEAMVR
-			Kore::Quaternion finalRot = desRotation[i].rotated(tracker[i]->offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(tracker[i]->offsetPosition.x(), tracker[i]->offsetPosition.y(), tracker[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+			Kore::Quaternion finalRot = desRotation[i].rotated(endEffector[i]->offsetRotation);
+			vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[i]->offsetPosition.x(), endEffector[i]->offsetPosition.y(), endEffector[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
 #else
 			Kore::Quaternion finalRot = desRotation[i];
 			vec3 finalPos = desPosition[i];
@@ -171,9 +174,9 @@ namespace {
 			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 			
 			if (!i)
-				avatar->setFixedPositionAndOrientation(tracker[i]->getBoneIndex(), finalPos, finalRot);
+				avatar->setFixedPositionAndOrientation(endEffector[i]->getBoneIndex(), finalPos, finalRot);
 			else
-				avatar->setDesiredPositionAndOrientation(tracker[i]->getBoneIndex(), finalPos, finalRot);
+				avatar->setDesiredPositionAndOrientation(endEffector[i]->getBoneIndex(), finalPos, finalRot);
 		}
 	}
 	
@@ -205,14 +208,14 @@ namespace {
 	void calibrateTracker(int i) {
 		vec3 sollPos, istPos = desPosition[i];
 		mat4 sollRot, istRot = desRotation[i].matrix();
-		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->getBoneIndex());
+		BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
-		tracker[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
-		tracker[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
+		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
+		endEffector[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
 	}
 	
 	void setSize() {
@@ -246,18 +249,18 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 4) {
 					// Foot tracker (if y pos is in the lower quarter of the body)
 					if (trackerTransPos.x() > 0) {
-						log(Info, "rightHand: %i -> %i", tracker[rightHand]->trackerIndex, i);
-						tracker[3]->setTrackerIndex(i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->trackerIndex, i);
+						tracker[rightFoot]->setTrackerIndex(i);
 					}
 					else {
-						log(Info, "rightFoot: %i -> %i", tracker[rightFoot]->trackerIndex, i);
-						tracker[4]->setTrackerIndex(i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->trackerIndex, i);
+						tracker[rightHand]->setTrackerIndex(i);
 					}
 				}
 				else {
 					// Hip tracker
-					log(Info, "hip: %i -> %i", tracker[hip]->trackerIndex, i);
-					tracker[0]->setTrackerIndex(i);
+					log(Info, "hip: %i -> %i", endEffector[hip]->trackerIndex, i);
+					tracker[hip]->setTrackerIndex(i);
 				}
 			}
 			else if (controller.trackedDevice == TrackedDevice::Controller) {
@@ -266,12 +269,12 @@ namespace {
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHand: %i -> %i", tracker[leftHand]->trackerIndex, i);
-					tracker[1]->setTrackerIndex(i);
+					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->trackerIndex, i);
+					endEffector[leftHand]->setTrackerIndex(i);
 				}
 				else {
-					log(Info, "rightHand: %i -> %i", tracker[rightHand]->trackerIndex, i);
-					tracker[2]->setTrackerIndex(i);
+					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->trackerIndex, i);
+					endEffector[rightHand]->setTrackerIndex(i);
 				}
 			}
 		}
@@ -286,7 +289,7 @@ namespace {
 			if (!calibratedAvatar) {
 				// calibrate to T-Pose
 				for (int i = 0; i < numOfEndEffectors; ++i) {
-					VrPoseState controller = VrInterface::getController(tracker[i]->trackerIndex);
+					VrPoseState controller = VrInterface::getController(endEffector[i]->trackerIndex);
 					
 					desPosition[i] = controller.vrPose.position;
 					desRotation[i] = controller.vrPose.orientation;
@@ -335,7 +338,6 @@ namespace {
 	
 	void initVars() {
 		// init & calibrate avatar
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 		avatar->setScale(currentFile->scale);
 		calibratedAvatar = true; // recorded Data are always calibrated!
 		
@@ -373,8 +375,8 @@ namespace {
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i)
-			if (tracker[i]->trackerIndex != -1) {
-				controller = VrInterface::getController(tracker[i]->trackerIndex);
+			if (endEffector[i]->trackerIndex != -1) {
+				controller = VrInterface::getController(endEffector[i]->trackerIndex);
 				
 				// Get controller position and rotation
 				desPosition[i] = controller.vrPose.position;
@@ -432,16 +434,12 @@ namespace {
 		}
 		Graphics4::setMatrix(mLocation, initTrans);
 		
-		// Animate avatar
 		avatar->animate(tex, deltaT);
 		
-		// Render tracker
 		if (renderTrackerAndController) renderTracker();
 		
-		// Rencer Coordinate System for End-Effectors
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
-		// Render living room
 		if (renderRoom) {
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
@@ -480,16 +478,12 @@ namespace {
 		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
 		
-		// Animate avatar
 		avatar->animate(tex, deltaT);
 		
-		// Render tracker
 		if (renderTrackerAndController) renderTracker();
 		
-		// Rencer Coordinate System for End-Effectors
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
-		// Render living room
 		if (renderRoom) renderLivingRoom(V, P);
 #endif
 		Graphics4::end();
@@ -657,7 +651,10 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+#else
+		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
 #endif
+		
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		initRot.normalize();
@@ -698,12 +695,12 @@ namespace {
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
 		
-		tracker = new EndEffector*[5];
-		tracker[hip] = new EndEffector(hipBoneIndex);
-		tracker[leftHand] = new EndEffector(leftHandBoneIndex);
-		tracker[rightHand] = new EndEffector(rightHandBoneIndex);
-		tracker[leftFoot] = new EndEffector(leftFootBoneIndex);
-		tracker[rightFoot] = new EndEffector(rightFootBoneIndex);
+		endEffector = new EndEffector*[5];
+		endEffector[hip] = new EndEffector(hipBoneIndex);
+		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
+		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
+		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
+		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
