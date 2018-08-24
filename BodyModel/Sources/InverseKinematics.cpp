@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "InverseKinematics.h"
 
+#include <float.h>
 #include <Kore/Log.h>
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
@@ -59,12 +60,12 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		prevDeltaTheta = deltaTheta;
 		
 		// todo: better!
-		if (targetBone->nodeIndex == tracker[1]->boneIndex || targetBone->nodeIndex == tracker[2]->boneIndex) {
+		if (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex) {
 			// deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[1]->ikMode);
 			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianHand->getPositionError();
 			errorRot = jacobianHand->getRotationError();
-		} else if (targetBone->nodeIndex == tracker[3]->boneIndex || targetBone->nodeIndex == tracker[4]->boneIndex) {
+		} else if (targetBone->nodeIndex == leftFootBoneIndex|| targetBone->nodeIndex == rightFootBoneIndex) {
 			// deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode);
 			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianFoot->getPositionError();
@@ -209,7 +210,7 @@ void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
 	
-	// upperarm / Schultergelenk
+	// upperarm
 	nodeLeft = bones[12 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-5.0f * Kore::pi / 18.0f, Kore::pi));                  // -50° bis 180° = 230° (LH, vorher -90° bis 120° = 210° => -20°)
@@ -222,7 +223,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 	
-	// lowerarm / Ellenbogengelenk
+	// lowerarm
 	nodeLeft = bones[13 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(0, 7.0f * Kore::pi / 9.0f));           				// 0° bis 140° = 150° (LH, vorher -90° bis 90° = 180° => -30°)
@@ -242,7 +243,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	
-	// thigh / Hüftgelenk
+	// thigh
 	nodeLeft = bones[4 - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-13.0f * Kore::pi / 18.0f, Kore::pi / 6.0f));          // -130° bis 30° = 160° (NN/LH, vorher -150° bis 60° = 210° => -50°)
@@ -255,7 +256,7 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
 	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
 	
-	// calf / Kniegelenk
+	// calf
 	nodeLeft = bones[5 - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
 	nodeLeft->constrain.push_back(Kore::vec2(0, 7.0f * Kore::pi / 9.0f));           				// 0° bis 140° = 150° (LH, vorher 0° bis 150° = 150° => 0°)

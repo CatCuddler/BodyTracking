@@ -7,6 +7,7 @@
 #include <Kore/Input/Mouse.h>
 #include <Kore/System.h>
 
+#include "EndEffector.h"
 #include "Avatar.h"
 #include "LivingRoom.h"
 #include "Logger.h"
@@ -28,7 +29,7 @@ float dMaxRot[] = { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
 float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
 
 namespace {
-	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);
+	EndEffector** tracker;
 	vec3 desPosition[numOfEndEffectors], trackerPosition[numOfEndEffectors];
 	Kore::Quaternion desRotation[numOfEndEffectors], trackerRotation[numOfEndEffectors];
 	
@@ -51,7 +52,6 @@ namespace {
 	ConstantLocation mLocation;
 	
 	// Living room shader
-	bool renderRoom = true;
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
 	Shader* fragmentShader_living_room;
@@ -79,12 +79,6 @@ namespace {
 	
 	vec3 cameraPos(0, 0, 0);
 	
-	const int backTrackerIndex = 0;
-	const int leftHandTrackerIndex = 1;
-	const int rightHandTrackerIndex = 2;
-	const int leftFootTrackerIndex = 3;
-	const int rightFootTrackerIndex = 4;
-	
 	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
 	Avatar *avatar;
@@ -105,20 +99,34 @@ namespace {
 	int loop = 0;
 #endif
 	
-	void renderTracker(int i) {
-		Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
-		Graphics4::setMatrix(mLocation, M);
-		
-		// Tender a tracker for both feet and back
-		if (i == backTrackerIndex || i == leftFootTrackerIndex || i == rightFootTrackerIndex) {
-			viveObjects[0]->render(tex);
-		// Render a controller for both hands
-		} else if (i == rightHandTrackerIndex || i == leftHandTrackerIndex) {
-			viveObjects[1]->render(tex);
+	void renderTracker() {
+		for(int i = 0; i < numOfEndEffectors; ++i) {
+			Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
+			Graphics4::setMatrix(mLocation, M);
+			
+			// Tender a tracker for both feet and back
+			if (i == hip || i == rightHand || i == rightFoot) {
+				viveObjects[0]->render(tex);
+				// Render a controller for both hands
+			} else if (i == rightHand || i == leftHand) {
+				viveObjects[1]->render(tex);
+			}
+			
+			// Render local coordinate system
+			viveObjects[2]->render(tex);
 		}
-		
-		// Render local coordinate system
-		viveObjects[2]->render(tex);
+	}
+	
+	void renderCSForEndEffector() {
+		for(int i = 0; i < numOfEndEffectors; ++i) {
+			//Kore::Quaternion localRot = avatar->getLocalCoordinateSystem(tracker[i]->getBoneIndex());
+			BoneNode* node = avatar->getBoneWithIndex(tracker[i]->getBoneIndex());
+			
+			log(Info, "%s", node->boneName);
+			
+			Graphics4::setMatrix(mLocation, node->transform);
+			viveObjects[2]->render(tex);
+		}
 	}
 	
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -163,9 +171,9 @@ namespace {
 			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 			
 			if (!i)
-				avatar->setFixedPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
+				avatar->setFixedPositionAndOrientation(tracker[i]->getBoneIndex(), finalPos, finalRot);
 			else
-				avatar->setDesiredPositionAndOrientation(tracker[i]->boneIndex, finalPos, finalRot);
+				avatar->setDesiredPositionAndOrientation(tracker[i]->getBoneIndex(), finalPos, finalRot);
 		}
 	}
 	
@@ -197,7 +205,7 @@ namespace {
 	void calibrateTracker(int i) {
 		vec3 sollPos, istPos = desPosition[i];
 		mat4 sollRot, istRot = desRotation[i].matrix();
-		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
+		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->getBoneIndex());
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
 		sollPos = bone->getPosition();
@@ -238,31 +246,31 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 4) {
 					// Foot tracker (if y pos is in the lower quarter of the body)
 					if (trackerTransPos.x() > 0) {
-						log(Info, "leftFootTrackerIndex: %i -> %i", tracker[leftFootTrackerIndex]->trackerIndex, i);
+						log(Info, "rightHand: %i -> %i", tracker[rightHand]->trackerIndex, i);
 						tracker[3]->setTrackerIndex(i);
 					}
 					else {
-						log(Info, "rightFootTrackerIndex: %i -> %i", tracker[rightFootTrackerIndex]->trackerIndex, i);
+						log(Info, "rightFoot: %i -> %i", tracker[rightFoot]->trackerIndex, i);
 						tracker[4]->setTrackerIndex(i);
 					}
 				}
 				else {
-					//back tracker
-					log(Info, "backTrackerIndex: %i -> %i", tracker[backTrackerIndex]->trackerIndex, i);
+					// Hip tracker
+					log(Info, "hip: %i -> %i", tracker[hip]->trackerIndex, i);
 					tracker[0]->setTrackerIndex(i);
 				}
 			}
 			else if (controller.trackedDevice == TrackedDevice::Controller) {
-				//Hand tracker
+				// Hand tracker
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHandTrackerIndex: %i -> %i", tracker[leftHandTrackerIndex]->trackerIndex, i);
+					log(Info, "leftHand: %i -> %i", tracker[leftHand]->trackerIndex, i);
 					tracker[1]->setTrackerIndex(i);
 				}
 				else {
-					log(Info, "rightHandTrackerIndex: %i -> %i", tracker[rightHandTrackerIndex]->trackerIndex, i);
+					log(Info, "rightHand: %i -> %i", tracker[rightHand]->trackerIndex, i);
 					tracker[2]->setTrackerIndex(i);
 				}
 			}
@@ -392,11 +400,10 @@ namespace {
 			avatar->animate(tex, deltaT);
 			
 			// Render tracker
-			int i = 0;
-			while (i < numOfEndEffectors && renderTrackerAndController && viveObjects[i] != nullptr) {
-				renderTracker(i);
-				i++;
-			}
+			if (renderTrackerAndController) renderTracker();
+			
+			// Rencer Coordinate System for End-Effectors
+			if (renderAxisForEndEffector) renderCSForEndEffector();
 			
 			// Render living room
 			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
@@ -429,11 +436,10 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		// Render tracker
-		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController && viveObjects[i] != nullptr) {
-			renderTracker(i);
-			i++;
-		}
+		if (renderTrackerAndController) renderTracker();
+		
+		// Rencer Coordinate System for End-Effectors
+		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		// Render living room
 		if (renderRoom) {
@@ -478,11 +484,10 @@ namespace {
 		avatar->animate(tex, deltaT);
 		
 		// Render tracker
-		int i = 0;
-		while (i < numOfEndEffectors && renderTrackerAndController) {
-			renderTracker(i);
-			i++;
-		}
+		if (renderTrackerAndController) renderTracker();
+		
+		// Rencer Coordinate System for End-Effectors
+		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		// Render living room
 		if (renderRoom) renderLivingRoom(V, P);
@@ -672,9 +677,14 @@ namespace {
 		mat4 mat = q2.matrix();
 		camForward = mat * camForward;
 		
-		viveObjects[0] = new MeshObject("vivemodels/vivetracker.ogex", "vivemodels/", structure, 1);
-		viveObjects[1] = new MeshObject("vivemodels/vivecontroller.ogex", "vivemodels/", structure, 1);
-		viveObjects[2] = new MeshObject("vivemodels/axis.ogex", "vivemodels/", structure, 1);
+		if (renderTrackerAndController) {
+			viveObjects[0] = new MeshObject("vivemodels/vivetracker.ogex", "vivemodels/", structure, 1);
+			viveObjects[1] = new MeshObject("vivemodels/vivecontroller.ogex", "vivemodels/", structure, 1);
+		}
+		
+		if (renderTrackerAndController || renderAxisForEndEffector) {
+			viveObjects[2] = new MeshObject("vivemodels/axis.ogex", "vivemodels/", structure, 1);
+		}
 		
 		if (renderRoom) {
 			loadLivingRoomShader();
@@ -687,6 +697,13 @@ namespace {
 		
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
+		
+		tracker = new EndEffector*[5];
+		tracker[hip] = new EndEffector(hipBoneIndex);
+		tracker[leftHand] = new EndEffector(leftHandBoneIndex);
+		tracker[rightHand] = new EndEffector(rightHandBoneIndex);
+		tracker[leftFoot] = new EndEffector(leftFootBoneIndex);
+		tracker[rightFoot] = new EndEffector(rightFootBoneIndex);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove

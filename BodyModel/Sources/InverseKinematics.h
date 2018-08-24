@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kore/Math/Quaternion.h>
-#include <float.h>
+
 #include "Jacobian.h"
 
 extern int ikMode, maxSteps[];
