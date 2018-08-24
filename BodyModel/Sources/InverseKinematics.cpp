@@ -158,12 +158,12 @@ void InverseKinematics::applyChanges(std::vector<float> deltaTheta, BoneNode* ta
 	while (bone->initialized && i < size) {
 		Kore::vec3 axes = bone->axes;
 		
-		if (axes.x() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
-		if (axes.y() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), deltaTheta[i++]));
-		if (axes.z() == 1.0 && i < size) bone->quaternion.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
+		if (axes.x() == 1.0 && i < size) bone->rotation.rotate(Kore::Quaternion(Kore::vec3(1, 0, 0), deltaTheta[i++]));
+		if (axes.y() == 1.0 && i < size) bone->rotation.rotate(Kore::Quaternion(Kore::vec3(0, 1, 0), deltaTheta[i++]));
+		if (axes.z() == 1.0 && i < size) bone->rotation.rotate(Kore::Quaternion(Kore::vec3(0, 0, 1), deltaTheta[i++]));
 		
-		bone->quaternion.normalize();
-		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
+		bone->rotation.normalize();
+		bone->local = bone->transform * bone->rotation.matrix().Transpose();
 		
 		bone = bone->parent;
 	}
@@ -175,17 +175,17 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		Kore::vec3 axes = bone->axes;
 		
 		Kore::vec3 rot;
-		Kore::RotationUtility::quatToEuler(&bone->quaternion, &rot.x(), &rot.y(), &rot.z());
+		Kore::RotationUtility::quatToEuler(&bone->rotation, &rot.x(), &rot.y(), &rot.z());
 		
 		float x = (axes.x() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.x()) : rot.x();
 		float y = (axes.y() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.y()) : rot.y();
 		float z = (axes.z() == 1.0) ? clampValue(bone->constrain[0].x(), bone->constrain[0].y(), rot.z()) : rot.z();
 		
-		Kore::RotationUtility::eulerToQuat(x, y, z, &bone->quaternion);
+		Kore::RotationUtility::eulerToQuat(x, y, z, &bone->rotation);
 		
-		// bone->quaternion = Kore::Quaternion((double) x, (double) y, (double) z, 1);
-		bone->quaternion.normalize();
-		bone->local = bone->transform * bone->quaternion.matrix().Transpose();
+		// bone->rotation = Kore::Quaternion((double) x, (double) y, (double) z, 1);
+		bone->rotation.normalize();
+		bone->local = bone->transform * bone->rotation.matrix().Transpose();
 		
 		bone = bone->parent;
 	}
