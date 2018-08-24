@@ -4,14 +4,29 @@
 #include <Kore/Log.h>
 #include <ctime>
 
-Logger::Logger() : initPositionData(false), initEvaluationData(false) {
-	time_t t = time(0);   // Get time now
-	
-	positionDataPath << positionData << "_" << t << ".csv";
-}
-
 Logger::~Logger() {
 	positionDataOutputFile.close();
+	positionDataOutputFile.close();
+}
+
+void Logger::startLogger() {
+	time_t t = time(0);   // Get time now
+	
+	positionDataPath.str(std::string());
+	positionDataPath << positionData << "_" << t << ".csv";
+	
+	positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
+	positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
+	positionDataOutputFile.flush();
+	
+	log(Kore::Info, "start logging!");
+}
+
+void Logger::endLogger() {
+	positionDataOutputFile.close();
+    prevScale = 0;
+	
+	log(Kore::Info, "stop logging!");
 }
 
 void Logger::startEvaluationLogger() {
@@ -22,47 +37,39 @@ void Logger::startEvaluationLogger() {
 	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
 	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
 	
+	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
+	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;dMax Pos;dMax Rot;Steps Max\n";
+	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentGroup[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos << ";" << errorMaxRot << ";" << dMaxPos[ikMode] << ";" << dMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
+	evaluationConfigOutputFile.flush();
+	evaluationConfigOutputFile.close();
+	
+	evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
+	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
+	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
+	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
+	evaluationDataOutputFile.flush();
+	
 	log(Kore::Info, "start eval-logging!");
 }
 
 void Logger::endEvaluationLogger() {
 	evaluationDataOutputFile.close();
-	initEvaluationData = false;
 	
 	log(Kore::Info, "stop eval-logging!");
 }
 
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot) {
-	if (!initPositionData) {
-		positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-		positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW\n";
-		positionDataOutputFile.flush();
-		initPositionData = true;
-	}
-	
+void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save positional and rotation data
-	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
+	if (scale != prevScale) {
+		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+		prevScale = scale;
+	} else
+		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
 	positionDataOutputFile.flush();
 }
 
 void Logger::saveEvaluationData(Avatar *avatar) {
-	if (!initEvaluationData) {
-		evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-		evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;dMax Pos;dMax Rot;Steps Max\n";
-		evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentFile->positionDataFilename << ";" << lambda[ikMode] << ";"  << errorMaxPos << ";"  << errorMaxRot << ";"  << dMaxPos[ikMode] << ";"  << dMaxRot[ikMode] << ";"  << maxSteps[ikMode] << "\n";
-		evaluationConfigOutputFile.flush();
-		evaluationConfigOutputFile.close();
-		
-		evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
-		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
-		evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
-		evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
-		evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
-		evaluationDataOutputFile.flush();
-		
-		initEvaluationData = true;
-	}
-	
 	float* iterations = avatar->getIterations();
 	float* errorPos = avatar->getErrorPos();
 	float* errorRot = avatar->getErrorRot();
@@ -102,6 +109,9 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 			else if (column == 4) rawRot->y = num;
 			else if (column == 5) rawRot->z = num;
 			else if (column == 6) rawRot->w = num;
+			
+			if (currLineNumber == 1 && column == 7)
+				scale = num;
 			
 			++column;
 		}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Label } from 'semantic-ui-react';
 import { get } from 'lodash';
-import { colorsMaterial } from '@filou/core';
+import colorsMaterial from './colors';
 
 const LabelGroup = ({
   name,
@@ -30,7 +30,7 @@ const LabelGroup = ({
                 backgroundColor:
                   !groupBy &&
                   get(colorsMaterial, [
-                    selectedFiles.findIndex(x => x === name) * 2,
+                    selectedFiles.findIndex(x => x === name),
                     'palette',
                     6
                   ])

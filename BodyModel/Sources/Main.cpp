@@ -22,11 +22,15 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // dynamic ik-parameter
-int ikMode = 5; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
-int maxSteps[] = { 100, 100, 100, 100, 100, 100 };
-float dMaxPos[] = { 0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f };
-float dMaxRot[] = { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
-float lambda[] = { 0.25f, 0.01f, 0.18f, 0.1f, 0.18f, Kore::pi / 4, Kore::pi / 4 };
+int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
+float lambda[] =    { 0.35f,	0.05f,		0.20f,		0.25f,		0.20f,		0.018f	};
+float dMaxPos[] =   { 0,        0,          0,          0,          0,          0       };
+float dMaxRot[] =   { 0,        0,          0,          0,          0,          0       };
+float maxSteps[] =  { 100.0f,   100.0f,     100.0f,     100.0f,     100.0f,     100.0f  };
+
+int currentFile = 0;
+int evalStepsInit = evalSteps;
+float evalInitValue[] = { 0.01f,    0.01f,      0.21f,      0.36f,      0.21f,      0.01f   };
 
 namespace {
 	EndEffector** endEffector;
@@ -165,7 +169,7 @@ namespace {
 			Kore::Quaternion finalRot = desRotation[i];
 			vec3 finalPos = desPosition[i];
 #endif
-			if (logData) logger->saveData(finalPos, finalRot);
+			if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 			
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);
@@ -223,7 +227,6 @@ namespace {
 		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
 		currentUserHeight = hmdPos.y();
 		
-		// todo: float factor = 173.3f / 161.3f; // ø Körperhöhe / ø Augenhöhe = 1.0744f
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
 		
@@ -244,8 +247,8 @@ namespace {
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
-				if (trackerPos.y() < currentUserHeight / 4) {
-					// Foot tracker (if y pos is in the lower quarter of the body)
+				if (trackerPos.y() < currentUserHeight / 3) {
+					// Foot tracker (if y pos is in the lower triple of the body)
 					if (trackerTransPos.x() > 0) {
 						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->trackerIndex, i);
 						tracker[rightFoot]->setTrackerIndex(i);
@@ -304,14 +307,13 @@ namespace {
 		}
 		
 		// Trigger button => logging
-		if (buttonNr == 33) {
-			if (value == 1) {
-				logData = true;
-				log(Info, "Start logging data.");
-			} else {
-				logData = false;
-				log(Info, "Stop recording data.");
-			}
+		if (buttonNr == 33 && value == 1) {
+			logData = !logData;
+			
+			if (logData)
+				logger->startLogger();
+			else
+				logger->endLogger();
 		}
 		
 		// Grip button => init Controller
@@ -335,15 +337,8 @@ namespace {
 #endif
 	
 	void initVars() {
-		// init & calibrate avatar
-		avatar->setScale(currentFile->scale);
+		// Init & calibrate avatar
 		calibratedAvatar = true; // recorded Data are always calibrated!
-		
-		initRot.normalize();
-		initRotInv = initRot.invert();
-		
-		initTrans = mat4::Translation(0, 0, 0) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
 		
 		line = 0;
 	}
@@ -400,10 +395,18 @@ namespace {
 			avatar->animate(tex, deltaT);
 			
 			// Render tracker
+<<<<<<< HEAD
 			if (renderTrackerAndController) renderTracker();
 			
 			// Rencer Coordinate System for End-Effectors
 			if (renderAxisForEndEffector) renderCSForEndEffector();
+=======
+			int i = 0;
+			while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
+				renderTracker(i);
+				i++;
+			}
+>>>>>>> cf13934a0bb2f8b517ba7318f782025e182e3cc6
 			
 			// Render living room
 			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
@@ -434,40 +437,98 @@ namespace {
 		
 		avatar->animate(tex, deltaT);
 		
+<<<<<<< HEAD
 		if (renderTrackerAndController) renderTracker();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) {
+=======
+		// Render tracker
+		int i = 0;
+		while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
+			renderTracker(i);
+			i++;
+		}
+		
+		// Render living room
+		if (showLivingRoom) {
+>>>>>>> cf13934a0bb2f8b517ba7318f782025e182e3cc6
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 #else
+        // todo: remove
+        /* while (loop >= 0) {
+            loop--;
+            log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
+            
+            if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1)
+                exit(0);
+            else {
+                if (evalSteps <= 1) {
+                    evalValue[ikMode] = evalInitValue[ikMode];
+                    evalSteps = evalStepsInit;
+                    ikMode++;
+                } else {
+                    evalValue[ikMode] += evalStep;
+                    evalSteps--;
+                }
+                
+                if (ikMode > 5) {
+                    ikMode = 0;
+                    currentFile++;
+                }
+                
+                loop = 0;
+            }
+        } */
+        
 		// Read line
-		if (logger->readData(line, numOfEndEffectors, currentFile->positionDataFilename, desPosition, desRotation)) {
+		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation)) {
+            if (!line)
+                avatar->setScale(logger->getScale());
+				
 			for (int i = 0; i < numOfEndEffectors; ++i)
 				executeMovement(i);
 			
 			line += numOfEndEffectors;
 		} else {
-			if (loop >= 0) {
-				if (eval) logger->saveEvaluationData(avatar);
-				if (loop > 0) initVars();
-				log(Kore::Info, "%i more iterations!", loop);
-				loop--;
-				
-				/* if (loop < 0) {
-				 if (eval) logger->endEvaluationLogger();
-				 
-				 // todo: remove after eval
-				 if (ikMode < 6) {
-				 ikMode++;
-				 loop = 5;
-				 }
-				 if (eval) logger->startEvaluationLogger();
-				 } */
-			}
-		}
+            if (loop >= 0) {
+                if (eval) logger->saveEvaluationData(avatar);
+                // log(Kore::Info, "%i more iterations!", loop);
+                log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
+                loop--;
+                
+                if (eval && loop < 0) {
+                    logger->endEvaluationLogger();
+                    
+                    if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1)
+                        exit(0);
+                    else {
+                        if (evalSteps <= 1) {
+                            evalValue[ikMode] = evalInitValue[ikMode];
+                            evalSteps = evalStepsInit;
+                            ikMode++;
+                        } else {
+                            evalValue[ikMode] += evalStep;
+                            evalSteps--;
+                        }
+                        
+                        if (ikMode > 5) {
+                            ikMode = 0;
+                            currentFile++;
+                        }
+                        
+                        loop = 0;
+                        logger->startEvaluationLogger();
+                    }
+                }
+                
+                if (loop >= 0)
+                    initVars();
+            }
+        }
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -484,6 +545,7 @@ namespace {
 		
 		if (renderRoom) renderLivingRoom(V, P);
 #endif
+
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}

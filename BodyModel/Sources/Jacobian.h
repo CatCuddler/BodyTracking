@@ -54,9 +54,6 @@ public:
 			case 5:
 				vec = calcDeltaThetaBySDLS(jacobian, deltaP);
 				break;
-			case 6:
-				vec = calcDeltaThetaBySDLSModified(jacobian, deltaP);
-				break;
 				
 			default:
 				vec = calcDeltaThetaByTranspose(jacobian, deltaP);
@@ -152,7 +149,8 @@ private:
 			if (
 				fabs(d[i]) > nearNull &&
 				N_i > nearNull &&
-				fabs(alpha_i) > nearNull
+				fabs(alpha_i) > nearNull &&
+				lambda[5] > nearNull
 				) {
 				float omegaInverse_i = 1.0 / d[i];
 				
@@ -172,49 +170,6 @@ private:
 		}
 		
 		return clampMaxAbs(phi, lambda[5]);
-	}
-	vec_n calcDeltaThetaBySDLSModified(mat_mxn jacobian, vec_m deltaP) {
-		calcSVD(jacobian);
-		
-		vec_n theta;
-		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
-			vec_m u_i;
-			float N_i = 0.0f;
-			float alpha_i = 0.0f;
-			for (int m = 0; m < nDOFs; ++m) {
-				u_i[m] = U[m][i];
-				N_i += fabs(u_i[m]);
-				alpha_i += u_i[m] * deltaP[m];
-			}
-			
-			if (
-				fabs(d[i]) > nearNull &&
-				N_i > nearNull &&
-				fabs(alpha_i) > nearNull
-				) {
-				float omegaInverse_i = 1.0 / d[i];
-				
-				vec_n v_i;
-				float M_i = 0.0f;
-				for (int n = 0; n < nJointDOFs; ++n) {
-					v_i[n] = V[n][i];
-					
-					for (int m = 0; m < nDOFs; ++m)
-						M_i += fabs(v_i[n]) * fabs(jacobian[m][n]);
-				}
-				M_i *= omegaInverse_i;
-				
-				float gamma_i =
-				fabs(M_i) > nearNull &&
-				fabs(M_i) > fabs(N_i) ?
-				fabs(N_i / M_i) * lambda[6] :
-				lambda[6];
-				
-				theta += clampMag(omegaInverse_i * alpha_i * v_i, gamma_i);
-			}
-		}
-		
-		return theta;
 	}
 	
 	// ---------------------------------------------------------
@@ -356,16 +311,6 @@ private:
 		
 		if (length > gamma_i)
 			for (int n = 0; n < 3; ++n)
-				vec[n] = gamma_i * vec[n] / length;
-		
-		return vec;
-	}
-	
-	vec_n clampMag(vec_n vec, float gamma_i) {
-		float length = vec.getLength();
-		
-		if (length > gamma_i)
-			for (int n = 0; n < nJointDOFs; ++n)
 				vec[n] = gamma_i * vec[n] / length;
 		
 		return vec;

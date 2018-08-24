@@ -17,6 +17,9 @@ const enhance = compose(
   withState('min', 'setMin'),
   withState('max', 'setMax'),
   withState('scale', 'setScale'),
+  withState('average', 'setAverage'),
+  withState('interpolate', 'setInterpolate'),
+  withState('notnull', 'setNotNull'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
       .map(file => file.folder)
@@ -37,11 +40,15 @@ const enhance = compose(
       ) || []
   })),
   withState('selectedFields', 'setSelectedFields', ({ fields }) => [
-    get(fields, 0)
+    get(fields, 0) || 'Iterations'
   ]),
-  withPropsOnChange(['selectedFields'], ({ selectedFields, setScale }) => {
-    setScale(selectedFields.length > 1);
-  }),
+  withPropsOnChange(
+    ['selectedFields'],
+    ({ selectedFields, scale, setScale }) => {
+      if (!scale && selectedFields.length > 1) setScale(-1);
+      else if (scale === -1 && selectedFields.length <= 1) setScale(0);
+    }
+  ),
   withHandlers({
     onClickField: ({ selectedFields, setSelectedFields }) => (e, field) =>
       e.shiftKey
@@ -95,7 +102,13 @@ const App = ({
   max,
   setMax,
   scale,
-  setScale
+  setScale,
+  interpolate,
+  setInterpolate,
+  notnull,
+  setNotNull,
+  average,
+  setAverage
 }) => (
   <div
     style={{
@@ -123,6 +136,12 @@ const App = ({
       setMax={setMax}
       scale={scale}
       setScale={setScale}
+      interpolate={interpolate}
+      setInterpolate={setInterpolate}
+      notnull={notnull}
+      setNotNull={setNotNull}
+      average={average}
+      setAverage={setAverage}
     />
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
@@ -143,6 +162,10 @@ const App = ({
         min={min}
         max={max}
         scale={scale}
+        interpolate={interpolate}
+        setInterpolate={setInterpolate}
+        notnull={notnull}
+        average={average}
       />
     </div>
   </div>
