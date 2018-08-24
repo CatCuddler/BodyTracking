@@ -109,14 +109,16 @@ namespace {
 		Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
 		Graphics4::setMatrix(mLocation, M);
 		
-		/*if (i == backTrackerIndex || i == leftFootTrackerIndex || i == rightFootTrackerIndex)
+		// Tender a tracker for both feet and back
+		if (i == backTrackerIndex || i == leftFootTrackerIndex || i == rightFootTrackerIndex) {
 			viveObjects[0]->render(tex);
-		else if (i == rightHandTrackerIndex || i == leftHandTrackerIndex)
+		// Render a controller for both hands
+		} else if (i == rightHandTrackerIndex || i == leftHandTrackerIndex) {
 			viveObjects[1]->render(tex);
-		else
-			log(Info, "Something is wrong");*/
+		}
 		
-		viveObjects[2]->render(tex); // TODO delete this when tested in VR
+		// Render local coordinate system
+		viveObjects[2]->render(tex);
 	}
 	
 	void renderLivingRoom(mat4 V, mat4 P) {
@@ -672,7 +674,7 @@ namespace {
 		
 		viveObjects[0] = new MeshObject("vivemodels/vivetracker.ogex", "vivemodels/", structure, 1);
 		viveObjects[1] = new MeshObject("vivemodels/vivecontroller.ogex", "vivemodels/", structure, 1);
-		viveObjects[2] = new MeshObject("cube.ogex", "", structure, 0.05);
+		viveObjects[2] = new MeshObject("vivemodels/axis.ogex", "vivemodels/", structure, 1);
 		
 		if (renderRoom) {
 			loadLivingRoomShader();
