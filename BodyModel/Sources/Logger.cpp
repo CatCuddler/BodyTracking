@@ -118,15 +118,18 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 	return false;
 }
 
-bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
+bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
 	std::string str;
 	bool success = false;
 	
-	if (!positionDataInputFile.is_open())
+	if (!positionDataInputFile.is_open()) {
 		positionDataInputFile.open(filename);
+		
+		log(Kore::Info, "Read data from %s", filename);
+	}
 	
-	// Skip lines
-	while(line > currLineNumber - 1) {
+	// Skip header
+	if(currLineNumber == 0) {
 		std::getline(positionDataInputFile, str, '\n');
 		++currLineNumber;
 	}

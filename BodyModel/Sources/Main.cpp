@@ -38,7 +38,6 @@ namespace {
 	Kore::Quaternion desRotation[numOfEndEffectors];
 	
 	Logger* logger;
-	int line = 0;
 	
 	double startTime;
 	double lastTime;
@@ -338,13 +337,6 @@ namespace {
 	}
 #endif
 	
-	void initVars() {
-		// Init & calibrate avatar
-		calibratedAvatar = true; // TODO recorded Data are always calibrated!
-		
-		line = 0;
-	}
-	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -423,19 +415,16 @@ namespace {
 		
 		// Read line
 		float scaleFactor;
-		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation, scaleFactor)) {
-			if (line == 0) {
-				log(Kore::Info, "%s", currentGroup[currentFile]);
-                avatar->setScale(scaleFactor);
+		if (logger->readData(numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation, scaleFactor)) {
+			if (!calibratedAvatar) {
+				avatar->setScale(scaleFactor);
+				calibratedAvatar = true;
 			}
 			
-			for (int i = 0; i < numOfEndEffectors; ++i)
-				executeMovement(i);
+			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
 			
-			line += numOfEndEffectors;
 		} else {
 			currentFile++;
-			line = 0;
 			
 			// Evaluation?
             /*if (loop >= 0) {
@@ -692,8 +681,6 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
-#else
-		initVars();
 #endif
 	}
 }
