@@ -74,7 +74,6 @@ namespace {
 	// Keyboard controls
 	bool rotate = false;
 	bool W, A, S, D = false;
-	bool Z, X = false;
 	
 	vec4 camUp(0.0f, 1.0f, 0.0f, 0.0f);
 	vec4 camForward(0.0f, 0.0f, 1.0f, 0.0f);
@@ -182,7 +181,6 @@ namespace {
 	}
 	
 #ifdef KORE_STEAMVR
-	
 	void calibrateTracker(int i) {
 		vec3 sollPos, istPos = desPosition[i];
 		mat4 sollRot, istRot = desRotation[i].matrix();
@@ -540,12 +538,6 @@ namespace {
 			case Kore::KeyD:
 				D = true;
 				break;
-			case Kore::KeyZ:
-				Z = true;
-				break;
-			case Kore::KeyX:
-				X = true;
-				break;
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
 				VrInterface::resetHmdPose();
@@ -577,12 +569,6 @@ namespace {
 				break;
 			case Kore::KeyD:
 				D = false;
-				break;
-			case Kore::KeyZ:
-				Z = false;
-				break;
-			case Kore::KeyX:
-				X = false;
 				break;
 			default:
 				break;
@@ -644,7 +630,6 @@ namespace {
 	}
 	
 	void loadLivingRoomShader() {
-		// Load shader for living room
 		FileReader vs("shader_basic_shading.vert");
 		FileReader fs("shader_basic_shading.frag");
 		vertexShader_living_room = new Shader(vs.readAll(), vs.size(), VertexShader);
