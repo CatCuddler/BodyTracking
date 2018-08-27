@@ -181,8 +181,6 @@ namespace {
 			Kore::Quaternion finalRot = desRotation[deviceID].rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
 			
-			// Save calibrated data
-			//if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 #else
 			Kore::Quaternion finalRot = desRotation[deviceID];
 			vec3 finalPos = desPosition[deviceID];
@@ -200,34 +198,42 @@ namespace {
 		}
 	}
 	
+	void calibrate() {
+		for (int i = 0; i < numOfEndEffectors; ++i) {
 #ifdef KORE_STEAMVR
-	void calibrateTracker(int deviceID) {
-		vec3 sollPos, istPos = desPosition[deviceID];
-		mat4 sollRot, istRot = desRotation[deviceID].matrix();
-		BoneNode* bone = avatar->getBoneWithIndex(endEffector[deviceID]->getBoneIndex());
-		
-		sollRot = initRot.rotated(bone->getOrientation()).matrix();
-		sollPos = bone->getPosition();
-		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
-		
-		endEffector[deviceID]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
-		endEffector[deviceID]->setOffsetRotation(Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose()));
+			VrPoseState controller = VrInterface::getController(endEffector[i]->trackerIndex);
+			
+			desPosition[i] = controller.vrPose.position;
+			desRotation[i] = controller.vrPose.orientation;
+#endif
+			
+			vec3 sollPos, istPos = desPosition[i];
+			mat4 sollRot, istRot = desRotation[i].matrix();
+			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+			
+			sollRot = initRot.rotated(bone->getOrientation()).matrix();
+			sollPos = bone->getPosition();
+			sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
+			
+			endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
+			endEffector[i]->setOffsetRotation(Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose()));
+		}
 	}
 	
 	// Test this
-	/*void calibrateTracker(int i) {
-		vec3 sollPos, istPos = desPosition[i];
-		Kore::Quaternion sollRot, istRot = desRotation[i];
-		BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+	/*vec3 sollPos, istPos = desPosition[i];
+	Kore::Quaternion sollRot, istRot = desRotation[i];
+	BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 		
-		sollRot = initRot.rotated(bone->getOrientation());
-		sollPos = bone->getPosition();
-		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
+	sollRot = initRot.rotated(bone->getOrientation());
+	sollPos = bone->getPosition();
+	sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
-		endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
-		endEffector[i]->setOffsetRotation(sollRot.rotated(istRot));
+	endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
+	endEffector[i]->setOffsetRotation(sollRot.rotated(istRot));
 	}*/
 
+#ifdef KORE_STEAMVR
 	void setSize() {
 		float currentAvatarHeight = avatar->getHeight();
 		
@@ -289,15 +295,7 @@ namespace {
 				initController();
 			
 			if (!calibratedAvatar) {
-				for (int i = 0; i < numOfEndEffectors; ++i) {
-					VrPoseState controller = VrInterface::getController(endEffector[i]->trackerIndex);
-					
-					desPosition[i] = controller.vrPose.position;
-					desRotation[i] = controller.vrPose.orientation;
-					
-					calibrateTracker(i);
-				}
-				
+				calibrate();
 				log(Info, "Calibrate avatar");
 				calibratedAvatar = true;
 			} else {
@@ -418,6 +416,7 @@ namespace {
 		if (logger->readData(numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation, scaleFactor)) {
 			if (!calibratedAvatar) {
 				avatar->setScale(scaleFactor);
+				calibrate();
 				calibratedAvatar = true;
 			}
 			
