@@ -127,9 +127,9 @@ namespace {
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
-			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
-			vec3 endEffectorPos = bone->getPosition();;
+			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
+			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
 			
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * endEffectorRot.matrix().Transpose();
 			Graphics4::setMatrix(mLocation, M);
@@ -276,7 +276,6 @@ namespace {
 				initController();
 			
 			if (!calibratedAvatar) {
-				// calibrate to T-Pose
 				for (int i = 0; i < numOfEndEffectors; ++i) {
 					VrPoseState controller = VrInterface::getController(endEffector[i]->trackerIndex);
 					
@@ -298,16 +297,19 @@ namespace {
 		if (buttonNr == 33 && value == 1) {
 			logData = !logData;
 			
-			if (logData)
+			if (logData) {
+				log(Info, "Start logging");
 				logger->startLogger();
-			else
+			} else {
+				log(Info, "Stop logging");
 				logger->endLogger();
+			}
 		}
 		
 		// Grip button => init controller
 		if (buttonNr == 2 && value == 1 && !calibratedAvatar) {
-			initController();
 			log(Info, "Init Controller");
+			initController();
 		}
 	}
 	
@@ -326,7 +328,7 @@ namespace {
 	
 	void initVars() {
 		// Init & calibrate avatar
-		calibratedAvatar = true; // recorded Data are always calibrated!
+		calibratedAvatar = true; // TODO recorded Data are always calibrated!
 		
 		line = 0;
 	}

@@ -110,13 +110,12 @@ struct BoneNode {
 	Kore::vec3 getPosition() {
 		Kore::vec3 result;
 		
-		// from quat to euler!
-		Kore::vec4 quat = combined * Kore::vec4(0, 0, 0, 1);
-		quat *= 1.0 / quat.w();
+		Kore::vec4 pos = combined * Kore::vec4(0, 0, 0, 1);
+		pos *= 1.0 / pos.w();
 		
-		result.x() = quat.x();
-		result.y() = quat.y();
-		result.z() = quat.z();
+		result.x() = pos.x();
+		result.y() = pos.y();
+		result.z() = pos.z();
 		
 		return result;
 	}

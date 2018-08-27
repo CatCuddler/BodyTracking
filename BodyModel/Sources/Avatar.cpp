@@ -48,7 +48,6 @@ void Avatar::animate(TextureUnit tex) {
 				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
 				
 				int index = mesh->boneIndices[currentBoneIndex] + 2;
-				//BoneNode* bone = bones[mesh->boneIndices[currentBoneIndex] + 1];
 				BoneNode* bone = getBoneWithIndex(index);
 				float boneWeight = mesh->boneWeight[currentBoneIndex];
 				totalJointsWeight += boneWeight;
