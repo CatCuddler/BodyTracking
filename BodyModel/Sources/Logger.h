@@ -10,7 +10,7 @@
 #include <sstream>
 
 extern int currentFile, ikMode;
-extern float dMaxPos[], dMaxRot[], lambda[], maxSteps[];
+extern float dMaxArms[], dMaxLegs[], lambda[], maxSteps[], errorMaxPos[], errorMaxRot[];
 
 class Logger {
 	

@@ -1,16 +1,17 @@
 #pragma once
 
 extern int ikMode;
-extern float lambda[];
+extern float maxSteps[], dMaxArms[], dMaxLegs[];
 
 struct EndEffector {
 	Kore::vec3 offsetPosition;
 	Kore::Quaternion offsetRotation;
 	int boneIndex;
 	int trackerIndex = -1;
-	int ikMode = ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+	float* dMax;
 	
-	EndEffector(int boneIndex, int mode = 5) : boneIndex(boneIndex), ikMode(mode) {}
+	EndEffector(int boneIndex, float* dMax, int mode = 5) : boneIndex(boneIndex), dMax(dMax), ikMode(mode) {}
 	
 	void setTrackerIndex(int index) {
 		trackerIndex = index;
@@ -24,31 +25,35 @@ struct DataFile {
 };
 
 namespace {
+	float dMaxDisabled[] = { 0, 0, 0, 0, 0, 0 };
+	// float dMaxArms[] = { 0, 0, 0, 0, 0, 0 };
+	// float dMaxLegs[] = { 0, 0, 0, 0, 0, 0 };
+	
 	EndEffector* tracker[] = {
-		new EndEffector(2), 	// back
-		new EndEffector(17), 	// left-hand
-		new EndEffector(27), 	// right-hand
-		new EndEffector(6),		// left-foot
-		new EndEffector(31), 	// right-foot
+		new EndEffector(2, 	dMaxDisabled), 	// back
+		new EndEffector(17, dMaxArms), 		// left-hand
+		new EndEffector(27, dMaxArms), 		// right-hand
+		new EndEffector(6, 	dMaxLegs),		// left-foot
+		new EndEffector(31, dMaxLegs), 		// right-foot
 	};
 	
 	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
 	const char* laufen[] = {"laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv"};
     const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
-    const char* alle[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv", "laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv", "joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
-	const char** currentGroup = squats;
+	const char* alle[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv", "laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv", "joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
+	const char** currentGroup = alle;
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
 	const int height = 768;
 	const bool withOrientation = true;
-	const float errorMaxPos = 0.01f;
-	const float errorMaxRot = 0.01f;
     
     // eval
-    const bool eval = false;
-    float* evalValue = lambda;
-    float evalStep = 0.05f;
-    int evalSteps = 21;
-    int evalFilesInGroup = 4;
+    const bool eval = true;
+    float* evalValue = maxSteps;
+    float evalStep = 10.0f;
+	int evalSteps = 25;
+    int evalFilesInGroup = 14;
+	int evalMinIk = 3;
+	int evalMaxIk = 3;
 }

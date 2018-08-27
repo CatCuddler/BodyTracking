@@ -51,7 +51,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < (int) maxSteps[ikMode] && !stucked) {
+	while ((errorPos < 0 || errorPos > errorMaxPos[ikMode] || errorRot < 0 || errorRot > errorMaxRot[ikMode]) && i < (int) maxSteps[ikMode] && !stucked) {
 #ifdef KORE_MACOS
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 #endif
@@ -59,13 +59,13 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		prevDeltaTheta = deltaTheta;
 		
 		if (targetBone->nodeIndex == tracker[1]->boneIndex || targetBone->nodeIndex == tracker[2]->boneIndex) {
-			// deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[1]->ikMode);
-			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
+			// todo: deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[1]->ikMode, tracker[1]->dMax);
+			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxArms); // todo: remove after eval
 			errorPos = jacobianHand->getPositionError();
 			errorRot = jacobianHand->getRotationError();
 		} else if (targetBone->nodeIndex == tracker[3]->boneIndex || targetBone->nodeIndex == tracker[4]->boneIndex) {
-			// deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode);
-			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
+			// todo: deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode, tracker[3]->dMax);
+			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxLegs); // todo: remove after eval
 			errorPos = jacobianFoot->getPositionError();
 			errorRot = jacobianFoot->getRotationError();
 		}
@@ -102,7 +102,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	
 	if (eval) {
 		totalNum += 1;
-		evalReached += (errorPos < errorMaxPos && errorRot < errorMaxRot) ? 1 : 0;
+		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
 		evalStucked += stucked ? 1 : 0;
 		
 		// iterations

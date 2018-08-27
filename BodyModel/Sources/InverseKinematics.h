@@ -5,7 +5,7 @@
 #include "Jacobian.h"
 
 extern int ikMode;
-extern float maxSteps[];
+extern float maxSteps[], errorMaxPos[], errorMaxRot[], dMaxArms[], dMaxLegs[];
 
 class InverseKinematics {
 	

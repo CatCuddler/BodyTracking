@@ -12,7 +12,7 @@ extern float dMaxPos[], dMaxRot[], lambda[];
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode, float* dMax) {
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
@@ -25,17 +25,11 @@ public:
 			errorRot = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]).getLength();
 		
 		// clampMag
-		if (dMaxPos[ikMode] > nearNull) {
-			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMaxPos[ikMode]);
+		if (dMax[ikMode] > nearNull) {
+			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMax[ikMode]);
 			deltaP[0] = clampedPos[0];
 			deltaP[1] = clampedPos[1];
 			deltaP[2] = clampedPos[2];
-		}
-		if (dMaxRot[ikMode] > nearNull) {
-			Kore::vec3 clampedRot = clampMag(Kore::vec3(deltaP[3], deltaP[4], deltaP[5]), dMaxRot[ikMode]);
-			deltaP[3] = clampedRot[0];
-			deltaP[4] = clampedRot[1];
-			deltaP[5] = clampedRot[2];
 		}
 		
 		switch (ikMode) {
@@ -106,9 +100,11 @@ private:
 	vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
+		float max = MaxAbs(d);
+		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			if (fabs(d[i]) > lambda[3]) // modification to stabilize SVD
+			if (fabs(d[i]) > lambda[3] * max) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
@@ -316,8 +312,21 @@ private:
 		return vec;
 	}
 	
+	float MaxAbs(vec_m vec) {
+		float max = 0;
+		
+		for (int m = 0; m < nDOFs; ++m) {
+			float val = fabs(vec[m]);
+			
+			if (val > max) max = val;
+		}
+		
+		return max;
+	}
+	
 	vec_n clampMaxAbs(vec_n vec, float gamma_i) {
 		float max = 0;
+		
 		for (int n = 0; n < nJointDOFs; ++n) {
 			float val = fabs(vec[n]);
 			
