@@ -63,7 +63,7 @@ void Kore::RotationUtility::getOrientation(const Kore::mat4* m, Kore::Quaternion
 	orientation->normalize();
 }
 
-Kore::Quaternion matrixToQuaternion(Kore::mat4 diffRot, int i = 0) {
+Kore::Quaternion Kore::RotationUtility::matrixToQuaternion(Kore::mat4 diffRot, int i) {
 	Kore::vec4 result;
 	int j = i < 2 ? i + 1 : 0;
 	int k = i > 0 ? i - 1 : 2;
