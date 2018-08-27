@@ -50,10 +50,10 @@ namespace {
     
     // eval
     const bool eval = true;
-    float* evalValue = maxSteps;
-    float evalStep = 10.0f;
-	int evalSteps = 25;
+    float* evalValue = dMaxArms;
+	float evalStep = 0.1f;
+	int evalSteps = 11;
     int evalFilesInGroup = 14;
-	int evalMinIk = 3;
-	int evalMaxIk = 3;
+	int evalMinIk = 5;
+	int evalMaxIk = 5;
 }

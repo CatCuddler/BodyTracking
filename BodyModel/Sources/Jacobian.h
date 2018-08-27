@@ -12,7 +12,7 @@ extern float dMaxPos[], dMaxRot[], lambda[];
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode, float* dMax) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode, float* dMax, float scale) {
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
@@ -26,10 +26,13 @@ public:
 		
 		// clampMag
 		if (dMax[ikMode] > nearNull) {
-			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMax[ikMode]);
+			float clampingConstant = prevError - errorPos > nearNull ? dMax[ikMode] * scale + prevError - errorPos : dMax[ikMode] * scale;
+			
+			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), clampingConstant);
 			deltaP[0] = clampedPos[0];
 			deltaP[1] = clampedPos[1];
 			deltaP[2] = clampedPos[2];
+			prevError = errorPos;
 		}
 		
 		switch (ikMode) {
@@ -59,6 +62,11 @@ public:
 		
 		return deltaTheta;
 	}
+	void init() {
+		errorPos = -1.0f;
+		errorRot = -1.0f;
+		prevError = FLT_MAX;
+	}
 	float getPositionError() {
 		return errorPos;
 	}
@@ -76,6 +84,7 @@ private:
 	
 	float   errorPos = -1.0f;
 	float	errorRot = -1.0f;
+	float	prevError = FLT_MAX;
 	int     nDOFs = posAndOrientation ? 6 : 3;
 	
 	mat_mxm U;

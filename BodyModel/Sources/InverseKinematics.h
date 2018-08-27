@@ -10,7 +10,7 @@ extern float maxSteps[], errorMaxPos[], errorMaxRot[], dMaxArms[], dMaxLegs[];
 class InverseKinematics {
 	
 public:
-	InverseKinematics(std::vector<BoneNode*> bones);
+	InverseKinematics(std::vector<BoneNode*> bones, float scale);
 	void inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
@@ -24,6 +24,7 @@ public:
 	
 private:
 	std::vector<BoneNode*> bones;
+	float scale;
 	
 	static const int handJointDOFs = 6;
 	static const bool handWithOrientation = withOrientation;

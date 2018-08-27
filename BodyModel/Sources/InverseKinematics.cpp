@@ -3,9 +3,11 @@
 
 #include <Kore/Log.h>
 
-InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
+InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec, float s) {
 	bones = boneVec;
 	setJointConstraints();
+	
+	scale = s;
 	
 	totalNum = 0;
 	evalReached = 0;
@@ -49,6 +51,9 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 #endif
 	
+	jacobianHand->init();
+	jacobianFoot->init();
+	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
 	while ((errorPos < 0 || errorPos > errorMaxPos[ikMode] || errorRot < 0 || errorRot > errorMaxRot[ikMode]) && i < (int) maxSteps[ikMode] && !stucked) {
@@ -60,12 +65,12 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPo
 		
 		if (targetBone->nodeIndex == tracker[1]->boneIndex || targetBone->nodeIndex == tracker[2]->boneIndex) {
 			// todo: deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[1]->ikMode, tracker[1]->dMax);
-			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxArms); // todo: remove after eval
+			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxArms, scale); // todo: remove after eval
 			errorPos = jacobianHand->getPositionError();
 			errorRot = jacobianHand->getRotationError();
 		} else if (targetBone->nodeIndex == tracker[3]->boneIndex || targetBone->nodeIndex == tracker[4]->boneIndex) {
 			// todo: deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode, tracker[3]->dMax);
-			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxLegs); // todo: remove after eval
+			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode, dMaxLegs, scale); // todo: remove after eval
 			errorPos = jacobianFoot->getPositionError();
 			errorRot = jacobianFoot->getRotationError();
 		}
