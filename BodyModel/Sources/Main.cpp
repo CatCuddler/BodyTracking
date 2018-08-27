@@ -86,10 +86,10 @@ namespace {
 	Avatar *avatar;
 	LivingRoom* livingRoom;
 	
-	mat4 initTrans = mat4::Identity();
-	mat4 initTransInv = mat4::Identity();
-	Kore::Quaternion initRot = Kore::Quaternion(0, 0, 0, 1);
-	Kore::Quaternion initRotInv = Kore::Quaternion(0, 0, 0, 1);
+	mat4 initTrans;
+	mat4 initTransInv;
+	Kore::Quaternion initRot;
+	Kore::Quaternion initRotInv;
 	
 	bool calibratedAvatar = false;
 	
@@ -176,8 +176,11 @@ namespace {
 		if (calibratedAvatar) {
 #ifdef KORE_STEAMVR
 			// Add offset to endeffector
-			Kore::Quaternion finalRot = desRotation[deviceID].rotated(endEffector[deviceID]->offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[deviceID]->offsetPosition.x(), endEffector[deviceID]->offsetPosition.y(), endEffector[deviceID]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+			Kore::Quaternion offsetRotation = endEffector[deviceID]->getOffsetRotation();
+			vec3 offserPosition = endEffector[deviceID]->getOffsetPosition();
+			
+			Kore::Quaternion finalRot = desRotation[deviceID].rotated(offsetRotation);
+			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
 			
 			// Save calibrated data
 			//if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
@@ -199,17 +202,17 @@ namespace {
 	}
 	
 #ifdef KORE_STEAMVR
-	void calibrateTracker(int i) {
-		vec3 sollPos, istPos = desPosition[i];
-		mat4 sollRot, istRot = desRotation[i].matrix();
-		BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+	void calibrateTracker(int deviceID) {
+		vec3 sollPos, istPos = desPosition[deviceID];
+		mat4 sollRot, istRot = desRotation[deviceID].matrix();
+		BoneNode* bone = avatar->getBoneWithIndex(endEffector[deviceID]->getBoneIndex());
 		
 		sollRot = initRot.rotated(bone->getOrientation()).matrix();
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
-		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
-		endEffector[i]->offsetRotation = Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose());
+		endEffector[deviceID]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
+		endEffector[deviceID]->setOffsetRotation(Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose()));
 	}
 	
 	// Test this
@@ -222,8 +225,8 @@ namespace {
 		sollPos = bone->getPosition();
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
-		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
-		endEffector[i]->offsetRotation = sollRot.rotated(istRot);
+		endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
+		endEffector[i]->setOffsetRotation(sollRot.rotated(istRot));
 	}*/
 
 	void setSize() {
@@ -236,7 +239,7 @@ namespace {
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
 		
-		log(Info, "current avatar height %f, current user height %f, scale %f", currentAvatarHeight, currentUserHeight, scale);
+		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
 	void initController() {
@@ -249,34 +252,31 @@ namespace {
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
+			vec3 trackerPos = controller.vrPose.position;
+			vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
-				vec3 trackerPos = controller.vrPose.position;
-				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-				
 				if (trackerPos.y() < currentUserHeight / 3) {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
-						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->trackerIndex, i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 						endEffector[rightFoot]->setTrackerIndex(i);
 					} else {
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->trackerIndex, i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getTrackerIndex(), i);
 						endEffector[rightHand]->setTrackerIndex(i);
 					}
 				} else {
 					// Hip tracker
-					log(Info, "hip: %i -> %i", endEffector[hip]->trackerIndex, i);
+					log(Info, "hip: %i -> %i", endEffector[hip]->getTrackerIndex(), i);
 					endEffector[hip]->setTrackerIndex(i);
 				}
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
-				// Hand tracker
-				vec3 trackerPos = controller.vrPose.position;
-				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
-				
+				// Hand controller
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->trackerIndex, i);
+					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getTrackerIndex(), i);
 					endEffector[leftHand]->setTrackerIndex(i);
 				} else {
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->trackerIndex, i);
+					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 					endEffector[rightHand]->setTrackerIndex(i);
 				}
 			}
@@ -410,11 +410,8 @@ namespace {
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 
-		if (!firstPersonMonitor) {
-			renderAvatar(V, P);
-		} else {
-			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
-		}
+		if (!firstPersonMonitor) renderAvatar(V, P);
+		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		
 		if (renderTrackerAndController) renderTracker();
 		

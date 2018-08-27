@@ -19,14 +19,22 @@ class EndEffector {
 public:
 	EndEffector(int boneIndex, int mode = 5);
 	
+	Kore::vec3 getOffsetPosition() const;
+	void setOffsetPosition(Kore::vec3 offsetPosition);
+	
+	Kore::Quaternion getOffsetRotation() const;
+	void setOffsetRotation(Kore::Quaternion offsetRotation);
+	
+	int getTrackerIndex();
 	void setTrackerIndex(int index);
+	
 	int getBoneIndex() const;
 	
+private:
 	Kore::vec3 offsetPosition;
 	Kore::Quaternion offsetRotation;
 	int boneIndex;
 	int trackerIndex;
 	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
 
-private:
 };
