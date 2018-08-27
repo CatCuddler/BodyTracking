@@ -30,25 +30,20 @@ private:
 	int currLineNumber = 0;
 	std::fstream positionDataInputFile;
 	
-	float prevScale;
-	float scale;
+	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 	
 public:
+	Logger();
 	~Logger();
 	
 	void startLogger();
 	void endLogger();
+	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
 	void startEvaluationLogger();
 	void endEvaluationLogger();
 	
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	void saveEvaluationData(Avatar *avatar);
 	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	
-	float getScale() {
-		return scale;
-	}
+	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };

@@ -4,6 +4,9 @@
 #include <Kore/Log.h>
 #include <ctime>
 
+Logger::Logger() {
+}
+
 Logger::~Logger() {
 	positionDataOutputFile.close();
 	positionDataOutputFile.close();
@@ -19,14 +22,19 @@ void Logger::startLogger() {
 	positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
 	positionDataOutputFile.flush();
 	
-	log(Kore::Info, "start logging!");
+	log(Kore::Info, "Start logging");
 }
 
 void Logger::endLogger() {
 	positionDataOutputFile.close();
-    prevScale = 0;
 	
-	log(Kore::Info, "stop logging!");
+	log(Kore::Info, "Stop logging!");
+}
+
+void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
+	// Save positional and rotation data
+	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+	positionDataOutputFile.flush();
 }
 
 void Logger::startEvaluationLogger() {
@@ -50,23 +58,13 @@ void Logger::startEvaluationLogger() {
 	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
 	evaluationDataOutputFile.flush();
 	
-	log(Kore::Info, "start eval-logging!");
+	log(Kore::Info, "Start eval-logging!");
 }
 
 void Logger::endEvaluationLogger() {
 	evaluationDataOutputFile.close();
 	
-	log(Kore::Info, "stop eval-logging!");
-}
-
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
-	// Save positional and rotation data
-	if (scale != prevScale) {
-		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
-		prevScale = scale;
-	} else
-		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
-	positionDataOutputFile.flush();
+	log(Kore::Info, "Stop eval-logging!");
 }
 
 void Logger::saveEvaluationData(Avatar *avatar) {
@@ -91,7 +89,7 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	evaluationDataOutputFile.flush();
 }
 
-bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
+bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
 	int column = 0;
 	
 	if (std::getline(positionDataInputFile, str, '\n')) {
@@ -102,16 +100,14 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 		while(std::getline(ss, item, ';')) {
 			float num = std::stof(item);
 			
-			if (column == 0) rawPos->x() = num;
-			else if (column == 1) rawPos->y() = num;
-			else if (column == 2) rawPos->z() = num;
-			else if (column == 3) rawRot->x = num;
-			else if (column == 4) rawRot->y = num;
-			else if (column == 5) rawRot->z = num;
-			else if (column == 6) rawRot->w = num;
-			
-			if (currLineNumber == 1 && column == 7)
-				scale = num;
+			if (column == 0)		rawPos->x() = num;
+			else if (column == 1)	rawPos->y() = num;
+			else if (column == 2)	rawPos->z() = num;
+			else if (column == 3)	rawRot->x = num;
+			else if (column == 4)	rawRot->y = num;
+			else if (column == 5)	rawRot->z = num;
+			else if (column == 6)	rawRot->w = num;
+			else if (column == 7)	scale = num;
 			
 			++column;
 		}
@@ -122,7 +118,7 @@ bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* raw
 	return false;
 }
 
-bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
+bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
 	std::string str;
 	bool success = false;
 	
@@ -140,7 +136,7 @@ bool Logger::readData(int line, const int numOfEndEffectors, const char* filenam
 		Kore::vec3 pos = Kore::vec3(0, 0, 0);
 		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
 		
-		success = readLine(str, &pos, &rot);
+		success = readLine(str, &pos, &rot, scale);
 		if (success) {
 			++currLineNumber;
 			rawPos[i] = pos;

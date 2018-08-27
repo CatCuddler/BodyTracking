@@ -312,10 +312,8 @@ namespace {
 			logData = !logData;
 			
 			if (logData) {
-				log(Info, "Start logging");
 				logger->startLogger();
 			} else {
-				log(Info, "Stop logging");
 				logger->endLogger();
 			}
 		}
@@ -424,10 +422,11 @@ namespace {
 #else
 		
 		// Read line
-		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation)) {
+		float scaleFactor;
+		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation, scaleFactor)) {
 			if (line == 0) {
 				log(Kore::Info, "%s", currentGroup[currentFile]);
-                avatar->setScale(logger->getScale());
+                avatar->setScale(scaleFactor);
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i)
