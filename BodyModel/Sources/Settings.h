@@ -21,7 +21,7 @@ namespace {
 	const int height = 768;
 
 	const bool renderRoom = true;
-	const bool renderTrackerAndController = false;
+	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
 	const bool withOrientation = true;

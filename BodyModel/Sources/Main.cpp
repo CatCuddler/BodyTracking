@@ -177,7 +177,7 @@ namespace {
 #ifdef KORE_STEAMVR
 			// Add offset to endeffector
 			Kore::Quaternion finalRot = desRotation[deviceID].rotated(endEffector[deviceID]->offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[deviceID]->offsetPosition.x(), endEffector[i]->offsetPosition.y(), endEffector[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[deviceID]->offsetPosition.x(), endEffector[deviceID]->offsetPosition.y(), endEffector[deviceID]->offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
 			// Save calibrated data
 			//if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
@@ -209,7 +209,7 @@ namespace {
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
 		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
-		endEffector[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
+		//endEffector[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
 	}
 	
 	void setSize() {
@@ -243,15 +243,15 @@ namespace {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
 						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->trackerIndex, i);
-						tracker[rightFoot]->setTrackerIndex(i);
+						endEffector[rightFoot]->setTrackerIndex(i);
 					} else {
 						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->trackerIndex, i);
-						tracker[rightHand]->setTrackerIndex(i);
+						endEffector[rightHand]->setTrackerIndex(i);
 					}
 				} else {
 					// Hip tracker
 					log(Info, "hip: %i -> %i", endEffector[hip]->trackerIndex, i);
-					tracker[hip]->setTrackerIndex(i);
+					endEffector[hip]->setTrackerIndex(i);
 				}
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Hand tracker
@@ -393,10 +393,10 @@ namespace {
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
 		// Render on monitor
+		mat4 P = getProjectionMatrix();
+		mat4 V = getViewMatrix();
+
 		if (!firstPersonMonitor) {
-			mat4 P = getProjectionMatrix();
-			mat4 V = getViewMatrix();
-			
 			renderAvatar(V, P);
 		} else {
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
