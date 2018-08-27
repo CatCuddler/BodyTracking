@@ -209,9 +209,23 @@ namespace {
 		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
 		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
-		//endEffector[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
+		endEffector[i]->offsetRotation = Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose());
 	}
 	
+	// Test this
+	/*void calibrateTracker(int i) {
+		vec3 sollPos, istPos = desPosition[i];
+		Kore::Quaternion sollRot, istRot = desRotation[i];
+		BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+		
+		sollRot = initRot.rotated(bone->getOrientation());
+		sollPos = bone->getPosition();
+		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
+		
+		endEffector[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
+		endEffector[i]->offsetRotation = sollRot.rotated(istRot);
+	}*/
+
 	void setSize() {
 		float currentAvatarHeight = avatar->getHeight();
 		
