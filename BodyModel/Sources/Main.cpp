@@ -169,7 +169,7 @@ namespace {
 	void executeMovement(int deviceID) {
 #ifdef KORE_STEAMVR
 		// Save raw data
-		if (logData) logger->saveData(desPosition[deviceID], desRotation[deviceID], avatar->scale);
+		if (logData) logger->saveData(endEffector[deviceID]->getName(), desPosition[deviceID], desRotation[deviceID], avatar->scale);
 #endif
 		
 		if (calibratedAvatar) {
@@ -258,25 +258,25 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 3) {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
-						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 						endEffector[rightFoot]->setTrackerIndex(i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 					} else {
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getTrackerIndex(), i);
 						endEffector[rightHand]->setTrackerIndex(i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getTrackerIndex(), i);
 					}
 				} else {
 					// Hip tracker
-					log(Info, "hip: %i -> %i", endEffector[hip]->getTrackerIndex(), i);
 					endEffector[hip]->setTrackerIndex(i);
+					log(Info, "hip: %i -> %i", endEffector[hip]->getTrackerIndex(), i);
 				}
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
 				if (trackerTransPos.x() > 0) {
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getTrackerIndex(), i);
 					endEffector[leftHand]->setTrackerIndex(i);
+					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getTrackerIndex(), i);
 				} else {
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 					endEffector[rightHand]->setTrackerIndex(i);
+					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
 				}
 			}
 		}

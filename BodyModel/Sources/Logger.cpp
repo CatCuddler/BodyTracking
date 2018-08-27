@@ -19,7 +19,7 @@ void Logger::startLogger() {
 	positionDataPath << positionData << "_" << t << ".csv";
 	
 	positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-	positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
+	positionDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
 	positionDataOutputFile.flush();
 	
 	log(Kore::Info, "Start logging");
@@ -31,9 +31,9 @@ void Logger::endLogger() {
 	log(Kore::Info, "Stop logging!");
 }
 
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
+void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save positional and rotation data
-	positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+	positionDataOutputFile << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
 	positionDataOutputFile.flush();
 }
 

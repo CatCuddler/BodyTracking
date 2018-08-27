@@ -38,7 +38,7 @@ public:
 	
 	void startLogger();
 	void endLogger();
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
+	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
 	void startEvaluationLogger();
 	void endEvaluationLogger();
