@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "InverseKinematics.h"
+#include "EndEffector.h"
 
 #include <float.h>
 #include <Kore/Log.h>

@@ -3,6 +3,18 @@
 #include <Kore/Math/Vector.h>
 #include <Kore/Math/Quaternion.h>
 
+enum EndEffectorIndices {
+	hip, leftHand, rightHand, leftFoot, rightFoot
+};
+
+const int hipBoneIndex = 2;
+const int leftHandBoneIndex = 17;	// 17 or 14
+const int rightHandBoneIndex = 27;	// 27 or 24
+const int leftFootBoneIndex = 6;
+const int rightFootBoneIndex = 31;
+
+const int numOfEndEffectors = 5;
+
 class EndEffector {
 public:
 	EndEffector(int boneIndex, int mode = 5);

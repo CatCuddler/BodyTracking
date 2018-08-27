@@ -176,11 +176,12 @@ namespace {
 #ifdef KORE_STEAMVR
 			Kore::Quaternion finalRot = desRotation[i].rotated(endEffector[i]->offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[i]->offsetPosition.x(), endEffector[i]->offsetPosition.y(), endEffector[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+			
+			if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 #else
 			Kore::Quaternion finalRot = desRotation[i];
 			vec3 finalPos = desPosition[i];
 #endif
-			if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 			
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);
@@ -223,10 +224,10 @@ namespace {
 	void initController() {
 		VrPoseState controller;
 		
-		// set Avatar size
+		// Set avatar size
 		setSize();
 		
-		// Get left and right tracker index
+		// Get indices for VR devices
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
@@ -235,23 +236,20 @@ namespace {
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 				
 				if (trackerPos.y() < currentUserHeight / 3) {
-					// Foot tracker (if y pos is in the lower triple of the body)
+					// Foot tracker
 					if (trackerTransPos.x() > 0) {
 						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->trackerIndex, i);
 						tracker[rightFoot]->setTrackerIndex(i);
-					}
-					else {
+					} else {
 						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->trackerIndex, i);
 						tracker[rightHand]->setTrackerIndex(i);
 					}
-				}
-				else {
+				} else {
 					// Hip tracker
 					log(Info, "hip: %i -> %i", endEffector[hip]->trackerIndex, i);
 					tracker[hip]->setTrackerIndex(i);
 				}
-			}
-			else if (controller.trackedDevice == TrackedDevice::Controller) {
+			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Hand tracker
 				vec3 trackerPos = controller.vrPose.position;
 				vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
@@ -259,8 +257,7 @@ namespace {
 				if (trackerTransPos.x() > 0) {
 					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->trackerIndex, i);
 					endEffector[leftHand]->setTrackerIndex(i);
-				}
-				else {
+				} else {
 					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->trackerIndex, i);
 					endEffector[rightHand]->setTrackerIndex(i);
 				}
@@ -303,7 +300,7 @@ namespace {
 				logger->endLogger();
 		}
 		
-		// Grip button => init Controller
+		// Grip button => init controller
 		if (buttonNr == 2 && value == 1 && !calibratedAvatar) {
 			initController();
 			log(Info, "Init Controller");
@@ -411,15 +408,21 @@ namespace {
 		
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation)) {
-            if (!line)
+			if (line == 0) {
+				log(Kore::Info, "%s", currentGroup[currentFile]);
                 avatar->setScale(logger->getScale());
-				
+			}
+			
 			for (int i = 0; i < numOfEndEffectors; ++i)
 				executeMovement(i);
 			
 			line += numOfEndEffectors;
 		} else {
-            if (loop >= 0) {
+			currentFile++;
+			line = 0;
+			
+			// Evaluation?
+            /*if (loop >= 0) {
                 if (eval) logger->saveEvaluationData(avatar);
                 // log(Kore::Info, "%i more iterations!", loop);
                 log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
@@ -452,7 +455,7 @@ namespace {
                 
                 if (loop >= 0)
                     initVars();
-            }
+            }*/
         }
 		
 		// Get projection and view matrix

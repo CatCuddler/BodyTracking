@@ -10,23 +10,11 @@ struct DataFile {
 };
 
 namespace {
-	enum EndEffectorIndices {
-		hip, leftHand, rightHand, leftFoot, rightFoot
-	};
-	
-	const int hipBoneIndex = 2;
-	const int leftHandBoneIndex = 17;	// 17 or 14
-	const int rightHandBoneIndex = 27;	// 27 or 24
-	const int leftFootBoneIndex = 6;
-	const int rightFootBoneIndex = 31;
-	
-	const int numOfEndEffectors = 5;
-	
 	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
 	const char* laufen[] = {"laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv"};
     const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
     const char* alle[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv", "laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv", "joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
-	const char** currentGroup = squats;
+	const char** currentGroup = alle;
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
@@ -40,8 +28,10 @@ namespace {
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
 	
+#ifdef KORE_STEAMVR
 	bool logData = false;
-    
+#endif
+	
     // Evaluation values
     const bool eval = false;
     float* evalValue = lambda;
