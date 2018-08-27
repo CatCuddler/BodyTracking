@@ -34,8 +34,8 @@ float evalInitValue[] = { 0.01f,    0.01f,      0.21f,      0.36f,      0.21f,  
 
 namespace {
 	EndEffector** endEffector;
-	vec3 desPosition[numOfEndEffectors], trackerPosition[numOfEndEffectors];
-	Kore::Quaternion desRotation[numOfEndEffectors], trackerRotation[numOfEndEffectors];
+	vec3 desPosition[numOfEndEffectors];
+	Kore::Quaternion desRotation[numOfEndEffectors];
 	
 	Logger* logger;
 	int line = 0;
@@ -105,7 +105,7 @@ namespace {
 		Graphics4::setPipeline(pipeline);
 		
 		for(int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
+			Kore::mat4 M = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * desRotation[i].matrix().Transpose();
 			Graphics4::setMatrix(mLocation, M);
 			
 			if (i == hip || i == rightFoot || i == leftFoot) {
@@ -167,30 +167,34 @@ namespace {
 		return V;
 	}
 	
-	void executeMovement(int i) {
-		trackerPosition[i] = desPosition[i];
-		trackerRotation[i] = desRotation[i];
+	void executeMovement(int deviceID) {
+#ifdef KORE_STEAMVR
+		// Save raw data
+		if (logData) logger->saveData(desPosition[deviceID], desRotation[deviceID], avatar->scale);
+#endif
 		
 		if (calibratedAvatar) {
-			// Add offset to endeffector
 #ifdef KORE_STEAMVR
-			Kore::Quaternion finalRot = desRotation[i].rotated(endEffector[i]->offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition[i].x(), desPosition[i].y(), desPosition[i].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[i]->offsetPosition.x(), endEffector[i]->offsetPosition.y(), endEffector[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
+			// Add offset to endeffector
+			Kore::Quaternion finalRot = desRotation[deviceID].rotated(endEffector[deviceID]->offsetRotation);
+			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(endEffector[deviceID]->offsetPosition.x(), endEffector[i]->offsetPosition.y(), endEffector[i]->offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
-			if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
+			// Save calibrated data
+			//if (logData) logger->saveData(finalPos, finalRot, avatar->scale);
 #else
-			Kore::Quaternion finalRot = desRotation[i];
-			vec3 finalPos = desPosition[i];
+			Kore::Quaternion finalRot = desRotation[deviceID];
+			vec3 finalPos = desPosition[deviceID];
 #endif
 			
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);
 			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 			
-			if (!i)
-				avatar->setFixedPositionAndOrientation(endEffector[i]->getBoneIndex(), finalPos, finalRot);
-			else
-				avatar->setDesiredPositionAndOrientation(endEffector[i]->getBoneIndex(), finalPos, finalRot);
+			if (deviceID == hip) {
+				avatar->setFixedPositionAndOrientation(endEffector[deviceID]->getBoneIndex(), finalPos, finalRot);
+			} else {
+				avatar->setDesiredPositionAndOrientation(endEffector[deviceID]->getBoneIndex(), finalPos, finalRot);
+			}
 		}
 	}
 	
