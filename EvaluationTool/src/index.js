@@ -5,7 +5,7 @@ import { get } from 'lodash';
 import App from './app';
 import registerServiceWorker from './registerServiceWorker';
 
-const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'DLS-SVD', 'SDLS'];
+const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'SVD-DLS', 'SDLS'];
 const req = require.context('../json');
 const sources = req.keys();
 
@@ -55,12 +55,12 @@ const files = sources
       folder,
       errorPos: parseFloat(config['Error Pos Max']),
       errorRot: parseFloat(config['Error Rot Max']),
-      dMaxPos: parseFloat(config['dMax Pos']),
-      dMaxRot: parseFloat(config['dMax Rot']),
+      dMaxArms: parseFloat(config['dMax Arms']),
+      dMaxLegs: parseFloat(config['dMax Legs']),
       steps: parseFloat(config['Steps Max']),
       lambda: Math.round(config.lambda * 10000) / 10000,
       file: config.File,
-      orientation: config['with Orientation'] !== '0',
+      orientation: config['with Orientation'] === '1',
       mode: ikMode[config['IK Mode']] || 'NA',
       values,
       length

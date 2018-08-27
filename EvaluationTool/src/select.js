@@ -53,18 +53,18 @@ const Select = ({ allowNull, value, setValue }) => (
         steps
       </Dropdown.Item>
       <Dropdown.Item
-        onClick={() => setValue('dMaxPos')}
-        active={value === 'dMaxPos'}
+        onClick={() => setValue('dMaxArms')}
+        active={value === 'dMaxArms'}
       >
         <Label color="violet" circular empty />
-        dMaxPos
+        dMaxArms
       </Dropdown.Item>
       <Dropdown.Item
-        onClick={() => setValue('dMaxRot')}
-        active={value === 'dMaxRot'}
+        onClick={() => setValue('dMaxLegs')}
+        active={value === 'dMaxLegs'}
       >
         <Label color="violet" circular empty />
-        dMaxRot
+        dMaxLegs
       </Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>

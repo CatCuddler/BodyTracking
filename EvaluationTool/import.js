@@ -27,10 +27,10 @@ const work = (fromFolder, toFolder) => {
 
   Object.keys(data).forEach(file => {
     const folder = groupByFiles
-      ? `${config[file].File.split('-')[0]}_${toFolder}`
+      ? `${toFolder}/${config[file].File.split('-')[0]}`
       : toFolder;
 
-    if (config[file] && config[file]['IK Mode'] < 6) {
+    if (config[file]) {
       ensureDirSync(resolve(__dirname, 'json', folder));
       writeJsonSync(
         resolve(__dirname, 'json', folder, `evaluationData_${file}.json`),

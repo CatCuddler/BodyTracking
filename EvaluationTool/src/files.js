@@ -7,8 +7,7 @@ import LabelGroup from './labelgroup';
 
 const enhance = compose(
   withPropsOnChange(['sortBy', 'files'], ({ sortBy, files }) => ({
-    groups: _groupBy(files, sortBy),
-    sortBy
+    groups: sortBy ? _groupBy(files, sortBy) : { All: files }
   }))
 );
 
@@ -71,18 +70,18 @@ const Files = ({
                   get(groups, [group, 0, 'steps'])) ||
                 '-'
               }
-              dMaxPos={
+              dMaxArms={
                 (groups[group].every(
-                  x => x.dMaxPos === get(groups, [group, 0, 'dMaxPos'])
+                  x => x.dMaxArms === get(groups, [group, 0, 'dMaxArms'])
                 ) &&
-                  get(groups, [group, 0, 'dMaxPos'])) ||
+                  get(groups, [group, 0, 'dMaxArms'])) ||
                 '-'
               }
-              dMaxRot={
+              dMaxLegs={
                 (groups[group].every(
-                  x => x.dMaxRot === get(groups, [group, 0, 'dMaxRot'])
+                  x => x.dMaxLegs === get(groups, [group, 0, 'dMaxLegs'])
                 ) &&
-                  get(groups, [group, 0, 'dMaxRot'])) ||
+                  get(groups, [group, 0, 'dMaxLegs'])) ||
                 '-'
               }
               selectedFiles={selectedFiles}

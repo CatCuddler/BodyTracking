@@ -45,7 +45,7 @@ const Nav = ({
       </Dropdown.Menu>
     </Dropdown>
 
-    <Select value={sortBy} setValue={setSortBy} />
+    <Select value={sortBy} setValue={setSortBy} allowNull />
     <Select value={groupBy} setValue={setGroupBy} allowNull />
 
     <Dropdown item text="options">
@@ -58,7 +58,7 @@ const Nav = ({
         />
         <Dropdown.Item
           icon={scale === 2 ? 'check' : undefined}
-          text="scale (zero-mean/unit-variance standardization)"
+          text="scale (z-score norm)"
           active={scale === 2}
           onClick={() => setScale(scale === 2 ? 0 : 2)}
         />

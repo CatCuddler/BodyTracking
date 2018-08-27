@@ -4,6 +4,8 @@ import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
 import { ResponsiveLine } from './line';
 import colorsMaterial from './colors';
 
+const labelScale = ['', 'min-max norm', 'z-score norm'];
+
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
   // searchIndex is at the end
   if (searchIndex >= data.length) return data;
@@ -210,7 +212,7 @@ const enhance = compose(
               data: d.data.map(({ x, y }) => ({
                 x,
                 y: highest
-                  ? Math.round(((y - lowest) / highest) * 10000) / 100
+                  ? Math.round(((y - lowest) / highest) * 100000) / 1000
                   : y
               }))
             };
@@ -232,63 +234,6 @@ const enhance = compose(
       return { data: data.map(d => ({ ...d, data: d.data.slice(0, min) })) };
     }
   ),
-  withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
-    const tickValues = [];
-    let min = Infinity;
-    let max = 0;
-
-    if (interpolate) {
-      const newData = data.map(d => {
-        const data2 = [];
-
-        d.data.forEach(({ x, y }, i) => {
-          min = x < min ? x : min;
-          max = x > max ? x : max;
-
-          if (i) {
-            let x0 = d.data[i - 1].x;
-            const y0 = d.data[i - 1].y;
-            const m = (y - y0) / (x - x0);
-
-            while (Math.round((x - x0) * 100) / 100 > 0.01) {
-              x0 += 0.01;
-
-              data2.push({
-                x: Math.round(x0 * 100) / 100,
-                y: Math.round((y - m * (x - x0)) * 100) / 100
-              });
-            }
-          }
-
-          data2.push({ x, y });
-        });
-
-        return {
-          ...d,
-          data: data2
-        };
-      });
-
-      for (let i = min; i < max; i += (max - min) / 20)
-        tickValues.push(Math.round(i * 100) / 100);
-      tickValues.push(Math.round(max * 100) / 100);
-
-      return {
-        data: newData,
-        tickValues
-      };
-    }
-
-    return { data, tickValues };
-  }),
-  withPropsOnChange(['data', 'notnull'], ({ data: d, notnull }) => ({
-    data: notnull
-      ? d.map(({ data, ...rest }) => ({
-          ...rest,
-          data: data.filter(({ x }) => x)
-        }))
-      : d
-  })),
   withPropsOnChange(['data', 'scale'], ({ data: d, scale }) => {
     if (scale === 2)
       return {
@@ -312,9 +257,10 @@ const enhance = compose(
             mittelwert,
             data: data.map(({ x, y }) => ({
               x,
-              y:
-                Math.round(((y - mittelwert) / standardabweichung) * 1000) /
-                1000
+              y: standardabweichung
+                ? Math.round(((y - mittelwert) / standardabweichung) * 1000) /
+                  1000
+                : 0
             }))
           };
         })
@@ -338,13 +284,70 @@ const enhance = compose(
       });
       average.data = average.data.map(({ x, y }) => ({
         x,
-        y: Math.round((y / d.length) * 100) / 100
+        y: Math.round((y / d.length) * 1000) / 1000
       }));
 
       return { data: [...d, average] };
     }
 
     return {};
+  }),
+  withPropsOnChange(['data', 'notnull'], ({ data: d, notnull }) => ({
+    data: notnull
+      ? d.map(({ data, ...rest }) => ({
+          ...rest,
+          data: data.filter(({ x }) => x)
+        }))
+      : d
+  })),
+  withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
+    const tickValues = [];
+    let min = Infinity;
+    let max = 0;
+
+    if (interpolate) {
+      const newData = data.map(d => {
+        const data2 = [];
+
+        d.data.forEach(({ x, y }, i) => {
+          min = x < min ? x : min;
+          max = x > max ? x : max;
+
+          if (i) {
+            let x0 = d.data[i - 1].x;
+            const y0 = d.data[i - 1].y;
+            const m = (y - y0) / (x - x0);
+
+            while (Math.round((x - x0) * 1000) / 1000 > 0.01) {
+              x0 += 0.01;
+
+              data2.push({
+                x: Math.round(x0 * 1000) / 1000,
+                y: Math.round((y - m * (x - x0)) * 1000) / 1000
+              });
+            }
+          }
+
+          data2.push({ x, y });
+        });
+
+        return {
+          ...d,
+          data: data2
+        };
+      });
+
+      for (let i = min; i < max; i += (max - min) / 20)
+        tickValues.push(Math.round(i * 20) / 20);
+      tickValues.push(Math.round(max * 20) / 20);
+
+      return {
+        data: newData,
+        tickValues
+      };
+    }
+
+    return { data, tickValues };
   }),
   withPropsOnChange(['data', 'average'], ({ data: d, average }) => {
     const markers = [];
@@ -409,6 +412,18 @@ const enhance = compose(
       markers
     };
   }),
+  withPropsOnChange(['data', 'tickValues'], ({ data, tickValues }) => {
+    let newTicks = [];
+
+    if (!tickValues || !tickValues.length) {
+      get(data, [0, 'data'], []).forEach(({ x }) => newTicks.push(x));
+    } else newTicks = [...tickValues];
+
+    if (newTicks.join('').length > 90)
+      newTicks = newTicks.filter((x, i) => i % 2 === 0);
+
+    return { tickValues: newTicks };
+  }),
   withHandlers({
     tooltipFormat: ({ scale, data }) => (x, i, p) => {
       const { standardabweichung, mittelwert } =
@@ -423,8 +438,9 @@ const enhance = compose(
 
         case 2:
           return standardabweichung
-            ? `${x} [${Math.round((x * standardabweichung + mittelwert) * 100) /
-                100}]`
+            ? `${x} [${Math.round(
+                (x * standardabweichung + mittelwert) * 1000
+              ) / 1000}]`
             : x;
 
         default:
@@ -434,48 +450,70 @@ const enhance = compose(
   })
 );
 
-const Chart = ({ data, tickValues, markers, large, scale, tooltipFormat }) => {
-  const axisBottom = tickValues.length > 1 ? { tickValues } : undefined;
-
-  return (
-    <div
-      style={{
-        flexGrow: 1,
-        marginLeft: '1rem',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      {!!data.length && (
-        <ResponsiveLine
-          data={data}
-          margin={{
-            top: 20,
-            right: 25,
-            bottom: 50,
-            left: 50
-          }}
-          markers={markers}
-          enableDots={false}
-          animate
-          colorBy={e => e.color}
-          axisBottom={axisBottom}
-          tooltipFormat={tooltipFormat}
-          minY={scale === 2 ? 'auto' : 0}
-          legends={[
-            {
-              anchor: 'bottom-left',
-              direction: 'row',
-              translateX: -50,
-              translateY: 50,
-              itemWidth: !large ? 100 : 180,
-              itemHeight: 20
-            }
-          ]}
-        />
-      )}
-    </div>
-  );
-};
+const Chart = ({
+  data,
+  tickValues,
+  markers,
+  large,
+  scale,
+  tooltipFormat,
+  selectedFields,
+  groupBy,
+  average
+}) => (
+  <div
+    style={{
+      flexGrow: 1,
+      marginLeft: '1rem',
+      display: 'flex',
+      flexDirection: 'column'
+    }}
+  >
+    {!!data.length && (
+      <ResponsiveLine
+        data={data}
+        margin={{
+          top: 5,
+          right: 25,
+          bottom: 60,
+          left: 50
+        }}
+        width={600}
+        height={450}
+        markers={markers}
+        enableDots={false}
+        animate
+        colorBy={e => e.color}
+        axisBottom={{
+          legend: groupBy || '# of cycle',
+          legendOffset: 36,
+          legendPosition: 'center',
+          tickValues
+        }}
+        axisLeft={{
+          legend: scale
+            ? labelScale[Math.abs(scale)]
+            : [average ? 'Average' : null, ...selectedFields]
+                .filter(x => x)
+                .join(', '),
+          legendOffset: -36,
+          legendPosition: 'center'
+        }}
+        tooltipFormat={tooltipFormat}
+        minY={scale === 2 ? 'auto' : 0}
+        legends={[
+          {
+            anchor: 'bottom-left',
+            direction: 'row',
+            translateX: -45,
+            translateY: 60,
+            itemWidth: !large ? 100 : 180,
+            itemHeight: 20
+          }
+        ]}
+      />
+    )}
+  </div>
+);
 
 export default enhance(Chart);

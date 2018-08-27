@@ -11,8 +11,8 @@ const LabelGroup = ({
   errorRot,
   lambda,
   steps,
-  dMaxPos,
-  dMaxRot,
+  dMaxArms,
+  dMaxLegs,
   selectedFiles,
   groupBy
 }) => (
@@ -55,7 +55,7 @@ const LabelGroup = ({
         {steps || '-'}
       </Label>
       <Label color="violet" horizontal>
-        {dMaxPos || '-'} / {dMaxRot || '-'}
+        {dMaxArms || '-'} / {dMaxLegs || '-'}
       </Label>
     </Label.Group>
   </div>
