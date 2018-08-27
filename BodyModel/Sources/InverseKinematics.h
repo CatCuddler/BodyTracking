@@ -5,12 +5,12 @@
 #include "Jacobian.h"
 
 extern int ikMode;
-extern float maxSteps[], errorMaxPos[], errorMaxRot[], dMaxArms[], dMaxLegs[];
+extern float maxSteps[], errorMaxPos[], errorMaxRot[];
 
 class InverseKinematics {
 	
 public:
-	InverseKinematics(std::vector<BoneNode*> bones, float scale);
+	InverseKinematics(std::vector<BoneNode*> bones);
 	void inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
@@ -24,7 +24,6 @@ public:
 	
 private:
 	std::vector<BoneNode*> bones;
-	float scale;
 	
 	static const int handJointDOFs = 6;
 	static const bool handWithOrientation = withOrientation;

@@ -55,8 +55,6 @@ const files = sources
       folder,
       errorPos: parseFloat(config['Error Pos Max']),
       errorRot: parseFloat(config['Error Rot Max']),
-      dMaxArms: parseFloat(config['dMax Arms']),
-      dMaxLegs: parseFloat(config['dMax Legs']),
       steps: parseFloat(config['Steps Max']),
       lambda: Math.round(config.lambda * 10000) / 10000,
       file: config.File,

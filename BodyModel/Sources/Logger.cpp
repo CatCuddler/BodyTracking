@@ -38,8 +38,8 @@ void Logger::startEvaluationLogger() {
 	evaluationConfigPath << "eval/" << evaluationConfigFilename << "_" << t << ".csv";
 	
 	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;dMax Arms;dMax Legs;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentGroup[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos[ikMode] << ";" << errorMaxRot[ikMode] << ";" << dMaxArms[ikMode] << ";" << dMaxLegs[ikMode] << ";" << maxSteps[ikMode] << "\n";
+	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
+	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentGroup[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos[ikMode] << ";" << errorMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	

@@ -478,8 +478,6 @@ const Chart = ({
           bottom: 60,
           left: 50
         }}
-        width={600}
-        height={450}
         markers={markers}
         enableDots={false}
         animate

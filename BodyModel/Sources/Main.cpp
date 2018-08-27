@@ -26,12 +26,10 @@ float lambda[] =    	{ 0.35f,    0.05f,      0.2f,      	0.03f,      0.2f,      
 float errorMaxPos[] = 	{ 0.01f,  	0.1f,    	0.1f,    	0.01f,    	0.1f,    	0.01f 	};
 float errorMaxRot[] =	{ 0.01f,  	0.1f,    	0.01f,    	0.01f,    	0.01f,    	0.01f 	};
 float maxSteps[] =  	{ 10.0f,   	100.0f,     20.0f,     	10.0f,     	20.0f,     	60.0f	};
-float dMaxArms[] =   	{ 0,        0,          0,          0,          0,          0       };
-float dMaxLegs[] =   	{ 0,        0,          0,          0,          0,          0       };
 
 int currentFile = 0;
 int evalStepsInit = evalSteps;
-float evalInitValue[] = { 0,        0,          0,          0,          0,          0       };
+float evalInitValue[] = { 0.35f,    0.05f,      0.2f,      	0.03f,      0.2f,      	0.018f  };
 
 namespace {
 	const int numOfEndEffectors = sizeof(tracker) / sizeof(*tracker);

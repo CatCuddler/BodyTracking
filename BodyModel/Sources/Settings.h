@@ -1,7 +1,7 @@
 #pragma once
 
 extern int ikMode;
-extern float maxSteps[], dMaxArms[], dMaxLegs[];
+extern float lambda[];
 
 struct EndEffector {
 	Kore::vec3 offsetPosition;
@@ -9,9 +9,8 @@ struct EndEffector {
 	int boneIndex;
 	int trackerIndex = -1;
 	int ikMode; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
-	float* dMax;
 	
-	EndEffector(int boneIndex, float* dMax, int mode = 5) : boneIndex(boneIndex), dMax(dMax), ikMode(mode) {}
+	EndEffector(int boneIndex, int mode = 5) : boneIndex(boneIndex), ikMode(mode) {}
 	
 	void setTrackerIndex(int index) {
 		trackerIndex = index;
@@ -25,16 +24,12 @@ struct DataFile {
 };
 
 namespace {
-	float dMaxDisabled[] = { 0, 0, 0, 0, 0, 0 };
-	// float dMaxArms[] = { 0, 0, 0, 0, 0, 0 };
-	// float dMaxLegs[] = { 0, 0, 0, 0, 0, 0 };
-	
 	EndEffector* tracker[] = {
-		new EndEffector(2, 	dMaxDisabled), 	// back
-		new EndEffector(17, dMaxArms), 		// left-hand
-		new EndEffector(27, dMaxArms), 		// right-hand
-		new EndEffector(6, 	dMaxLegs),		// left-foot
-		new EndEffector(31, dMaxLegs), 		// right-foot
+		new EndEffector(2),  // back
+		new EndEffector(17), // left-hand
+		new EndEffector(27), // right-hand
+		new EndEffector(6),	 // left-foot
+		new EndEffector(31), // right-foot
 	};
 	
 	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
@@ -50,10 +45,10 @@ namespace {
     
     // eval
     const bool eval = true;
-    float* evalValue = dMaxArms;
+    float* evalValue = lambda;
 	float evalStep = 0.1f;
-	int evalSteps = 11;
+	int evalSteps = 10;
     int evalFilesInGroup = 14;
-	int evalMinIk = 5;
+	int evalMinIk = 0;
 	int evalMaxIk = 5;
 }

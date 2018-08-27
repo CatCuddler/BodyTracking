@@ -11,7 +11,7 @@ namespace {
 }
 
 Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
-	invKin = new InverseKinematics(bones, scale);
+	invKin = new InverseKinematics(bones);
 	
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);

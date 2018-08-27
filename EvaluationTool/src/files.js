@@ -70,20 +70,6 @@ const Files = ({
                   get(groups, [group, 0, 'steps'])) ||
                 '-'
               }
-              dMaxArms={
-                (groups[group].every(
-                  x => x.dMaxArms === get(groups, [group, 0, 'dMaxArms'])
-                ) &&
-                  get(groups, [group, 0, 'dMaxArms'])) ||
-                '-'
-              }
-              dMaxLegs={
-                (groups[group].every(
-                  x => x.dMaxLegs === get(groups, [group, 0, 'dMaxLegs'])
-                ) &&
-                  get(groups, [group, 0, 'dMaxLegs'])) ||
-                '-'
-              }
               selectedFiles={selectedFiles}
               groupBy={groupBy}
             />

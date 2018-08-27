@@ -52,20 +52,6 @@ const Select = ({ allowNull, value, setValue }) => (
         <Label color="green" circular empty />
         steps
       </Dropdown.Item>
-      <Dropdown.Item
-        onClick={() => setValue('dMaxArms')}
-        active={value === 'dMaxArms'}
-      >
-        <Label color="violet" circular empty />
-        dMaxArms
-      </Dropdown.Item>
-      <Dropdown.Item
-        onClick={() => setValue('dMaxLegs')}
-        active={value === 'dMaxLegs'}
-      >
-        <Label color="violet" circular empty />
-        dMaxLegs
-      </Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>
 );
