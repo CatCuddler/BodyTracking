@@ -102,6 +102,8 @@ namespace {
 #endif
 	
 	void renderTracker() {
+		Graphics4::setPipeline(pipeline);
+		
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::mat4 M = mat4::Translation(trackerPosition[i].x(), trackerPosition[i].y(), trackerPosition[i].z()) * trackerRotation[i].matrix().Transpose();
 			Graphics4::setMatrix(mLocation, M);
@@ -120,6 +122,8 @@ namespace {
 	}
 	
 	void renderCSForEndEffector() {
+		Graphics4::setPipeline(pipeline);
+		
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
@@ -140,6 +144,15 @@ namespace {
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
 		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room);
+	}
+	
+	void renderAvatar(mat4 V, mat4 P) {
+		Graphics4::setPipeline(pipeline);
+		
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
+		Graphics4::setMatrix(mLocation, initTrans);
+		avatar->animate(tex);
 	}
 	
 	Kore::mat4 getProjectionMatrix() {
@@ -356,34 +369,17 @@ namespace {
 		for (int j = 0; j < 2; ++j) {
 			VrInterface::beginRender(j);
 			
-			Graphics4::setPipeline(pipeline);
-			
 			Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 			
 			state = VrInterface::getSensorState(j);
-			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
-			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
 			
-			// Animate avatar
-			Graphics4::setMatrix(mLocation, initTrans);
-			avatar->animate(tex, deltaT);
+			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
-			// Render tracker
-<<<<<<< HEAD
 			if (renderTrackerAndController) renderTracker();
 			
-			// Rencer Coordinate System for End-Effectors
 			if (renderAxisForEndEffector) renderCSForEndEffector();
-=======
-			int i = 0;
-			while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
-				renderTracker(i);
-				i++;
-			}
->>>>>>> cf13934a0bb2f8b517ba7318f782025e182e3cc6
 			
-			// Render living room
-			renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (renderRoom) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -394,70 +390,25 @@ namespace {
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
 		
 		// Render on monitor
-		Graphics4::setPipeline(pipeline);
-		
-		// Get projection and view matrix
-		mat4 P = getProjectionMatrix();
-		mat4 V = getViewMatrix();
 		if (!firstPersonMonitor) {
-			Graphics4::setMatrix(vLocation, V);
-			Graphics4::setMatrix(pLocation, P);
+			mat4 P = getProjectionMatrix();
+			mat4 V = getViewMatrix();
+			
+			renderAvatar(V, P);
+		} else {
+			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
-		else {
-			Graphics4::setMatrix(vLocation, state.pose.vrPose.eye);
-			Graphics4::setMatrix(pLocation, state.pose.vrPose.projection);
-		}
-		Graphics4::setMatrix(mLocation, initTrans);
 		
-		avatar->animate(tex, deltaT);
-		
-<<<<<<< HEAD
 		if (renderTrackerAndController) renderTracker();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) {
-=======
-		// Render tracker
-		int i = 0;
-		while (i < numOfEndEffectors && (showTracker || !calibratedAvatar) && cubes[i] != nullptr) {
-			renderTracker(i);
-			i++;
-		}
-		
-		// Render living room
-		if (showLivingRoom) {
->>>>>>> cf13934a0bb2f8b517ba7318f782025e182e3cc6
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 #else
-        // todo: remove
-        /* while (loop >= 0) {
-            loop--;
-            log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
-            
-            if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1)
-                exit(0);
-            else {
-                if (evalSteps <= 1) {
-                    evalValue[ikMode] = evalInitValue[ikMode];
-                    evalSteps = evalStepsInit;
-                    ikMode++;
-                } else {
-                    evalValue[ikMode] += evalStep;
-                    evalSteps--;
-                }
-                
-                if (ikMode > 5) {
-                    ikMode = 0;
-                    currentFile++;
-                }
-                
-                loop = 0;
-            }
-        } */
-        
+		
 		// Read line
 		if (logger->readData(line, numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation)) {
             if (!line)
@@ -507,11 +458,8 @@ namespace {
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
-		Graphics4::setMatrix(vLocation, V);
-		Graphics4::setMatrix(pLocation, P);
-		Graphics4::setMatrix(mLocation, initTrans);
 		
-		avatar->animate(tex, deltaT);
+		renderAvatar(V, P);
 		
 		if (renderTrackerAndController) renderTracker();
 		

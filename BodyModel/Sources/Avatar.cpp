@@ -24,7 +24,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	currentHeight = position.z();
 }
 
-void Avatar::animate(TextureUnit tex, float deltaTime) {
+void Avatar::animate(TextureUnit tex) {
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
