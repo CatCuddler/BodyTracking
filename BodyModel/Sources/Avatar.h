@@ -16,8 +16,6 @@ public:
 	void setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	
-	Kore::Quaternion getLocalCoordinateSystem(int boneIndex);
-	
 	BoneNode* getBoneWithIndex(int index) const;
 	
 	float getReached() const;

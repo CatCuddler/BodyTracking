@@ -98,14 +98,6 @@ void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPositio
 	bone->local = bone->transform * bone->rotation.matrix().Transpose();
 }
 
-Kore::Quaternion Avatar::getLocalCoordinateSystem(int boneIndex) {
-	BoneNode* bone = getBoneWithIndex(boneIndex);
-
-	//Kore::Quaternion localRot = new Quaternion(0, 0, 0, 1);
-	
-	return bone->rotation;
-}
-
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	BoneNode* bone = bones[boneIndex - 1];
 	
