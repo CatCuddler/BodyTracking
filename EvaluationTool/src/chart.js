@@ -30,7 +30,7 @@ const averageDuplicates = (data, searchIndex = 0, values = []) => {
   values.push(data[searchIndex].y);
   const newData = [...data];
   newData[searchIndex] = {
-    x: data[searchIndex].x,
+    ...data[searchIndex],
     y:
       Math.round(
         (values.reduce((acc, value) => acc + value, 0) / values.length) * 1000
@@ -71,7 +71,9 @@ const enhance = compose(
       // group multiple files to one
       if (groupBy) {
         const data = [];
-        const groups = _groupBy(filteredFiles, sortBy);
+        const groups = sortBy
+          ? _groupBy(filteredFiles, sortBy)
+          : { All: files };
 
         const extendedFields = [];
         selectedFields.forEach(field => {
@@ -86,11 +88,13 @@ const enhance = compose(
         Object.keys(groups).forEach((group, index) => {
           const xData = {};
           const yData = {};
+          const sortData = {};
 
           groups[group].forEach(file => {
             extendedFields.forEach(field => {
               if (!xData[field]) xData[field] = [];
               if (!yData[field]) yData[field] = [];
+              if (!sortData[field]) sortData[field] = [];
 
               xData[field].push(file[groupBy]);
               yData[field].push(
@@ -99,6 +103,9 @@ const enhance = compose(
                   0
                 )
               );
+              sortData[field].push(
+                groupBy === 'mode' ? file.modeNumber : file[groupBy]
+              );
             });
           });
 
@@ -106,10 +113,11 @@ const enhance = compose(
             const groupNames = Object.keys(groups);
             let chartData = xData[field].map((x, j) => ({
               x,
-              y: Math.round(yData[field][j] * 1000) / 1000
+              y: Math.round(yData[field][j] * 1000) / 1000,
+              sort: sortData[field][j]
             }));
             chartData = averageDuplicates(chartData);
-            chartData = _sortBy(chartData, d => d.x);
+            chartData = _sortBy(chartData, d => d.sort);
 
             const color =
               groupNames.length > 1
@@ -270,13 +278,20 @@ const enhance = compose(
   }),
   withPropsOnChange(['data', 'average'], ({ data: d, average: a }) => {
     if (a) {
+      const filteredData = d.filter(
+        ({ id }) => !id.includes(' Min') && !id.includes(' Max')
+      );
       const average = {
         id: 'Average',
-        color: get(colorsMaterial, [d.length, 'palette', 6], 'black'),
+        color: get(
+          colorsMaterial,
+          [filteredData.length, 'palette', 6],
+          'black'
+        ),
         data: []
       };
 
-      d.forEach(({ data }) => {
+      filteredData.forEach(({ data }) => {
         data.forEach(({ x, y }, i) => {
           if (!average.data[i]) average.data[i] = { x, y };
           else average.data[i].y += y;
@@ -284,7 +299,7 @@ const enhance = compose(
       });
       average.data = average.data.map(({ x, y }) => ({
         x,
-        y: Math.round((y / d.length) * 1000) / 1000
+        y: Math.round((y / filteredData.length) * 1000) / 1000
       }));
 
       return { data: [...d, average] };
@@ -292,14 +307,6 @@ const enhance = compose(
 
     return {};
   }),
-  withPropsOnChange(['data', 'notnull'], ({ data: d, notnull }) => ({
-    data: notnull
-      ? d.map(({ data, ...rest }) => ({
-          ...rest,
-          data: data.filter(({ x }) => x)
-        }))
-      : d
-  })),
   withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
     const tickValues = [];
     let min = Infinity;
@@ -352,61 +359,63 @@ const enhance = compose(
   withPropsOnChange(['data', 'average'], ({ data: d, average }) => {
     const markers = [];
 
-    d.forEach(({ data, id }, i) => {
-      let min = Infinity;
-      let minX;
-      let max = -Infinity;
-      let maxX;
+    d.filter(({ id }) => !id.includes(' Min') && !id.includes(' Max')).forEach(
+      ({ data, id }, i) => {
+        let min = Infinity;
+        let minX;
+        let max = -Infinity;
+        let maxX;
 
-      if (id === 'Average' || !average)
-        data.forEach(({ x, y }) => {
-          if (y < min) {
-            min = y;
-            minX = x;
-          }
-          if (y > max) {
-            max = y;
-            maxX = x;
-          }
-        });
-
-      if (minX !== undefined) {
-        const index = markers.findIndex(m => m.value === minX);
-
-        if (index >= 0) {
-          markers[index].legend = 'multiple extrema';
-          markers[index].lineStyle.stroke = 'black';
-        } else
-          markers.push({
-            axis: 'x',
-            value: minX,
-            lineStyle: {
-              stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
-              strokeWidth: 1
-            },
-            legend: `min ${id} [${minX}, ${min}]`,
-            legendOrientation: 'vertical'
+        if (id === 'Average' || !average)
+          data.forEach(({ x, y }) => {
+            if (y < min) {
+              min = y;
+              minX = x;
+            }
+            if (y > max) {
+              max = y;
+              maxX = x;
+            }
           });
-      }
-      if (maxX !== undefined) {
-        const index = markers.findIndex(m => m.value === maxX);
 
-        if (index >= 0) {
-          markers[index].legend = 'multiple extrema';
-          markers[index].lineStyle.stroke = 'black';
-        } else
-          markers.push({
-            axis: 'x',
-            value: maxX,
-            lineStyle: {
-              stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
-              strokeWidth: 1
-            },
-            legend: `max ${id} [${maxX}, ${max}]`,
-            legendOrientation: 'vertical'
-          });
+        if (minX !== undefined) {
+          const index = markers.findIndex(m => m.value === minX);
+
+          if (index >= 0) {
+            markers[index].legend = 'multiple extrema';
+            markers[index].lineStyle.stroke = 'black';
+          } else
+            markers.push({
+              axis: 'x',
+              value: minX,
+              lineStyle: {
+                stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+                strokeWidth: 1
+              },
+              legend: `min ${id} [${minX}, ${min}]`,
+              legendOrientation: 'vertical'
+            });
+        }
+        if (maxX !== undefined) {
+          const index = markers.findIndex(m => m.value === maxX);
+
+          if (index >= 0) {
+            markers[index].legend = 'multiple extrema';
+            markers[index].lineStyle.stroke = 'black';
+          } else
+            markers.push({
+              axis: 'x',
+              value: maxX,
+              lineStyle: {
+                stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+                strokeWidth: 1
+              },
+              legend: `max ${id} [${maxX}, ${max}]`,
+              legendOrientation: 'vertical'
+            });
+        }
       }
-    });
+    );
 
     return {
       markers
@@ -459,7 +468,8 @@ const Chart = ({
   tooltipFormat,
   selectedFields,
   groupBy,
-  average
+  average,
+  extrema
 }) => (
   <div
     style={{
@@ -478,7 +488,7 @@ const Chart = ({
           bottom: 60,
           left: 50
         }}
-        markers={markers}
+        markers={extrema ? markers : undefined}
         enableDots={false}
         animate
         colorBy={e => e.color}

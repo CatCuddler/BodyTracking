@@ -38,7 +38,9 @@ const LabelGroup = ({
       >
         {name && selectedFiles.length > 1
           ? `#${selectedFiles.findIndex(x => x === name) + 1}`
-          : length}
+          : groupBy
+            ? `1 x ${length}`
+            : `${length} x 1`}
       </Label>
       <Label color="teal" horizontal>
         {file || '-'}

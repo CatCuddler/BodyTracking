@@ -26,9 +26,9 @@ const work = (fromFolder, toFolder) => {
   });
 
   Object.keys(data).forEach(file => {
-    const folder = groupByFiles
-      ? `${toFolder}/${config[file].File.split('-')[0]}`
-      : toFolder;
+    const group = groupByFiles ? config[file].File.split('-')[0] : null;
+    const folder =
+      toFolder && group ? `${toFolder}/${group}` : toFolder || group;
 
     if (config[file]) {
       ensureDirSync(resolve(__dirname, 'json', folder));

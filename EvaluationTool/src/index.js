@@ -4,8 +4,8 @@ import 'semantic-ui-css/semantic.min.css';
 import { get } from 'lodash';
 import App from './app';
 import registerServiceWorker from './registerServiceWorker';
+import ikMode from './ik-modes';
 
-const ikMode = ['JT', 'JPI', 'DLS', 'SVD', 'SVD-DLS', 'SDLS'];
 const req = require.context('../json');
 const sources = req.keys();
 
@@ -60,6 +60,7 @@ const files = sources
       file: config.File,
       orientation: config['with Orientation'] === '1',
       mode: ikMode[config['IK Mode']] || 'NA',
+      modeNumber: parseInt(config['IK Mode'], 10),
       values,
       length
     };

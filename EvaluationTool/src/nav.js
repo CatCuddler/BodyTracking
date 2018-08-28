@@ -23,10 +23,10 @@ const Nav = ({
   setScale,
   interpolate,
   setInterpolate,
-  notnull,
-  setNotNull,
   average,
-  setAverage
+  setAverage,
+  extrema,
+  setExtrema
 }) => (
   <Menu>
     <Menu.Item header>IK Evaluation Tool</Menu.Item>
@@ -69,6 +69,12 @@ const Nav = ({
           onClick={() => setAverage(!average)}
         />
         <Dropdown.Item
+          icon={extrema ? 'check' : undefined}
+          text="extrema"
+          active={!!extrema}
+          onClick={() => setExtrema(!extrema)}
+        />
+        <Dropdown.Item
           icon={min ? 'check' : undefined}
           text="min"
           active={!!min}
@@ -85,12 +91,6 @@ const Nav = ({
           text="interpolate"
           active={!!interpolate}
           onClick={() => setInterpolate(!interpolate)}
-        />
-        <Dropdown.Item
-          icon={notnull ? 'check' : undefined}
-          text="not null"
-          active={!!notnull}
-          onClick={() => setNotNull(!notnull)}
         />
       </Dropdown.Menu>
     </Dropdown>
