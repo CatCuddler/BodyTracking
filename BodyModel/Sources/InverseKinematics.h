@@ -33,6 +33,8 @@ private:
 	static const bool footWithOrientation = withOrientation;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
+	float getRadian(float degree);
+	
 	void updateBone(BoneNode* bone);
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);

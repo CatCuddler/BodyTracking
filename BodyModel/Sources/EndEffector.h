@@ -7,10 +7,25 @@ enum EndEffectorIndices {
 	hip, leftHand, rightHand, leftFoot, rightFoot
 };
 
+// Hip
 const int hipBoneIndex = 2;
+// Left arm
+const int leftShoulderBoneIndex = 11;
+const int leftArmBoneIndex = 12;
+const int leftForeArmBoneIndex = 13;
 const int leftHandBoneIndex = 17;	// 17 or 14
+// Right arm
+const int rightShoulderBoneIndex = 21;
+const int rightArmBoneIndex = 22;
+const int rightForeArmBoneIndex = 23;
 const int rightHandBoneIndex = 27;	// 27 or 24
+// Left foot
+const int leftUpLegBoneIndex = 4;
+const int leftLegBoneIndex = 5;
 const int leftFootBoneIndex = 6;
+//Right foot
+const int rightUpLegBoneIndex = 29;
+const int rightLegBoneIndex = 30;
 const int rightFootBoneIndex = 31;
 
 const char* const hipT = "hip";	// Hip tracker

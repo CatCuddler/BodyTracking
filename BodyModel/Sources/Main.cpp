@@ -82,7 +82,7 @@ namespace {
 	
 	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
-	Avatar *avatar;
+	Avatar* avatar;
 	LivingRoom* livingRoom;
 	
 	mat4 initTrans;
@@ -424,6 +424,7 @@ namespace {
 			
 		} else {
 			currentFile++;
+			calibratedAvatar = false;
 			
 			// Evaluation?
             /*if (loop >= 0) {
