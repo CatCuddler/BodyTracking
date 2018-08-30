@@ -201,7 +201,7 @@ namespace {
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 #ifdef KORE_STEAMVR
-			VrPoseState controller = VrInterface::getController(endEffector[i]->getTrackerIndex());
+			VrPoseState controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
 			
 			desPosition[i] = controller.vrPose.position;
 			desRotation[i] = controller.vrPose.orientation;
@@ -264,25 +264,25 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 3) {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
-						endEffector[leftFoot]->setTrackerIndex(i);
-						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getTrackerIndex(), i);
+						endEffector[leftFoot]->setDeviceIndex(i);
+						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getDeviceIndex(), i);
 					} else {
-						endEffector[rightFoot]->setTrackerIndex(i);
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getTrackerIndex(), i);
+						endEffector[rightFoot]->setDeviceIndex(i);
+						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getDeviceIndex(), i);
 					}
 				} else {
 					// Hip tracker
-					endEffector[hip]->setTrackerIndex(i);
-					log(Info, "hip: %i -> %i", endEffector[hip]->getTrackerIndex(), i);
+					endEffector[hip]->setDeviceIndex(i);
+					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
 				}
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
 				if (trackerTransPos.x() > 0) {
-					endEffector[leftHand]->setTrackerIndex(i);
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getTrackerIndex(), i);
+					endEffector[leftHand]->setDeviceIndex(i);
+					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getDeviceIndex(), i);
 				} else {
-					endEffector[rightHand]->setTrackerIndex(i);
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
+					endEffector[rightHand]->setDeviceIndex(i);
+					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
 				}
 			}
 		}
@@ -360,8 +360,8 @@ namespace {
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i)
-			if (endEffector[i]->getTrackerIndex() != -1) {
-				controller = VrInterface::getController(endEffector[i]->getTrackerIndex());
+			if (endEffector[i]->getDeviceIndex() != -1) {
+				controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
 				
 				// Get controller position and rotation
 				desPosition[i] = controller.vrPose.position;

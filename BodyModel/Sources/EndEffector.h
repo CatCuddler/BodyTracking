@@ -46,8 +46,8 @@ public:
 	Kore::Quaternion getOffsetRotation() const;
 	void setOffsetRotation(Kore::Quaternion offsetRotation);
 	
-	int getTrackerIndex() const;
-	void setTrackerIndex(int index);
+	int getDeviceIndex() const;
+	void setDeviceIndex(int index);
 	
 	int getBoneIndex() const;
 	const char* getName() const;
@@ -57,7 +57,7 @@ private:
 	Kore::Quaternion offsetRotation;
 	int boneIndex;		// As defined in .ogex node (e.g. nodeX ==> boneIndex = X)
 	const char* name;	// Name of the end-effector (e.g. lhC)
-	int trackerIndex;	// ID of the VR device
+	int deviceID;	// ID of the VR device
 	int ikMode;			// 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
 	
 	const char* getNameForIndex(const int ID) const;

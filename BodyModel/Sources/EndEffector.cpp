@@ -4,7 +4,7 @@
 
 #include <string>
 
-EndEffector::EndEffector(int boneIndex, int mode) : offsetPosition(Kore::vec3(0, 0, 0)), offsetRotation(Kore::Quaternion(0, 0, 0, 1)), boneIndex(boneIndex), trackerIndex(-1), ikMode(mode) {
+EndEffector::EndEffector(int boneIndex, int mode) : offsetPosition(Kore::vec3(0, 0, 0)), offsetRotation(Kore::Quaternion(0, 0, 0, 1)), boneIndex(boneIndex), deviceID(-1), ikMode(mode) {
 
 	name = getNameForIndex(boneIndex);
 }
@@ -25,12 +25,12 @@ void EndEffector::setOffsetRotation(Kore::Quaternion rot) {
 	offsetRotation = rot;
 }
 
-int EndEffector::getTrackerIndex() const {
-	return trackerIndex;
+int EndEffector::getDeviceIndex() const {
+	return deviceID;
 }
 
-void EndEffector::setTrackerIndex(int index) {
-	trackerIndex = index;
+void EndEffector::setDeviceIndex(int index) {
+	deviceID = index;
 }
 
 int EndEffector::getBoneIndex() const {
