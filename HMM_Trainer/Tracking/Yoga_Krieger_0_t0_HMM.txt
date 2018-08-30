@@ -1,0 +1,16 @@
+6;
+8;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;nan;nan;
+nan;nan;nan;nan;nan;nan;
+0;

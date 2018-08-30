@@ -46,7 +46,7 @@ string currentMovement = "Yoga_Krieger5";
 // Path for the source files
 string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
-string trainingFileName = "Yoga_Krieger";
+string trainingFileName = "Yoga_Krieger_";
 // Path for HMM and clusters to be saved in
 string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
