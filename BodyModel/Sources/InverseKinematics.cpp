@@ -248,13 +248,13 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	
-	// Hand TODO
-	nodeLeft = bones[14 - 1];
+	// Hand
+	nodeLeft = bones[leftHandBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 1);
 	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(40) - tolerance, getRadian(30) + tolerance));
 	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(70) - tolerance, getRadian(60) + tolerance));
 	
-	nodeRight = bones[24 - 1];
+	nodeRight = bones[rightHandBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
 	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);

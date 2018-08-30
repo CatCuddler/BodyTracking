@@ -13,12 +13,12 @@ const int hipBoneIndex = 2;
 const int leftShoulderBoneIndex = 11;
 const int leftArmBoneIndex = 12;
 const int leftForeArmBoneIndex = 13;
-const int leftHandBoneIndex = 17;	// 17 or 14
+const int leftHandBoneIndex = 14;
 // Right arm
 const int rightShoulderBoneIndex = 21;
 const int rightArmBoneIndex = 22;
 const int rightForeArmBoneIndex = 23;
-const int rightHandBoneIndex = 27;	// 27 or 24
+const int rightHandBoneIndex = 24;
 // Left foot
 const int leftUpLegBoneIndex = 4;
 const int leftLegBoneIndex = 5;
