@@ -30,7 +30,7 @@ private:
 	int currLineNumber = 0;
 	std::fstream positionDataInputFile;
 	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
+	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag);
 	
 public:
 	Logger();

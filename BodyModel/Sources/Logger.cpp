@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Logger.h"
+#include "EndEffector.h"
 
 #include <Kore/Log.h>
 #include <ctime>
@@ -89,13 +90,17 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	evaluationDataOutputFile.flush();
 }
 
-bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
+bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag) {
 	int column = 0;
 	
 	if (std::getline(positionDataInputFile, str, '\n')) {
 		std::stringstream ss;
 		ss.str(str);
 		std::string item;
+		
+		// Get tag
+		std::getline(ss, item, ';');
+		tag = item;
 		
 		while(std::getline(ss, item, ';')) {
 			float num = std::stof(item);
@@ -139,7 +144,9 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 		Kore::vec3 pos = Kore::vec3(0, 0, 0);
 		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
 		
-		success = readLine(str, &pos, &rot, scale);
+		std::string tag;
+		success = readLine(str, &pos, &rot, scale, tag);
+		
 		if (success) {
 			++currLineNumber;
 			rawPos[i] = pos;
