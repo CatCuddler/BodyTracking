@@ -9,7 +9,7 @@
 
 #pragma once
 #include "Markov.h"
-#include "Matrix.h"
+#include "matrix.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -386,10 +386,11 @@ void HMM::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
 		// Calculate log probability
 		prevProbability = probability;
 		probability = 0;
+        if (sequence.size()>0){
 		for (int t = 0; t < sequence.at(0).size(); t++) {
 			probability -= std::log(c.at(0).at(t));
 		}
-
+        }
 	}
 
 	std::cout << iter;

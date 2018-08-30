@@ -144,7 +144,7 @@ int main() {
 			}
 		}
 		if (emptyTracker) {
-			std::cout << " \} \nThose trackers have been skipped and no corresponding HMM was created. \n\n";
+			std::cout << " \n\nThose trackers have been skipped and no corresponding HMM was created. \n\n";
 		}
 
 		for (int ii = 0; ii < 6; ii++) {
@@ -381,9 +381,10 @@ int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	while (ifstream(trainingFilePath + trainingFileName + std::to_string(trainingNumber) + ".txt")) {
 		trainingNumber++;
 	}
+    cout << std::to_string(trainingNumber) + "\n";
 	return trainingNumber;
 }
-
+ 
 
 /********************************************************************************
 * method:		updateFilePaths
@@ -397,4 +398,3 @@ void updateFilePaths() {
 	setWriteFilePath(writeFilePath);
 	setWriteFileName(writeFileName);
 }
-//test git
