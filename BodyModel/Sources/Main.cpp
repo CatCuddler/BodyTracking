@@ -264,10 +264,10 @@ namespace {
 				if (trackerPos.y() < currentUserHeight / 3) {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
-						endEffector[rightFoot]->setTrackerIndex(i);
-						log(Info, "rightFoot: %i -> %i", endEffector[rightHand]->getTrackerIndex(), i);
+						endEffector[leftFoot]->setTrackerIndex(i);
+						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getTrackerIndex(), i);
 					} else {
-						endEffector[rightHand]->setTrackerIndex(i);
+						endEffector[rightFoot]->setTrackerIndex(i);
 						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getTrackerIndex(), i);
 					}
 				} else {
