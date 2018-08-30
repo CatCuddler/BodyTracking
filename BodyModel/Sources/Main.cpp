@@ -201,7 +201,7 @@ namespace {
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 #ifdef KORE_STEAMVR
-			VrPoseState controller = VrInterface::getController(endEffector[i]->trackerIndex);
+			VrPoseState controller = VrInterface::getController(endEffector[i]->getTrackerIndex());
 			
 			desPosition[i] = controller.vrPose.position;
 			desRotation[i] = controller.vrPose.orientation;
@@ -360,8 +360,8 @@ namespace {
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i)
-			if (endEffector[i]->trackerIndex != -1) {
-				controller = VrInterface::getController(endEffector[i]->trackerIndex);
+			if (endEffector[i]->getTrackerIndex() != -1) {
+				controller = VrInterface::getController(endEffector[i]->getTrackerIndex());
 				
 				// Get controller position and rotation
 				desPosition[i] = controller.vrPose.position;
