@@ -63,27 +63,3 @@ void Kore::RotationUtility::getOrientation(const Kore::mat4* m, Kore::Quaternion
 	orientation->normalize();
 }
 
-Kore::Quaternion Kore::RotationUtility::matrixToQuaternion(Kore::mat4 diffRot, int i) {
-	Kore::vec4 result;
-	int j = i < 2 ? i + 1 : 0;
-	int k = i > 0 ? i - 1 : 2;
-	
-	if (diffRot[i][i] >= diffRot[j][j] && diffRot[i][i] >= diffRot[k][k]) {
-		result[i] = sqrtf(1 + diffRot[i][i] - diffRot[j][j] - diffRot[k][k] ) / 2;
-		result[j] = (diffRot[j][i] + diffRot[i][j]) / (4 * result[i]);
-		result[k] = (diffRot[k][i] + diffRot[i][k]) / (4 * result[i]);
-		result[3] = (diffRot[k][j] - diffRot[j][k]) / (4 * result[i]);
-		
-		// check if w < 0?
-		if (!(
-			  (result.z() < nearNull || fabs(2 * (result.x() * result.y() - result.w() * result.z()) - diffRot[1][0]) < nearNull) &&
-			  (result.y() < nearNull || fabs(2 * (result.x() * result.z() + result.w() * result.y()) - diffRot[2][0]) < nearNull) &&
-			  (result.x() < nearNull || fabs(2 * (result.y() * result.z() - result.w() * result.x()) - diffRot[2][1]) < nearNull)
-			  )) result.w() = -result.w();
-		
-		return Kore::Quaternion(result.x(), result.y(), result.z(), result.w());
-	}
-	
-	return matrixToQuaternion(diffRot, i + 1);
-}
-

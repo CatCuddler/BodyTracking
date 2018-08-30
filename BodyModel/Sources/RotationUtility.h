@@ -10,6 +10,5 @@ namespace Kore {
 		float getRadians(float degree);
 		float getDegree(float rad);
 		void getOrientation(const Kore::mat4* m, Kore::Quaternion* orientation);
-		Kore::Quaternion matrixToQuaternion(Kore::mat4 diffRot, int i = 0);
 	}
 }
