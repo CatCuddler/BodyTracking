@@ -301,17 +301,10 @@ namespace {
 	void gamepadButton(int buttonNr, float value) {
 		// Menu button => calibrating
 		if (buttonNr == 1 && value == 1) {
-			if (!currentUserHeight)
-				assignControllerAndTracker();
-			
-			if (!calibratedAvatar) {
-				calibrate();
-				log(Info, "Calibrate avatar");
-				calibratedAvatar = true;
-			} else {
-				log(Info, "Release avatar");
-				calibratedAvatar = false;
-			}
+			assignControllerAndTracker();
+			calibrate();
+			calibratedAvatar = true;
+			log(Info, "Calibrate avatar");
 		}
 		
 		// Trigger button => logging
@@ -325,12 +318,6 @@ namespace {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
 			}
-		}
-		
-		// Grip button => init controller
-		if (buttonNr == 2 && value == 1 && !calibratedAvatar) {
-			log(Info, "Init Controller");
-			assignControllerAndTracker();
 		}
 	}
 	

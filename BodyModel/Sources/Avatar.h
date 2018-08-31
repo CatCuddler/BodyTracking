@@ -18,6 +18,8 @@ public:
 	
 	BoneNode* getBoneWithIndex(int index) const;
 	
+	void resetPositionAndRotation();
+	
 	float getReached() const;
 	float getStucked() const;
 	float* getIterations() const;

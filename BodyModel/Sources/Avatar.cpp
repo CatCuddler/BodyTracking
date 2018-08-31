@@ -103,6 +103,17 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	return bone;
 }
 
+void Avatar::resetPositionAndRotation() {
+	for (int i = 0; i < bones.size(); ++i) {
+		bones[i]->transform = Kore::mat4::Identity();
+		bones[i]->local = Kore::mat4::Identity();
+		bones[i]->combined = Kore::mat4::Identity();
+		bones[i]->combinedInv = Kore::mat4::Identity();
+		bones[i]->finalTransform = Kore::mat4::Identity();
+		bones[i]->rotation = Kore::Quaternion(0, 0, 0, 1);
+	}
+}
+
 float Avatar::getReached() const {
 	return invKin->getReached();
 }
