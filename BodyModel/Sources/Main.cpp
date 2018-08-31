@@ -319,6 +319,12 @@ namespace {
 				logger->endLogger();
 			}
 		}
+		
+		// Grip button => release
+		if (buttonNr == 2 && value == 1) {
+			calibratedAvatar = false;
+			avatar->resetPositionAndRotation();
+		}
 	}
 	
 	void initButtons() {
@@ -438,6 +444,7 @@ namespace {
 		} else {
 			currentFile++;
 			calibratedAvatar = false;
+			avatar->resetPositionAndRotation();
 			
 			// Evaluation?
             /*if (loop >= 0) {
