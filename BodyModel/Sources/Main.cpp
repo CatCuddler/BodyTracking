@@ -260,9 +260,6 @@ namespace {
 	void assignControllerAndTracker() {
 		VrPoseState controller;
 		
-		// Set avatar size
-		setSize();
-		
 		// Get indices for VR devices
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
@@ -302,6 +299,7 @@ namespace {
 		// Menu button => calibrating
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
+			setSize();
 			calibrate();
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
