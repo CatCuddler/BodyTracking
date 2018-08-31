@@ -100,7 +100,6 @@ namespace {
 	
 #ifdef KORE_STEAMVR
 	float currentUserHeight;
-	bool initedButtons = false;
 	bool firstPersonMonitor = false;
 #else
 	int loop = 0;
@@ -296,7 +295,14 @@ namespace {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
-		// Menu button => calibrating
+		// Grip button => set size and reset an avatar to a default T-Pose
+		if (buttonNr == 2 && value == 1) {
+			calibratedAvatar = false;
+			avatar->resetPositionAndRotation();
+			setSize();
+		}
+		
+		// Menu button => calibrate
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
@@ -304,7 +310,7 @@ namespace {
 			log(Info, "Calibrate avatar");
 		}
 		
-		// Trigger button => logging
+		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
 			logData = !logData;
 			
@@ -315,13 +321,6 @@ namespace {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
 			}
-		}
-		
-		// Grip button => release
-		if (buttonNr == 2 && value == 1) {
-			calibratedAvatar = false;
-			avatar->resetPositionAndRotation();
-			setSize();
 		}
 	}
 	
@@ -334,7 +333,6 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::Controller)
 				Gamepad::get(i)->Button = gamepadButton;
 		}
-		initedButtons = true;
 	}
 #endif
 	
@@ -357,9 +355,6 @@ namespace {
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
 		SensorState state;
-		
-		if (!initedButtons)
-			initButtons();
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -699,6 +694,7 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
+		initButtons();
 #endif
 	}
 }
