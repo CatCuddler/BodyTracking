@@ -227,21 +227,21 @@ const enhance = compose(
           })
         : data
   })),
-  withPropsOnChange(
-    ['files', 'data', 'groupBy'],
-    ({ files, data, groupBy }) => {
-      if (files.length === 1 || groupBy) return {};
+  withPropsOnChange(['files', 'data'], ({ files, data }) => {
+    if (files.length === 1) return {};
 
-      // reduce all data to consistent length
-      let min;
-      data.forEach(d => {
-        const length = get(d, ['data', 'length']);
-        if (!min || length < min) min = length;
+    // reduce all data to consistent length
+    data.forEach(d => {
+      d.data.forEach(({ x }) => {
+        data.filter(d2 => d2.id !== d.id).forEach(d2 => {
+          if (d2.data.findIndex(({ x: x2 }) => x2 === x) < 0)
+            d2.data.push({ x, y: null });
+        });
       });
+    });
 
-      return { data: data.map(d => ({ ...d, data: d.data.slice(0, min) })) };
-    }
-  ),
+    return { data };
+  }),
   withPropsOnChange(['data', 'scale'], ({ data: d, scale }) => {
     if (scale === 2)
       return {
@@ -285,7 +285,7 @@ const enhance = compose(
         id: 'Average',
         color: get(
           colorsMaterial,
-          [filteredData.length, 'palette', 6],
+          [a === 1 ? filteredData.length : 0, 'palette', 6],
           'black'
         ),
         data: []
@@ -302,7 +302,7 @@ const enhance = compose(
         y: Math.round((y / filteredData.length) * 1000) / 1000
       }));
 
-      return { data: [...d, average] };
+      return { data: a === 1 ? [...d, average] : [average] };
     }
 
     return {};
@@ -431,7 +431,9 @@ const enhance = compose(
     if (newTicks.join('').length > 90)
       newTicks = newTicks.filter((x, i) => i % 2 === 0);
 
-    return { tickValues: newTicks };
+    const numeric = !isNaN(get(newTicks, 0));
+
+    return { tickValues: newTicks, numeric };
   }),
   withHandlers({
     tooltipFormat: ({ scale, data }) => (x, i, p) => {
@@ -469,7 +471,8 @@ const Chart = ({
   selectedFields,
   groupBy,
   average,
-  extrema
+  extrema,
+  numeric
 }) => (
   <div
     style={{
@@ -488,6 +491,7 @@ const Chart = ({
           bottom: 60,
           left: 50
         }}
+        curve={numeric ? 'linear' : 'step'}
         markers={extrema ? markers : undefined}
         enableDots={false}
         animate

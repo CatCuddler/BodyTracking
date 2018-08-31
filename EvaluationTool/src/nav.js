@@ -63,10 +63,10 @@ const Nav = ({
           onClick={() => setScale(scale === 2 ? 0 : 2)}
         />
         <Dropdown.Item
-          icon={average ? 'check' : undefined}
+          icon={!average ? undefined : average === 1 ? 'check' : 'eye'}
           text="average"
           active={!!average}
-          onClick={() => setAverage(!average)}
+          onClick={() => setAverage(!average ? 1 : average === 1 ? 2 : 0)}
         />
         <Dropdown.Item
           icon={extrema ? 'check' : undefined}

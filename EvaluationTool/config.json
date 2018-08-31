@@ -1,5 +1,5 @@
 {
   "input": "../BodyModel/Deployment/eval",
   "output": "",
-  "groupByFiles": true
+  "groupToFolderBy": false
 }

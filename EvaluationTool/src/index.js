@@ -58,6 +58,7 @@ const files = sources
       steps: parseFloat(config['Steps Max']),
       lambda: Math.round(config.lambda * 10000) / 10000,
       file: config.File,
+      group: config.group,
       orientation: config['with Orientation'] === '1',
       mode: ikMode[config['IK Mode']] || 'NA',
       modeNumber: parseInt(config['IK Mode'], 10),

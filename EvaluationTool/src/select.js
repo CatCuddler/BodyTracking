@@ -25,6 +25,13 @@ const Select = ({ allowNull, value, setValue }) => (
         file
       </Dropdown.Item>
       <Dropdown.Item
+        onClick={() => setValue('group')}
+        active={value === 'group'}
+      >
+        <Label circular empty />
+        group
+      </Dropdown.Item>
+      <Dropdown.Item
         onClick={() => setValue('lambda')}
         active={value === 'lambda'}
       >
