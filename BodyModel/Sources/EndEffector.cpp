@@ -62,7 +62,7 @@ const char* EndEffector::getNameForIndex(const int ID) const {
 	else if(ID == leftHandBoneIndex)	return lhC;
 	else if(ID == rightHandBoneIndex)	return rhC;
 	else if(ID == leftFootBoneIndex)	return lfT;
-	else if(ID == rightFootBoneIndex)	return lfT;
+	else if(ID == rightFootBoneIndex)	return rfT;
 	else return nullptr;
 }
 

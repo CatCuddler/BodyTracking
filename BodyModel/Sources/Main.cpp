@@ -366,8 +366,8 @@ namespace {
 				controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
 				
 				// Get controller position and rotation
-				endEffector[i].setDesPosition(controller.vrPose.position);
-				endEffector[i].setDesRotation(controller.vrPose.orientation);
+				endEffector[i]->setDesPosition(controller.vrPose.position);
+				endEffector[i]->setDesRotation(controller.vrPose.orientation);
 				
 				executeMovement(i);
 			}
