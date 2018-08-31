@@ -7,6 +7,7 @@
 #include <Kore/Math/Quaternion.h>
 
 #include <vector>
+#include <map>
 
 struct Mesh {
 	int numFaces;
@@ -95,7 +96,7 @@ struct BoneNode {
 	
 	// Constraints
 	Kore::vec3 axes;
-	std::vector<Kore::vec2> constrain;	// <min, max>
+	std::map<const char* const, float> constrain;	// <min, max>
 	
 	BoneNode() :
 		transform(Kore::mat4::Identity()),

@@ -36,10 +36,18 @@ private:
 	float getRadian(float degree);
 	
 	void updateBone(BoneNode* bone);
+	
+	const char* const xMin = "x_min";
+	const char* const xMax = "x_max";
+	const char* const yMin = "y_min";
+	const char* const yMax = "y_max";
+	const char* const zMin = "z_min";
+	const char* const zMax = "z_max";
+	
 	void setJointConstraints();
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
-	float clampValue(float minVal, float maxVal, float value);
+	void clampValue(float minVal, float maxVal, float& value);
 	
 	int totalNum = 0, evalReached = 0, evalStucked = 0;
 	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];

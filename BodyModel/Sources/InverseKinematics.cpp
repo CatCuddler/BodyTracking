@@ -178,19 +178,15 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 		Kore::vec3 rot;
 		Kore::RotationUtility::quatToEuler(&bone->rotation, &rot.x(), &rot.y(), &rot.z());
 		
-		int i = 0;
 		float x = rot.x(), y = rot.y(), z = rot.z();
 		if (axes.x() == 1.0) {
-			x = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.x());
-			i++;
+			clampValue(bone->constrain[xMin], bone->constrain[xMax], x);
 		}
 		if (axes.y() == 1.0) {
-			y = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.y());
-			i++;
+			clampValue(bone->constrain[yMin], bone->constrain[yMax], y);
 		}
 		if (axes.z() == 1.0) {
-			z = clampValue(bone->constrain[i].x(), bone->constrain[i].y(), rot.z());
-			i++;
+			clampValue(bone->constrain[zMin], bone->constrain[zMax], z);
 		}
 		Kore::RotationUtility::eulerToQuat(x, y, z, &bone->rotation);
 		
@@ -201,7 +197,7 @@ void InverseKinematics::applyJointConstraints(BoneNode* targetBone) {
 	}
 }
 
-float InverseKinematics::clampValue(float minVal, float maxVal, float value) {
+void InverseKinematics::clampValue(float minVal, float maxVal, float& value) {
 	if (minVal > maxVal) {
 		float temp = minVal;
 		minVal = maxVal;
@@ -209,11 +205,9 @@ float InverseKinematics::clampValue(float minVal, float maxVal, float value) {
 	}
 	
 	if (value < minVal)
-		return minVal;
+		value = minVal;
 	else if (value > maxVal)
-		return maxVal;
-	
-	return value;
+		value = maxVal;
 }
 
 float InverseKinematics::getRadian(float degree) {
@@ -229,57 +223,57 @@ void InverseKinematics::setJointConstraints() {
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(50) - tolerance, getRadian(180) + tolerance));
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(90) - tolerance, getRadian(90) + tolerance));
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(130) - tolerance, getRadian(90) + tolerance));
+	nodeLeft->constrain[xMin] = -getRadian(50) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[yMax] = getRadian(90) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(130) - tolerance;	nodeLeft->constrain[zMax] = getRadian(90) + tolerance;
 	
 	nodeRight = bones[rightArmBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
+	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
+	nodeRight->constrain[yMin] = -nodeLeft->constrain[yMin],	nodeRight->constrain[yMax] = -nodeLeft->constrain[yMax];
+	nodeRight->constrain[zMin] = -nodeLeft->constrain[zMin],	nodeRight->constrain[zMax] = -nodeLeft->constrain[zMax];
 	
 	// Forearm
 	nodeLeft = bones[leftForeArmBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(0, getRadian(140) + tolerance));
+	nodeLeft->constrain[xMin] = 0;								nodeLeft->constrain[xMax] = getRadian(140) + tolerance;
 	
 	nodeRight = bones[rightForeArmBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
+	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
 	
 	// Hand
 	nodeLeft = bones[leftHandBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(40) - tolerance, getRadian(30) + tolerance));
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(70) - tolerance, getRadian(60) + tolerance));
+	nodeLeft->constrain[xMin] = -getRadian(40) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(70) - tolerance;		nodeLeft->constrain[zMax] = getRadian(60) + tolerance;
 	
 	nodeRight = bones[rightHandBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
+	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
+	nodeRight->constrain[zMin] = -nodeLeft->constrain[zMin],	nodeRight->constrain[zMax] = -nodeLeft->constrain[zMax];
 	
 	// Thigh
 	nodeLeft = bones[leftUpLegBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(130) - tolerance, getRadian(30) + tolerance));
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(60) - tolerance, getRadian(40) + tolerance));
-	nodeLeft->constrain.push_back(Kore::vec2(-getRadian(50) - tolerance, getRadian(50) + tolerance));
+	nodeLeft->constrain[xMin] = -getRadian(130) - tolerance;	nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(60) - tolerance;		nodeLeft->constrain[yMax] = getRadian(40) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(50) - tolerance;		nodeLeft->constrain[zMax] = getRadian(50) + tolerance;
 	
 	nodeRight = bones[rightUpLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
-	nodeRight->constrain.push_back(nodeLeft->constrain[1] * -1.0f);
-	nodeRight->constrain.push_back(nodeLeft->constrain[2] * -1.0f);
+	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
+	nodeRight->constrain[yMin] = -nodeLeft->constrain[yMin],	nodeRight->constrain[yMax] = -nodeLeft->constrain[yMax];
+	nodeRight->constrain[zMin] = -nodeLeft->constrain[zMin],	nodeRight->constrain[zMax] = -nodeLeft->constrain[zMax];
 	
 	// Calf
 	nodeLeft = bones[leftLegBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain.push_back(Kore::vec2(0, getRadian(140) + tolerance));
+	nodeLeft->constrain[xMin] = 0;								nodeLeft->constrain[xMax] = getRadian(140) + tolerance;
 	
 	nodeRight = bones[rightLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
-	nodeRight->constrain.push_back(nodeLeft->constrain[0]);
+	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
 }
 
 float InverseKinematics::getReached() {
