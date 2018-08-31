@@ -5,6 +5,10 @@
 #include <Kore/Graphics1/Color.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
+#include <Kore/Audio2/Audio.h>
+#include <Kore/Audio1/Audio.h>
+#include <Kore/Audio1/Sound.h>
+#include <Kore/Audio1/SoundStream.h>
 #include <Kore/System.h>
 
 #include "EndEffector.h"
@@ -39,6 +43,10 @@ namespace {
 	
 	double startTime;
 	double lastTime;
+	
+	// Audio cues
+	Sound* startRecordingSound;
+	Sound* stopRecordingSound;
 	
 	// Avatar shader
 	VertexStructure structure;
@@ -311,8 +319,10 @@ namespace {
 			logData = !logData;
 			
 			if (logData) {
+				Audio1::play(startRecordingSound);
 				logger->startLogger();
 			} else {
+				Audio1::play(stopRecordingSound);
 				logger->endLogger();
 			}
 		}
@@ -710,6 +720,12 @@ int kore(int argc, char** argv) {
 	Mouse::the()->Move = mouseMove;
 	Mouse::the()->Press = mousePress;
 	Mouse::the()->Release = mouseRelease;
+	
+	// Sound initiation
+	Audio1::init();
+	Audio2::init();
+	startRecordingSound = new Sound("sound/start.wav");
+	stopRecordingSound = new Sound("sound/stop.wav");
 	
 	System::start();
 	
