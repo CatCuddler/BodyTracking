@@ -354,8 +354,8 @@ namespace {
 		
 		// Move position of camera based on WASD keys
 		float cameraMoveSpeed = 4.f;
-		if (S) cameraPos -= camForward * (float) deltaT * cameraMoveSpeed;
-		if (W) cameraPos += camForward * (float) deltaT * cameraMoveSpeed;
+		if (S) cameraPos -= camForward * (float)deltaT * cameraMoveSpeed;
+		if (W) cameraPos += camForward * (float)deltaT * cameraMoveSpeed;
 		if (A) cameraPos += camRight * (float)deltaT * cameraMoveSpeed;
 		if (D) cameraPos -= camRight * (float)deltaT * cameraMoveSpeed;
 		
@@ -430,10 +430,15 @@ namespace {
 		Kore::Quaternion desRotation[numOfEndEffectors];
 		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
 			endEffector[hip]->setDesPosition(desPosition[0]);
+			endEffector[hip]->setDesRotation(desRotation[0]);
 			endEffector[leftHand]->setDesPosition(desPosition[1]);
+			endEffector[leftHand]->setDesRotation(desRotation[1]);
 			endEffector[rightHand]->setDesPosition(desPosition[2]);
+			endEffector[rightHand]->setDesRotation(desRotation[2]);
 			endEffector[leftFoot]->setDesPosition(desPosition[3]);
+			endEffector[leftFoot]->setDesRotation(desRotation[3]);
 			endEffector[rightFoot]->setDesPosition(desPosition[4]);
+			endEffector[rightFoot]->setDesRotation(desRotation[4]);
 			
 			if (!calibratedAvatar) {
 				avatar->setScale(scaleFactor);
