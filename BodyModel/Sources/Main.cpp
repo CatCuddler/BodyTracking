@@ -299,7 +299,6 @@ namespace {
 		// Menu button => calibrating
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
-			setSize();
 			calibrate();
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
@@ -322,6 +321,7 @@ namespace {
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
 			avatar->resetPositionAndRotation();
+			setSize();
 		}
 	}
 	
