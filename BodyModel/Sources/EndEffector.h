@@ -40,6 +40,12 @@ class EndEffector {
 public:
 	EndEffector(int boneIndex, int mode = 5);
 	
+	Kore::vec3 getDesPosition() const;
+	void setDesPosition(Kore::vec3 pos);
+	
+	Kore::Quaternion getDesRotation() const;
+	void setDesRotation(Kore::Quaternion rot);
+	
 	Kore::vec3 getOffsetPosition() const;
 	void setOffsetPosition(Kore::vec3 offsetPosition);
 	
@@ -53,8 +59,12 @@ public:
 	const char* getName() const;
 	
 private:
+	Kore::vec3 desPosition;
+	Kore::Quaternion desRotation;
+	
 	Kore::vec3 offsetPosition;
 	Kore::Quaternion offsetRotation;
+	
 	int boneIndex;		// As defined in .ogex node (e.g. nodeX ==> boneIndex = X)
 	const char* name;	// Name of the end-effector (e.g. lhC)
 	int deviceID;	// ID of the VR device
