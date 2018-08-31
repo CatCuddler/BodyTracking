@@ -122,13 +122,14 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				// Render a tracker for both feet and back
 				viveObjects[0]->render(tex);
+				// Render local coordinate system
+				viveObjects[2]->render(tex);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Render a controller for both hands
 				viveObjects[1]->render(tex);
+				// Render local coordinate system
+				viveObjects[2]->render(tex);
 			}
-			
-			// Render local coordinate system
-			viveObjects[2]->render(tex);
 		}
 #else
 		for(int i = 0; i < numOfEndEffectors; ++i) {
