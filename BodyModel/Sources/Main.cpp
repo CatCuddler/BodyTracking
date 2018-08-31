@@ -167,24 +167,16 @@ namespace {
 	}
 	
 	void executeMovement(int deviceID) {
-#ifdef KORE_STEAMVR
 		// Save raw data
 		if (logData) logger->saveData(endEffector[deviceID]->getName(), desPosition[deviceID], desRotation[deviceID], avatar->scale);
-#endif
 		
 		if (calibratedAvatar) {
-#ifdef KORE_STEAMVR
 			// Add offset to endeffector
 			Kore::Quaternion offsetRotation = endEffector[deviceID]->getOffsetRotation();
 			vec3 offserPosition = endEffector[deviceID]->getOffsetPosition();
 			
 			Kore::Quaternion finalRot = desRotation[deviceID].rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition[deviceID].x(), desPosition[deviceID].y(), desPosition[deviceID].z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
-			
-#else
-			Kore::Quaternion finalRot = desRotation[deviceID];
-			vec3 finalPos = desPosition[deviceID];
-#endif
 			
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);
@@ -200,38 +192,20 @@ namespace {
 	
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-#ifdef KORE_STEAMVR
-			VrPoseState controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
-			
-			desPosition[i] = controller.vrPose.position;
-			desRotation[i] = controller.vrPose.orientation;
-#endif
-			
 			vec3 sollPos, istPos = desPosition[i];
-			mat4 sollRot, istRot = desRotation[i].matrix();
+			Kore::Quaternion sollRot, istRot = desRotation[i];
+			
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
-			sollRot = initRot.rotated(bone->getOrientation()).matrix();
+			sollRot = initRot.rotated(bone->getOrientation());
+			
 			sollPos = bone->getPosition();
 			sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 			
-			endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
-			endEffector[i]->setOffsetRotation(Kore::RotationUtility::matrixToQuaternion(sollRot * istRot.Transpose()));
+			endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
+			endEffector[i]->setOffsetRotation((istRot.invert()).rotated(sollRot));
 		}
 	}
-	
-	// Test this
-	/*vec3 sollPos, istPos = desPosition[i];
-	Kore::Quaternion sollRot, istRot = desRotation[i];
-	BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
-		
-	sollRot = initRot.rotated(bone->getOrientation());
-	sollPos = bone->getPosition();
-	sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
-		
-	endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
-	endEffector[i]->setOffsetRotation(sollRot.rotated(istRot));
-	}*/
 
 #ifdef KORE_STEAMVR
 	void setSize() {
