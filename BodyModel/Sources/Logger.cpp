@@ -48,7 +48,7 @@ void Logger::startEvaluationLogger() {
 	
 	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
 	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;dMax Pos;dMax Rot;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentGroup[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos << ";" << errorMaxRot << ";" << dMaxPos[ikMode] << ";" << dMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
+	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << files[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos << ";" << errorMaxRot << ";" << dMaxPos[ikMode] << ";" << dMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	
@@ -129,7 +129,6 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 	
 	if (!positionDataInputFile.is_open()) {
 		positionDataInputFile.open(filename);
-		
 		log(Kore::Info, "Read data from %s", filename);
 	}
 	

@@ -387,7 +387,7 @@ namespace {
 		
 		// Read line
 		float scaleFactor;
-		if (logger->readData(numOfEndEffectors, currentGroup[currentFile], desPosition, desRotation, scaleFactor)) {
+		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
 			if (!calibratedAvatar) {
 				avatar->setScale(scaleFactor);
 				calibrate();

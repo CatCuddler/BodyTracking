@@ -10,17 +10,15 @@ struct DataFile {
 };
 
 namespace {
-	const char* squats[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv"};
-	const char* laufen[] = {"laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv"};
-    const char* joggen[] = {"joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
-    const char* alle[] = {"squats-1.csv", "squats-2.csv", "squats-3.csv", "squats-4.csv", "squats-5.csv", "laufen-1.csv", "laufen-2.csv", "laufen-3.csv", "laufen-4.csv", "laufen-5.csv", "joggen-1.csv", "joggen-2.csv", "joggen-3.csv", "joggen-4.csv"};
-	const char** currentGroup = alle;
+	// TODO: Record new data (raw data)
+	const int numFiles = 1;
+    const char* files[numFiles] = {"positionData_1535629103.csv"};
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
 	const int height = 768;
 
-	const bool renderRoom = true;
+	const bool renderRoom = false;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
@@ -28,9 +26,7 @@ namespace {
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
 	
-#ifdef KORE_STEAMVR
 	bool logData = false;
-#endif
 	
     // Evaluation values
     const bool eval = false;
