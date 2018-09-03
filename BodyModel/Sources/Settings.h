@@ -11,8 +11,8 @@ struct DataFile {
 
 namespace {
 	// TODO: Record new data (raw data)
-	const int numFiles = 1;
-    const char* files[numFiles] = {"positionData_1535629103.csv"};
+	const int numFiles = 9;
+    const char* files[numFiles] = {"positionData_1535958687.csv", "positionData_1535958747.csv", "positionData_1535958762.csv"};
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
