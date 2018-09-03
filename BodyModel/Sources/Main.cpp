@@ -99,6 +99,7 @@ namespace {
 	bool calibratedAvatar = false;
 	
 #ifdef KORE_STEAMVR
+	bool controllerButtonsInitialized = false;
 	float currentUserHeight;
 	bool firstPersonMonitor = false;
 #else
@@ -355,7 +356,8 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
-		SensorState state;
+
+		if (!controllerButtonsInitialized) initButtons();
 		
 		VrPoseState controller;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -371,6 +373,7 @@ namespace {
 		}
 		
 		// Render for both eyes
+		SensorState state;
 		for (int j = 0; j < 2; ++j) {
 			VrInterface::beginRender(j);
 			
@@ -695,7 +698,6 @@ namespace {
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
-		initButtons();
 #endif
 	}
 }
