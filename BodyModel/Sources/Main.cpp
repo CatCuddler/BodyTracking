@@ -431,6 +431,7 @@ namespace {
 			endEffector[rightFoot]->setDesRotation(desRotation[4]);
 			
 			if (!calibratedAvatar) {
+				avatar->resetPositionAndRotation();
 				avatar->setScale(scaleFactor);
 				calibrate();
 				calibratedAvatar = true;
@@ -441,7 +442,6 @@ namespace {
 		} else {
 			currentFile++;
 			calibratedAvatar = false;
-			avatar->resetPositionAndRotation();
 			
 			// Evaluation?
             /*if (loop >= 0) {

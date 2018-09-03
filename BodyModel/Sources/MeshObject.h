@@ -83,7 +83,8 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
-	Kore::mat4 transform;		// bind matrix
+	Kore::mat4 bind;
+	Kore::mat4 transform;
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;

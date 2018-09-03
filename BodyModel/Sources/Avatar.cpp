@@ -105,11 +105,11 @@ BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 
 void Avatar::resetPositionAndRotation() {
 	for (int i = 0; i < bones.size(); ++i) {
-		bones[i]->transform = Kore::mat4::Identity();
-		bones[i]->local = Kore::mat4::Identity();
-		bones[i]->combined = Kore::mat4::Identity();
-		bones[i]->combinedInv = Kore::mat4::Identity();
-		bones[i]->finalTransform = Kore::mat4::Identity();
+		bones[i]->transform = bones[i]->bind;
+		bones[i]->local = bones[i]->bind;
+		bones[i]->combined = bones[i]->parent->combined * bones[i]->local;
+		bones[i]->combinedInv = bones[i]->combined.Invert();
+		bones[i]->finalTransform = bones[i]->combined * bones[i]->combinedInv;
 		bones[i]->rotation = Kore::Quaternion(0, 0, 0, 1);
 	}
 }
