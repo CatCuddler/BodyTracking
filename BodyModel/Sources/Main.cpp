@@ -200,17 +200,17 @@ namespace {
 		return V;
 	}
 	
-	void executeMovement(int deviceID) {
-		Kore::vec3 desPosition = endEffector[deviceID]->getDesPosition();
-		Kore::Quaternion desRotation = endEffector[deviceID]->getDesRotation();
+	void executeMovement(int endEffectorID) {
+		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
+		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
 		
 		// Save raw data
-		if (logData) logger->saveData(endEffector[deviceID]->getName(), desPosition, desRotation, avatar->scale);
+		if (logData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
-			Kore::Quaternion offsetRotation = endEffector[deviceID]->getOffsetRotation();
-			vec3 offserPosition = endEffector[deviceID]->getOffsetPosition();
+			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
+			vec3 offserPosition = endEffector[endEffectorID]->getOffsetPosition();
 			
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
@@ -219,28 +219,38 @@ namespace {
 			finalRot = initRotInv.rotated(finalRot);
 			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 			
-			if (deviceID == hip) {
-				avatar->setFixedPositionAndOrientation(endEffector[deviceID]->getBoneIndex(), finalPos, finalRot);
+			if (endEffectorID == hip) {
+				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 			} else {
-				avatar->setDesiredPositionAndOrientation(endEffector[deviceID]->getBoneIndex(), finalPos, finalRot);
+				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 			}
 		}
 	}
 	
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::vec3 istPos = endEffector[i]->getDesPosition();
-			Kore::Quaternion istRot = endEffector[i]->getDesRotation();
+			Kore::vec3 currentPos;
+			Kore::Quaternion currentRot;
+			
+#ifdef KORE_STEAMVR
+			VrPoseState controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
+			
+			currentPos = controller.vrPose.position;
+			currentRot = controller.vrPose.orientation;
+#else
+			currentPos = endEffector[i]->getDesPosition();
+			currentRot = endEffector[i]->getDesRotation();
+#endif
 			
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
-			vec3 sollPos = bone->getPosition();
-			sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
+			vec3 targetPos = bone->getPosition();
+			targetPos = initTrans * vec4(targetPos.x(), targetPos.y(), targetPos.z(), 1);
 			
-			Kore::Quaternion sollRot = initRot.rotated(bone->getOrientation());
+			Kore::Quaternion targetRot = initRot.rotated(bone->getOrientation());
 			
-			endEffector[i]->setOffsetPosition((mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.matrix().Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1));
-			endEffector[i]->setOffsetRotation((istRot.invert()).rotated(sollRot));
+			endEffector[i]->setOffsetPosition((mat4::Translation(currentPos.x(), currentPos.y(), currentPos.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
+			endEffector[i]->setOffsetRotation((currentRot.invert()).rotated(targetRot));
 		}
 	}
 
@@ -419,16 +429,10 @@ namespace {
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
 		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
-			endEffector[hip]->setDesPosition(desPosition[0]);
-			endEffector[hip]->setDesRotation(desRotation[0]);
-			endEffector[leftHand]->setDesPosition(desPosition[1]);
-			endEffector[leftHand]->setDesRotation(desRotation[1]);
-			endEffector[rightHand]->setDesPosition(desPosition[2]);
-			endEffector[rightHand]->setDesRotation(desRotation[2]);
-			endEffector[leftFoot]->setDesPosition(desPosition[3]);
-			endEffector[leftFoot]->setDesRotation(desRotation[3]);
-			endEffector[rightFoot]->setDesPosition(desPosition[4]);
-			endEffector[rightFoot]->setDesRotation(desRotation[4]);
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				endEffector[i]->setDesPosition(desPosition[i]);
+				endEffector[i]->setDesRotation(desRotation[i]);
+			}
 			
 			if (!calibratedAvatar) {
 				avatar->resetPositionAndRotation();
