@@ -12,7 +12,7 @@ struct DataFile {
 namespace {
 	// TODO: Record new data (raw data)
 	const int numFiles = 7;
-    const char* files[numFiles] = { "monkey.csv", "walking.csv", "squats.csv", "kicks.csv", "yoga_warrior.csv", "crouch.csv", "bend_forward.csv"};
+    const char* files[numFiles] = {"walking.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv", "bend_forward.csv"};
 	
 	const float nearNull = 0.0001f;
 	const int width = 1024;
