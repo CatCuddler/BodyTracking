@@ -39,7 +39,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	evalTimeIteration[2] = FLT_MIN;
 }
 
-void InverseKinematics::inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
 	float errorPos = -1.0f;
 	float errorRot = -1.0f;

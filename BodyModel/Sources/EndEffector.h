@@ -7,6 +7,10 @@ enum EndEffectorIndices {
 	hip, leftHand, rightHand, leftFoot, rightFoot
 };
 
+enum IKMode {
+	JT, JPI, DLS, SVD, SVD_DLS, SDLS, SDLS_Mod
+};
+
 // Hip
 const int hipBoneIndex = 2;
 // Left arm
@@ -38,7 +42,7 @@ const int numOfEndEffectors = 5;
 
 class EndEffector {
 public:
-	EndEffector(int boneIndex, int mode = 5);
+	EndEffector(int boneIndex, IKMode ikMode = JT);
 	
 	Kore::vec3 getDesPosition() const;
 	void setDesPosition(Kore::vec3 pos);
@@ -58,6 +62,9 @@ public:
 	int getBoneIndex() const;
 	const char* getName() const;
 	
+	IKMode getIKMode() const;
+	void setIKMode(IKMode mode);
+	
 private:
 	Kore::vec3 desPosition;
 	Kore::Quaternion desRotation;
@@ -68,7 +75,7 @@ private:
 	int boneIndex;		// As defined in .ogex node (e.g. nodeX ==> boneIndex = X)
 	const char* name;	// Name of the end-effector (e.g. lhC)
 	int deviceID;		// ID of the VR device
-	int ikMode;			// 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS, 6: SDLS-Modified
+	IKMode ikMode;
 	
 	const char* getNameForIndex(const int ID) const;
 	int getIndexForName(const char* name) const;

@@ -2,17 +2,16 @@
 #include "BussIK/MatrixRmn.h"
 #include "RotationUtility.h"
 #include "Settings.h"
+#include "EndEffector.h"
 
 #include <Kore/Log.h>
 
 struct BoneNode;
 
-extern float dMaxPos[], dMaxRot[], lambda[];
-
 template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode = 0) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, IKMode ikMode = JT) {
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
@@ -39,19 +38,19 @@ public:
 		}
 		
 		switch (ikMode) {
-			case 1:
+			case JPI:
 				vec = calcDeltaThetaByPseudoInverse(jacobian, deltaP);
 				break;
-			case 2:
+			case DLS:
 				vec = calcDeltaThetaByDLS(jacobian, deltaP);
 				break;
-			case 3:
+			case SVD:
 				vec = calcDeltaThetaBySVD(jacobian, deltaP);
 				break;
-			case 4:
+			case SVD_DLS:
 				vec = calcDeltaThetaByDLSwithSVD(jacobian, deltaP);
 				break;
-			case 5:
+			case SDLS:
 				vec = calcDeltaThetaBySDLS(jacobian, deltaP);
 				break;
 				

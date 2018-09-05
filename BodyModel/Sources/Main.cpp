@@ -25,16 +25,6 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
-// dynamic ik-parameter
-int ikMode = 0; // 0: JT, 1: JPI, 2: DLS, 3: SVD, 4: DLS with SVD, 5: SDLS
-float lambda[] =    { 0.35f,	0.05f,		0.20f,		0.25f,		0.20f,		0.018f	};
-float dMaxPos[] =   { 0,        0,          0,          0,          0,          0       };
-float dMaxRot[] =   { 0,        0,          0,          0,          0,          0       };
-float maxSteps[] =  { 100.0f,   100.0f,     100.0f,     100.0f,     100.0f,     100.0f  };
-
-int currentFile = 0;
-int evalStepsInit = evalSteps;
-float evalInitValue[] = { 0.01f,    0.01f,      0.21f,      0.36f,      0.21f,      0.01f   };
 
 namespace {
 	EndEffector** endEffector;
@@ -222,7 +212,7 @@ namespace {
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 			} else {
-				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
+				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 		}
 	}
@@ -447,41 +437,43 @@ namespace {
 			currentFile++;
 			calibratedAvatar = false;
 			
-			// Evaluation?
-            /*if (loop >= 0) {
-                if (eval) logger->saveEvaluationData(avatar);
-                // log(Kore::Info, "%i more iterations!", loop);
-                log(Kore::Info, "%s\t%i\t%f", currentGroup[currentFile], ikMode, evalValue[ikMode]);
-                loop--;
-                
-                if (eval && loop < 0) {
-                    logger->endEvaluationLogger();
-                    
-                    if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1)
-                        exit(0);
-                    else {
-                        if (evalSteps <= 1) {
-                            evalValue[ikMode] = evalInitValue[ikMode];
-                            evalSteps = evalStepsInit;
-                            ikMode++;
-                        } else {
-                            evalValue[ikMode] += evalStep;
-                            evalSteps--;
-                        }
-                        
-                        if (ikMode > 5) {
-                            ikMode = 0;
-                            currentFile++;
-                        }
-                        
-                        loop = 0;
-                        logger->startEvaluationLogger();
-                    }
-                }
-                
-                if (loop >= 0)
-                    initVars();
-            }*/
+			// Evaluation
+			/*if(eval) {
+				if (loop >= 0) {
+					if (eval) logger->saveEvaluationData(avatar);
+					// log(Kore::Info, "%i more iterations!", loop);
+					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, lambda[ikMode]);
+					loop--;
+					
+					if (eval && loop < 0) {
+						logger->endEvaluationLogger();
+						
+						if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1) {
+							exit(0);
+						} else {
+							if (evalSteps <= 1) {
+								lambda[ikMode] = evalInitValue[ikMode];
+								evalSteps = evalStepsInit;
+								ikMode++;
+							} else {
+								lambda[ikMode] += evalStep;
+								evalSteps--;
+							}
+							
+							if (ikMode > 5) {
+								ikMode = 0;
+								currentFile++;
+							}
+							
+							loop = 0;
+							logger->startEvaluationLogger();
+						}
+					}
+					
+					if (loop >= 0)
+						initVars();
+				}
+			}*/
         }
 		
 		// Get projection and view matrix

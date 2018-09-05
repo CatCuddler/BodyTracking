@@ -83,10 +83,10 @@ void Avatar::animate(TextureUnit tex) {
 	}
 }
 
-void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+void Avatar::setDesiredPositionAndOrientation(int boneIndex, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
-	invKin->inverseKinematics(bone, desPosition, desRotation);
+	invKin->inverseKinematics(bone, ikMode, desPosition, desRotation);
 }
 
 void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {

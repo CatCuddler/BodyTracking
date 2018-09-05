@@ -9,9 +9,6 @@
 #include <fstream>
 #include <sstream>
 
-extern int currentFile, ikMode;
-extern float dMaxPos[], dMaxRot[], lambda[], maxSteps[];
-
 class Logger {
 	
 private:

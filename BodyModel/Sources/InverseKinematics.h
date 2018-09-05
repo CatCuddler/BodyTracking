@@ -4,14 +4,11 @@
 
 #include "Jacobian.h"
 
-extern int ikMode;
-extern float maxSteps[];
-
 class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
-	void inverseKinematics(BoneNode* targetBone, Kore::vec3 desPosition, Kore::Quaternion desRotation);
+	void inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
 	float getReached();

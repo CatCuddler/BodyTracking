@@ -4,7 +4,7 @@
 
 #include <string>
 
-EndEffector::EndEffector(int boneIndex, int mode) : desPosition(Kore::vec3(0, 0, 0)), desRotation(Kore::Quaternion(0, 0, 0, 1)), offsetPosition(Kore::vec3(0, 0, 0)), offsetRotation(Kore::Quaternion(0, 0, 0, 1)), boneIndex(boneIndex), deviceID(-1), ikMode(mode) {
+EndEffector::EndEffector(int boneIndex, IKMode ikMode) : desPosition(Kore::vec3(0, 0, 0)), desRotation(Kore::Quaternion(0, 0, 0, 1)), offsetPosition(Kore::vec3(0, 0, 0)), offsetRotation(Kore::Quaternion(0, 0, 0, 1)), boneIndex(boneIndex), deviceID(-1), ikMode(ikMode) {
 
 	name = getNameForIndex(boneIndex);
 }
@@ -55,6 +55,14 @@ int EndEffector::getBoneIndex() const {
 
 const char* EndEffector::getName() const {
 	return name;
+}
+
+IKMode EndEffector::getIKMode() const {
+	return ikMode;
+}
+
+void EndEffector::setIKMode(IKMode mode) {
+	ikMode = mode;
 }
 
 const char* EndEffector::getNameForIndex(const int ID) const {
