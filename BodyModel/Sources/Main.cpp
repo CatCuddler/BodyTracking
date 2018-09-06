@@ -802,6 +802,7 @@ namespace {
 
 				if (recognition) { // starting recognition
 					Audio1::play(startRecognitionSound);
+					log(Info, "Start recognizing data");
 					// clear prievously stored points
 					recognitionPoints.at(0).clear();
 					recognitionPoints.at(1).clear();
@@ -816,7 +817,7 @@ namespace {
 					startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
 					startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
 				} else { // stoping and evaluation recognition
-
+					log(Info, "Stop recognizing data");
 					// read clusters for all trackers from file
 					bool trackersPresent[6];
 					vector<KMeans> kmeanVector(6);
@@ -825,9 +826,12 @@ namespace {
 							KMeans kmeans(hmmPath, hmmName + "_" + to_string(ii));
 							kmeanVector.at(ii) = kmeans;
 							trackersPresent[ii] = true;
+							log(Info, "find tracking file");
+					
 						}
 						catch (std::invalid_argument) {
 							trackersPresent[ii] = false;
+							log(Info, "can't find tracker file");
 						}
 					}
 					vector<bool> trackerMovementRecognised(6, true); // store which trackers were recognised as the correct movement
@@ -843,8 +847,10 @@ namespace {
 
 					if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
 						Audio1::play(correctSound);
+						log(Info, "The movement is correct");
 					} else {
 						Audio1::play(wrongSound);
+						log(Info, "The movement is wrong");
 					}
 				}
 		}
@@ -902,9 +908,66 @@ namespace {
 		// Menu button
 		if (buttonNr == 1) {
 			if (value == 1) {
-				log(Info, "Menu button released");
-			} else {
 				log(Info, "Menu button pressed");
+			} else {
+				log(Info, "Menu button released");
+			}
+			if (!record) { // recognition is only possible while there is no recording in progress
+				recognition = !recognition;
+
+				if (recognition) { // starting recognition
+					Audio1::play(startRecognitionSound);
+					log(Info, "Start recognizing data");
+					// clear prievously stored points
+					recognitionPoints.at(0).clear();
+					recognitionPoints.at(1).clear();
+					recognitionPoints.at(2).clear();
+					recognitionPoints.at(3).clear();
+					recognitionPoints.at(4).clear();
+					recognitionPoints.at(5).clear();
+					dataPointNumber = 0;
+					// save current HMD position and rotation for data normalisation
+					startX = hmdPosition.x();
+					startZ = hmdPosition.z();
+					startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
+					startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
+				}
+				else { // stoping and evaluation recognition
+					log(Info, "Stop recognizing data");
+					// read clusters for all trackers from file
+					bool trackersPresent[6];
+					vector<KMeans> kmeanVector(6);
+					for (int ii = 0; ii < 6; ii++) {
+						try {
+							KMeans kmeans(hmmPath, hmmName + "_" + to_string(ii));
+							kmeanVector.at(ii) = kmeans;
+							trackersPresent[ii] = true;
+						}
+						catch (std::invalid_argument) {
+							trackersPresent[ii] = false;
+							log(Info, "can't find tracker file");
+						}
+					}
+					vector<bool> trackerMovementRecognised(6, true); // store which trackers were recognised as the correct movement
+					for (int ii = 0; ii < 6; ii++) { // check all trackers
+						if (!recognitionPoints.at(ii).empty() && trackersPresent[ii]) { // make sure the tracker is currently present and there is a HMM for it
+							vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints())); // clustering data
+							HMM model(hmmPath, hmmName + "_" + to_string(ii)); // reading HMM
+							trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin())); // calculating probability and comparing with probability threshold as well as applying restfix
+							logger->analyseHMM(hmmName.c_str(), model.calculateProbability(clusteredPoints), false);
+						}
+					}
+					logger->analyseHMM(hmmName.c_str(), 0, true);
+
+					if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
+						Audio1::play(correctSound);
+						log(Info, "The movement is correct");
+					}
+					else {
+						Audio1::play(wrongSound);
+						log(Info, "The movement is wrong");
+					}
+				}
 			}
 		}
 		
@@ -912,18 +975,39 @@ namespace {
 		if (buttonNr == 33) {
 			// TODO: Dont use keyboard keys to start/stop recording data; use trigger button on the controller
 			if (value == 1) {
-				log(Info, "Trigger button released");
-			} else {
 				log(Info, "Trigger button pressed");
+			} else {
+				log(Info, "Trigger button released");
+			}
+			if (!recognition) { // recording is only possible while there is no recognition in progress
+				record = !record;
+
+				if (record) {
+					log(Info, "Start recording data");
+					Audio1::play(startRecordingSound);
+
+					startX = hmdPosition.x();
+					startZ = hmdPosition.z();
+					startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
+					startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
+
+				}
+				else {
+					log(Info, "Stop recording data");
+					Audio1::play(stopRecordingSound);
+
+					logger->closeFile();
+				}
 			}
 		}
+
 		
 		// Grip button
 		if (buttonNr == 2) {
 			if (value == 1) {
-				log(Info, "Grip button released");
-			} else {
 				log(Info, "Grip button pressed");
+			} else {
+				log(Info, "Grip button released");
 			}
 		}
 	}
