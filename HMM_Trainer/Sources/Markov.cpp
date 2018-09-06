@@ -33,7 +33,7 @@ using std::stringstream;
 				model. Defaults to 0, in which case all probabilities are randomized
 * return value: Hidden Markov Model
 ********************************************************************************/
-HMM::HMM(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(numStates, 0), probabilityThreshold(0) {
+HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(numStates, 0), probabilityThreshold(0) {
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
 	
@@ -102,7 +102,7 @@ HMM::HMM(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(numStates, 0
 * parameters:	none
 * return value:	Hidden Markov Model
 ********************************************************************************/
-HMM::HMM(): numStates(1), sigmaSize(1), pi(numStates, 0), probabilityThreshold(0) {
+HMMModel::HMMModel(): numStates(1), sigmaSize(1), pi(numStates, 0), probabilityThreshold(0) {
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
 }
@@ -114,7 +114,7 @@ HMM::HMM(): numStates(1), sigmaSize(1), pi(numStates, 0), probabilityThreshold(0
 *				fileName is the HMMs name without the _HMM.txt ending
 * return value: Hidden Markov Model
 ********************************************************************************/
-HMM::HMM(string filePath, string fileName) {
+HMMModel::HMMModel(string filePath, string fileName) {
 
 	string str;
 
@@ -171,7 +171,7 @@ HMM::HMM(string filePath, string fileName) {
 * parameters:	none
 * return value: the log probability threshold
 ********************************************************************************/
-double HMM::getProbabilityThreshold() { return probabilityThreshold; }
+double HMMModel::getProbabilityThreshold() { return probabilityThreshold; }
 
 /********************************************************************************
 * method:		updateAlphaNormalized
@@ -182,7 +182,7 @@ double HMM::getProbabilityThreshold() { return probabilityThreshold; }
 *				alpha is the forward probability matrix to be updated
 * return value: the vector of normalization coefficients
 ********************************************************************************/
-vector<double> HMM::updateAlphaNormalized(vector<int>& sequence, double** alpha) {
+vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** alpha) {
 
 	const int N = numStates;
 	const int T = sequence.size();
@@ -233,7 +233,7 @@ vector<double> HMM::updateAlphaNormalized(vector<int>& sequence, double** alpha)
 *				beta is the backward probability matrix to be updated
 * return value: the vector of normalization coefficients
 ********************************************************************************/
-void HMM::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta) {
+void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta) {
 
 	const int N = numStates;
 	const int T = sequence.size();
@@ -266,7 +266,7 @@ void HMM::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double*
 				calculated
 * return value: the log of the sequence's probability being emitted by the  HMM
 ********************************************************************************/
-double HMM::calculateProbability(vector<int>& sequence) {
+double HMMModel::calculateProbability(vector<int>& sequence) {
 
 	const int N = numStates;
 	const int T = sequence.size();
@@ -295,7 +295,7 @@ double HMM::calculateProbability(vector<int>& sequence) {
 				algorithm will stop. Defaults to 0.1
 * return value: none
 ********************************************************************************/
-void HMM::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
+void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
 
 	const int N = numStates;
 	const int M = sigmaSize;
@@ -407,7 +407,7 @@ void HMM::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
 *				fileName is the HMMs name without the _HMM.txt ending
 * return value: none
 ********************************************************************************/
-void HMM::writeHMM(string filePath, string fileName) {
+void HMMModel::writeHMM(string filePath, string fileName) {
 
 	ofstream file;
 	file.open(filePath + fileName + "_HMM.txt", ios::out | ios::trunc);

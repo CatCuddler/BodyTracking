@@ -26,7 +26,7 @@ using std::vector;
 * description: an object of the class HMM contains all
   parameters of a Hidden Markov Model.
 ***********************************************************/
-class HMM {
+class HMMModel {
 
 	// TODO public for now as throwing errors in BodyTracking otherwise
 public:
@@ -41,9 +41,9 @@ public:
 	void updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta);
 
 public:
-	HMM(int N, int M, int LRdepth = 0);
-	HMM();
-	HMM(string, string);
+	HMMModel(int N, int M, int LRdepth = 0);
+	HMMModel();
+	HMMModel(string, string);
 
 	void writeHMM(string filePath, string fileName);
 	double getProbabilityThreshold();

@@ -25,7 +25,7 @@ int getFullTrainingNumber(string trainingFilePath, string trainingFileName);
 void updateFilePaths();
 void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int hmmTries);
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber);
-vector<double> calculateProbability(HMM models[6]);
+vector<double> calculateProbability(HMMModel models[6]);
 
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
@@ -117,7 +117,7 @@ int main() {
 				std::cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
 				for (int jj = 0; jj < hmmTries; jj++) {
 					// use Baum-Welch-Algorithm to train HMM and write it to a file 
-					HMM model(numStates, numEmissions, lrDepth);
+					HMMModel model(numStates, numEmissions, lrDepth);
 					model.trainHMM(sequence.at(ii));
 					if (jj < hmmTries - 1) std::cout << ", ";
 					if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
@@ -194,7 +194,7 @@ int main() {
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
 				std::cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
-				HMM model(writeFilePath, writeFileName + "_" + to_string(ii));
+				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
 				std::cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
 			}
 		}
@@ -274,14 +274,14 @@ int main() {
 * return value: none
 ********************************************************************************/
 void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int hmmTries) {
-	HMM finalModels[6];
+	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
 
 	for (int ii = 0; ii < 6; ii++) {
 		if (!sequence.at(ii).empty()) {
 			for (int jj = 0; jj < hmmTries; jj++) {
 				/* use Baum-Welch-Algorithm to train HMM and write it to a file */
-				HMM model(numStates, numEmissions, lrDepth);
+				HMMModel model(numStates, numEmissions, lrDepth);
 				model.trainHMM(sequence.at(ii));
 				if (jj < hmmTries - 1) std::cout << ", ";
 				if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
@@ -327,7 +327,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 * return value: none
 ********************************************************************************/
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber) {
-	HMM finalModels[6];
+	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
 	for (int jj = 0; jj < hmmTries; jj++) {
 		for (int ii = 0; ii < 6; ii++) {
@@ -355,7 +355,7 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 * parameters:	models is an array of HMMs for the six trackers
 * return value: vector of the probability of each tracker
 ********************************************************************************/
-vector<double> calculateProbability(HMM models[6]) {
+vector<double> calculateProbability(HMMModel models[6]) {
 	vector<double> returnVector(6);
 
 	vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeans);

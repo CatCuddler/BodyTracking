@@ -1,7 +1,8 @@
 #ifndef KMEANS_H_INCLUDED
 #define KMEANS_H_INCLUDED
 
-//#include <vector>
+#include <string>
+#include <vector>
 
 using namespace std;
 
