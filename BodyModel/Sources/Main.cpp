@@ -37,6 +37,9 @@ namespace {
 	// Audio cues
 	Sound* startRecordingSound;
 	Sound* stopRecordingSound;
+	Sound* correctSound;
+	Sound* wrongSound;
+	Sound* startRecognitionSound;
 	
 	// Avatar shader
 	VertexStructure structure;
@@ -719,6 +722,9 @@ int kore(int argc, char** argv) {
 	Audio2::init();
 	startRecordingSound = new Sound("sound/start.wav");
 	stopRecordingSound = new Sound("sound/stop.wav");
+	correctSound = new Sound("sound/correct.wav");
+	wrongSound = new Sound("sound/wrong.wav");
+	startRecognitionSound = new Sound("sound/start_recognition.wav");
 	
 	System::start();
 	
