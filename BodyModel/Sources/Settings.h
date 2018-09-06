@@ -23,7 +23,7 @@ namespace {
 	const float errorMaxPos = 0.01f;
 	const float errorMaxRot = 0.01f;
 	
-	bool logData = false;
+	bool logRawData = false;
 	
     // Evaluation values
     const bool eval = false;

@@ -4,13 +4,15 @@
 #include <Kore/Math/Quaternion.h>
 
 enum EndEffectorIndices {
-	hip, leftHand, rightHand, leftFoot, rightFoot
+	head, hip, leftHand, rightHand, leftFoot, rightFoot
 };
 
 enum IKMode {
 	JT, JPI, DLS, SVD, SVD_DLS, SDLS, SDLS_Mod
 };
 
+// Head
+const int headBoneIndex = 20;
 // Hip
 const int hipBoneIndex = 2;
 // Left arm
@@ -27,18 +29,20 @@ const int rightHandBoneIndex = 24;
 const int leftUpLegBoneIndex = 4;
 const int leftLegBoneIndex = 5;
 const int leftFootBoneIndex = 6;
-//Right foot
+// Right foot
 const int rightUpLegBoneIndex = 29;
 const int rightLegBoneIndex = 30;
 const int rightFootBoneIndex = 31;
 
-const char* const hipT = "hip";	// Hip tracker
-const char* const lhC = "lhc";	// Left hand controller
-const char* const rhC = "rhc";	// Right hand controller
-const char* const lfT = "lft";	// Left foot tracker*/
-const char* const rfT = "rft";	// Right foot tracker
+// Tags used in .csv
+const char* const headTag = "head";
+const char* const hipTag = "hip";
+const char* const lHandTag = "lHand";
+const char* const rHandTag = "rHand";
+const char* const lFootTag = "lFoot";
+const char* const rFootTag = "rFoot";
 
-const int numOfEndEffectors = 5;
+const int numOfEndEffectors = 6;
 
 class EndEffector {
 public:

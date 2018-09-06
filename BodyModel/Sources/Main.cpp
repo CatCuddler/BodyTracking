@@ -195,7 +195,7 @@ namespace {
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
 		
 		// Save raw data
-		if (logData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
+		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
@@ -314,9 +314,9 @@ namespace {
 		
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
-			logData = !logData;
+			logRawData = !logRawData;
 			
-			if (logData) {
+			if (logRawData) {
 				Audio1::play(startRecordingSound);
 				logger->startLogger();
 			} else {
@@ -418,10 +418,10 @@ namespace {
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				endEffector[i]->setDesPosition(desPosition[i]);
-				endEffector[i]->setDesRotation(desRotation[i]);
+		if (currentFile < numFiles && logger->readData(numOfEndEffectors-1, files[currentFile], desPosition, desRotation, scaleFactor)) {
+			for (int i = 0; i < numOfEndEffectors-1; ++i) {	// TODO: delete -1 and +1 (also line 421, 434)
+				endEffector[i+1]->setDesPosition(desPosition[i]);
+				endEffector[i+1]->setDesRotation(desRotation[i]);
 			}
 			
 			if (!calibratedAvatar) {
@@ -431,7 +431,7 @@ namespace {
 				calibratedAvatar = true;
 			}
 			
-			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
+			for (int i = 0; i < numOfEndEffectors-1; ++i) executeMovement(i+1);
 			
 		} else {
 			currentFile++;
@@ -685,7 +685,8 @@ namespace {
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
 		
-		endEffector = new EndEffector*[5];
+		endEffector = new EndEffector*[numOfEndEffectors];
+		endEffector[head] = new EndEffector(headBoneIndex);
 		endEffector[hip] = new EndEffector(hipBoneIndex);
 		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
 		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);

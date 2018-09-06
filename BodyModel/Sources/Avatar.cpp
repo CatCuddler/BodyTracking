@@ -7,10 +7,6 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
-namespace {
-	const int headBoneIndex = 20;
-}
-
 Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
 	invKin = new InverseKinematics(bones);
 	

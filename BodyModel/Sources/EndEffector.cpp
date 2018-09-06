@@ -66,19 +66,21 @@ void EndEffector::setIKMode(IKMode mode) {
 }
 
 const char* EndEffector::getNameForIndex(const int ID) const {
-	if(ID == hipBoneIndex)				return hipT;
-	else if(ID == leftHandBoneIndex)	return lhC;
-	else if(ID == rightHandBoneIndex)	return rhC;
-	else if(ID == leftFootBoneIndex)	return lfT;
-	else if(ID == rightFootBoneIndex)	return rfT;
+	if (ID == headBoneIndex)			return headTag;
+	else if(ID == hipBoneIndex)			return hipTag;
+	else if(ID == leftHandBoneIndex)	return lHandTag;
+	else if(ID == rightHandBoneIndex)	return rHandTag;
+	else if(ID == leftFootBoneIndex)	return lFootTag;
+	else if(ID == rightFootBoneIndex)	return rFootTag;
 	else return nullptr;
 }
 
 int EndEffector::getIndexForName(const char* name) const {
-	if(std::strcmp(name, hipT) == 0)		return hipBoneIndex;
-	else if(std::strcmp(name, lhC) == 0)	return leftHandBoneIndex;
-	else if(std::strcmp(name, rhC) == 0)	return rightHandBoneIndex;
-	else if(std::strcmp(name, lfT) == 0)	return leftFootBoneIndex;
-	else if(std::strcmp(name, rfT) == 0)	return rightFootBoneIndex;
+	if(std::strcmp(name, headTag) == 0)			return headBoneIndex;
+	else if(std::strcmp(name, hipTag) == 0)		return hipBoneIndex;
+	else if(std::strcmp(name, lHandTag) == 0)	return leftHandBoneIndex;
+	else if(std::strcmp(name, rHandTag) == 0)	return rightHandBoneIndex;
+	else if(std::strcmp(name, lFootTag) == 0)	return leftFootBoneIndex;
+	else if(std::strcmp(name, rFootTag) == 0)	return rightFootBoneIndex;
 	else return -1;
 }
