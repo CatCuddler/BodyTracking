@@ -9,6 +9,10 @@
   variabels below.
 ********************************************************************************/
 
+#include "matrix.h"
+#include "Markov.h"
+#include "kMeans.h"
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -16,9 +20,6 @@
 #include <time.h>
 #include <vector>
 #include <thread>
-#include "matrix.h"
-#include "Markov.h"
-#include "kMeans.h"
 
 // declaration above main for function to be found instead of creating header file
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName);
@@ -332,7 +333,7 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 	for (int jj = 0; jj < hmmTries; jj++) {
 		for (int ii = 0; ii < 6; ii++) {
 			/* use Baum-Welch-Algorithm to train HMM and write it to a file */
-			HMM model(numStates, numEmissions, lrDepth);
+			HMMModel model(numStates, numEmissions, lrDepth);
 			model.trainHMM(sequence.at(ii));
 			if (jj < hmmTries - 1) std::cout << ", ";
 			if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {

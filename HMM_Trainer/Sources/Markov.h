@@ -9,10 +9,11 @@
   Applications in Speech Recognition" by Rabiner, 1989.
 ***********************************************************/
 
+#pragma once
+
 #ifndef MARKOV_H_INCLUDED
 #define MARKOV_H_INCLUDED
 
-#pragma once
 #include <string>
 #include <vector>
 #include <iostream>

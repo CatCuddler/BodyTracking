@@ -6,10 +6,10 @@
   Taken from https://github.com/Reuynil/hmm/blob/master/hmm/matrix.h
 ********************************************************************************/
 
+#pragma once
+
 #ifndef MATRIX_H_INCLUDED
 #define MATRIX_H_INCLUDED
-
-#pragma once
 
 template<typename T>
 T** matrix(T u, int n, int m)
