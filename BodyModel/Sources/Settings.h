@@ -7,8 +7,8 @@ struct DataFile {
 };
 
 namespace {
-	const int numFiles = 7;
-    const char* files[numFiles] = {"walking.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv", "bend_forward.csv"};
+	const int numFiles = 6;
+    const char* files[numFiles] = {"walking.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
 	int currentFile = 0;
 	
 	const float nearNull = 0.0001f;
