@@ -197,7 +197,7 @@ namespace {
 	void executeMovement(int endEffectorID) {
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
-		
+
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
@@ -263,16 +263,16 @@ namespace {
 	}
 	
 	void assignControllerAndTracker() {
-		VrPoseState controller;
+		VrPoseState vrDevice;
 		
 		// Get indices for VR devices
 		for (int i = 0; i < 16; ++i) {
-			controller = VrInterface::getController(i);
+			vrDevice = VrInterface::getController(i);
 			
-			vec3 trackerPos = controller.vrPose.position;
+			vec3 trackerPos = vrDevice.vrPose.position;
 			vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
 			
-			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
+			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
 				if (trackerPos.y() < currentUserHeight / 3) {
 					// Foot tracker
 					if (trackerTransPos.x() > 0) {
@@ -287,7 +287,7 @@ namespace {
 					endEffector[hip]->setDeviceIndex(i);
 					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
 				}
-			} else if (controller.trackedDevice == TrackedDevice::Controller) {
+			} else if (vrDevice.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
 				if (trackerTransPos.x() > 0) {
 					endEffector[leftHand]->setDeviceIndex(i);
@@ -297,6 +297,10 @@ namespace {
 					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
 				}
 			}
+			
+			// HMD
+			endEffector[head]->setDeviceIndex(0);
+			//log(Info, "head: %i -> %i", endEffector[head]->getDeviceIndex(), i);
 		}
 	}
 	
@@ -363,15 +367,25 @@ namespace {
 
 		if (!controllerButtonsInitialized) initButtons();
 		
-		VrPoseState controller;
+		VrPoseState vrDevice;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			if (endEffector[i]->getDeviceIndex() != -1) {
-				controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
-				
-				// Get controller position and rotation
-				endEffector[i]->setDesPosition(controller.vrPose.position);
-				endEffector[i]->setDesRotation(controller.vrPose.orientation);
-				
+
+				if (i == head) {
+					SensorState state = VrInterface::getSensorState(0);
+
+					// Get HMD position and rotation
+					endEffector[i]->setDesPosition(state.pose.vrPose.position);
+					endEffector[i]->setDesRotation(state.pose.vrPose.orientation);
+
+				} else {
+					vrDevice = VrInterface::getController(endEffector[i]->getDeviceIndex());
+
+					// Get VR device position and rotation
+					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
+					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+				}
+
 				executeMovement(i);
 			}
 		}
@@ -422,10 +436,10 @@ namespace {
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles && logger->readData(numOfEndEffectors-1, files[currentFile], desPosition, desRotation, scaleFactor)) {
-			for (int i = 0; i < numOfEndEffectors-1; ++i) {	// TODO: delete -1 and +1 (also line 421, 434)
-				endEffector[i+1]->setDesPosition(desPosition[i]);
-				endEffector[i+1]->setDesRotation(desRotation[i]);
+		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				endEffector[i]->setDesPosition(desPosition[i]);
+				endEffector[i]->setDesRotation(desRotation[i]);
 			}
 			
 			if (!calibratedAvatar) {
@@ -435,7 +449,7 @@ namespace {
 				calibratedAvatar = true;
 			}
 			
-			for (int i = 0; i < numOfEndEffectors-1; ++i) executeMovement(i+1);
+			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
 			
 		} else {
 			currentFile++;
