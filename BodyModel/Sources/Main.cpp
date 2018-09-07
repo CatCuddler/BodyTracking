@@ -189,9 +189,8 @@ namespace {
 		mat4 sollRot, istRot = desRotation[i].matrix();
 		BoneNode* bone = avatar->getBoneWithIndex(tracker[i]->boneIndex);
 		
-		sollRot = initRot.rotated(bone->getOrientation()).matrix();
+		sollRot = bone->getOrientation().matrix();
 		sollPos = bone->getPosition();
-		sollPos = initTrans * vec4(sollPos.x(), sollPos.y(), sollPos.z(), 1);
 		
 		tracker[i]->offsetPosition = (mat4::Translation(istPos.x(), istPos.y(), istPos.z()) * sollRot.Transpose()).Invert() * mat4::Translation(sollPos.x(), sollPos.y(), sollPos.z()) * vec4(0, 0, 0, 1);
 		tracker[i]->offsetRotation = matrixToQuaternion(sollRot * istRot.Transpose());
