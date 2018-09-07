@@ -15,6 +15,7 @@
 #include "Avatar.h"
 #include "LivingRoom.h"
 #include "Logger.h"
+#include "HMM.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -31,6 +32,8 @@ namespace {
 	const int numOfEndEffectors = 6;
 	
 	Logger* logger;
+	
+	HMM* hmm;
 	
 	double startTime;
 	double lastTime;
@@ -200,6 +203,8 @@ namespace {
 
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
+		
+		hmm->recordMovement(*endEffector[endEffectorID], avatar->getHeight());
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
@@ -702,6 +707,8 @@ namespace {
 		
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
+		
+		hmm = new HMM();
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
 		endEffector[head] = new EndEffector(headBoneIndex);
