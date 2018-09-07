@@ -673,9 +673,9 @@ namespace {
 		initTransInv = initTrans.Invert();
 		
 		// Set camera initial position and orientation
-		cameraPos = vec3(3.0, 3.5, 0.3);
+		cameraPos = vec3(2.2, 4.5, 0.3);
 		Kore::Quaternion q1(vec3(0.0f, 1.0f, 0.0f), Kore::pi / 2.0f);
-		Kore::Quaternion q2(vec3(1.0f, 0.0f, 0.0f), -Kore::pi / 6.0f);
+		Kore::Quaternion q2(vec3(1.0f, 0.0f, 0.0f), -Kore::pi / 4.0f);
 		camUp = q2.matrix() * camUp;
 		camRight = q1.matrix() * camRight;
 		q2.rotate(q1);
