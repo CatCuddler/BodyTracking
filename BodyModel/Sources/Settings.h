@@ -1,11 +1,5 @@
 #pragma once
 
-struct DataFile {
-	const char* positionDataFilename;
-	
-	DataFile(const char* position, float scale = 1.0f) : positionDataFilename(position) {}
-};
-
 namespace {
 	const int numFiles = 6;
     const char* files[numFiles] = {"walking.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
