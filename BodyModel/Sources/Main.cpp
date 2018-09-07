@@ -28,6 +28,7 @@ using namespace Kore::Graphics4;
 
 namespace {
 	EndEffector** endEffector;
+	const int numOfEndEffectors = 6;
 	
 	Logger* logger;
 	
