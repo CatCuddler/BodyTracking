@@ -204,7 +204,9 @@ namespace {
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
-		hmm->recordMovement(*endEffector[endEffectorID], avatar->getHeight());
+		// Save data to either train hmm or to recognize a movement
+		// TODO: why dont we use calibrated data? (finalRot, finalPos)
+		if (hmm->hmmActive()) hmm->recordMovement(endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
@@ -335,6 +337,24 @@ namespace {
 			} else {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
+			}
+			
+			// HMM
+			if(hmm->isRecordingActive()) {
+				// Recording a movement
+				hmm->recording = !hmm->recording;
+				if (hmm->recording) hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				else hmm->stopRecording();
+			} else if(hmm->isRecognitionActive()) {
+				// Recognizing a movement
+				hmm->recognizing = !hmm->recognizing;
+				if (hmm->recognizing) {
+					hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				} else {
+					bool correct = hmm->stopRecognition();
+					if (correct) Audio1::play(correctSound);
+					else Audio1::play(wrongSound);
+				}
 			}
 		}
 	}

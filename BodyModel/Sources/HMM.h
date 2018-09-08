@@ -8,15 +8,27 @@
 class HMM {
 	
 private:
-	bool record = false;
-	bool recognition = false;
+	const bool record = false;
+	const bool recognition = false;
+	
+	void init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	
 public:
 	HMM();
 	
-	void recordMovement(EndEffector& endEffector, float currentUserHeight);
+	bool isRecordingActive();
+	bool isRecognitionActive();
 	
-	void startRecognition(EndEffector& hmd);
+	bool recording = false;
+	bool recognizing = false;
+	
+	void startRecord(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
+	void stopRecord();
+	
+	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	bool stopRecognition();
+	
+	bool hmmActive();
+	void recordMovement(const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
 };
