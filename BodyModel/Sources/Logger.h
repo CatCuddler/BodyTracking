@@ -12,9 +12,7 @@
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
-	std::fstream positionDataOutputFile;
-	std::stringstream positionDataPath;
+	std::fstream logDataOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
 	std::fstream evaluationDataOutputFile;
@@ -25,15 +23,14 @@ private:
 	std::stringstream evaluationConfigPath;
 	
 	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
-	
+	std::fstream logDataInputFile;
 	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag);
 	
 public:
 	Logger();
 	~Logger();
 	
-	void startLogger();
+	void startLogger(const char* fileName);
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	

@@ -333,7 +333,7 @@ namespace {
 			
 			if (logRawData) {
 				Audio1::play(startRecordingSound);
-				logger->startLogger();
+				logger->startLogger("logData");
 			} else {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
@@ -343,17 +343,30 @@ namespace {
 			if(hmm->isRecordingActive()) {
 				// Recording a movement
 				hmm->recording = !hmm->recording;
-				if (hmm->recording) hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
-				else hmm->stopRecording();
+				if (hmm->recording) {
+					Kore::log(Kore::Info, "Start recording data for HMM");
+					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				} else {
+					Kore::log(Kore::Info, "Stop recording data for HMM");
+					hmm->stopRecording();
+				}
 			} else if(hmm->isRecognitionActive()) {
 				// Recognizing a movement
 				hmm->recognizing = !hmm->recognizing;
 				if (hmm->recognizing) {
+					Audio1::play(startRecognitionSound);
+					log(Info, "Start recognizing the motion");
 					hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 				} else {
+					log(Info, "Stop recognizing the motion");
 					bool correct = hmm->stopRecognition();
-					if (correct) Audio1::play(correctSound);
-					else Audio1::play(wrongSound);
+					if (correct) {
+						log(Info, "The movement is correct!");
+						Audio1::play(correctSound);
+					} else {
+						log(Info, "The movement is wrong");
+						Audio1::play(wrongSound);
+					}
 				}
 			}
 		}
@@ -728,7 +741,7 @@ namespace {
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
 		
-		hmm = new HMM();
+		hmm = new HMM(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
 		endEffector[head] = new EndEffector(headBoneIndex);

@@ -9,33 +9,33 @@ Logger::Logger() {
 }
 
 Logger::~Logger() {
-	positionDataOutputFile.close();
-	positionDataOutputFile.close();
+	logDataOutputFile.close();
+	logDataInputFile.close();
 }
 
-void Logger::startLogger() {
+void Logger::startLogger(const char* fileName) {
 	time_t t = time(0);   // Get time now
 	
-	positionDataPath.str(std::string());
-	positionDataPath << positionData << "_" << t << ".csv";
+	std::stringstream positionDataPath;
+	positionDataPath << fileName << "_" << t << ".csv";
 	
-	positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-	positionDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
-	positionDataOutputFile.flush();
+	logDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
+	logDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
+	logDataOutputFile.flush();
 	
 	log(Kore::Info, "Start logging");
 }
 
 void Logger::endLogger() {
-	positionDataOutputFile.close();
+	logDataOutputFile.close();
 	
 	log(Kore::Info, "Stop logging!");
 }
 
 void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save positional and rotation data
-	positionDataOutputFile << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
-	positionDataOutputFile.flush();
+	logDataOutputFile << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+	logDataOutputFile.flush();
 }
 
 void Logger::startEvaluationLogger() {
@@ -93,7 +93,7 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag) {
 	int column = 0;
 	
-	if (std::getline(positionDataInputFile, str, '\n')) {
+	if (std::getline(logDataInputFile, str, '\n')) {
 		std::stringstream ss;
 		ss.str(str);
 		std::string item;
@@ -127,14 +127,14 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 	std::string str;
 	bool success = false;
 	
-	if (!positionDataInputFile.is_open()) {
-		positionDataInputFile.open(filename);
+	if (!logDataInputFile.is_open()) {
+		logDataInputFile.open(filename);
 		log(Kore::Info, "Read data from %s", filename);
 	}
 	
 	// Skip header
 	if(currLineNumber == 0) {
-		std::getline(positionDataInputFile, str, '\n');
+		std::getline(logDataInputFile, str, '\n');
 		++currLineNumber;
 	}
 	
@@ -153,8 +153,8 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 		}
 	}
 	
-	if (positionDataInputFile.eof()) {
-		positionDataInputFile.close();
+	if (logDataInputFile.eof()) {
+		logDataInputFile.close();
 		currLineNumber = 0;
 	}
 	
