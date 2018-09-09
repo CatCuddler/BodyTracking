@@ -32,11 +32,13 @@ HMM::HMM() {
 }
 
 bool HMM::isRecordingActive() {
-	return record;
+	// Recording is only possible while there is no recognition in progress
+	return (record && !recognition);
 }
 
 bool HMM::isRecognitionActive() {
-	return recognition;
+	// Recognition is only possible while there is no recording in progress
+	return (recognition && !record);
 }
 
 void HMM::init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
