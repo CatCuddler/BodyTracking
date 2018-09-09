@@ -11,15 +11,16 @@ Logger::Logger() {
 Logger::~Logger() {
 	logDataOutputFile.close();
 	logDataInputFile.close();
+	hmmDataOutputFile.close();
 }
 
 void Logger::startLogger(const char* fileName) {
 	time_t t = time(0);   // Get time now
 	
-	std::stringstream positionDataPath;
-	positionDataPath << fileName << "_" << t << ".csv";
+	std::stringstream logFileName;
+	logFileName << fileName << "_" << t << ".csv";
 	
-	logDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
+	logDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
 	logDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
 	logDataOutputFile.flush();
 	
@@ -29,13 +30,36 @@ void Logger::startLogger(const char* fileName) {
 void Logger::endLogger() {
 	logDataOutputFile.close();
 	
-	log(Kore::Info, "Stop logging!");
+	log(Kore::Info, "Stop logging");
 }
 
 void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save positional and rotation data
 	logDataOutputFile << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
 	logDataOutputFile.flush();
+}
+
+void Logger::startHMMLogger(const char* fileName, int num) {
+	std::stringstream logFileName;
+	logFileName << fileName << "_" << num << ".csv";
+	
+	hmmDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
+	hmmDataOutputFile << "time;tag;posX;posY;posZ\n";
+	hmmDataOutputFile.flush();
+	
+	log(Kore::Info, "Start logging data for HMM");
+}
+
+void Logger::endHMMLogger() {
+	hmmDataOutputFile.close();
+	
+	log(Kore::Info, "Stop logging data for HMM");
+}
+
+void Logger::saveHMMData(float lastTime, const char* tag, Kore::vec3 pos) {
+	// Save positional and rotation data
+	hmmDataOutputFile << lastTime << ";" << tag << ";" << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
+	hmmDataOutputFile.flush();
 }
 
 void Logger::startEvaluationLogger() {

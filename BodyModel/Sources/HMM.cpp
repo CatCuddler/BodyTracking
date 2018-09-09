@@ -19,6 +19,8 @@ namespace {
 	
 	float currentUserHeight;
 	
+	int curentFileNumber = 0;
+	
 	const int numOfDataPoints = 6;
 	int dataPointNumber; // x-th point of data collected in current recording/recognition
 	
@@ -27,8 +29,8 @@ namespace {
 	
 }
 
-HMM::HMM() {
-	
+HMM::HMM(Logger& logger) : logger(logger) {
+	curentFileNumber = 0;
 }
 
 bool HMM::isRecordingActive() {
@@ -50,18 +52,17 @@ void HMM::init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 	currentUserHeight = hmdPosition.y();
 }
 
-void HMM::startRecord(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
+void HMM::startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 	if (record) {
 		init(hmdPosition, hmdRotation);
-//		logger->openFile();
-		Kore::log(Kore::Info, "Start recording data for HMM");
+		logger.startHMMLogger(hmmName.c_str(), curentFileNumber);
+		curentFileNumber++;
 	}
 }
 
-void HMM::stopRecord() {
+void HMM::stopRecording() {
 	if (record) {
-//		logger->closeFile();
-		Kore::log(Kore::Info, "Stop recording data for HMM");
+		logger.endHMMLogger();
 	}
 }
 
@@ -85,29 +86,32 @@ bool HMM::stopRecognition() {
 				KMeans kmeans(hmmPath, hmmName + "_" + to_string(ii));
 				kmeanVector.at(ii) = kmeans;
 				trackersPresent[ii] = true;
-			}
-			catch (std::invalid_argument) {
+			} catch (std::invalid_argument) {
 				trackersPresent[ii] = false;
-				Kore::log(Kore::Info, "Can't find tracker file");
+				Kore::log(Kore::Error, "Can't find tracker file");
 			}
 		}
-		vector<bool> trackerMovementRecognised(numOfDataPoints, true); // store which trackers were recognised as the correct movement
-		for (int ii = 0; ii < numOfDataPoints; ii++) { // check all trackers
-			if (!recognitionPoints.at(ii).empty() && trackersPresent[ii]) { // make sure the tracker is currently present and there is a HMM for it
-				vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints())); // clustering data
-				HMMModel model(hmmPath, hmmName + "_" + to_string(ii)); // reading HMM
-				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin())); // calculating probability and comparing with probability threshold as well as applying restfix
+		// Store which trackers were recognised as the correct
+		vector<bool> trackerMovementRecognised(numOfDataPoints, true);
+		for (int ii = 0; ii < numOfDataPoints; ii++) {
+			// Make sure the tracker is currently present and there is a HMM for it
+			if (!recognitionPoints.at(ii).empty() && trackersPresent[ii]) {
+				// Clustering data
+				vector<int> clusteredPoints = kmeanVector.at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(ii).getAveragePoints()));
+				// Reading HMM
+				HMMModel model(hmmPath, hmmName + "_" + to_string(ii));
+				// Calculating the probability and comparing with probability threshold as well as applying restfix
+				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 //			logger->analyseHMM(hmmName.c_str(), model.calculateProbability(clusteredPoints), false);
 			}
 		}
 		
-		//logger->analyseHMM(hmmName.c_str(), 0, true);
+//		logger->analyseHMM(hmmName.c_str(), 0, true);
 		
-		if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) { // all (present) trackers were recognised as correct
-			Kore::log(Kore::Info, "The movement is correct!");
+		if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+			// All (present) trackers were recognised as correct
 			return true;
 		} else {
-			Kore::log(Kore::Info, "The movement is wrong!");
 			return false;
 		}
 	}
@@ -119,7 +123,7 @@ bool HMM::hmmActive() {
 	else return false;
 }
 
-void HMM::recordMovement(const char* name, Kore::vec3 position, Kore::Quaternion rotation) {
+void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation) {
 	// Either recording or recognition is active
 	if (recording || recognizing) {
 		
@@ -132,7 +136,7 @@ void HMM::recordMovement(const char* name, Kore::vec3 position, Kore::Quaternion
 			// Data is recorded
 			// TODO: Why do we need 1.8?
 			Kore::vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
-//			logger->saveData(lastTime, identifier, hmmPos);
+			logger.saveHMMData(lastTime, name, hmmPos);
 		}
 		
 		if (recognition) { // data is stored internally for evaluation at the end of recognition

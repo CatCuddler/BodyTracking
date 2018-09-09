@@ -12,7 +12,10 @@
 class Logger {
 	
 private:
+	// Output file to save raw data
 	std::fstream logDataOutputFile;
+	// Output file to save data for hmm
+	std::fstream hmmDataOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
 	std::fstream evaluationDataOutputFile;
@@ -38,6 +41,11 @@ public:
 	void endEvaluationLogger();
 	
 	void saveEvaluationData(Avatar *avatar);
+	
+	// HMM
+	void startHMMLogger(const char* fileName, int num);
+	void endHMMLogger();
+	void saveHMMData(float lastTime, const char* tag, Kore::vec3 rawPos);
 	
 	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };

@@ -206,7 +206,7 @@ namespace {
 		
 		// Save data to either train hmm or to recognize a movement
 		// TODO: why dont we use calibrated data? (finalRot, finalPos)
-		if (hmm->hmmActive()) hmm->recordMovement(endEffector[endEffectorID]->getName(), desPosition, desRotation);
+		if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
@@ -344,10 +344,8 @@ namespace {
 				// Recording a movement
 				hmm->recording = !hmm->recording;
 				if (hmm->recording) {
-					Kore::log(Kore::Info, "Start recording data for HMM");
 					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 				} else {
-					Kore::log(Kore::Info, "Stop recording data for HMM");
 					hmm->stopRecording();
 				}
 			} else if(hmm->isRecognitionActive()) {

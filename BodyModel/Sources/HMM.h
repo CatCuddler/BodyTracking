@@ -1,20 +1,23 @@
 #pragma once
 
 #include "EndEffector.h"
-
+#include "Logger.h"
 #include "kMeans.h"
 #include "Markov.h"
 
 class HMM {
 	
 private:
+	// Either record or recognition can be true
 	const bool record = false;
 	const bool recognition = false;
+	
+	Logger& logger;
 	
 	void init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	
 public:
-	HMM();
+	HMM(Logger& logger);
 	
 	bool isRecordingActive();
 	bool isRecognitionActive();
@@ -22,13 +25,13 @@ public:
 	bool recording = false;
 	bool recognizing = false;
 	
-	void startRecord(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
-	void stopRecord();
+	void startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
+	void stopRecording();
 	
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	bool stopRecognition();
 	
 	bool hmmActive();
-	void recordMovement(const char* name, Kore::vec3 position, Kore::Quaternion rotation);
+	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
 };
