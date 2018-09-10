@@ -128,6 +128,7 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 	if (recording || recognizing) {
 		
 		// TODO: why dont we also use the rotation?
+		// TODO: why dont we use calibrated data? (finalRot, finalPos)
 		transitionX = position.x() - startX;
 		transitionY = position.y();
 		transitionZ = position.z() - startZ;

@@ -205,7 +205,6 @@ namespace {
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		// Save data to either train hmm or to recognize a movement
-		// TODO: why dont we use calibrated data? (finalRot, finalPos)
 		if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatar) {
