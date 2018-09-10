@@ -143,6 +143,7 @@ public:
 	
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
+	Kore::mat4 Mmirror;
 	
 	long meshesCount;
 	float scale;

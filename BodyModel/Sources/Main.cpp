@@ -88,6 +88,9 @@ namespace {
 	Avatar* avatar;
 	LivingRoom* livingRoom;
 	
+	// Variables to mirror the room and the avatar
+	vec3 mirrorOver(6.053f, 0.0f, -0.15);
+	
 	mat4 initTrans;
 	mat4 initTransInv;
 	Kore::Quaternion initRot;
@@ -173,7 +176,9 @@ namespace {
 		livingRoom->setLights(lightCount_living_room, lightPosLocation_living_room);
 		Graphics4::setMatrix(vLocation_living_room, V);
 		Graphics4::setMatrix(pLocation_living_room, P);
-		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room);
+		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, false);
+		
+		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -182,6 +187,15 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
+		avatar->animate(tex);
+		
+		// Mirror the avatar
+		mat4 initTransMirror = initTrans;
+		Kore::Quaternion rot = initRot;
+		rot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
+		initTransMirror = mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		
+		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
 	}
 	
@@ -693,9 +707,9 @@ namespace {
 		loadAvatarShader();
 		
 #ifdef KORE_STEAMVR
-		avatar = new Avatar("avatar/avatar_skeleton_headless.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_headless.ogex", "avatar/", structure);
 #else
-		avatar = new Avatar("avatar/avatar_skeleton.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
 #endif
 		
 		initRot = Kore::Quaternion(0, 0, 0, 1);
@@ -708,9 +722,9 @@ namespace {
 		initTransInv = initTrans.Invert();
 		
 		// Set camera initial position and orientation
-		cameraPos = vec3(2.2, 4.5, 0.3);
+		cameraPos = vec3(2.6, 1.8, 0.0);
 		Kore::Quaternion q1(vec3(0.0f, 1.0f, 0.0f), Kore::pi / 2.0f);
-		Kore::Quaternion q2(vec3(1.0f, 0.0f, 0.0f), -Kore::pi / 4.0f);
+		Kore::Quaternion q2(vec3(1.0f, 0.0f, 0.0f), -Kore::pi / 8.0f);
 		camUp = q2.matrix() * camUp;
 		camRight = q1.matrix() * camRight;
 		q2.rotate(q1);
@@ -732,7 +746,10 @@ namespace {
 			Kore::Quaternion livingRoomRot = Kore::Quaternion(0, 0, 0, 1);
 			livingRoomRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 			livingRoomRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
-			livingRoom->M = mat4::Translation(-0.7, 0, 0) * livingRoomRot.matrix().Transpose();
+			livingRoom->M = mat4::Translation(0, 0, 0) * livingRoomRot.matrix().Transpose();
+			
+			livingRoomRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
+			livingRoom->Mmirror = mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
 		logger = new Logger();
