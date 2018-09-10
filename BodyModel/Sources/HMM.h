@@ -1,27 +1,37 @@
 #pragma once
 
-#include <vector>
+#include "EndEffector.h"
+#include "Logger.h"
+#include "kMeans.h"
+#include "Markov.h"
 
 class HMM {
 	
 private:
-	const char* hmmPath = "../Tracking/";
-	const char* hmmName = "Yoga_Krieger";
+	// Either record or recognition can be true
+	const bool record = false;
+	const bool recognition = false;
 	
-	// Initial tracked position as base for rotation of any futher data points
-	double startX;
-	double startZ;
-	double startRotCos;
-	double startRotSin;
-	double transitionX;
-	double transitionY;
-	double transitionZ;
-	int dataPointNumber; // x-th point of data collected in current recording/recognition
+	Logger& logger;
 	
-	// Vector of data points logged in real time movement recognition
-	//std::vector<std::vector<Point>> recognitionPoints(6);
+	void init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	
 public:
-	HMM();
+	HMM(Logger& logger);
+	
+	bool isRecordingActive();
+	bool isRecognitionActive();
+	
+	bool recording = false;
+	bool recognizing = false;
+	
+	void startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
+	void stopRecording();
+	
+	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
+	bool stopRecognition();
+	
+	bool hmmActive();
+	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
 };

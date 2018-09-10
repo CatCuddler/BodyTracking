@@ -42,8 +42,6 @@ const char* const rHandTag = "rHand";
 const char* const lFootTag = "lFoot";
 const char* const rFootTag = "rFoot";
 
-const int numOfEndEffectors = 6;
-
 class EndEffector {
 public:
 	EndEffector(int boneIndex, IKMode ikMode = JT);
@@ -77,7 +75,7 @@ private:
 	Kore::Quaternion offsetRotation;
 	
 	int boneIndex;		// As defined in .ogex node (e.g. nodeX ==> boneIndex = X)
-	const char* name;	// Name of the end-effector (e.g. lhC)
+	const char* name;	// Name of the end-effector (e.g. lHand)
 	int deviceID;		// ID of the VR device
 	IKMode ikMode;
 	

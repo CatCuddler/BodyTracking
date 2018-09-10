@@ -6,6 +6,8 @@
 create HMMs and calculate probabilities of new data sets
 ********************************************************************************/
 
+#include "kMeans.h"
+
 #include <vector>
 #include <string>
 #include <math.h>
@@ -15,7 +17,6 @@ create HMMs and calculate probabilities of new data sets
 #include <stdlib.h>
 #include <fstream>
 #include <time.h>
-#include "kMeans.h"
 
 // publicly available tracker names to represent them as string and not only as number. Mainly used for console output 
 const string trackerNames[6] = { "Head Mounted Display", "Left Hand Controller", "Right Hand Controller", "Back Tracker", "Left Foot Tracker", "Right Foot Tracker" };

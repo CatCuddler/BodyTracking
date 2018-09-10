@@ -12,9 +12,10 @@
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
-	std::fstream positionDataOutputFile;
-	std::stringstream positionDataPath;
+	// Output file to save raw data
+	std::fstream logDataOutputFile;
+	// Output file to save data for hmm
+	std::fstream hmmDataOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
 	std::fstream evaluationDataOutputFile;
@@ -25,15 +26,14 @@ private:
 	std::stringstream evaluationConfigPath;
 	
 	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
-	
+	std::fstream logDataInputFile;
 	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag);
 	
 public:
 	Logger();
 	~Logger();
 	
-	void startLogger();
+	void startLogger(const char* fileName);
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
@@ -41,6 +41,11 @@ public:
 	void endEvaluationLogger();
 	
 	void saveEvaluationData(Avatar *avatar);
+	
+	// HMM
+	void startHMMLogger(const char* fileName, int num);
+	void endHMMLogger();
+	void saveHMMData(float lastTime, const char* tag, Kore::vec3 rawPos);
 	
 	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };

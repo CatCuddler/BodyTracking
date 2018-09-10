@@ -15,6 +15,7 @@
 #include "Avatar.h"
 #include "LivingRoom.h"
 #include "Logger.h"
+#include "HMM.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -28,8 +29,11 @@ using namespace Kore::Graphics4;
 
 namespace {
 	EndEffector** endEffector;
+	const int numOfEndEffectors = 6;
 	
 	Logger* logger;
+	
+	HMM* hmm;
 	
 	double startTime;
 	double lastTime;
@@ -214,6 +218,10 @@ namespace {
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
+		// Save data to either train hmm or to recognize a movement
+		// TODO: why dont we use calibrated data? (finalRot, finalPos)
+		if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
+		
 		if (calibratedAvatar) {
 			// Add offset to endeffector
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
@@ -339,10 +347,39 @@ namespace {
 			
 			if (logRawData) {
 				Audio1::play(startRecordingSound);
-				logger->startLogger();
+				logger->startLogger("logData");
 			} else {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
+			}
+			
+			// HMM
+			if(hmm->isRecordingActive()) {
+				// Recording a movement
+				hmm->recording = !hmm->recording;
+				if (hmm->recording) {
+					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				} else {
+					hmm->stopRecording();
+				}
+			} else if(hmm->isRecognitionActive()) {
+				// Recognizing a movement
+				hmm->recognizing = !hmm->recognizing;
+				if (hmm->recognizing) {
+					Audio1::play(startRecognitionSound);
+					log(Info, "Start recognizing the motion");
+					hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				} else {
+					log(Info, "Stop recognizing the motion");
+					bool correct = hmm->stopRecognition();
+					if (correct) {
+						log(Info, "The movement is correct!");
+						Audio1::play(correctSound);
+					} else {
+						log(Info, "The movement is wrong");
+						Audio1::play(wrongSound);
+					}
+				}
 			}
 		}
 	}
@@ -718,6 +755,8 @@ namespace {
 		
 		logger = new Logger();
 		if (eval) logger->startEvaluationLogger();
+		
+		hmm = new HMM(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
 		endEffector[head] = new EndEffector(headBoneIndex);

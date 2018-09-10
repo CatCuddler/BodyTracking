@@ -7,15 +7,16 @@
   Applications in Speech Recognition" by Rabiner, 1989.
 ********************************************************************************/
 
-#pragma once
 #include "Markov.h"
 #include "matrix.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <time.h>
 #include <algorithm>    // std::min
 #include <cmath>
+
 using std::ofstream;
 using std::ifstream;
 using std::cout;
