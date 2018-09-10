@@ -71,6 +71,11 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianFoot->getPositionError();
 			errorRot = jacobianFoot->getRotationError();
+		} else if (targetBone->nodeIndex == headBoneIndex) {
+			deltaTheta = jacobianHead->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
+			errorPos = jacobianHead->getPositionError();
+			errorRot = jacobianHead->getRotationError();
+			
 		}
 		
 		// check if ik stucked (runned in extrema)
@@ -221,11 +226,18 @@ void InverseKinematics::setJointConstraints() {
 	float tolerance = getRadian(15);
 	
 	// Head
+	// TODO: improve constraints
 	nodeLeft = bones[headBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[xMax] = getRadian(90) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[yMax] = getRadian(90) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[zMax] = getRadian(90) + tolerance;
+	nodeLeft->constrain[xMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[yMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[zMax] = getRadian(180) + tolerance;
+	
+	nodeLeft = bones[headBoneIndex - 2];
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain[xMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[yMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[zMax] = getRadian(180) + tolerance;
 	
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];

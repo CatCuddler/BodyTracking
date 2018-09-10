@@ -30,6 +30,11 @@ private:
 	static const bool footWithOrientation = withOrientation;
 	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
 	
+	static const int headJointDOFs = 6;
+	static const bool headWithOrientation = withOrientation;
+	Jacobian<headJointDOFs, headWithOrientation>* jacobianHead = new Jacobian<headJointDOFs, headWithOrientation>;
+
+	
 	float getRadian(float degree);
 	
 	void updateBone(BoneNode* bone);
