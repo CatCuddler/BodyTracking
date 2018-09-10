@@ -89,7 +89,7 @@ namespace {
 	LivingRoom* livingRoom;
 	
 	// Variables to mirror the room and the avatar
-	vec3 mirrorOver(6.053f, 0.0f, -0.15);
+	vec3 mirrorOver(6.055f, 0.0f, -0.15);
 	
 	mat4 initTrans;
 	mat4 initTransInv;
@@ -193,7 +193,9 @@ namespace {
 		mat4 initTransMirror = initTrans;
 		Kore::Quaternion rot = initRot;
 		rot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
-		initTransMirror = mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		mat4 mirrorMatrix = mat4::Identity();
+		mirrorMatrix.Set(2, 2 , -1);
+		initTransMirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
 		
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
