@@ -4,6 +4,8 @@
 
 #include <Kore/Log.h>
 
+#include <algorithm>
+
 namespace {
 	std::string hmmPath = "../Tracking/";
 	std::string hmmName = "Yoga_Krieger";
