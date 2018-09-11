@@ -13,10 +13,10 @@ class Logger {
 	
 private:
 	// Output file to save raw data
-	std::fstream logDataOutputFile;
+	std::ofstream logDataOutputFile;
 	// Output file to save data for hmm
-	std::fstream hmmDataOutputFile;
-	std::fstream hmmAnalysisOutputFile;
+	std::ofstream hmmDataOutputFile;
+	std::ofstream hmmAnalysisOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
 	std::fstream evaluationDataOutputFile;
@@ -45,8 +45,8 @@ public:
 	
 	// HMM
 	void startHMMLogger(const char* filename, int num);
-	void endHMMLogger();
-	void saveHMMData(float lastTime, const char* tag, Kore::vec3 rawPos);
+	void endHMMLogger(int lineCount);
+	void saveHMMData(const char* tag, float lastTime, Kore::vec3 pos);
 	void analyseHMM(const char* filename, double probability, bool newLine);
 	
 	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);

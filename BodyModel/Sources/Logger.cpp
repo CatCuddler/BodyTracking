@@ -7,6 +7,7 @@
 
 namespace {
 	bool initHmmAnalysisData = false;
+	int hmmHeaderLength;
 }
 
 Logger::Logger() {
@@ -48,22 +49,32 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	std::stringstream logFileName;
 	logFileName << filename << "_" << num << ".csv";
 	
-	hmmDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
-	hmmDataOutputFile << "time;tag;posX;posY;posZ\n";
+	hmmDataOutputFile.open(logFileName.str(), std::ios::out);
+	const char* hmmHeader = "tag;time;posX;posY;posZ\n";
+	hmmDataOutputFile << hmmHeader;
+	
+	// Placeholder for line number that will be overwritten when the file is closed
+	hmmDataOutputFile << "N=        ;;;;\n";
+	hmmHeaderLength = (int)strlen(hmmHeader);
+	
 	hmmDataOutputFile.flush();
 	
 	log(Kore::Info, "Start logging data for HMM");
 }
 
-void Logger::endHMMLogger() {
+void Logger::endHMMLogger(int lineCount) {
+	hmmDataOutputFile.seekp(hmmHeaderLength);
+	// Store number of lines / datapoints
+	hmmDataOutputFile << "N=" << lineCount;
+	hmmDataOutputFile.flush();
 	hmmDataOutputFile.close();
 	
 	log(Kore::Info, "Stop logging data for HMM");
 }
 
-void Logger::saveHMMData(float lastTime, const char* tag, Kore::vec3 pos) {
+void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos) {
 	// Save positional and rotation data
-	hmmDataOutputFile << lastTime << ";" << tag << ";" << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
+	hmmDataOutputFile << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
 	hmmDataOutputFile.flush();
 }
 

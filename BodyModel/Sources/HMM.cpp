@@ -22,6 +22,7 @@ namespace {
 	float currentUserHeight;
 	
 	int curentFileNumber = 0;
+	int curentLineNumber = 0;
 	
 	const int numOfDataPoints = 6;
 	int dataPointNumber; // x-th point of data collected in current recording/recognition
@@ -52,6 +53,8 @@ void HMM::init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 	startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
 	startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
 	currentUserHeight = hmdPosition.y();
+	
+	curentLineNumber = 0;
 }
 
 void HMM::startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
@@ -64,7 +67,7 @@ void HMM::startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 
 void HMM::stopRecording() {
 	if (record) {
-		logger.endHMMLogger();
+		logger.endHMMLogger(curentLineNumber);
 	}
 }
 
@@ -129,6 +132,8 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 	// Either recording or recognition is active
 	if (recording || recognizing) {
 		
+		curentLineNumber++;
+		
 		// TODO: why dont we also use the rotation?
 		// TODO: why dont we use calibrated data? (finalRot, finalPos)
 		transitionX = position.x() - startX;
@@ -139,7 +144,7 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 			// Data is recorded
 			// TODO: Why do we need 1.8?
 			Kore::vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
-			logger.saveHMMData(lastTime, name, hmmPos);
+			logger.saveHMMData(name, lastTime, hmmPos);
 		}
 		
 		if (recognition) { // data is stored internally for evaluation at the end of recognition
