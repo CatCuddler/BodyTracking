@@ -225,19 +225,25 @@ void InverseKinematics::setJointConstraints() {
 	
 	float tolerance = getRadian(15);
 	
-	// Head
-	// TODO: improve constraints
-	nodeLeft = bones[headBoneIndex - 1];
-	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[yMax] = getRadian(180) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[zMax] = getRadian(180) + tolerance;
-	
+	// Neck
 	nodeLeft = bones[headBoneIndex - 2];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[yMax] = getRadian(180) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(180) - tolerance;		nodeLeft->constrain[zMax] = getRadian(180) + tolerance;
+	nodeLeft->constrain[xMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[xMax] = getRadian(45) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[yMax] = getRadian(45) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[zMax] = getRadian(45) + tolerance;
+	
+	nodeLeft = bones[headBoneIndex - 3];
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain[xMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[xMax] = getRadian(45) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[yMax] = getRadian(45) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[zMax] = getRadian(45) + tolerance;
+	
+	// Upper body
+	nodeLeft = bones[10 - 1];
+	nodeLeft->axes = Kore::vec3(1, 1, 1);
+	nodeLeft->constrain[xMin] = -getRadian(30) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
+	nodeLeft->constrain[yMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[yMax] = getRadian(20) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;
 	
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];
