@@ -321,8 +321,12 @@ namespace {
 		}
 		
 		// HMD
-		SensorState state = VrInterface::getSensorState(0);
-		initEndEffector(head, 0, state.pose.vrPose.position, state.pose.vrPose.orientation);
+		SensorState stateLeftEye = VrInterface::getSensorState(0);
+		SensorState stateRightEye = VrInterface::getSensorState(1);
+		vec3 leftEyePos = stateLeftEye.pose.vrPose.position;
+		vec3 rightEyePos = stateRightEye.pose.vrPose.position;
+		vec3 hmdPosCenter = (leftEyePos + rightEyePos) / 2;
+		initEndEffector(head, 0, hmdPosCenter, stateLeftEye.pose.vrPose.orientation);
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
