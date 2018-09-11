@@ -646,6 +646,7 @@ namespace {
 		structure.add("nor", Float3VertexData);
 		
 		pipeline = new PipelineState();
+		pipeline = new PipelineState();
 		pipeline->inputLayout[0] = &structure;
 		pipeline->inputLayout[1] = nullptr;
 		pipeline->vertexShader = vertexShader;
@@ -709,13 +710,14 @@ namespace {
 		loadAvatarShader();
 		
 #ifdef KORE_STEAMVR
-		avatar = new Avatar("avatar/avatar_headless.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
 #else
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
 #endif
 		
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		
