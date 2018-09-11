@@ -44,7 +44,7 @@ const char* const rFootTag = "rFoot";
 
 class EndEffector {
 public:
-	EndEffector(int boneIndex, IKMode ikMode = JT);
+	EndEffector(int boneIndex, IKMode ikMode = DLS);
 	
 	Kore::vec3 getDesPosition() const;
 	void setDesPosition(Kore::vec3 pos);
