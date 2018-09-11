@@ -245,18 +245,8 @@ namespace {
 	
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::vec3 currentPos;
-			Kore::Quaternion currentRot;
-			
-#ifdef KORE_STEAMVR
-			VrPoseState controller = VrInterface::getController(endEffector[i]->getDeviceIndex());
-			
-			currentPos = controller.vrPose.position;
-			currentRot = controller.vrPose.orientation;
-#else
-			currentPos = endEffector[i]->getDesPosition();
-			currentRot = endEffector[i]->getDesRotation();
-#endif
+			Kore::vec3 currentPos = endEffector[i]->getDesPosition();
+			Kore::Quaternion currentRot = endEffector[i]->getDesRotation();
 			
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 			
@@ -284,6 +274,14 @@ namespace {
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
+	void initEndEffector(int efID, int deviceID, vec3 pos, Quaternion rot) {
+		endEffector[efID]->setDeviceIndex(deviceID);
+		endEffector[efID]->setDesPosition(pos);
+		endEffector[efID]->setDesRotation(rot);
+		
+		log(Info, "%s: %i -> %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
+	}
+	
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
 		
@@ -291,39 +289,40 @@ namespace {
 		for (int i = 0; i < 16; ++i) {
 			vrDevice = VrInterface::getController(i);
 			
-			vec3 trackerPos = vrDevice.vrPose.position;
-			vec4 trackerTransPos = initTransInv * vec4(trackerPos.x(), trackerPos.y(), trackerPos.z(), 1);
+			vec3 devicePos = vrDevice.vrPose.position;
+			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
+			Quaternion deviceRot = vrDevice.vrPose.orientation;
 			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-				if (trackerPos.y() < currentUserHeight / 3) {
+				if (devicePos.y() < currentUserHeight / 3) {
 					// Foot tracker
-					if (trackerTransPos.x() > 0) {
-						endEffector[leftFoot]->setDeviceIndex(i);
+					if (deviceTransPos.x() > 0) {
+						initEndEffector(leftFoot, i, devicePos, deviceRot);
 						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getDeviceIndex(), i);
 					} else {
-						endEffector[rightFoot]->setDeviceIndex(i);
+						initEndEffector(rightFoot, i, devicePos, deviceRot);
 						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getDeviceIndex(), i);
 					}
 				} else {
 					// Hip tracker
-					endEffector[hip]->setDeviceIndex(i);
+					initEndEffector(hip, i, devicePos, deviceRot);
 					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
 				}
 			} else if (vrDevice.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
-				if (trackerTransPos.x() > 0) {
-					endEffector[leftHand]->setDeviceIndex(i);
+				if (deviceTransPos.x() > 0) {
+					initEndEffector(leftHand, i, devicePos, deviceRot);
 					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getDeviceIndex(), i);
 				} else {
-					endEffector[rightHand]->setDeviceIndex(i);
+					initEndEffector(rightHand, i, devicePos, deviceRot);
 					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
 				}
 			}
-			
-			// HMD
-			endEffector[head]->setDeviceIndex(0);
-			//log(Info, "head: %i -> %i", endEffector[head]->getDeviceIndex(), i);
 		}
+		
+		// HMD
+		SensorState state = VrInterface::getSensorState(0);
+		initEndEffector(head, 0, state.pose.vrPose.position, state.pose.vrPose.orientation);
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
