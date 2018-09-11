@@ -274,7 +274,7 @@ namespace {
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
-	void initEndEffector(int efID, int deviceID, vec3 pos, Quaternion rot) {
+	void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
 		endEffector[efID]->setDeviceIndex(deviceID);
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
@@ -291,7 +291,7 @@ namespace {
 			
 			vec3 devicePos = vrDevice.vrPose.position;
 			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
-			Quaternion deviceRot = vrDevice.vrPose.orientation;
+			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
 				if (devicePos.y() < currentUserHeight / 3) {
