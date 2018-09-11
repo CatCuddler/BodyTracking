@@ -104,11 +104,11 @@ bool HMM::stopRecognition() {
 				HMMModel model(hmmPath, hmmName + "_" + to_string(ii));
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-//			logger->analyseHMM(hmmName.c_str(), model.calculateProbability(clusteredPoints), false);
+			logger.analyseHMM(hmmName.c_str(), model.calculateProbability(clusteredPoints), false);
 			}
 		}
 		
-//		logger->analyseHMM(hmmName.c_str(), 0, true);
+		logger.analyseHMM(hmmName.c_str(), 0, true);
 		
 		if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
 			// All (present) trackers were recognised as correct

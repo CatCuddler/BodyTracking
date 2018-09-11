@@ -5,6 +5,10 @@
 #include <Kore/Log.h>
 #include <ctime>
 
+namespace {
+	bool initHmmAnalysisData = false;
+}
+
 Logger::Logger() {
 }
 
@@ -12,13 +16,14 @@ Logger::~Logger() {
 	logDataOutputFile.close();
 	logDataInputFile.close();
 	hmmDataOutputFile.close();
+	hmmAnalysisOutputFile.close();
 }
 
-void Logger::startLogger(const char* fileName) {
+void Logger::startLogger(const char* filename) {
 	time_t t = time(0);   // Get time now
 	
 	std::stringstream logFileName;
-	logFileName << fileName << "_" << t << ".csv";
+	logFileName << filename << "_" << t << ".csv";
 	
 	logDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
 	logDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
@@ -39,9 +44,9 @@ void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRo
 	logDataOutputFile.flush();
 }
 
-void Logger::startHMMLogger(const char* fileName, int num) {
+void Logger::startHMMLogger(const char* filename, int num) {
 	std::stringstream logFileName;
-	logFileName << fileName << "_" << num << ".csv";
+	logFileName << filename << "_" << num << ".csv";
 	
 	hmmDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
 	hmmDataOutputFile << "time;tag;posX;posY;posZ\n";
@@ -60,6 +65,20 @@ void Logger::saveHMMData(float lastTime, const char* tag, Kore::vec3 pos) {
 	// Save positional and rotation data
 	hmmDataOutputFile << lastTime << ";" << tag << ";" << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
 	hmmDataOutputFile.flush();
+}
+
+void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
+	if (!initHmmAnalysisData) {
+		std::stringstream hmmAnalysisPath;
+		hmmAnalysisPath << hmmName << "_analysis.txt";
+		hmmAnalysisOutputFile.open(hmmAnalysisPath.str(), std::ios::out | std::ios::app);
+		initHmmAnalysisData = true;
+	}
+	
+	if (newLine) hmmAnalysisOutputFile << "\n";
+	else hmmAnalysisOutputFile << probability << ";";
+	
+	hmmAnalysisOutputFile.flush();
 }
 
 void Logger::startEvaluationLogger() {

@@ -16,6 +16,7 @@ private:
 	std::fstream logDataOutputFile;
 	// Output file to save data for hmm
 	std::fstream hmmDataOutputFile;
+	std::fstream hmmAnalysisOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
 	std::fstream evaluationDataOutputFile;
@@ -33,7 +34,7 @@ public:
 	Logger();
 	~Logger();
 	
-	void startLogger(const char* fileName);
+	void startLogger(const char* filename);
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
@@ -43,9 +44,10 @@ public:
 	void saveEvaluationData(Avatar *avatar);
 	
 	// HMM
-	void startHMMLogger(const char* fileName, int num);
+	void startHMMLogger(const char* filename, int num);
 	void endHMMLogger();
 	void saveHMMData(float lastTime, const char* tag, Kore::vec3 rawPos);
+	void analyseHMM(const char* filename, double probability, bool newLine);
 	
 	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };
