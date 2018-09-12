@@ -13,6 +13,9 @@ enum IKMode {
 
 // Head
 const int headBoneIndex = 20;
+const int neckBoneIndex = 19;
+// Upper body
+const int upperBack = 10;
 // Hip
 const int hipBoneIndex = 2;
 // Left arm
