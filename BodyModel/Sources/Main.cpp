@@ -124,11 +124,11 @@ namespace {
 			
 			Kore::mat4 M = mat4::Translation(pos.x(), pos.y(), pos.z()) * rot.matrix().Transpose();
 			
-			Kore::Quaternion rot(0, 0, 0, 1);
-			rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+			Kore::Quaternion yRot(0, 0, 0, 1);
+			yRot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
 			mat4 zMirror = mat4::Identity();
 			zMirror.Set(2, 2 , -1);
-			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * M;
+			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * yRot.matrix().Transpose() * M;
 			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				// Render a tracker for both feet and back
