@@ -133,13 +133,17 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				// Render a tracker for both feet and back
 				renderVRDevice(0, M);
+				renderVRDevice(0, mirrorM);
 				// Render local coordinate system
 				renderVRDevice(2, M);
+				renderVRDevice(2, mirrorM);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Render a controller for both hands
 				renderVRDevice(1, M);
+				renderVRDevice(1, mirrorM);
 				// Render local coordinate system
 				renderVRDevice(2, M);
+				renderVRDevice(2, mirrorM);
 			}
 		}
 #else
