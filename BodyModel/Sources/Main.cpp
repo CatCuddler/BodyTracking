@@ -106,7 +106,12 @@ namespace {
 	int loop = 0;
 #endif
 	
-	void renderTracker() {
+	void renderVRDevice(int index, Kore::mat4 M) {
+		Graphics4::setMatrix(mLocation, M);
+		viveObjects[index]->render(tex);
+	}
+	
+	void renderAllVRDevices() {
 		Graphics4::setPipeline(pipeline);
 	
 #ifdef KORE_STEAMVR
@@ -118,18 +123,23 @@ namespace {
 			Kore::Quaternion rot = controller.vrPose.orientation;
 			
 			Kore::mat4 M = mat4::Translation(pos.x(), pos.y(), pos.z()) * rot.matrix().Transpose();
-			Graphics4::setMatrix(mLocation, M);
+			
+			Kore::Quaternion rot(0, 0, 0, 1);
+			rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+			mat4 zMirror = mat4::Identity();
+			zMirror.Set(2, 2 , -1);
+			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * M;
 			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				// Render a tracker for both feet and back
-				viveObjects[0]->render(tex);
+				renderVRDevice(0, M);
 				// Render local coordinate system
-				viveObjects[2]->render(tex);
+				renderVRDevice(2, M);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Render a controller for both hands
-				viveObjects[1]->render(tex);
+				renderVRDevice(1, M);
 				// Render local coordinate system
-				viveObjects[2]->render(tex);
+				renderVRDevice(2, M);
 			}
 		}
 #else
@@ -138,18 +148,26 @@ namespace {
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
 			Kore::mat4 M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
-			Graphics4::setMatrix(mLocation, M);
+			
+			Kore::Quaternion rot(0, 0, 0, 1);
+			rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+			mat4 zMirror = mat4::Identity();
+			zMirror.Set(2, 2 , -1);
+			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * M;
 			
 			if (i == hip || i == rightFoot || i == leftFoot) {
 				// Render a tracker for both feet and back
-				viveObjects[0]->render(tex);
+				renderVRDevice(0, M);
+				renderVRDevice(0, mirrorM);
 			} else if (i == rightHand || i == leftHand) {
 				// Render a controller for both hands
-				viveObjects[1]->render(tex);
+				renderVRDevice(1, M);
+				renderVRDevice(1, mirrorM);
 			}
 			
 			// Render local coordinate system
-			viveObjects[2]->render(tex);
+			renderVRDevice(2, M);
+			renderVRDevice(2, mirrorM);
 		}
 #endif
 	}
@@ -190,12 +208,11 @@ namespace {
 		avatar->animate(tex);
 		
 		// Mirror the avatar
-		mat4 initTransMirror = initTrans;
 		Kore::Quaternion rot = initRot;
 		rot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
 		mat4 mirrorMatrix = mat4::Identity();
 		mirrorMatrix.Set(2, 2 , -1);
-		initTransMirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		mat4 initTransMirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
 		
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
@@ -455,7 +472,7 @@ namespace {
 			
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
-			if (renderTrackerAndController) renderTracker();
+			if (renderTrackerAndController) renderAllVRDevices();
 			
 			if (renderAxisForEndEffector) renderCSForEndEffector();
 			
@@ -476,7 +493,7 @@ namespace {
 		if (!firstPersonMonitor) renderAvatar(V, P);
 		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		
-		if (renderTrackerAndController) renderTracker();
+		if (renderTrackerAndController) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
@@ -554,7 +571,7 @@ namespace {
 		
 		renderAvatar(V, P);
 		
-		if (renderTrackerAndController) renderTracker();
+		if (renderTrackerAndController) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
