@@ -30,7 +30,7 @@ namespace {
 	// IK Parameter
 	int ikMode = 0;
 	float lambda[] =	{ 0.35f,	0.05f,		0.2f,		0.03f,		0.2f,		0.018f	};
-	float dMaxPos[] =	{ 0.01,		0.1,		0.1,		0.01,		0.1,		0.01	};
-	float dMaxRot[] =	{ 0.01,		0.1,		0.01,		0,			0.01,		0.01	};
-	float maxSteps[] =	{ 10.0f,	100.0f,		100.0f,		100.0f,		20.0f,		60.0f	};
+	float dMaxPos[] =	{ 0.0f,		0.1f,		0.1f,		0.01f,		0.1f,		0.01f	};
+	float dMaxRot[] =	{ 0.0f,		0.1f,		0.01f,		0.0f,		0.01f,		0.01f	};
+	float maxSteps[] =	{ 100.0f,	100.0f,		100.0f,		100.0f,		20.0f,		60.0f	};
 }
