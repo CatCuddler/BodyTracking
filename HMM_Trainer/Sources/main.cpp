@@ -21,6 +21,7 @@
 #include <vector>
 #include <thread>
 
+using namespace std;
 // declaration above main for function to be found instead of creating header file
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName);
 void updateFilePaths();
@@ -83,30 +84,30 @@ int main() {
 
 	/// ***** ***** ***** Creating a new HMM ***** ***** ***** ///
 	if (createHMM) {
-		std::cout << "<Automatic execution>\n" << "Using predefined variables for execution." "\n\n";
+		cout << "<Automatic execution>\n" << "Using predefined variables for execution." "\n\n";
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 
 		/// ***** ***** Actual creation of HMM ***** ***** ///
-		std::cout << "Training HMM with " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
+		cout << "Training HMM with " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
 
 		// read data and use k-Means algorithm for clustering
-		std::cout << "Clustering data points using k-Means algorithm. \n";
+		cout << "Clustering data points using k-Means algorithm. \n";
 		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
-		std::cout << "Matching data points of current data sets to clusters. ";
+		cout << "Matching data points of current data sets to clusters. ";
 		vector<vector<vector<int>>> sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 
-		std::cout << "Single data sets clustered successfully. \n\n";
+		cout << "Single data sets clustered successfully. \n\n";
 
 		if (debug) { // console output of clusters
 			for (int kk = 0; kk < 6; kk++) {
 				if (!sequence.at(kk).empty()) {
-					std::cout << trackerNames[kk] << " clusters: \n";
+					cout << trackerNames[kk] << " clusters: \n";
 					for (int ii = 0; ii < sequence.at(kk).size(); ii++) {
-						std::cout << "File #" << ii + 1 << ": \n";
+						cout << "File #" << ii + 1 << ": \n";
 						for (int &singleClusterNumber : sequence.at(kk).at(ii)) {
-							std::cout << singleClusterNumber << " ";
-						} std::cout << "\n";
-					} std::cout << "\n";
+							cout << singleClusterNumber << " ";
+						} cout << "\n";
+					} cout << "\n";
 				}
 			}
 		}
@@ -115,19 +116,19 @@ int main() {
 		vector<double> probabilities(6, 0);
 		for (int ii = 0; ii < 6; ii++) {
 			if (!sequence.at(ii).empty()) {
-				std::cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
+				cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
 				for (int jj = 0; jj < hmmTries; jj++) {
 					// use Baum-Welch-Algorithm to train HMM and write it to a file 
 					HMMModel model(numStates, numEmissions, lrDepth);
 					model.trainHMM(sequence.at(ii));
-					if (jj < hmmTries - 1) std::cout << ", ";
+					if (jj < hmmTries - 1) cout << ", ";
 					if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 						model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii));
 						probabilities.at(ii) = (model.getProbabilityThreshold());
 					}
-					std::cout << jj << ", ";
+					cout << jj << ", ";
 				}
-				std::cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
+				cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
 			}
 		}
 
@@ -135,68 +136,68 @@ int main() {
 		for (int ii = 0; ii < 6; ii++) {
 			if (sequence.at(ii).empty()) {
 				if (!emptyTracker) {
-					std::cout << "Some trackers were not found in the given data set: \n \{ ";
+					cout << "Some trackers were not found in the given data set: \n \{ ";
 					emptyTracker = true;
 				}
 				else {
-					std::cout << ", ";
+					cout << ", ";
 				}
-				std::cout << trackerNames[ii];
+				cout << trackerNames[ii];
 			}
 		}
 		if (emptyTracker) {
-			std::cout << " \n\nThose trackers have been skipped and no corresponding HMM was created. \n\n";
+			cout << " \n\nThose trackers have been skipped and no corresponding HMM was created. \n\n";
 		}
 
 		for (int ii = 0; ii < 6; ii++) {
 			if (!sequence.at(ii).empty()) {
-				std::cout << "The log probability threshold of " << trackerNames[ii] << " is " << probabilities.at(ii) << ". \n";
+				cout << "The log probability threshold of " << trackerNames[ii] << " is " << probabilities.at(ii) << ". \n";
 			}
 		}
 	}
 
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
 	else if (calculateSingleProbability) {
-		std::cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
+		cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
 
-		std::cout << "Loading cluster coordinates.\n";
+		cout << "Loading cluster coordinates.\n";
 		vector<KMeans> kmeanVector(6);
 		bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
 		for (int ii = 0; ii < 6; ii++) {
 			try {
 				KMeans kmeans(writeFilePath, writeFileName + "_" + to_string(ii));
 				kmeanVector.at(ii) = kmeans;
-				std::cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
+				cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
 				trackersPresent[ii] = true;
 			}
-			catch (std::invalid_argument) {
+			catch (invalid_argument) {
 				trackersPresent[ii] = false;
 			}
 		}
-		std::cout << "\n";
+		cout << "\n";
 
-		std::cout << "Sorting new data sets into clusters. ";
+		cout << "Sorting new data sets into clusters. ";
 		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeanVector);
-		std::cout << "Normalised data sets clustered. \n";
+		cout << "Normalised data sets clustered. \n";
 
 		if (debug) { // console output of clusters
 			for (int kk = 0; kk < 6; kk++) {
-				std::cout << "\n";
+				cout << "\n";
 				if (!dataClusters.at(kk).empty()) {
-					std::cout << trackerNames[kk] << " clusters: \n";
+					cout << trackerNames[kk] << " clusters: \n";
 					for (int &singleClusterNumber : dataClusters.at(kk).at(0)) {
-						std::cout << singleClusterNumber << " ";
+						cout << singleClusterNumber << " ";
 					}
-					std::cout << "\n";
+					cout << "\n";
 				}
 			}
 		}
 
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
-				std::cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
+				cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
-				std::cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
+				cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
 			}
 		}
 	}
@@ -220,18 +221,18 @@ int main() {
 			kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
 			sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 			for (numStates = 6; numStates <= 16; numStates += 2) {
-				std::cout << "Splitting threads**********************************************************************\n";
-				std::cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
+				cout << "Splitting threads**********************************************************************\n";
+				cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
 
 				// Uses threadIteration for lrDepth as well
 				for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
-					std::cout << "Launched from thread " << threadIteration << "\n";
+					cout << "Launched from thread " << threadIteration << "\n";
 					t[threadIteration] = thread(multiThreadOptimisation, threadIteration, numStates, numEmissions, trainingNumber, sequence, hmmTries);
 				}
 				for (thread &singleThread : t) {
 					singleThread.join();
 				}
-				std::cout << "\nRejoined threads**********************************************************************\n\n";
+				cout << "\nRejoined threads**********************************************************************\n\n";
 
 			}
 		}
@@ -244,10 +245,10 @@ int main() {
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
 		sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
-		std::cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
-		std::cout << "Splitting threads**********************************************************************\n";
+		cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
+		cout << "Splitting threads**********************************************************************\n";
 		for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
-			std::cout << "Launched from thread " << threadIteration << "\n";
+			cout << "Launched from thread " << threadIteration << "\n";
 			t[threadIteration] = thread(multiThreadHMMCreation, threadIteration, numStates, numEmissions, trainingNumber, sequence, threadIteration);
 		}
 		for (thread &singleThread : t) {
@@ -255,7 +256,7 @@ int main() {
 		}
 	}
 
-	std::cout << "\n";
+	cout << "\n";
 	return 0;
 }
 
@@ -284,7 +285,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 				/* use Baum-Welch-Algorithm to train HMM and write it to a file */
 				HMMModel model(numStates, numEmissions, lrDepth);
 				model.trainHMM(sequence.at(ii));
-				if (jj < hmmTries - 1) std::cout << ", ";
+				if (jj < hmmTries - 1) cout << ", ";
 				if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 					finalModels[ii] = model;
 					probabilities.at(ii) = (model.getProbabilityThreshold());
@@ -335,7 +336,7 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 			/* use Baum-Welch-Algorithm to train HMM and write it to a file */
 			HMMModel model(numStates, numEmissions, lrDepth);
 			model.trainHMM(sequence.at(ii));
-			if (jj < hmmTries - 1) std::cout << ", ";
+			if (jj < hmmTries - 1) cout << ", ";
 			if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 				finalModels[ii] = model;
 				model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
@@ -379,10 +380,9 @@ vector<double> calculateProbability(HMMModel models[6]) {
 ********************************************************************************/
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	int trainingNumber = 0;
-	while (ifstream(trainingFilePath + trainingFileName + std::to_string(trainingNumber) + ".txt")) {
+	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".txt")) {
 		trainingNumber++;
 	}
-    cout << std::to_string(trainingNumber) + "\n";
 	return trainingNumber;
 }
  

@@ -14,15 +14,15 @@
 #include <fstream>
 #include <sstream>
 #include <time.h>
-#include <algorithm>    // std::min
+#include <algorithm>    //  min
 #include <cmath>
-
-using std::ofstream;
-using std::ifstream;
-using std::cout;
-using std::getline;
-using std::ios;
-using std::stringstream;
+using namespace std;
+//using std::ofstream;
+//using std::ifstream;
+//using std::cout;
+//using std::getline;
+//using std::ios;
+//using std::stringstream;
 
 /********************************************************************************
 * method:		HMM construtor
@@ -74,8 +74,8 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
 		}
 	} else {				// left-to-right model
 		for (int i = 0; i < N; i++) {
-			for (int j = i; j < std::min(i + 1 + LRdepth, N); j++) {
-				a[i][j] = 1.0 / std::min(LRdepth + 1, N - i);
+			for (int j = i; j < min(i + 1 + LRdepth, N); j++) {
+				a[i][j] = 1.0 / min(LRdepth + 1, N - i);
 			}
 		}
 	}
@@ -162,7 +162,7 @@ HMMModel::HMMModel(string filePath, string fileName) {
 	}
 	else {
 		cout << "Unable to read file. ";
-		throw std::invalid_argument("File does not exist");
+		throw invalid_argument("File does not exist");
 	}
 }
 
@@ -279,7 +279,7 @@ double HMMModel::calculateProbability(vector<int>& sequence) {
 	// Calculate probability
 	double probability = 0;
 	for (int t = 0; t < sequence.size(); t++) {
-		probability -= std::log(c.at(t));
+		probability -= log(c.at(t));
 	}
 
 	return probability;
@@ -389,12 +389,12 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		probability = 0;
         if (sequence.size()>0){
 		for (int t = 0; t < sequence.at(0).size(); t++) {
-			probability -= std::log(c.at(0).at(t));
+			probability -= log(c.at(0).at(t));
 		}
         }
 	}
 
-	std::cout << iter;
+	cout << iter;
 
 	// Save log probability threshold
 	probabilityThreshold = probability * 2;
