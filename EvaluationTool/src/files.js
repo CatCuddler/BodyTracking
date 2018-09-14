@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import { Menu, Label } from 'semantic-ui-react';
 import { compose, withPropsOnChange } from 'recompose';
 import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
-import { colorsMaterial } from '@filou/core';
+import colorsMaterial from './colors';
 import LabelGroup from './labelgroup';
 
 const enhance = compose(
@@ -104,7 +104,7 @@ const Files = ({
                     active &&
                     selectedFiles.length > 1 &&
                     get(colorsMaterial, [
-                      selectedFiles.findIndex(x => x === file.name) * 2,
+                      selectedFiles.findIndex(x => x === file.name),
                       'palette',
                       6
                     ]),

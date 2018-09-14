@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Avatar.h"
 
 #include "RotationUtility.h"
@@ -5,10 +6,6 @@
 
 using namespace Kore;
 using namespace Kore::Graphics4;
-
-namespace {
-	const int headBoneIndex = 20;
-}
 
 Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
 	invKin = new InverseKinematics(bones);
@@ -23,7 +20,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	currentHeight = position.z();
 }
 
-void Avatar::animate(TextureUnit tex, float deltaTime) {
+void Avatar::animate(TextureUnit tex) {
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
@@ -47,7 +44,6 @@ void Avatar::animate(TextureUnit tex, float deltaTime) {
 				vec4 norVec(mesh->normals[i * 3 + 0], mesh->normals[i * 3 + 1], mesh->normals[i * 3 + 2], 1);
 				
 				int index = mesh->boneIndices[currentBoneIndex] + 2;
-				//BoneNode* bone = bones[mesh->boneIndices[currentBoneIndex] + 1];
 				BoneNode* bone = getBoneWithIndex(index);
 				float boneWeight = mesh->boneWeight[currentBoneIndex];
 				totalJointsWeight += boneWeight;
@@ -83,25 +79,35 @@ void Avatar::animate(TextureUnit tex, float deltaTime) {
 	}
 }
 
-void Avatar::setDesiredPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+void Avatar::setDesiredPositionAndOrientation(int boneIndex, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
-	invKin->inverseKinematics(bone, desPosition, desRotation);
+	invKin->inverseKinematics(bone, ikMode, desPosition, desRotation);
 }
 
 void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	BoneNode* bone = getBoneWithIndex(boneIndex);
 	
 	bone->transform = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
-	bone->quaternion = desRotation;
-	bone->quaternion.normalize();
-	bone->local = bone->transform * bone->quaternion.matrix().Transpose();
+	bone->rotation = desRotation;
+	bone->rotation.normalize();
+	bone->local = bone->transform * bone->rotation.matrix().Transpose();
 }
 
 BoneNode* Avatar::getBoneWithIndex(int boneIndex) const {
 	BoneNode* bone = bones[boneIndex - 1];
-	
 	return bone;
+}
+
+void Avatar::resetPositionAndRotation() {
+	for (int i = 0; i < bones.size(); ++i) {
+		bones[i]->transform = bones[i]->bind;
+		bones[i]->local = bones[i]->bind;
+		bones[i]->combined = bones[i]->parent->combined * bones[i]->local;
+		bones[i]->combinedInv = bones[i]->combined.Invert();
+		bones[i]->finalTransform = bones[i]->combined * bones[i]->combinedInv;
+		bones[i]->rotation = Kore::Quaternion(0, 0, 0, 1);
+	}
 }
 
 float Avatar::getReached() const {

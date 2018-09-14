@@ -545,7 +545,8 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
-	bone->transform = getMatrix4x4(transform);
+	bone->bind = getMatrix4x4(transform);
+	bone->transform = bone->bind;
 	bone->local = bone->transform;
 	
 	// Get node animation

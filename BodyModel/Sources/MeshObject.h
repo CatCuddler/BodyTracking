@@ -7,6 +7,7 @@
 #include <Kore/Math/Quaternion.h>
 
 #include <vector>
+#include <map>
 
 struct Mesh {
 	int numFaces;
@@ -82,12 +83,13 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
-	Kore::mat4 transform;		// bind matrix
+	Kore::mat4 bind;
+	Kore::mat4 transform;
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	Kore::Quaternion quaternion;	// local rotation
+	Kore::Quaternion rotation;	// local rotation
 	
 	bool initialized = false;
 	
@@ -95,7 +97,7 @@ struct BoneNode {
 	
 	// Constraints
 	Kore::vec3 axes;
-	std::vector<Kore::vec2> constrain;	// <min, max>
+	std::map<const char* const, float> constrain;	// <min, max>
 	
 	BoneNode() :
 		transform(Kore::mat4::Identity()),
@@ -103,20 +105,19 @@ struct BoneNode {
 		combined(Kore::mat4::Identity()),
 		combinedInv(Kore::mat4::Identity()),
 		finalTransform(Kore::mat4::Identity()),
-		quaternion(Kore::Quaternion(0, 0, 0, 1)),
+		rotation(Kore::Quaternion(0, 0, 0, 1)),
 		axes(Kore::vec3(0, 0, 0))
 	{}
 	
 	Kore::vec3 getPosition() {
 		Kore::vec3 result;
 		
-		// from quat to euler!
-		Kore::vec4 quat = combined * Kore::vec4(0, 0, 0, 1);
-		quat *= 1.0 / quat.w();
+		Kore::vec4 pos = combined * Kore::vec4(0, 0, 0, 1);
+		pos *= 1.0 / pos.w();
 		
-		result.x() = quat.x();
-		result.y() = quat.y();
-		result.z() = quat.z();
+		result.x() = pos.x();
+		result.y() = pos.y();
+		result.z() = pos.z();
 		
 		return result;
 	}
@@ -142,6 +143,7 @@ public:
 	
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
+	Kore::mat4 Mmirror;
 	
 	long meshesCount;
 	float scale;

@@ -9,19 +9,16 @@
 #include <fstream>
 #include <sstream>
 
-extern int ikMode, maxSteps[];
-extern float dMaxPos[], dMaxRot[], lambda[];
-
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
-	bool initPositionData;
-	std::fstream positionDataOutputFile;
-	std::stringstream positionDataPath;
+	// Output file to save raw data
+	std::ofstream logDataOutputFile;
+	// Output file to save data for hmm
+	std::ofstream hmmDataOutputFile;
+	std::ofstream hmmAnalysisOutputFile;
 	
 	const char* evaluationDataFilename = "evaluationData";
-	bool initEvaluationData;
 	std::fstream evaluationDataOutputFile;
 	std::stringstream evaluationDataPath;
 	
@@ -30,18 +27,27 @@ private:
 	std::stringstream evaluationConfigPath;
 	
 	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
+	std::fstream logDataInputFile;
+	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag);
 	
 public:
 	Logger();
 	~Logger();
 	
+	void startLogger(const char* filename);
+	void endLogger();
+	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
+	
 	void startEvaluationLogger();
 	void endEvaluationLogger();
 	
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
 	void saveEvaluationData(Avatar *avatar);
 	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
+	// HMM
+	void startHMMLogger(const char* filename, int num);
+	void endHMMLogger(int lineCount);
+	void saveHMMData(const char* tag, float lastTime, Kore::vec3 pos);
+	void analyseHMM(const char* filename, double probability, bool newLine);
+	
+	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };

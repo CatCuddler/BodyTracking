@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "LivingRoom.h"
 
 using namespace Kore;
@@ -7,10 +9,12 @@ LivingRoom::LivingRoom(const char* meshFile, const char* textureFile, const Kore
 	
 }
 
-void LivingRoom::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation mLocationInverse, ConstantLocation diffuseLocation, ConstantLocation specularLocation, ConstantLocation specularPowerLocation) {
+void LivingRoom::render(TextureUnit tex, Kore::Graphics4::ConstantLocation mLocation, Kore::Graphics4::ConstantLocation mLocationInverse, ConstantLocation diffuseLocation, ConstantLocation specularLocation, ConstantLocation specularPowerLocation, bool mirror) {
 	for (int i = 0; i < meshesCount; ++i) {
 		Geometry* geometry = geometries[i];
-		mat4 modelMatrix = M * geometry->transform;
+		mat4 modelMatrix = mat4::Identity();
+		if (!mirror) modelMatrix = M * geometry->transform;
+		else modelMatrix = Mmirror * geometry->transform;
 		mat4 modelMatrixInverse = modelMatrix.Invert();
 		
 		Graphics4::setMatrix(mLocation, modelMatrix);
