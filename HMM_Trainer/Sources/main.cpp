@@ -80,7 +80,7 @@ ofstream file;
 int main() {
 	// set file paths in kMeans to input above
 	updateFilePaths();
-	srand(time(NULL)); // randomises random numbers
+	srand((unsigned int)time(NULL)); // randomises random numbers
 
 	/// ***** ***** ***** Creating a new HMM ***** ***** ***** ///
 	if (createHMM) {

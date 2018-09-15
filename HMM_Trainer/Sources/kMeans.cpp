@@ -48,7 +48,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 	vector<vector<Point>> parsedPoints = readData(trainingFileNameKMeans, fileAmount);
 	for (int ii = 0; ii < 6; ii++) {
 		if (!parsedPoints.at(ii).empty()) {
-			KMeans kmeans(emissions, totalValues, parsedPoints.at(ii).size(), parsedPoints.at(ii).size() / fileAmount, maxIterations);
+			KMeans kmeans(emissions, totalValues, (int)parsedPoints.at(ii).size(), (int)parsedPoints.at(ii).size()/fileAmount, maxIterations);
 			cout << "Calculating clusters for " << trackerNames[ii] << "; ";
 			kmeans.runKMeans(parsedPoints.at(ii));
 			kmeans.writeKMeans(writeFilePathKMeans, writeFileNameKMeans + "_" + to_string(ii));
@@ -166,7 +166,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			else if (id_tracker.compare("bac") == 0) returnVector.at(3).push_back(point);
 			else if (id_tracker.compare("lfT") == 0) returnVector.at(4).push_back(point);
 			else if (id_tracker.compare("rfT") == 0) returnVector.at(5).push_back(point);
-			else  cout << "Error! Unknown tracker data detected.";
+			else cout << "Error! Unknown tracker data detected.";
 		}
 		f.close();
 	}
@@ -423,7 +423,7 @@ void Cluster::addPoint(Point point) {
 }
 
 bool Cluster::removePoint(int idPoint) {
-	int totalPoints = points.size();
+	int totalPoints = (int)points.size();
 
 	for (int i = 0; i < totalPoints; i++)
 	{
@@ -439,7 +439,7 @@ bool Cluster::removePoint(int idPoint) {
 void Cluster::setCentralValue(int index, double value) { centralValues[index] = value; }
 double Cluster::getCentralValue(int index) { return centralValues[index]; }
 Point Cluster::getPoint(int index) { return points[index]; }
-int Cluster::getTotalPoints() { return points.size(); }
+int Cluster::getTotalPoints() { return (int)points.size(); }
 int Cluster::getID() { return idCluster; }
 
 
@@ -451,7 +451,7 @@ int Cluster::getID() { return idCluster; }
 ********************************************************************************/
 Point::Point(int idPoint, vector<double>& values) {
 	this->idPoint = idPoint;
-	totalValue = values.size();
+	totalValue = (int)values.size();
 
 	for (int i = 0; i < totalValue; i++)
 		this->values.push_back(values[i]);

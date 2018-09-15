@@ -38,7 +38,7 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
 	
-	srand(time(NULL)); // Seed for random number generation
+	srand((unsigned int)time(NULL)); // Seed for random number generation
 
 	// Initialize Pi
 	if (LRdepth == 0) {		// left-to-right depth of 0: random initialization
@@ -186,7 +186,7 @@ double HMMModel::getProbabilityThreshold() { return probabilityThreshold; }
 vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** alpha) {
 
 	const int N = numStates;
-	const int T = sequence.size();
+	const int T = (int)sequence.size();
 
 	vector<double> c(T, 0);
 
@@ -237,7 +237,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta) {
 
 	const int N = numStates;
-	const int T = sequence.size();
+	const int T = (int)sequence.size();
 
 	// 1. Initialization
 	for (int i = 0; i < N; i++) {
@@ -270,7 +270,7 @@ void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, do
 double HMMModel::calculateProbability(vector<int>& sequence) {
 
 	const int N = numStates;
-	const int T = sequence.size();
+	const int T = (int)sequence.size();
 
 	double** alpha = matrix<double>(0, N, T); // forward probability matrix
 
@@ -300,7 +300,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 
 	const int N = numStates;
 	const int M = sigmaSize;
-	const int sequenceSize = sequence.size();
+	const int sequenceSize = (int)sequence.size();
 
 	double probability = 0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
@@ -313,7 +313,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 
 	// set the size of each matrix
 	for (iter = 0; iter < sequenceSize; iter++) {
-		int T = sequence.at(iter).size();
+		int T = (int)sequence.at(iter).size();
 		alpha.at(iter) = matrix<double>(0, N, T);
 		beta.at(iter) = matrix<double>(0, N, T);
 	}
