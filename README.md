@@ -6,14 +6,14 @@ Requirements:
 - node.js
 - VisualStudio or XCode
 
-git clone --recursive git@github.com:CatCuddler/BodyTracking.git
+git clone --recursive git@github.com:CatCuddler/BodyTracking.git<br />
 cd BodyTracking/BodyModel
 
-Compile for VR:	node Kore/make --vr steamvr
+Compile for VR:	node Kore/make --vr steamvr<br />
 Compile without VR node Kore/make
 
-Currently Metal does not work. Use Opengl or Direct3D.
--g opengl or -g direct3d11
+Currently Metal does not work. Use Opengl or Direct3D.<br />
+node Kore/make -g opengl or node Kore/make -g direct3d11
 
 If you are using Xcode, you have to set custom working directory:
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
