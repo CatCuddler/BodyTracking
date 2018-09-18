@@ -133,17 +133,13 @@ namespace {
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
 				// Render a tracker for both feet and back
 				renderVRDevice(0, M);
-				renderVRDevice(0, mirrorM);
 				// Render local coordinate system
 				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Render a controller for both hands
 				renderVRDevice(1, M);
-				renderVRDevice(1, mirrorM);
 				// Render local coordinate system
 				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
 			}
 		}
 #else
@@ -255,6 +251,8 @@ namespace {
 			// Transform desired position to the character local coordinate system
 			finalRot = initRotInv.rotated(finalRot);
 			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
+
+			//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
@@ -371,10 +369,8 @@ namespace {
 			logRawData = !logRawData;
 			
 			if (logRawData) {
-				Audio1::play(startRecordingSound);
 				logger->startLogger("logData");
 			} else {
-				Audio1::play(stopRecordingSound);
 				logger->endLogger();
 			}
 			
@@ -383,9 +379,11 @@ namespace {
 				// Recording a movement
 				hmm->recording = !hmm->recording;
 				if (hmm->recording) {
+					Audio1::play(startRecordingSound);
 					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 				} else {
 					hmm->stopRecording();
+					Audio1::play(stopRecordingSound);
 				}
 			} else if(hmm->isRecognitionActive()) {
 				// Recognizing a movement
