@@ -4,13 +4,13 @@ This project implements an accurate, low-latency body tracking approach for VR-b
 
 Requirements:
 - node.js
-- VisualStudio or XCode
+- VisualStudio or Xcode
 
 git clone --recursive git@github.com:CatCuddler/BodyTracking.git<br />
 cd BodyTracking/BodyModel
 
 Compile for VR:	node Kore/make --vr steamvr<br />
-Compile without VR node Kore/make
+Compile without VR: node Kore/make
 
 Currently Metal does not work. Use Opengl or Direct3D.<br />
 node Kore/make -g opengl or node Kore/make -g direct3d11
