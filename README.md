@@ -19,3 +19,5 @@ If you are using Xcode, you have to set custom working directory:
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/F6yFdpnhhoo/0.jpg)](https://www.youtube.com/watch?v=F6yFdpnhhoo&feature=youtu.be)
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/x4SS8_-XY38/0.jpg)](https://youtu.be/x4SS8_-XY38)
