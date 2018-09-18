@@ -18,6 +18,9 @@ node Kore/make -g opengl or node Kore/make -g direct3d11
 If you are using Xcode, you have to set custom working directory:
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
 
+Open VisualStudio or Xcode project in BodyModel/build<br />
+Change to "Release" mode
+
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/x4SS8_-XY38/0.jpg)](https://youtu.be/x4SS8_-XY38)
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/F6yFdpnhhoo/0.jpg)](https://youtu.be/F6yFdpnhhoo)
