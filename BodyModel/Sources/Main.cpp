@@ -245,16 +245,15 @@ namespace {
 		if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatar) {
-			// Add offset to endeffector
+			// Transform desired position/rotation to the character local coordinate system
+			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			desRotation = initRotInv.rotated(desRotation);
+			
+			// Add offset
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
 			vec3 offserPosition = endEffector[endEffectorID]->getOffsetPosition();
-			
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
-			
-			// Transform desired position to the character local coordinate system
-			finalRot = initRotInv.rotated(finalRot);
-			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
@@ -269,12 +268,14 @@ namespace {
 			Kore::vec3 currentPos = endEffector[i]->getDesPosition();
 			Kore::Quaternion currentRot = endEffector[i]->getDesRotation();
 			
+			// Transform desired position/rotation to the character local coordinate system
+			currentPos = initTransInv * vec4(currentPos.x(), currentPos.y(), currentPos.z(), 1);
+			currentRot = initRotInv.rotated(currentRot);
+			
+			// Get actual position/rotation of the character skeleton
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
-			
 			vec3 targetPos = bone->getPosition();
-			targetPos = initTrans * vec4(targetPos.x(), targetPos.y(), targetPos.z(), 1);
-			
-			Kore::Quaternion targetRot = initRot.rotated(bone->getOrientation());
+			Kore::Quaternion targetRot = bone->getOrientation();
 			
 			endEffector[i]->setOffsetPosition((mat4::Translation(currentPos.x(), currentPos.y(), currentPos.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
 			endEffector[i]->setOffsetRotation((currentRot.invert()).rotated(targetRot));
@@ -311,8 +312,10 @@ namespace {
 			vrDevice = VrInterface::getController(i);
 			
 			vec3 devicePos = vrDevice.vrPose.position;
-			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
+			
+			// Transform desired position to the character local coordinate system
+			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
 			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
 				if (devicePos.y() < currentUserHeight / 3) {
