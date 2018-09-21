@@ -1,8 +1,8 @@
 #pragma once
 
 namespace {
-	const int numFiles = 6;
-    const char* files[numFiles] = {"walking.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
+	const int numFiles = 7;
+    const char* files[numFiles] = {"walking.csv", "squats.csv", "lunges.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
 	int currentFile = 0;
 	
 	const float nearNull = 0.0001f;
@@ -30,7 +30,7 @@ namespace {
 	// IK Parameter
 	int ikMode = 0;
 	float lambda[] =	{ 0.35f,	0.05f,		0.2f,		0.03f,		0.2f,		0.018f	};
-	float dMaxPos[] =	{ 0.0f,		0.1f,		0.1f,		0.01f,		0.1f,		0.01f	};
-	float dMaxRot[] =	{ 0.0f,		0.1f,		0.01f,		0.0f,		0.01f,		0.01f	};
-	float maxSteps[] =	{ 100.0f,	100.0f,		100.0f,		100.0f,		20.0f,		60.0f	};
+	float dMaxPos[] =	{ 0.01f,	0.1f,		0.1f,		0.01f,		0.1f,		0.01f	};
+	float dMaxRot[] =	{ 0.01f,	0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
+	float maxSteps[] =	{ 10.0f,	100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
 }
