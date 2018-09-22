@@ -11,18 +11,18 @@ This project implements an accurate, low-latency body tracking approach for VR-b
 git clone --recursive git@github.com:CatCuddler/BodyTracking.git
 
 ### Compile
-cd BodyTracking/BodyModel<\br>
+cd BodyTracking/BodyModel <br />
 node Kore/make --vr steamvr
 
 #### Only for Mac User:
-Currently Metal does not work. Use Opengl.<\br>
+Currently Metal does not work. Use Opengl. <br />
 node Kore/make -g opengl
 
 ### Open VS or XCode
-Open VisualStudio or Xcode project in BodyModel/build<\br>
+Open VisualStudio or Xcode project in BodyModel/build <br />
 Change to "Release" mode
 
-If you are using Xcode, you have to set custom working directory:<\br>
+If you are using Xcode, you have to set custom working directory: <br />
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
 
 ### Avatar Calibration
