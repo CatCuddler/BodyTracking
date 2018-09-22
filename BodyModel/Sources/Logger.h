@@ -2,7 +2,6 @@
 
 #include "Avatar.h"
 
-#include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
 #include <iostream>
@@ -38,10 +37,9 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void startEvaluationLogger();
-	void endEvaluationLogger();
-	
+	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
 	void saveEvaluationData(Avatar *avatar);
+	void endEvaluationLogger();
 	
 	// HMM
 	void startHMMLogger(const char* filename, int num);

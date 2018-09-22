@@ -1,17 +1,15 @@
+#include "Settings.h"
 #include "MeshObject.h"
 #include "BussIK/MatrixRmn.h"
-#include "RotationUtility.h"
-#include "Settings.h"
 #include "EndEffector.h"
-
-#include <Kore/Log.h>
 
 struct BoneNode;
 
-template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
+template<int nJointDOFs = 6> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, IKMode ikMode = JT) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode) {
+		
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
@@ -58,16 +56,16 @@ public:
 	}
 	
 private:
-	typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
-	typedef Kore::Matrix<posAndOrientation ? 6 : 3, nJointDOFs, float>                  mat_nxm;
-	typedef Kore::Matrix<posAndOrientation ? 6 : 3, posAndOrientation ? 6 : 3, float>   mat_mxm;
-	typedef Kore::Matrix<nJointDOFs, nJointDOFs, float>                                 mat_nxn;
-	typedef Kore::Vector<float, posAndOrientation ? 6 : 3>                              vec_m;
-	typedef Kore::Vector<float, nJointDOFs>                                             vec_n;
+	typedef Kore::Matrix<nJointDOFs, 6, float>				mat_mxn;
+	typedef Kore::Matrix<6, nJointDOFs, float>				mat_nxm;
+	typedef Kore::Matrix<6, 6, float>						mat_mxm;
+	typedef Kore::Matrix<nJointDOFs, nJointDOFs, float>		mat_nxn;
+	typedef Kore::Vector<float, 6>							vec_m;
+	typedef Kore::Vector<float, nJointDOFs>					vec_n;
 	
 	float   errorPos = -1.0f;
 	float	errorRot = -1.0f;
-	int     nDOFs = posAndOrientation ? 6 : 3;
+	int     nDOFs = 6;
 	
 	mat_mxm U;
 	mat_nxn V;
@@ -317,6 +315,7 @@ private:
 	
 	vec_n clampMaxAbs(vec_n vec, float gamma_i) {
 		float max = 0;
+		
 		for (int n = 0; n < nJointDOFs; ++n) {
 			float val = fabs(vec[n]);
 			

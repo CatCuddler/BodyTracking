@@ -4,12 +4,26 @@ import { compose, withPropsOnChange } from 'recompose';
 import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
 import colorsMaterial from './colors';
 import LabelGroup from './labelgroup';
+import ikMode from './ik-modes';
 
 const enhance = compose(
-  withPropsOnChange(['sortBy', 'files'], ({ sortBy, files }) => ({
-    groups: _groupBy(files, sortBy),
-    sortBy
-  }))
+  withPropsOnChange(['sortBy'], ({ sortBy }) => ({
+    sortBy2: sortBy === 'mode' ? 'modeNumber' : sortBy
+  })),
+  withPropsOnChange(['sortBy2', 'files'], ({ sortBy2, files }) => ({
+    groups: sortBy2 ? _groupBy(files, sortBy2) : { All: files }
+  })),
+  withPropsOnChange(['sortBy', 'groups'], ({ sortBy, groups }) => {
+    const sortedGroups = {};
+    _sortBy(Object.keys(groups)).forEach(group => {
+      sortedGroups[sortBy === 'mode' ? ikMode[group] || 'All' : group] =
+        groups[group];
+    });
+
+    return {
+      groups: sortedGroups
+    };
+  })
 );
 
 const Files = ({
@@ -21,7 +35,7 @@ const Files = ({
   onClickFiles
 }) => (
   <Menu vertical style={{ width: '25%', overflowY: 'auto', marginBottom: 0 }}>
-    {_sortBy(Object.keys(groups)).map(group => (
+    {Object.keys(groups).map(group => (
       <Fragment key={group}>
         <Menu.Item
           header
@@ -35,7 +49,16 @@ const Files = ({
             <Label>{sortBy}</Label>
           ) : (
             <LabelGroup
-              length={groups[group].length}
+              length={groups[group].reduce(
+                (acc, val) =>
+                  acc +
+                  get(val, [
+                    'values',
+                    get(Object.keys(val.values), 0),
+                    'length'
+                  ]),
+                0
+              )}
               file={
                 (groups[group].every(
                   x => x.file === get(groups, [group, 0, 'file'])
@@ -69,20 +92,6 @@ const Files = ({
                   x => x.steps === get(groups, [group, 0, 'steps'])
                 ) &&
                   get(groups, [group, 0, 'steps'])) ||
-                '-'
-              }
-              dMaxPos={
-                (groups[group].every(
-                  x => x.dMaxPos === get(groups, [group, 0, 'dMaxPos'])
-                ) &&
-                  get(groups, [group, 0, 'dMaxPos'])) ||
-                '-'
-              }
-              dMaxRot={
-                (groups[group].every(
-                  x => x.dMaxRot === get(groups, [group, 0, 'dMaxRot'])
-                ) &&
-                  get(groups, [group, 0, 'dMaxRot'])) ||
                 '-'
               }
               selectedFiles={selectedFiles}

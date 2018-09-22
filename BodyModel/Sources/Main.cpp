@@ -10,7 +10,9 @@
 #include <Kore/Audio1/Sound.h>
 #include <Kore/Audio1/SoundStream.h>
 #include <Kore/System.h>
+#include <Kore/Log.h>
 
+#include "Settings.h"
 #include "EndEffector.h"
 #include "Avatar.h"
 #include "LivingRoom.h"
@@ -26,8 +28,14 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
-
 namespace {
+	const int width = 1024;
+	const int height = 768;
+	
+	const bool renderRoom = true;
+	const bool renderTrackerAndController = true;
+	const bool renderAxisForEndEffector = false;
+	
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 6;
 	
@@ -509,7 +517,6 @@ namespace {
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 #else
-		
 		// Read line
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
@@ -530,47 +537,49 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
 			
 		} else {
-			currentFile++;
-			calibratedAvatar = false;
-			
-			// Evaluation
-			/*if(eval) {
+			if (eval) {
 				if (loop >= 0) {
-					if (eval) logger->saveEvaluationData(avatar);
+					logger->saveEvaluationData(avatar);
 					// log(Kore::Info, "%i more iterations!", loop);
-					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, lambda[ikMode]);
+					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, evalValue[ikMode]);
 					loop--;
 					
-					if (eval && loop < 0) {
+					if (loop < 0) {
 						logger->endEvaluationLogger();
 						
-						if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1) {
+						if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
 							exit(0);
-						} else {
+						else {
 							if (evalSteps <= 1) {
-								lambda[ikMode] = evalInitValue[ikMode];
+								evalValue[ikMode] = evalInitValue[ikMode];
 								evalSteps = evalStepsInit;
 								ikMode++;
+								endEffector[head]->setIKMode((IKMode)ikMode);
+								endEffector[leftHand]->setIKMode((IKMode)ikMode);
+								endEffector[rightHand]->setIKMode((IKMode)ikMode);
+								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
+								endEffector[hip]->setIKMode((IKMode)ikMode);
 							} else {
-								lambda[ikMode] += evalStep;
+								evalValue[ikMode] += evalStep;
 								evalSteps--;
 							}
 							
-							if (ikMode > 5) {
-								ikMode = 0;
+							if (ikMode > evalMaxIk) {
+								ikMode = evalMinIk;
 								currentFile++;
 							}
 							
 							loop = 0;
-							logger->startEvaluationLogger();
+							logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxSteps[ikMode]);
 						}
 					}
-					
-					if (loop >= 0)
-						initVars();
 				}
-			}*/
-        }
+			} else {
+				currentFile++;
+				calibratedAvatar = false;
+			}
+		}
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -788,7 +797,6 @@ namespace {
 		}
 		
 		logger = new Logger();
-		if (eval) logger->startEvaluationLogger();
 		
 		hmm = new HMM(*logger);
 		

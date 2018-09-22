@@ -1,5 +1,4 @@
 #include "pch.h"
-
 #include "HMM.h"
 
 #include <Kore/Log.h>

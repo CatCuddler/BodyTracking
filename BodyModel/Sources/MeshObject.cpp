@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "MeshObject.h"
 
-#include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
 #include <sstream>
-#include <algorithm>
 
 using namespace Kore;
 using namespace Kore::Graphics4;

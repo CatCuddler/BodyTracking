@@ -1,5 +1,5 @@
 {
-  "input": "../BodyModel/Deployment",
-  "output": "lambda",
-  "groupByFiles": true
+  "input": "../BodyModel/Deployment/eval",
+  "output": "",
+  "groupToFolderBy": false
 }

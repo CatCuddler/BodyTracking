@@ -1,5 +1,4 @@
 #include "pch.h"
-
 #include "EndEffector.h"
 
 #include <string>

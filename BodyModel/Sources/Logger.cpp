@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Logger.h"
-#include "EndEffector.h"
 
 #include <Kore/Log.h>
+
 #include <ctime>
 
 namespace {
@@ -92,17 +92,17 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisOutputFile.flush();
 }
 
-void Logger::startEvaluationLogger() {
+void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
 	time_t t = time(0);   // Get time now
 	
 	evaluationDataPath.str(std::string());
 	evaluationConfigPath.str(std::string());
-	evaluationDataPath << evaluationDataFilename << "_" << t << ".csv";
-	evaluationConfigPath << evaluationConfigFilename << "_" << t << ".csv";
+	evaluationDataPath << "eval/" << evaluationDataFilename << "_" << t << ".csv";
+	evaluationConfigPath << "eval/" << evaluationConfigFilename << "_" << t << ".csv";
 	
 	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;dMax Pos;dMax Rot;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << files[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos << ";" << errorMaxRot << ";" << dMaxPos[ikMode] << ";" << dMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
+	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Steps Max\n";
+	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxSteps << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	

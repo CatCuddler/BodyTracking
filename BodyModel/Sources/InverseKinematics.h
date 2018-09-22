@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Kore/Math/Quaternion.h>
-
 #include "Jacobian.h"
+
+#include <Kore/Math/Quaternion.h>
 
 class InverseKinematics {
 	
@@ -23,16 +23,13 @@ private:
 	std::vector<BoneNode*> bones;
 	
 	static const int handJointDOFs = 6;
-	static const bool handWithOrientation = withOrientation;
-	Jacobian<handJointDOFs, handWithOrientation>* jacobianHand = new Jacobian<handJointDOFs, handWithOrientation>;
+	Jacobian<handJointDOFs>* jacobianHand = new Jacobian<handJointDOFs>;
 	
 	static const int footJointDOFs = 4;
-	static const bool footWithOrientation = withOrientation;
-	Jacobian<footJointDOFs, footWithOrientation>* jacobianFoot = new Jacobian<footJointDOFs, footWithOrientation>;
+	Jacobian<footJointDOFs>* jacobianFoot = new Jacobian<footJointDOFs>;
 	
 	static const int headJointDOFs = 6;
-	static const bool headWithOrientation = withOrientation;
-	Jacobian<headJointDOFs, headWithOrientation>* jacobianHead = new Jacobian<headJointDOFs, headWithOrientation>;
+	Jacobian<headJointDOFs>* jacobianHead = new Jacobian<headJointDOFs>;
 
 	
 	float getRadian(float degree);
