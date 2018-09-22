@@ -8,24 +8,24 @@ This project implements an accurate, low-latency body tracking approach for VR-b
 
 ## Start the project:
 
-git clone --recursive git@github.com:CatCuddler/BodyTracking.git<br />
+git clone --recursive git@github.com:CatCuddler/BodyTracking.git
 
 ### Compile
-cd BodyTracking/BodyModel<\br>
+cd BodyTracking/BodyModel
 node Kore/make --vr steamvr
 
-Only for Mac User:<\br>
-Currently Metal does not work. Use Opengl.<br />
+#### Only for Mac User:
+Currently Metal does not work. Use Opengl.
 node Kore/make -g opengl
 
 ### Open VS or XCode
-Open VisualStudio or Xcode project in BodyModel/build<br />
+Open VisualStudio or Xcode project in BodyModel/build
 Change to "Release" mode
 
 If you are using Xcode, you have to set custom working directory:
 BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working directory to 'Deployment'
 
-## Avatar Calibration
+### Avatar Calibration
 1. Strap one Vive Tracker on your left foot and another one on your right foot (above ankles)
 2. Strap the third Vive tracker on your waist
 3. Hold the Vive Controller in your hands ;)
