@@ -32,7 +32,7 @@ BodyTracking -> Edite Scheme... -> Run -> Options and then set custom working di
 4. Start the project. You will see an avatar, standing in a T-Pose.
 5. Press the "grip button" to set the size of the avatar (you must look straight ahead)
 6. Go to where the avatar stands and put your feet and hands in the same position.
-7. Make sure that the green arrows for the controller are pointing straight ahead.
+7. Make sure that the green arrows for the controllers are pointing straight ahead.
 8. Press the "menu button" to calibrate the avatar.
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/x4SS8_-XY38/0.jpg)](https://youtu.be/x4SS8_-XY38)
