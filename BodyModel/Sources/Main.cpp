@@ -177,9 +177,11 @@ namespace {
 				renderVRDevice(1, mirrorM);
 			}
 			
-			// Render local coordinate system
-			renderVRDevice(2, M);
-			renderVRDevice(2, mirrorM);
+			// Render local coordinate system only if the avatar is not calibrated
+			if (!calibratedAvatar) {
+				renderVRDevice(2, M);
+				renderVRDevice(2, mirrorM);
+			}
 		}
 #endif
 	}
