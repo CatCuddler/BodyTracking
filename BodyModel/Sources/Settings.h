@@ -17,7 +17,7 @@ namespace {
 	float maxSteps[] =		{ 10.0f,	100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
     
     // Evaluation values
-    const bool eval = true;
+    const bool eval = false;
     float* evalValue = lambda;
 	float evalInitValue[] = { 0.35f,	0.05f,		0.2f,		0.03f,		0.2f,		0.018f };
 	float evalStep = 0.1f;
