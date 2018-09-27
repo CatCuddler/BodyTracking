@@ -6,8 +6,35 @@
 #include <ctime>
 
 namespace {
+	int currLineNumber = 0;
+	char* source;
+	
 	bool initHmmAnalysisData = false;
 	int hmmHeaderLength;
+	
+	void getLine(const char* tag, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float* scale) {
+		int i = 0;
+		while(i < 9) {
+			
+			if (currLineNumber > 0) {
+				if (i == 0) tag = source;
+				else if (i == 1) rawPos->x() = stof(source);
+				else if (i == 2) rawPos->y() = stof(source);
+				else if (i == 3) rawPos->z() = stof(source);
+				else if (i == 4) rawRot->x = stof(source);
+				else if (i == 5) rawRot->y = stof(source);
+				else if (i == 6) rawRot->z = stof(source);
+				else if (i == 7) rawRot->w = stof(source);
+				else if (i == 8) *scale = stof(source);
+				
+				i++;
+			}
+			
+			// Get token
+			source = strtok(NULL, ";\n");
+		}
+		//Kore::log(Kore::Info, "%s %f %f %f %f %f %f %f %f", tag, rawPos->x(), rawPos->y(), rawPos->z(), rawRot->x, rawRot->y, rawRot->z, rawRot->w, scale);
+	}
 }
 
 Logger::Logger() {
@@ -15,7 +42,7 @@ Logger::Logger() {
 
 Logger::~Logger() {
 	logDataOutputFile.close();
-	logDataInputFile.close();
+	logDataReader.close();
 	hmmDataOutputFile.close();
 	hmmAnalysisOutputFile.close();
 }
@@ -144,73 +171,44 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	evaluationDataOutputFile.flush();
 }
 
-bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale, std::string& tag) {
-	int column = 0;
-	
-	if (std::getline(logDataInputFile, str, '\n')) {
-		std::stringstream ss;
-		ss.str(str);
-		std::string item;
+bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
+	if(currLineNumber == 0) {
+		log(Kore::Info, "Read data from %s", filename);
+		logDataReader.open(filename);
 		
-		// Get tag
-		std::getline(ss, item, ';');
-		tag = item;
-		
-		while(std::getline(ss, item, ';')) {
-			float num = std::stof(item);
-			
-			if (column == 0)		rawPos->x() = num;
-			else if (column == 1)	rawPos->y() = num;
-			else if (column == 2)	rawPos->z() = num;
-			else if (column == 3)	rawRot->x = num;
-			else if (column == 4)	rawRot->y = num;
-			else if (column == 5)	rawRot->z = num;
-			else if (column == 6)	rawRot->w = num;
-			else if (column == 7)	scale = num;
-			
-			++column;
+		// Real all
+		void* data = logDataReader.readAll();
+		int length = logDataReader.size();
+		source = new char[length + 1];
+		for (int i = 0; i < length; ++i) {
+			source[i] = ((char*)data)[i];
 		}
 		
-		return true;
-	}
-	
-	return false;
-}
-
-bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
-	std::string str;
-	bool success = false;
-	
-	if (!logDataInputFile.is_open()) {
-		logDataInputFile.open(filename);
-		log(Kore::Info, "Read data from %s", filename);
-	}
-	
-	// Skip header
-	if(currLineNumber == 0) {
-		std::getline(logDataInputFile, str, '\n');
+		// Skip header
+		source = std::strtok(source, "\n");
+		source = strtok(NULL, ";\n");
 		++currLineNumber;
 	}
 	
 	// Read line
 	for (int i = 0; i < numOfEndEffectors; ++i) {
+		const char* tag;
 		Kore::vec3 pos = Kore::vec3(0, 0, 0);
 		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
 		
-		std::string tag;
-		success = readLine(str, &pos, &rot, scale, tag);
+		getLine(tag, &pos, &rot, &scale);
 		
-		if (success) {
-			++currLineNumber;
-			rawPos[i] = pos;
-			rawRot[i] = rot;
-		}
+		++currLineNumber;
+		rawPos[i] = pos;
+		rawRot[i] = rot;
 	}
 	
-	if (logDataInputFile.eof()) {
-		logDataInputFile.close();
+	if (source == nullptr) {
+		delete source;
 		currLineNumber = 0;
+		logDataReader.close();
+		return false;
 	}
 	
-	return success;
+	return true;
 }
