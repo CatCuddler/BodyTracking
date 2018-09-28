@@ -230,11 +230,11 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft->constrain[zMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[zMax] = getRadian(45) + tolerance;
 	
 	// Upper body
-	nodeLeft = bones[upperBack - 1];
+/*	nodeLeft = bones[upperBack - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain[xMin] = -getRadian(30) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
 	nodeLeft->constrain[yMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[yMax] = getRadian(20) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;*/
 	
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];

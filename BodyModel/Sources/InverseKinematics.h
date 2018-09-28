@@ -28,7 +28,7 @@ private:
 	static const int footJointDOFs = 4;
 	Jacobian<footJointDOFs>* jacobianFoot = new Jacobian<footJointDOFs>;
 	
-	static const int headJointDOFs = 6;
+	static const int headJointDOFs = 3;
 	Jacobian<headJointDOFs>* jacobianHead = new Jacobian<headJointDOFs>;
 
 	
