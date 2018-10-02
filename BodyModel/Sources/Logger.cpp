@@ -226,7 +226,7 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 			rawPos[i] = pos;
 			rawRot[i] = rot;
 		} else {
-			delete source;
+			//delete source;
 			currLineNumber = 0;
 			logDataReader.close();
 			return false;
