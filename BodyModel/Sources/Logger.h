@@ -4,27 +4,23 @@
 
 #include <Kore/Math/Quaternion.h>
 #include <Kore/IO/FileReader.h>
+#include <Kore/IO/FileWriter.h>
 
-//#include <iostream>
 #include <fstream>
-#include <sstream>
 
 class Logger {
 	
 private:
 	// Output file to save raw data
-	std::ofstream logDataOutputFile;
+	std::ofstream logdataWriter;
+	
 	// Output file to save data for hmm
-	std::ofstream hmmDataOutputFile;
-	std::ofstream hmmAnalysisOutputFile;
+	std::ofstream hmmWriter;
+	std::ofstream hmmAnalysisWriter;
 	
-	const char* evaluationDataFilename = "evaluationData";
+	// Output file to save data for evaluation
 	std::fstream evaluationDataOutputFile;
-	std::stringstream evaluationDataPath;
-	
-	const char* evaluationConfigFilename = "evaluationConfig";
 	std::fstream evaluationConfigOutputFile;
-	std::stringstream evaluationConfigPath;
 	
 	Kore::FileReader logDataReader;
 	

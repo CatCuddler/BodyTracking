@@ -58,99 +58,105 @@ Logger::Logger() {
 }
 
 Logger::~Logger() {
-	logDataOutputFile.close();
 	logDataReader.close();
-	hmmDataOutputFile.close();
-	hmmAnalysisOutputFile.close();
+	logdataWriter.close();
+	hmmWriter.close();
+	hmmAnalysisWriter.close();
 }
 
 void Logger::startLogger(const char* filename) {
 	time_t t = time(0);   // Get time now
 	
-	std::stringstream logFileName;
-	logFileName << filename << "_" << t << ".csv";
+	char logFileName[50];
+	sprintf(logFileName, "%s_%li.csv", filename, t);
 	
-	logDataOutputFile.open(logFileName.str(), std::ios::app); // Append to the end
-	logDataOutputFile << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
-	logDataOutputFile.flush();
+	logdataWriter.open(logFileName, std::ios::app); // Append to the end
+	
+	// Append header
+	logdataWriter << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
+	logdataWriter.flush();
 	
 	log(Kore::Info, "Start logging");
 }
 
 void Logger::endLogger() {
-	logDataOutputFile.close();
+	logdataWriter.close();
 	
 	log(Kore::Info, "Stop logging");
 }
 
 void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
-	// Save positional and rotation data
-	logDataOutputFile << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
-	logDataOutputFile.flush();
+	// Save position and rotation
+	logdataWriter << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+	logdataWriter.flush();
 }
 
 void Logger::startHMMLogger(const char* filename, int num) {
-	std::stringstream logFileName;
-	logFileName << filename << "_" << num << ".csv";
+	char logFileName[50];
+	sprintf(logFileName, "%s_%i.csv", filename, num);
 	
-	hmmDataOutputFile.open(logFileName.str(), std::ios::out);
-	const char* hmmHeader = "tag;time;posX;posY;posZ\n";
-	hmmDataOutputFile << hmmHeader;
+	hmmWriter.open(logFileName, std::ios::out);
+	
+	// Append header
+	char hmmHeader[] = "tag;time;posX;posY;posZ\n";
+	hmmHeaderLength = (int)strlen(hmmHeader) + 1;
+	hmmWriter << hmmHeader;
 	
 	// Placeholder for line number that will be overwritten when the file is closed
-	hmmDataOutputFile << "N=        ;;;;\n";
-	hmmHeaderLength = (int)strlen(hmmHeader);
+	hmmWriter << "N=          \n";
 	
-	hmmDataOutputFile.flush();
+	hmmWriter.flush();
 	
 	log(Kore::Info, "Start logging data for HMM");
 }
 
 void Logger::endHMMLogger(int lineCount) {
-	hmmDataOutputFile.seekp(hmmHeaderLength);
+	hmmWriter.seekp(hmmHeaderLength);
 	// Store number of lines / datapoints
-	hmmDataOutputFile << "N=" << lineCount;
-	hmmDataOutputFile.flush();
-	hmmDataOutputFile.close();
+	hmmWriter << "N=" << lineCount;
+	hmmWriter.flush();
+	hmmWriter.close();
 	
 	log(Kore::Info, "Stop logging data for HMM");
 }
 
 void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos) {
-	// Save positional and rotation data
-	hmmDataOutputFile << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
-	hmmDataOutputFile.flush();
+	// Save position
+	hmmWriter << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
+	hmmWriter.flush();
 }
 
 void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	if (!initHmmAnalysisData) {
-		std::stringstream hmmAnalysisPath;
-		hmmAnalysisPath << hmmName << "_analysis.txt";
-		hmmAnalysisOutputFile.open(hmmAnalysisPath.str(), std::ios::out | std::ios::app);
+		char hmmAnalysisPath[100];
+		strcat(hmmAnalysisPath, hmmName);
+		strcat(hmmAnalysisPath, "_analysis.txt");
+		hmmAnalysisWriter.open(hmmAnalysisPath, std::ios::out | std::ios::app);
 		initHmmAnalysisData = true;
 	}
 	
-	if (newLine) hmmAnalysisOutputFile << "\n";
-	else hmmAnalysisOutputFile << probability << ";";
+	if (newLine) hmmAnalysisWriter << "\n";
+	else hmmAnalysisWriter << probability << ";";
 	
-	hmmAnalysisOutputFile.flush();
+	hmmAnalysisWriter.flush();
 }
 
 void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
 	time_t t = time(0);   // Get time now
 	
-	evaluationDataPath.str(std::string());
-	evaluationConfigPath.str(std::string());
-	evaluationDataPath << "eval/" << evaluationDataFilename << "_" << t << ".csv";
-	evaluationConfigPath << "eval/" << evaluationConfigFilename << "_" << t << ".csv";
+	char evaluationDataPath[100];
+	sprintf(evaluationDataPath, "eval/evaluationData_%li.csv", t);
 	
-	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
+	char evaluationConfigPath[100];
+	sprintf(evaluationConfigPath, "eval/evaluationConfig_%li.csv", t);
+	
+	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app);
 	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Steps Max\n";
 	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxSteps << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	
-	evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
 	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
 	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
 	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
@@ -220,7 +226,7 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 			rawPos[i] = pos;
 			rawRot[i] = rot;
 		} else {
-			//delete source;
+			delete source;
 			currLineNumber = 0;
 			logDataReader.close();
 			return false;
