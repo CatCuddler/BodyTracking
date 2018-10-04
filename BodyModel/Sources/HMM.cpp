@@ -4,7 +4,7 @@
 #include <Kore/Log.h>
 
 namespace {
-	const char hmmPath[] = "../Tracking/";
+	const char hmmPath[] = "../../HMM_Trainer/Tracking/";
 	const char hmmName[] = "Yoga_Krieger";
 	
 	// Initial tracked position as base for rotation of any futher data points
