@@ -3,6 +3,8 @@
 
 #include <Kore/Log.h>
 
+#include <algorithm>
+
 namespace {
 	const char hmmPath[] = "../../HMM_Trainer/Tracking/";
 	const char hmmName[] = "Yoga_Krieger";
