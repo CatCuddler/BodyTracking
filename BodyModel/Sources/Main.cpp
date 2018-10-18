@@ -383,10 +383,10 @@ namespace {
 		if (buttonNr == 33 && value == 1) {
 			logRawData = !logRawData;
 			
-			if (logRawData) {
+			if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 				Audio1::play(startRecordingSound);
 				logger->startLogger("logData");
-			} else {
+			} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 				Audio1::play(stopRecordingSound);
 				logger->endLogger();
 			}
