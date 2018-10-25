@@ -1,6 +1,6 @@
-# Real-time body tracking in virtual reality using a Vive Tracker
+# Real-time body recognition in virtual reality using Vive Trackers and Controllers
 
-This project implements an accurate, low-latency body tracking approach for VR-based applications using Vive Trackers. By implementing an inverse kinematics solver, we can provide appropriate set of joint configurations in order to animate the motions of the avatar as smoothly, rapidly and as accurately as possible. Using a HTC Vive headset, two Vive Controllers and three Vive Trackers, attached to the hands and feet, it is possible to create immersive VR experiences, where the user is able to perceive the avatar as her/his own body.
+This project implements an accurate full-body recognition approach for VR-based applications using HTC Vive Trackers and Controllers. Motion recognition is based on Hidden Markov Model. Currently, a Yoga Warrior I pose can be recognized with an accuracy of 88%. However, more models can be trained. Furthermore, we implemented an Inverse Kinematics solver to animate the motions of the avatar as smoothly, rapidly and as accurately as possible. Using a HTC Vive headset, two Vive Controllers and three Vive Trackers, attached to the hands and feet, it is possible to create immersive VR experiences, where the user is able to perceive the avatar as her/his own body. The user can see her/his avatar from the first-person perspective and in a virtual mirror.
 
 ## Requirements:
 - node.js
