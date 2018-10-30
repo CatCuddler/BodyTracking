@@ -19,9 +19,6 @@
 #include <iostream>
 #include <fstream>
 
-using std::string;
-using std::vector;
-
 /***********************************************************
 * class: HMM
 * description: an object of the class HMM contains all
@@ -35,21 +32,21 @@ public:
 	int sigmaSize; // size of the emmission alphabet
 	double **a; // transition matrix
 	double **b; // emmission matrix
-	vector<double> pi; // initial state distribution
+	std::vector<double> pi; // initial state distribution
 	double probabilityThreshold; // log probability threshold for gesture to be recognized
 
-	vector<double> updateAlphaNormalized(vector<int>& sequence, double** alpha);
-	void updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta);
+	std::vector<double> updateAlphaNormalized(std::vector<int>& sequence, double** alpha);
+	void updateBetaNormalized(std::vector<int>& sequence, std::vector<double>& c, double** beta);
 
 public:
 	HMMModel(int N, int M, int LRdepth = 0);
 	HMMModel();
-	HMMModel(string, string);
+	HMMModel(std::string, std::string);
 
-	void writeHMM(string filePath, string fileName);
+	void writeHMM(std::string filePath, std::string fileName);
 	double getProbabilityThreshold();
-	double calculateProbability(vector<int>& sequence);
-	void trainHMM(vector<vector<int>>& sequence, int maxIter = 100, double delta = 0.1);
+	double calculateProbability(std::vector<int>& sequence);
+	void trainHMM(std::vector<std::vector<int>>& sequence, int maxIter = 100, double delta = 0.1);
 
 };
 

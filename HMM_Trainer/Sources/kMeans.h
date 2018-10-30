@@ -6,24 +6,22 @@
 #include <string>
 #include <vector>
 
-using namespace std;
+extern const std::string trackerNames[6];
 
-extern const string trackerNames[6];
-
-void setTrainingFilePath(string trainingFilePath);
-void setTrainingFileName(string trainingFileName);
-void setWriteFilePath(string writeFilePath);
-void setWriteFileName(string writeFileName);
+void setTrainingFilePath(std::string trainingFilePath);
+void setTrainingFileName(std::string trainingFileName);
+void setWriteFilePath(std::string writeFilePath);
+void setWriteFileName(std::string writeFileName);
 
 class Point {
 private:
 	int idPoint, idCluster;
-	vector<double> values;
+	std::vector<double> values;
 	int totalValue = 0;
 public:
 	Point();
 	Point(int idPoint);
-	Point(int idPoint, vector<double>& values);
+	Point(int idPoint, std::vector<double>& values);
 	int getID();
 	void setCluster(int idCluster);
 	int getCluster();
@@ -35,8 +33,8 @@ public:
 class Cluster {
 private:
 	int idCluster;
-	vector<double> centralValues;
-	vector<Point> points;
+	std::vector<double> centralValues;
+	std::vector<Point> points;
 public:
 	Cluster(int idCluster, Point point);
 	void addPoint(Point point);
@@ -54,24 +52,24 @@ private:
 	int totalValues; // dimension of the input points (x,y,z)
 	int maxIterations, totalPoints;
 	int averagePoints; // average number of points per sequence
-	vector <Cluster> clusters; // vector of clusters
+	std::vector <Cluster> clusters; // vector of clusters
 
 	// returns the id of the closest ClusterCenter of a given point, using the euclidean distance
 	int getIDClosestCenter(Point point);
 public:
 	KMeans();
-	KMeans(string filePath, string fileName);
+	KMeans(std::string filePath, std::string fileName);
 	KMeans(int K, int totalValues, int totalPoints, int averagePoints, int maxIterations);
-	void runKMeans(vector<Point> & points);
-	vector<int> matchPointsToClusters(vector<Point> points);
-	void writeKMeans(string filePath, string fileName);
-	vector<Cluster> getClusters();
+	void runKMeans(std::vector<Point> & points);
+	std::vector<int> matchPointsToClusters(std::vector<Point> points);
+	void writeKMeans(std::string filePath, std::string fileName);
+	std::vector<Cluster> getClusters();
 	int getAveragePoints();
 };
 
-vector<vector<Point>> readData(string fileName, int fileAmount);
-vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations);
-vector<vector<vector<int>>> sortDataToClusters(string fileNameToBeSorted, int fileAmount, vector<KMeans> kmeans);
-vector<Point> normaliseMeasurements(vector<Point>, int dataVolume);
+std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);
+std::vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations);
+std::vector<std::vector<std::vector<int>>> sortDataToClusters(std::string fileNameToBeSorted, int fileAmount, std::vector<KMeans> kmeans);
+std::vector<Point> normaliseMeasurements(std::vector<Point>, int dataVolume);
 
 #endif

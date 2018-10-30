@@ -17,12 +17,7 @@
 #include <algorithm>    // std::min
 #include <cmath>
 
-using std::ofstream;
-using std::ifstream;
-using std::cout;
-using std::getline;
-using std::ios;
-using std::stringstream;
+using namespace std;
 
 /********************************************************************************
 * method:		HMM construtor

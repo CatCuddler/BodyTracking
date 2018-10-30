@@ -18,6 +18,8 @@ create HMMs and calculate probabilities of new data sets
 #include <fstream>
 #include <time.h>
 
+using namespace std;
+
 // publicly available tracker names to represent them as string and not only as number. Mainly used for console output 
 const string trackerNames[6] = { "Head Mounted Display", "Left Hand Controller", "Right Hand Controller", "Back Tracker", "Left Foot Tracker", "Right Foot Tracker" };
 
@@ -50,7 +52,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 			KMeans kmeans(emissions, totalValues, parsedPoints.at(ii).size(), parsedPoints.at(ii).size() / fileAmount, maxIterations);
 			cout << "Calculating clusters for " << trackerNames[ii] << "; ";
 			kmeans.runKMeans(parsedPoints.at(ii));
-			kmeans.writeKMeans(writeFilePathKMeans, writeFileNameKMeans + "_" + std::to_string(ii));
+			kmeans.writeKMeans(writeFilePathKMeans, writeFileNameKMeans + "_" + to_string(ii));
 			returnVector.at(ii) = kmeans;
 		}
 	}
@@ -68,11 +70,11 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 ********************************************************************************/
 vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, vector<KMeans> kmeans) {
 	vector<vector<vector<int>>> returnVector(6);
-	std::cout << "Normalising data set to same total movement duration. \n";
+	cout << "Normalising data set to same total movement duration. \n";
 	vector<vector<Point>> currentDataSet;
 	for (int currentFile = 0; currentFile < fileAmount; currentFile++) {
 		// check whether there is more than one file to be checked, and creeate seperate files if it is the case
-		if (fileAmount != 1) { currentDataSet = readData(fileName + std::to_string(currentFile), 1); }
+		if (fileAmount != 1) { currentDataSet = readData(fileName + to_string(currentFile), 1); }
 		// else just create one file
 		else { currentDataSet = readData(fileName, 1); }
 		for (int currentTracker = 0; currentTracker < 6; currentTracker++) {
@@ -133,7 +135,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 
 		string fullPath;
 		// if the amount of files is > 1 create a different file for each file
-		if (fileAmount != 1) fullPath = (trainingFilePathKMeans + fileName + std::to_string(kk) + ".txt");
+		if (fileAmount != 1) fullPath = (trainingFilePathKMeans + fileName + to_string(kk) + ".txt");
 		// else only create one path
 		else fullPath = (trainingFilePathKMeans + fileName + ".txt");
 
@@ -142,7 +144,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		}
 		else {
 			cout << "The current data set file " << fullPath << " does not exist!\n\n\n";
-			throw std::invalid_argument("File does not exist");
+			throw invalid_argument("File does not exist");
 		}
 
 		int currentSize;
@@ -203,7 +205,7 @@ KMeans::KMeans(string filePath, string fileName) {
 		f.open(fullPath);
 	}
 	else {
-		throw std::invalid_argument("No corresponding file found!");
+		throw invalid_argument("No corresponding file found!");
 	}
 
 	f >> emissions >> totalValues >> maxIterations >> totalPoints >> averagePoints;
