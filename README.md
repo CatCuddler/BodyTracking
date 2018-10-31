@@ -22,7 +22,8 @@ node Kore/make -g opengl
 
 ### Open VS or XCode
 Open VisualStudio or Xcode project in BodyModel/build <br />
-Change to "Release" mode
+Change to "Release" mode. <br />
+Change working directory in Xcode: Edit Scheme -> Use custom working directory --> choose deployment directory
 
 ### Avatar Calibration
 1. Strap one Vive Tracker on your left foot and another one on your right foot (above ankles)
