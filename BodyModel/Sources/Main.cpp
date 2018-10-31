@@ -291,6 +291,48 @@ namespace {
 			endEffector[i]->setOffsetRotation((desRotation.invert()).rotated(targetRot));
 		}
 	}
+	
+	void record() {
+		logRawData = !logRawData;
+		
+		if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+			Audio1::play(startRecordingSound);
+			logger->startLogger("logData");
+		} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+			Audio1::play(stopRecordingSound);
+			logger->endLogger();
+		}
+		
+		// HMM
+		if(hmm->isRecordingActive()) {
+			// Recording a movement
+			hmm->recording = !hmm->recording;
+			if (hmm->recording) {
+				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+			} else {
+				hmm->stopRecording();
+			}
+		} else if(hmm->isRecognitionActive()) {
+			// Recognizing a movement
+			hmm->recognizing = !hmm->recognizing;
+			if (hmm->recognizing) {
+				Audio1::play(startRecognitionSound);
+				log(Info, "Start recognizing the motion");
+				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+			} else {
+				log(Info, "Stop recognizing the motion");
+				bool correct = hmm->stopRecognition();
+				if (correct) {
+					log(Info, "The movement is correct!");
+					Audio1::play(correctSound);
+				} else {
+					log(Info, "The movement is wrong");
+					Audio1::play(wrongSound);
+				}
+			}
+		}
+	}
+	
 
 #ifdef KORE_STEAMVR
 	void setSize() {
@@ -381,44 +423,7 @@ namespace {
 		
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
-			logRawData = !logRawData;
-			
-			if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
-				Audio1::play(startRecordingSound);
-				logger->startLogger("logData");
-			} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
-				Audio1::play(stopRecordingSound);
-				logger->endLogger();
-			}
-			
-			// HMM
-			if(hmm->isRecordingActive()) {
-				// Recording a movement
-				hmm->recording = !hmm->recording;
-				if (hmm->recording) {
-					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
-				} else {
-					hmm->stopRecording();
-				}
-			} else if(hmm->isRecognitionActive()) {
-				// Recognizing a movement
-				hmm->recognizing = !hmm->recognizing;
-				if (hmm->recognizing) {
-					Audio1::play(startRecognitionSound);
-					log(Info, "Start recognizing the motion");
-					hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
-				} else {
-					log(Info, "Stop recognizing the motion");
-					bool correct = hmm->stopRecognition();
-					if (correct) {
-						log(Info, "The movement is correct!");
-						Audio1::play(correctSound);
-					} else {
-						log(Info, "The movement is wrong");
-						Audio1::play(wrongSound);
-					}
-				}
-			}
+			record();
 		}
 	}
 	
@@ -620,10 +625,12 @@ namespace {
 #endif
 				break;
 			case KeyL:
-				Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
-				Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
-				Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
-				Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
+				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
+				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
+				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
+				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
+				
+				record();
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
