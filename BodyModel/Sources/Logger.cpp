@@ -53,7 +53,7 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	hmmWriter.open(logFileName, std::ios::out);
 	
 	// Append header
-	char hmmHeader[] = "tag;time;posX;posY;posZ;rotX;rotY;rotZ;rotW\n";
+	char hmmHeader[] = "tag time posX posY posZ rotX rotY rotZ rotW\n";
 	hmmWriter << hmmHeader;
 	hmmWriter.flush();
 	
@@ -83,7 +83,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	}
 	
 	if (newLine) hmmAnalysisWriter << "\n";
-	else hmmAnalysisWriter << probability << ";";
+	else hmmAnalysisWriter << probability << " ";
 	
 	hmmAnalysisWriter.flush();
 }

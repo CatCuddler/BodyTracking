@@ -3,15 +3,14 @@
 #include "Avatar.h"
 
 #include <Kore/Math/Quaternion.h>
-//#include <Kore/IO/FileReader.h>
-//#include <Kore/IO/FileWriter.h>
 
 #include <fstream>
 
 class Logger {
 	
 private:
-	// Output file to save raw data
+	// Input and output file to for raw data
+	std::fstream logDataReader;
 	std::ofstream logdataWriter;
 	
 	// Output file to save data for hmm
@@ -22,8 +21,6 @@ private:
 	std::fstream evaluationDataOutputFile;
 	std::fstream evaluationConfigOutputFile;
 	
-	//Kore::FileReader logDataReader;
-	std::fstream logDataReader;
 public:
 	Logger();
 	~Logger();
