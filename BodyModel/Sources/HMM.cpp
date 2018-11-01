@@ -66,7 +66,7 @@ void HMM::startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 
 void HMM::stopRecording() {
 	if (record) {
-		logger.endHMMLogger(curentLineNumber);
+		logger.endHMMLogger();
 	}
 }
 

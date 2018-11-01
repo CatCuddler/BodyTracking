@@ -10,7 +10,6 @@ namespace {
 	char* source;
 	
 	bool initHmmAnalysisData = false;
-	int hmmHeaderLength;
 	
 	bool getLine(const char* tag, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float* scale) {
 		int i = 0;
@@ -99,21 +98,13 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	
 	// Append header
 	char hmmHeader[] = "tag;time;posX;posY;posZ;rotX;rotY;rotZ;rotW\n";
-	hmmHeaderLength = (int)strlen(hmmHeader);
 	hmmWriter << hmmHeader;
-	
-	// Placeholder for line number that will be overwritten when the file is closed
-	hmmWriter << "          \n";
-	
 	hmmWriter.flush();
 	
 	log(Kore::Info, "Start logging data for HMM");
 }
 
-void Logger::endHMMLogger(int lineCount) {
-	hmmWriter.seekp(hmmHeaderLength);
-	// Store number of lines / datapoints
-	hmmWriter << lineCount;
+void Logger::endHMMLogger() {
 	hmmWriter.flush();
 	hmmWriter.close();
 	
@@ -122,7 +113,7 @@ void Logger::endHMMLogger(int lineCount) {
 
 void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot) {
 	// Save position
-	hmmWriter << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << ";" << rot.x << ";" << rot.y << ";" << rot.z << ";" << rot.y << "\n";
+	hmmWriter << tag << " " << lastTime << " "  << pos.x() << " " << pos.y() << " " << pos.z() << " " << rot.x << " " << rot.y << " " << rot.z << " " << rot.y << "\n";
 	hmmWriter.flush();
 }
 

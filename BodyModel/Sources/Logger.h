@@ -38,7 +38,7 @@ public:
 	
 	// HMM
 	void startHMMLogger(const char* filename, int num);
-	void endHMMLogger(int lineCount);
+	void endHMMLogger();
 	void saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot);
 	void analyseHMM(const char* filename, double probability, bool newLine);
 	
