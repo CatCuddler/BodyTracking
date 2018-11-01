@@ -98,8 +98,8 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	hmmWriter.open(logFileName, std::ios::out);
 	
 	// Append header
-	char hmmHeader[] = "tag;time;posX;posY;posZ\n";
-	hmmHeaderLength = (int)strlen(hmmHeader) + 1;
+	char hmmHeader[] = "tag;time;posX;posY;posZ;rotX;rotY;rotZ;rotW\n";
+	hmmHeaderLength = (int)strlen(hmmHeader);
 	hmmWriter << hmmHeader;
 	
 	// Placeholder for line number that will be overwritten when the file is closed
@@ -120,9 +120,9 @@ void Logger::endHMMLogger(int lineCount) {
 	log(Kore::Info, "Stop logging data for HMM");
 }
 
-void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos) {
+void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot) {
 	// Save position
-	hmmWriter << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << "\n";
+	hmmWriter << tag << ";" << lastTime << ";"  << pos.x() << ";" << pos.y() << ";" << pos.z() << ";" << rot.x << ";" << rot.y << ";" << rot.z << ";" << rot.y << "\n";
 	hmmWriter.flush();
 }
 

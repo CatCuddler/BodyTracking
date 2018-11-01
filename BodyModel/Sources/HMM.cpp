@@ -31,7 +31,7 @@ namespace {
 	
 }
 
-HMM::HMM(Logger& logger) : logger(logger) {
+HMM::HMM(Logger& logger) : logger(logger), recording(false), recognizing(false) {
 	curentFileNumber = 0;
 }
 
@@ -131,6 +131,14 @@ bool HMM::hmmActive() {
 	else return false;
 }
 
+bool HMM::hmmRecording() {
+	return recording;
+}
+
+bool HMM::hmmRecognizing() {
+	return recognizing;
+}
+
 void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation) {
 	// Either recording or recognition is active
 	if (recording || recognizing) {
@@ -146,8 +154,10 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 		if (record) {
 			// Data is recorded
 			// TODO: Why do we need 1.8?
-			Kore::vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
-			logger.saveHMMData(name, lastTime, hmmPos);
+			//Kore::vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
+			//logger.saveHMMData(name, lastTime, hmmPos, rotation);
+			
+			logger.saveHMMData(name, lastTime, position.normalize(), rotation);
 		}
 		
 		if (recognition) { // data is stored internally for evaluation at the end of recognition

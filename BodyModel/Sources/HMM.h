@@ -21,8 +21,8 @@ public:
 	bool isRecordingActive();
 	bool isRecognitionActive();
 	
-	bool recording = false;
-	bool recognizing = false;
+	bool recording;
+	bool recognizing;
 	
 	void startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	void stopRecording();
@@ -31,6 +31,8 @@ public:
 	bool stopRecognition();
 	
 	bool hmmActive();
+	bool hmmRecording();
+	bool hmmRecognizing();
 	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
 };
