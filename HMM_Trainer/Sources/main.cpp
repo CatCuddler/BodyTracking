@@ -383,7 +383,7 @@ vector<double> calculateProbability(HMMModel models[6]) {
 ********************************************************************************/
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	int trainingNumber = 0;
-	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".txt")) {
+	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".csv")) {
 		trainingNumber++;
 	}
 	return trainingNumber;
