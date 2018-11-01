@@ -28,7 +28,7 @@ void Logger::startLogger(const char* filename) {
 	logdataWriter.open(logFileName, std::ios::app); // Append to the end
 	
 	// Append header
-	logdataWriter << "tag;rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
+	logdataWriter << "tag rawPosX rawPosY rawPosZ rawRotX rawRotY rawRotZ rawRotW scale\n";
 	logdataWriter.flush();
 	
 	log(Kore::Info, "Start logging");
