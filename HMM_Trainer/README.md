@@ -1,4 +1,4 @@
-# HMM TrainerOpen
+# HMM Trainer
 
 ## Create a project
 Open Visual Studio <br />
