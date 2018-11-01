@@ -2,7 +2,7 @@ const glob = require('glob');
 const csvjson = require('csvjson');
 const { writeJsonSync, readFileSync, ensureDirSync } = require('fs-extra');
 const { resolve } = require('path');
-const { input, output, groupByFiles } = require('./config');
+const { input, output, groupToFolderBy } = require('./config');
 
 const parse = csv =>
   csvjson.toObject(csv, {
@@ -26,11 +26,15 @@ const work = (fromFolder, toFolder) => {
   });
 
   Object.keys(data).forEach(file => {
-    const folder = groupByFiles
-      ? `${config[file].File.split('-')[0]}_${toFolder}`
-      : toFolder;
+    const group = config[file].File.split('-')[0];
+    if (group) config[file].group = group;
 
-    if (config[file] && config[file]['IK Mode'] < 6) {
+    const folder =
+      groupToFolderBy && config[file][groupToFolderBy]
+        ? `${toFolder}${toFolder ? '/' : ''}${config[file][groupToFolderBy]}`
+        : toFolder;
+
+    if (config[file]) {
       ensureDirSync(resolve(__dirname, 'json', folder));
       writeJsonSync(
         resolve(__dirname, 'json', folder, `evaluationData_${file}.json`),

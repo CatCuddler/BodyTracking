@@ -22,6 +22,7 @@
 #include <thread>
 
 using namespace std;
+
 // declaration above main for function to be found instead of creating header file
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName);
 void updateFilePaths();
@@ -32,9 +33,9 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on at least one data set specified below
-bool createHMM = false;
+bool createHMM = true;
 // Optimise a single HMM by indefinitely calculating new HMMs and replacing the old ones if those are better
-bool optimiseInfiniteHMM = true;
+bool optimiseInfiniteHMM = false;
 // Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM
@@ -46,6 +47,7 @@ bool debug = false;
 // File name of the data set to be used used for single probability calculation
 string currentMovement = "Yoga_Krieger5";
 // Path for the source files
+// NOTE: change working directory if necessary
 string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger_";
@@ -84,8 +86,9 @@ int main() {
 
 	/// ***** ***** ***** Creating a new HMM ***** ***** ***** ///
 	if (createHMM) {
-		cout << "<Automatic execution>\n" << "Using predefined variables for execution." "\n\n";
+		cout << "<Automatic execution>\n" << "Using predefined variables for execution.\n\n";
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
+		cout << "Create HMM using " << trainingNumber << " files.\n";
 
 		/// ***** ***** Actual creation of HMM ***** ***** ///
 		cout << "Training HMM with " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
@@ -380,7 +383,7 @@ vector<double> calculateProbability(HMMModel models[6]) {
 ********************************************************************************/
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	int trainingNumber = 0;
-	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".txt")) {
+	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".csv")) {
 		trainingNumber++;
 	}
 	return trainingNumber;

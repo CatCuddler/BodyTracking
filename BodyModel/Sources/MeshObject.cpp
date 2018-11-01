@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "MeshObject.h"
 
-#include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 

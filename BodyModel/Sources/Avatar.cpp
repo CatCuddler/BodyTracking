@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "Avatar.h"
 
-#include "RotationUtility.h"
-#include "InverseKinematics.h"
-
 using namespace Kore;
 using namespace Kore::Graphics4;
 

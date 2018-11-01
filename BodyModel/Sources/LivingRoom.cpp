@@ -1,5 +1,4 @@
 #include "pch.h"
-
 #include "LivingRoom.h"
 
 using namespace Kore;

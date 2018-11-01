@@ -1,17 +1,15 @@
+#include "Settings.h"
 #include "MeshObject.h"
 #include "BussIK/MatrixRmn.h"
-#include "RotationUtility.h"
-#include "Settings.h"
 #include "EndEffector.h"
-
-#include <Kore/Log.h>
 
 struct BoneNode;
 
-template<int nJointDOFs = 6, bool posAndOrientation = true> class Jacobian {
+template<int nJointDOFs = 6> class Jacobian {
 	
 public:
-	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, IKMode ikMode = JT) {
+	std::vector<float> calcDeltaTheta(BoneNode* endEffektor, Kore::vec3 pos_soll, Kore::Quaternion rot_soll, int ikMode) {
+		
 		std::vector<float> deltaTheta;
 		vec_n vec;
 		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
@@ -22,20 +20,6 @@ public:
 		errorPos = Kore::vec3(deltaP[0], deltaP[1], deltaP[2]).getLength();
 		if (nDOFs == 6)
 			errorRot = Kore::vec3(deltaP[3], deltaP[4], deltaP[5]).getLength();
-		
-		// clampMag
-		if (dMaxPos[ikMode] > nearNull) {
-			Kore::vec3 clampedPos = clampMag(Kore::vec3(deltaP[0], deltaP[1], deltaP[2]), dMaxPos[ikMode]);
-			deltaP[0] = clampedPos[0];
-			deltaP[1] = clampedPos[1];
-			deltaP[2] = clampedPos[2];
-		}
-		if (dMaxRot[ikMode] > nearNull) {
-			Kore::vec3 clampedRot = clampMag(Kore::vec3(deltaP[3], deltaP[4], deltaP[5]), dMaxRot[ikMode]);
-			deltaP[3] = clampedRot[0];
-			deltaP[4] = clampedRot[1];
-			deltaP[5] = clampedRot[2];
-		}
 		
 		switch (ikMode) {
 			case JPI:
@@ -72,16 +56,16 @@ public:
 	}
 	
 private:
-	typedef Kore::Matrix<nJointDOFs, posAndOrientation ? 6 : 3, float>                  mat_mxn;
-	typedef Kore::Matrix<posAndOrientation ? 6 : 3, nJointDOFs, float>                  mat_nxm;
-	typedef Kore::Matrix<posAndOrientation ? 6 : 3, posAndOrientation ? 6 : 3, float>   mat_mxm;
-	typedef Kore::Matrix<nJointDOFs, nJointDOFs, float>                                 mat_nxn;
-	typedef Kore::Vector<float, posAndOrientation ? 6 : 3>                              vec_m;
-	typedef Kore::Vector<float, nJointDOFs>                                             vec_n;
+	typedef Kore::Matrix<nJointDOFs, 6, float>				mat_mxn;
+	typedef Kore::Matrix<6, nJointDOFs, float>				mat_nxm;
+	typedef Kore::Matrix<6, 6, float>						mat_mxm;
+	typedef Kore::Matrix<nJointDOFs, nJointDOFs, float>		mat_nxn;
+	typedef Kore::Vector<float, 6>							vec_m;
+	typedef Kore::Vector<float, nJointDOFs>					vec_n;
 	
 	float   errorPos = -1.0f;
 	float	errorRot = -1.0f;
-	int     nDOFs = posAndOrientation ? 6 : 3;
+	int     nDOFs = 6;
 	
 	mat_mxm U;
 	mat_nxn V;
@@ -105,9 +89,11 @@ private:
 	vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
+		float max = MaxAbs(d);
+		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			if (fabs(d[i]) > lambda[3]) // modification to stabilize SVD
+			if (fabs(d[i]) > lambda[3] * max) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
@@ -315,8 +301,21 @@ private:
 		return vec;
 	}
 	
+	float MaxAbs(vec_m vec) {
+		float max = 0;
+		
+		for (int m = 0; m < nDOFs; ++m) {
+			float val = fabs(vec[m]);
+			
+			if (val > max) max = val;
+		}
+		
+		return max;
+	}
+	
 	vec_n clampMaxAbs(vec_n vec, float gamma_i) {
 		float max = 0;
+		
 		for (int n = 0; n < nJointDOFs; ++n) {
 			float val = fabs(vec[n]);
 			

@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "InverseKinematics.h"
-#include "EndEffector.h"
 
 #include <float.h>
-#include <Kore/Log.h>
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
@@ -53,7 +51,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while ((errorPos < 0 || errorPos > errorMaxPos || errorRot < 0 || errorRot > errorMaxRot) && i < (int) maxSteps[ikMode] && !stucked) {
+	while ((errorPos < 0 || errorPos > errorMaxPos[ikMode] || errorRot < 0 || errorRot > errorMaxRot[ikMode]) && i < (int) maxSteps[ikMode] && !stucked) {
 #ifdef KORE_MACOS
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 #endif
@@ -75,7 +73,6 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 			deltaTheta = jacobianHead->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianHead->getPositionError();
 			errorRot = jacobianHead->getRotationError();
-			
 		}
 		
 		// check if ik stucked (runned in extrema)
@@ -110,7 +107,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	
 	if (eval) {
 		totalNum += 1;
-		evalReached += (errorPos < errorMaxPos && errorRot < errorMaxRot) ? 1 : 0;
+		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
 		evalStucked += stucked ? 1 : 0;
 		
 		// iterations
@@ -233,11 +230,11 @@ void InverseKinematics::setJointConstraints() {
 	nodeLeft->constrain[zMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[zMax] = getRadian(45) + tolerance;
 	
 	// Upper body
-	nodeLeft = bones[upperBack - 1];
+/*	nodeLeft = bones[upperBack - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
 	nodeLeft->constrain[xMin] = -getRadian(30) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
 	nodeLeft->constrain[yMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[yMax] = getRadian(20) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;
+	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;*/
 	
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];

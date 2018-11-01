@@ -11,8 +11,6 @@ const LabelGroup = ({
   errorRot,
   lambda,
   steps,
-  dMaxPos,
-  dMaxRot,
   selectedFiles,
   groupBy
 }) => (
@@ -40,7 +38,9 @@ const LabelGroup = ({
       >
         {name && selectedFiles.length > 1
           ? `#${selectedFiles.findIndex(x => x === name) + 1}`
-          : length}
+          : groupBy
+            ? `1 x ${length}`
+            : `${length} x 1`}
       </Label>
       <Label color="teal" horizontal>
         {file || '-'}
@@ -53,9 +53,6 @@ const LabelGroup = ({
       </Label>
       <Label color="green" horizontal>
         {steps || '-'}
-      </Label>
-      <Label color="violet" horizontal>
-        {dMaxPos || '-'} / {dMaxRot || '-'}
       </Label>
     </Label.Group>
   </div>

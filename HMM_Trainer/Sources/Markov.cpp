@@ -16,13 +16,8 @@
 #include <time.h>
 #include <algorithm>    //  min
 #include <cmath>
+
 using namespace std;
-//using std::ofstream;
-//using std::ifstream;
-//using std::cout;
-//using std::getline;
-//using std::ios;
-//using std::stringstream;
 
 /********************************************************************************
 * method:		HMM construtor

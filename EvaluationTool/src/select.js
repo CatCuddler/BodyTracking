@@ -25,6 +25,13 @@ const Select = ({ allowNull, value, setValue }) => (
         file
       </Dropdown.Item>
       <Dropdown.Item
+        onClick={() => setValue('group')}
+        active={value === 'group'}
+      >
+        <Label circular empty />
+        group
+      </Dropdown.Item>
+      <Dropdown.Item
         onClick={() => setValue('lambda')}
         active={value === 'lambda'}
       >
@@ -51,20 +58,6 @@ const Select = ({ allowNull, value, setValue }) => (
       >
         <Label color="green" circular empty />
         steps
-      </Dropdown.Item>
-      <Dropdown.Item
-        onClick={() => setValue('dMaxPos')}
-        active={value === 'dMaxPos'}
-      >
-        <Label color="violet" circular empty />
-        dMaxPos
-      </Dropdown.Item>
-      <Dropdown.Item
-        onClick={() => setValue('dMaxRot')}
-        active={value === 'dMaxRot'}
-      >
-        <Label color="violet" circular empty />
-        dMaxRot
       </Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>

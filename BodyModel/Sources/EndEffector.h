@@ -8,7 +8,7 @@ enum EndEffectorIndices {
 };
 
 enum IKMode {
-	JT, JPI, DLS, SVD, SVD_DLS, SDLS, SDLS_Mod
+	JT = 0, JPI = 1, DLS = 2, SVD = 3, SVD_DLS = 4, SDLS = 5
 };
 
 // Head

@@ -10,7 +10,9 @@
 #include <Kore/Audio1/Sound.h>
 #include <Kore/Audio1/SoundStream.h>
 #include <Kore/System.h>
+#include <Kore/Log.h>
 
+#include "Settings.h"
 #include "EndEffector.h"
 #include "Avatar.h"
 #include "LivingRoom.h"
@@ -26,8 +28,14 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
-
 namespace {
+	const int width = 1024;
+	const int height = 768;
+	
+	const bool renderRoom = true;
+	const bool renderTrackerAndController = true;
+	const bool renderAxisForEndEffector = false;
+	
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 6;
 	
@@ -165,9 +173,11 @@ namespace {
 				renderVRDevice(1, mirrorM);
 			}
 			
-			// Render local coordinate system
-			renderVRDevice(2, M);
-			renderVRDevice(2, mirrorM);
+			// Render local coordinate system only if the avatar is not calibrated
+			if (!calibratedAvatar) {
+				renderVRDevice(2, M);
+				renderVRDevice(2, mirrorM);
+			}
 		}
 #endif
 	}
@@ -238,46 +248,90 @@ namespace {
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		// Save data to either train hmm or to recognize a movement
-		if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
+		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
+		if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatar) {
-			// Add offset to endeffector
+			// Transform desired position/rotation to the character local coordinate system
+			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			desRotation = initRotInv.rotated(desRotation);
+			
+			// Add offset
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
 			vec3 offserPosition = endEffector[endEffectorID]->getOffsetPosition();
-			
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
-			
-			// Transform desired position to the character local coordinate system
-			finalRot = initRotInv.rotated(finalRot);
-			finalPos = initTransInv * vec4(finalPos.x(), finalPos.y(), finalPos.z(), 1);
-
-			//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 			} else {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
+			
+			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
 	
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::vec3 currentPos = endEffector[i]->getDesPosition();
-			Kore::Quaternion currentRot = endEffector[i]->getDesRotation();
+			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
+			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
+			// Transform desired position/rotation to the character local coordinate system
+			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			desRotation = initRotInv.rotated(desRotation);
+			
+			// Get actual position/rotation of the character skeleton
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
-			
 			vec3 targetPos = bone->getPosition();
-			targetPos = initTrans * vec4(targetPos.x(), targetPos.y(), targetPos.z(), 1);
+			Kore::Quaternion targetRot = bone->getOrientation();
 			
-			Kore::Quaternion targetRot = initRot.rotated(bone->getOrientation());
-			
-			endEffector[i]->setOffsetPosition((mat4::Translation(currentPos.x(), currentPos.y(), currentPos.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
-			endEffector[i]->setOffsetRotation((currentRot.invert()).rotated(targetRot));
+			endEffector[i]->setOffsetPosition((mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
+			endEffector[i]->setOffsetRotation((desRotation.invert()).rotated(targetRot));
 		}
 	}
+	
+	void record() {
+		logRawData = !logRawData;
+		
+		if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+			Audio1::play(startRecordingSound);
+			logger->startLogger("logData");
+		} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+			Audio1::play(stopRecordingSound);
+			logger->endLogger();
+		}
+		
+		// HMM
+		if(hmm->isRecordingActive()) {
+			// Recording a movement
+			hmm->recording = !hmm->recording;
+			if (hmm->recording) {
+				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+			} else {
+				hmm->stopRecording();
+			}
+		} else if(hmm->isRecognitionActive()) {
+			// Recognizing a movement
+			hmm->recognizing = !hmm->recognizing;
+			if (hmm->recognizing) {
+				Audio1::play(startRecognitionSound);
+				log(Info, "Start recognizing the motion");
+				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+			} else {
+				log(Info, "Stop recognizing the motion");
+				bool correct = hmm->stopRecognition();
+				if (correct) {
+					log(Info, "The movement is correct!");
+					Audio1::play(correctSound);
+				} else {
+					log(Info, "The movement is wrong");
+					Audio1::play(wrongSound);
+				}
+			}
+		}
+	}
+	
 
 #ifdef KORE_STEAMVR
 	void setSize() {
@@ -309,8 +363,10 @@ namespace {
 			vrDevice = VrInterface::getController(i);
 			
 			vec3 devicePos = vrDevice.vrPose.position;
-			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
+			
+			// Transform desired position to the character local coordinate system
+			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
 			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
 				if (devicePos.y() < currentUserHeight / 3) {
@@ -366,44 +422,7 @@ namespace {
 		
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
-			logRawData = !logRawData;
-			
-			if (logRawData) {
-				logger->startLogger("logData");
-			} else {
-				logger->endLogger();
-			}
-			
-			// HMM
-			if(hmm->isRecordingActive()) {
-				// Recording a movement
-				hmm->recording = !hmm->recording;
-				if (hmm->recording) {
-					Audio1::play(startRecordingSound);
-					hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
-				} else {
-					hmm->stopRecording();
-					Audio1::play(stopRecordingSound);
-				}
-			} else if(hmm->isRecognitionActive()) {
-				// Recognizing a movement
-				hmm->recognizing = !hmm->recognizing;
-				if (hmm->recognizing) {
-					Audio1::play(startRecognitionSound);
-					log(Info, "Start recognizing the motion");
-					hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
-				} else {
-					log(Info, "Stop recognizing the motion");
-					bool correct = hmm->stopRecognition();
-					if (correct) {
-						log(Info, "The movement is correct!");
-						Audio1::play(correctSound);
-					} else {
-						log(Info, "The movement is wrong");
-						Audio1::play(wrongSound);
-					}
-				}
-			}
+			record();
 		}
 	}
 	
@@ -504,7 +523,6 @@ namespace {
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 #else
-		
 		// Read line
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
@@ -525,47 +543,49 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
 			
 		} else {
-			currentFile++;
-			calibratedAvatar = false;
-			
-			// Evaluation
-			/*if(eval) {
+			if (eval) {
 				if (loop >= 0) {
-					if (eval) logger->saveEvaluationData(avatar);
+					logger->saveEvaluationData(avatar);
 					// log(Kore::Info, "%i more iterations!", loop);
-					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, lambda[ikMode]);
+					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, evalValue[ikMode]);
 					loop--;
 					
-					if (eval && loop < 0) {
+					if (loop < 0) {
 						logger->endEvaluationLogger();
 						
-						if (currentFile >= evalFilesInGroup - 1 && ikMode >= 5 && evalSteps <= 1) {
+						if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
 							exit(0);
-						} else {
+						else {
 							if (evalSteps <= 1) {
-								lambda[ikMode] = evalInitValue[ikMode];
+								evalValue[ikMode] = evalInitValue[ikMode];
 								evalSteps = evalStepsInit;
 								ikMode++;
+								endEffector[head]->setIKMode((IKMode)ikMode);
+								endEffector[leftHand]->setIKMode((IKMode)ikMode);
+								endEffector[rightHand]->setIKMode((IKMode)ikMode);
+								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
+								endEffector[hip]->setIKMode((IKMode)ikMode);
 							} else {
-								lambda[ikMode] += evalStep;
+								evalValue[ikMode] += evalStep;
 								evalSteps--;
 							}
 							
-							if (ikMode > 5) {
-								ikMode = 0;
+							if (ikMode > evalMaxIk) {
+								ikMode = evalMinIk;
 								currentFile++;
 							}
 							
 							loop = 0;
-							logger->startEvaluationLogger();
+							logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxSteps[ikMode]);
 						}
 					}
-					
-					if (loop >= 0)
-						initVars();
 				}
-			}*/
-        }
+			} else {
+				currentFile++;
+				calibratedAvatar = false;
+			}
+		}
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -604,8 +624,12 @@ namespace {
 #endif
 				break;
 			case KeyL:
-				Kore::log(Kore::LogLevel::Info, "Position: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
-				Kore::log(Kore::LogLevel::Info, "Looking at: (%f, %f %f %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
+				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
+				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
+				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
+				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
+				
+				record();
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
@@ -781,7 +805,6 @@ namespace {
 		}
 		
 		logger = new Logger();
-		if (eval) logger->startEvaluationLogger();
 		
 		hmm = new HMM(*logger);
 		

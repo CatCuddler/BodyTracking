@@ -18,8 +18,8 @@ const enhance = compose(
   withState('max', 'setMax'),
   withState('scale', 'setScale'),
   withState('average', 'setAverage'),
+  withState('extrema', 'setExtrema'),
   withState('interpolate', 'setInterpolate'),
-  withState('notnull', 'setNotNull'),
   withPropsOnChange(['files', 'folder'], ({ files, folder }) => ({
     folders: files
       .map(file => file.folder)
@@ -105,10 +105,10 @@ const App = ({
   setScale,
   interpolate,
   setInterpolate,
-  notnull,
-  setNotNull,
   average,
-  setAverage
+  setAverage,
+  extrema,
+  setExtrema
 }) => (
   <div
     style={{
@@ -138,10 +138,10 @@ const App = ({
       setScale={setScale}
       interpolate={interpolate}
       setInterpolate={setInterpolate}
-      notnull={notnull}
-      setNotNull={setNotNull}
       average={average}
       setAverage={setAverage}
+      extrema={extrema}
+      setExtrema={setExtrema}
     />
 
     <div style={{ flexGrow: 1, display: 'flex' }}>
@@ -164,8 +164,8 @@ const App = ({
         scale={scale}
         interpolate={interpolate}
         setInterpolate={setInterpolate}
-        notnull={notnull}
         average={average}
+        extrema={extrema}
       />
     </div>
   </div>

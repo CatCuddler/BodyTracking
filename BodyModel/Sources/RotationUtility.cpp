@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "RotationUtility.h"
-#include "Settings.h"
 
 #include <math.h>
 
