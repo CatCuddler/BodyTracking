@@ -47,14 +47,14 @@ void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRo
 
 void Logger::startHMMLogger(const char* filename, int num) {
 	std::stringstream logFileName;
-	logFileName << filename << "_" << num << ".csv";
+	logFileName << filename << "_" << num << ".txt";
 	
 	hmmDataOutputFile.open(logFileName.str(), std::ios::out);
 	const char* hmmHeader = "tag;time;posX;posY;posZ\n";
 	hmmDataOutputFile << hmmHeader;
 	
 	// Placeholder for line number that will be overwritten when the file is closed
-	hmmDataOutputFile << "N=        ;;;;\n";
+	hmmDataOutputFile << "N=     \n";
 	hmmHeaderLength = (int)strlen(hmmHeader);
 	
 	hmmDataOutputFile.flush();
@@ -65,7 +65,7 @@ void Logger::startHMMLogger(const char* filename, int num) {
 void Logger::endHMMLogger(int lineCount) {
 	hmmDataOutputFile.seekp(hmmHeaderLength);
 	// Store number of lines / datapoints
-	hmmDataOutputFile << "N=" << lineCount;
+	hmmDataOutputFile <<endl << "N=" << lineCount;
 	hmmDataOutputFile.flush();
 	hmmDataOutputFile.close();
 	
