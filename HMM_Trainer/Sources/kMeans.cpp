@@ -161,12 +161,12 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			Point point = Point(ii, values);
 
 			// differentiate the parsed points and add them to the correct vectors
-			if (id_tracker.compare("HMD") == 0)      returnVector.at(0).push_back(point);
-			else if (id_tracker.compare("lhC") == 0) returnVector.at(1).push_back(point);
-			else if (id_tracker.compare("rhC") == 0) returnVector.at(2).push_back(point);
-			else if (id_tracker.compare("bac") == 0) returnVector.at(3).push_back(point);
-			else if (id_tracker.compare("lfT") == 0) returnVector.at(4).push_back(point);
-			else if (id_tracker.compare("rfT") == 0) returnVector.at(5).push_back(point);
+			if (id_tracker.compare("head") == 0)      returnVector.at(0).push_back(point);
+			else if (id_tracker.compare("lHand") == 0) returnVector.at(1).push_back(point);
+			else if (id_tracker.compare("rHand") == 0) returnVector.at(2).push_back(point);
+			else if (id_tracker.compare("hip") == 0) returnVector.at(3).push_back(point);
+			else if (id_tracker.compare("lFoot") == 0) returnVector.at(4).push_back(point);
+			else if (id_tracker.compare("rFoot") == 0) returnVector.at(5).push_back(point);
 			else  cout << "Error! Unknown tracker data detected.";
 		}
 		f.close();
