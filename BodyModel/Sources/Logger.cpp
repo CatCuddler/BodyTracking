@@ -103,7 +103,7 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	hmmWriter << hmmHeader;
 	
 	// Placeholder for line number that will be overwritten when the file is closed
-	hmmWriter << "N=          \n";
+	hmmWriter << "          \n";
 	
 	hmmWriter.flush();
 	
@@ -113,7 +113,7 @@ void Logger::startHMMLogger(const char* filename, int num) {
 void Logger::endHMMLogger(int lineCount) {
 	hmmWriter.seekp(hmmHeaderLength);
 	// Store number of lines / datapoints
-	hmmWriter << "N=" << lineCount;
+	hmmWriter << lineCount;
 	hmmWriter.flush();
 	hmmWriter.close();
 	
