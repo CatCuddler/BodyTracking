@@ -3,8 +3,8 @@
 #include "Avatar.h"
 
 #include <Kore/Math/Quaternion.h>
-#include <Kore/IO/FileReader.h>
-#include <Kore/IO/FileWriter.h>
+//#include <Kore/IO/FileReader.h>
+//#include <Kore/IO/FileWriter.h>
 
 #include <fstream>
 
@@ -22,8 +22,8 @@ private:
 	std::fstream evaluationDataOutputFile;
 	std::fstream evaluationConfigOutputFile;
 	
-	Kore::FileReader logDataReader;
-	
+	//Kore::FileReader logDataReader;
+	std::fstream logDataReader;
 public:
 	Logger();
 	~Logger();

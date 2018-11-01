@@ -6,51 +6,7 @@
 #include <ctime>
 
 namespace {
-	int currLineNumber = 0;
-	char* source;
-	
 	bool initHmmAnalysisData = false;
-	
-	bool getLine(const char* tag, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float* scale) {
-		int i = 0;
-		while(i < 9) {
-			
-			if (currLineNumber > 0) {
-				if (i == 0) {
-					tag = source;
-					bool checkTag = false;
-					if (tag == nullptr) checkTag = false;
-					else if (strcmp(tag, headTag) == 0) checkTag = true;
-					else if (strcmp(tag, hipTag) == 0) checkTag = true;
-					else if (strcmp(tag, lHandTag) == 0) checkTag = true;
-					else if (strcmp(tag, rHandTag) == 0) checkTag = true;
-					else if (strcmp(tag, lFootTag) == 0) checkTag = true;
-					else if (strcmp(tag, rFootTag) == 0) checkTag = true;
-					if (!checkTag) return false;
-				} else {
-					try {
-						float value = stof(source);
-						if (i == 1) rawPos->x() = value;
-						else if (i == 2) rawPos->y() = value;
-						else if (i == 3) rawPos->z() = value;
-						else if (i == 4) rawRot->x = value;
-						else if (i == 5) rawRot->y = value;
-						else if (i == 6) rawRot->z = value;
-						else if (i == 7) rawRot->w = value;
-						else if (i == 8) *scale = value;
-					} catch (const std::exception& e) {
-						Kore::log(Kore::Info, "Invalid input: %s", e.what());
-						return false;
-					}
-				}
-				i++;
-			}
-			// Get token
-			source = strtok(NULL, ";\n");
-		}
-		//Kore::log(Kore::Info, "%s %f %f %f %f %f %f %f %f", tag, rawPos->x(), rawPos->y(), rawPos->z(), rawRot->x, rawRot->y, rawRot->z, rawRot->w, *scale);
-		return true;
-	}
 }
 
 Logger::Logger() {
@@ -86,7 +42,7 @@ void Logger::endLogger() {
 
 void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save position and rotation
-	logdataWriter << tag << ";" << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
+	logdataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
 	logdataWriter.flush();
 }
 
@@ -186,39 +142,31 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 }
 
 bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
-	if(currLineNumber == 0) {
-		log(Kore::Info, "Read data from %s", filename);
-		logDataReader.open(filename);
+	string tag;
+	float posX, posY, posZ;
+	float rotX, rotY, rotZ, rotW;
+	
+	if(!logDataReader.is_open()) {
 		
-		// Real all
-		void* data = logDataReader.readAll();
-		int length = logDataReader.size();
-		source = new char[length + 1];
-		for (int i = 0; i < length; ++i) {
-			source[i] = ((char*)data)[i];
+		if (ifstream(filename)) {
+			logDataReader.open(filename);
+			log(Kore::Info, "Read data from %s", filename);
+			
+			// Skip header
+			logDataReader >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag;
+		} else {
+			log(Kore::Info, "Could not find file %s", filename);
 		}
-		
-		// Skip header
-		source = std::strtok(source, "\n");
-		source = strtok(NULL, ";\n");
-		++currLineNumber;
 	}
 	
 	// Read lines
 	for (int i = 0; i < numOfEndEffectors; ++i) {
-		const char* tag;
-		Kore::vec3 pos = Kore::vec3(0, 0, 0);
-		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
+		logDataReader >> tag >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW >> scale;
 		
-		bool success = getLine(tag, &pos, &rot, &scale);
+		rawPos[i] = Kore::vec3(posX, posY, posZ);
+		rawRot[i] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
 		
-		if (success) {
-			++currLineNumber;
-			rawPos[i] = pos;
-			rawRot[i] = rot;
-		} else {
-			//delete source;
-			currLineNumber = 0;
+		if (logDataReader.fail() || logDataReader.eof()) {
 			logDataReader.close();
 			return false;
 		}
