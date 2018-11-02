@@ -1,4 +1,4 @@
-# Real-time body reconstruction recognition in virtual reality using Vive Trackers and Controllers
+# Real-time body reconstruction and recognition in virtual reality using Vive Trackers and Controllers
 
 This project implements an accurate full-body recognition approach for VR-based applications using HTC Vive Trackers and Controllers. Motion recognition is based on Hidden Markov Model. Currently, a Yoga Warrior I pose can be recognized with an accuracy of 88%. However, more models can be trained. Furthermore, we implemented an Inverse Kinematics solver to animate the motions of the avatar as smoothly, rapidly and as accurately as possible. Using a HTC Vive headset, two Vive Controllers and three Vive Trackers, attached to the hands and feet, it is possible to create immersive VR experiences, where the user is able to perceive the avatar as her/his own body. The user can see her/his avatar from the first-person perspective and in a virtual mirror.
 
@@ -7,7 +7,7 @@ This project implements an accurate full-body recognition approach for VR-based 
 - VisualStudio or Xcode
 
 ## Clone the project:
-git clone --recursive git@github.com:CatCuddler/BodyTracking.git
+git clone --recursive git@github.com:CatCuddler/BodyTracking.git <br />
 cd BodyTracking/BodyModel/Kore <br />
 git checkout master <br />
 git submodule update --init --recursive <br />
@@ -23,7 +23,7 @@ node Kore/make -g opengl
 ### Open VS or XCode
 Open VisualStudio or Xcode project in BodyModel/build <br />
 Change to "Release" mode. <br />
-Change working directory in Xcode: Edit Scheme -> Use custom working directory --> choose deployment directory
+Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose deployment directory
 
 ### Avatar Calibration
 1. Strap one Vive Tracker on your left foot and another one on your right foot (above ankles)
