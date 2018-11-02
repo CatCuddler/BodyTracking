@@ -50,7 +50,7 @@ void Logger::startHMMLogger(const char* filename, int num) {
 	char logFileName[50];
 	sprintf(logFileName, "%s_%i.csv", filename, num);
 	
-	hmmDataOutputFile.flush();
+	//hmmDataOutputFile.flush();
 	hmmWriter.open(logFileName, std::ios::out);
 	
 	// Append header
