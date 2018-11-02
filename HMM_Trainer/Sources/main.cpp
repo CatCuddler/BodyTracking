@@ -9,7 +9,7 @@
   variabels below.
 ********************************************************************************/
 
-#include "matrix.h"
+#include "Matrix.h"
 #include "Markov.h"
 #include "kMeans.h"
 

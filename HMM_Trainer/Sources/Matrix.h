@@ -1,15 +1,12 @@
 /********************************************************************************
 * file name: matrix.h
 * author: Yue Reuynil
-* last changes: 21.11.2016
+* last changes: 20.11.2016
 * content: contains a matrix template used for the Hidden Markov Model.
   Taken from https://github.com/Reuynil/hmm/blob/master/hmm/matrix.h
 ********************************************************************************/
 
 #pragma once
-
-#ifndef MATRIX_H_INCLUDED
-#define MATRIX_H_INCLUDED
 
 template<typename T>
 T** matrix(T u, int n, int m)
@@ -35,5 +32,3 @@ void freeMatrix(T** mt, int n)
 	}
 	delete[] mt;
 }
-
-#endif

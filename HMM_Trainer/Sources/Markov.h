@@ -11,9 +11,6 @@
 
 #pragma once
 
-#ifndef MARKOV_H_INCLUDED
-#define MARKOV_H_INCLUDED
-
 #include <string>
 #include <vector>
 #include <iostream>
@@ -49,5 +46,3 @@ public:
 	void trainHMM(std::vector<std::vector<int>>& sequence, int maxIter = 100, double delta = 0.1);
 
 };
-
-#endif
