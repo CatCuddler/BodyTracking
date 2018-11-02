@@ -7,7 +7,7 @@ Choose "Visual c++" <br />
 Project file location: BodyTracking/HMM_Trainer/Sources <br />
 Project name: HMMTrainer <br />
 
-Click next and choose console application project" from the dropdown. <br /> 
+Click next and choose "Console application project" from the dropdown. <br /> 
 Click Finish. <br /> 
 
 Eventually you have to change the version of Windows SDK: right click on the solution and select "Retarget solution".
