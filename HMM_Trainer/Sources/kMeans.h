@@ -50,7 +50,7 @@ private:
 	int maxIterations, totalPoints;
 	int averagePoints; // average number of points per sequence
 	std::vector <Cluster> clusters; // vector of clusters
-
+	
 	// returns the id of the closest ClusterCenter of a given point, using the euclidean distance
 	int getIDClosestCenter(Point point);
 public:
