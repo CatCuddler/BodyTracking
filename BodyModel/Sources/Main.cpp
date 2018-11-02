@@ -311,8 +311,10 @@ namespace {
 			// Recording a movement
 			hmm->recording = !hmm->recording;
 			if (hmm->recording) {
+				Audio1::play(startRecordingSound);
 				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 			} else {
+				Audio1::play(stopRecordingSound);
 				hmm->stopRecording();
 			}
 		} else if(hmm->isRecognitionActive()) {
