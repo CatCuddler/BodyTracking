@@ -57,10 +57,11 @@ void HMM::init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
 }
 
 void HMM::startRecording(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
-
+	if (record) {
 		init(hmdPosition, hmdRotation);
 		logger.startHMMLogger(hmmName, curentFileNumber);
 		curentFileNumber++;
+	}
 }
 
 void HMM::stopRecording() {
