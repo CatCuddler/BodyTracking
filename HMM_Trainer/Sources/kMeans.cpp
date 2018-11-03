@@ -1,10 +1,10 @@
 /********************************************************************************
-* file name: kMeans.cpp
-* authors: Markus Stabel, Moritz Kolvenbach, Marco Fendrich
-* last changes: 15.03.2018
-* content: means to calculate clusters of data points in varying forms. Used to
-create HMMs and calculate probabilities of new data sets
-********************************************************************************/
+ * file name: kMeans.cpp
+ * authors: Markus Stabel, Moritz Kolvenbach, Marco Fendrich
+ * last changes: 15.03.2018
+ * content: means to calculate clusters of data points in varying forms. Used to
+ create HMMs and calculate probabilities of new data sets
+ ********************************************************************************/
 
 #include "kMeans.h"
 #include <vector>
@@ -33,16 +33,16 @@ void setWriteFilePath(string writeFilePath) { writeFilePathKMeans = writeFilePat
 void setWriteFileName(string writeFileName) { writeFileNameKMeans = writeFileName; }
 
 /********************************************************************************
-* method:		calculateClusters
-* description:	calculates clusters coordinates for multiple data points,
-				trackers and files
-* parameters:	startfile is the number of the file to start the process with
-				fileAmount is the number of files to be used for the calculation
-				emissions is the number of clusters to be created based on the data points
-				total_values is the dimension of the points used as input
-				maxIteration is the maximum numbers of iterations of the algorithm
-* return value: vector (trackers) of calculated clusters of given points
-********************************************************************************/
+ * method:		calculateClusters
+ * description:	calculates clusters coordinates for multiple data points,
+ trackers and files
+ * parameters:	startfile is the number of the file to start the process with
+ fileAmount is the number of files to be used for the calculation
+ emissions is the number of clusters to be created based on the data points
+ total_values is the dimension of the points used as input
+ maxIteration is the maximum numbers of iterations of the algorithm
+ * return value: vector (trackers) of calculated clusters of given points
+ ********************************************************************************/
 vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations) {
 	vector<KMeans> returnVector(6);
 	vector<vector<Point>> parsedPoints = readData(trainingFileNameKMeans, fileAmount);
@@ -59,14 +59,14 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 }
 
 /********************************************************************************
-* method:		sortDataToClusters
-* description:	sorts the given data set to the given clusters
-* parameters:	fileName is the base name of the files to be read
-				fileAmount is the number of files to be used for the calculation
-				kmeans are the clusters for each tracker
-* return value: vector (trackers) of vector (files) of vector (data points) of
-				cluster numbers
-********************************************************************************/
+ * method:		sortDataToClusters
+ * description:	sorts the given data set to the given clusters
+ * parameters:	fileName is the base name of the files to be read
+ fileAmount is the number of files to be used for the calculation
+ kmeans are the clusters for each tracker
+ * return value: vector (trackers) of vector (files) of vector (data points) of
+ cluster numbers
+ ********************************************************************************/
 vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, vector<KMeans> kmeans) {
 	vector<vector<vector<int>>> returnVector(6);
 	cout << "Normalising data set to same total movement duration. \n";
@@ -89,12 +89,12 @@ vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, 
 
 
 /********************************************************************************
-* method:		normaliseMeasurements
-* description:	normalises a given dataSet
-* parameters:	inputData is the dataSet to be normalised
-				dataVolume is the targetSize of the dataSet after normalisation
-* return value: vector<Point> the normalised dataSet
-********************************************************************************/
+ * method:		normaliseMeasurements
+ * description:	normalises a given dataSet
+ * parameters:	inputData is the dataSet to be normalised
+ dataVolume is the targetSize of the dataSet after normalisation
+ * return value: vector<Point> the normalised dataSet
+ ********************************************************************************/
 vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
 	vector<Point> returnVector(dataVolume);
 	dataVolume--;
@@ -116,14 +116,14 @@ vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
 }
 
 /********************************************************************************
-* method:		readData
-* description:	reads "fileAmount" number of files into a datatype with wich the
-				HMM_Trainer can work
-* parameters:	filename is the filepath for the files to be parsed
-				fileAmount is the amount of files to be parsed starting with the 
-				first
-* return value: vector of (trackers) of vector of <Point>
-********************************************************************************/
+ * method:		readData
+ * description:	reads "fileAmount" number of files into a datatype with wich the
+ HMM_Trainer can work
+ * parameters:	filename is the filepath for the files to be parsed
+ fileAmount is the amount of files to be parsed starting with the 
+ first
+ * return value: vector of (trackers) of vector of <Point>
+ ********************************************************************************/
 vector<vector<Point>> readData(string fileName, int fileAmount) {
 	fstream f;
 	vector<vector<Point>> returnVector(6);
@@ -132,32 +132,30 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 	string tag, time;
 	double posX, posY, posZ;
 	double rotX, rotY, rotZ, rotW;
-
+	
 	for (int kk = 0; kk < 0 + fileAmount; kk++) {
-
+		
 		string fullPath;
 		// if the amount of files is > 1 create a different file for each file
 		if (fileAmount != 1) fullPath = (trainingFilePathKMeans + fileName + to_string(kk) + ".csv");
 		// else only create one path
 		else fullPath = (trainingFilePathKMeans + fileName + ".csv");
-
+		
 		if (ifstream(fullPath)) {
 			f.open(fullPath);
-		}
-		else {
+		} else {
 			cout << "The current data set file " << fullPath << " does not exist!\n\n\n";
 			throw invalid_argument("File does not exist");
 		}
-
+		
 		f >> tag >> time >> tag >> tag >> tag >> tag >> tag >> tag >> tag; // Skip header
 		
 		int ii = 0;
-		for (;;)
-		{
+		for (;;) {
 			f >> tag >> time >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
 			vector<double> values = { posX, posY, posZ };
 			Point point = Point(ii, values);
-
+			
 			// differentiate the parsed points and add them to the correct vectors
 			if (tag.compare("head") == 0)      returnVector.at(0).push_back(point);
 			else if (tag.compare("lHand") == 0) returnVector.at(1).push_back(point);
@@ -179,14 +177,14 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 
 
 /********************************************************************************
-* method:		KMeans constructor
-* description:	creates a KMeans object with the given input values
-* parameters:	emissions is the amount of clusters to be created
-				totalValue the dimension of the given points to be clustered
-				totalPoints the amount of points in the dataSet
-				averagePoints the average amount of points belonging to each cluster
-				maxIterations the max amount of iterations for the given KMeans
-********************************************************************************/
+ * method:		KMeans constructor
+ * description:	creates a KMeans object with the given input values
+ * parameters:	emissions is the amount of clusters to be created
+ totalValue the dimension of the given points to be clustered
+ totalPoints the amount of points in the dataSet
+ averagePoints the average amount of points belonging to each cluster
+ maxIterations the max amount of iterations for the given KMeans
+ ********************************************************************************/
 KMeans::KMeans(int emissions, int totalValues, int totalPoints, int averagePoints, int maxIterations) {
 	this->emissions = emissions;
 	this->totalValues = totalValues;
@@ -196,11 +194,11 @@ KMeans::KMeans(int emissions, int totalValues, int totalPoints, int averagePoint
 }
 
 /********************************************************************************
-* method:		KMeans constructor
-* description:	creates a KMeans object from a file
-* parameters:	filePath the filepath to the KMeans file
-				fileName the name of the KMeans file
-********************************************************************************/
+ * method:		KMeans constructor
+ * description:	creates a KMeans object from a file
+ * parameters:	filePath the filepath to the KMeans file
+ fileName the name of the KMeans file
+ ********************************************************************************/
 KMeans::KMeans(string filePath, string fileName) {
 	fstream f;
 	string fullPath = filePath + fileName + "_cluster.txt";
@@ -210,13 +208,12 @@ KMeans::KMeans(string filePath, string fileName) {
 	else {
 		throw invalid_argument("No corresponding file found!");
 	}
-
+	
 	f >> emissions >> totalValues >> maxIterations >> totalPoints >> averagePoints;
-
+	
 	double x, y, z;
-
-	for (int ii = 0; ii < emissions; ii++)
-	{
+	
+	for (int ii = 0; ii < emissions; ii++) {
 		f >> x >> y >> z;
 		vector<double> values = { x, y, z };
 		Point point = Point(ii, values);
@@ -227,44 +224,41 @@ KMeans::KMeans(string filePath, string fileName) {
 }
 
 /********************************************************************************
-* method:		KMeans null constructor
-* description:	creates an empty KMeans object
-********************************************************************************/
+ * method:		KMeans null constructor
+ * description:	creates an empty KMeans object
+ ********************************************************************************/
 KMeans::KMeans() : emissions(0), totalValues(0), totalPoints(0), averagePoints(0), maxIterations(0) {}
 
 vector<Cluster> KMeans::getClusters() { return clusters; }
 int KMeans::getAveragePoints() { return averagePoints; }
 
 /********************************************************************************
-* method:		getIDClosestCenter
-* description:	calculates the closest cluster for a given point and returns it's ID
-* parameters:	point the point for which the closest cluster is to be found
-* return value: int the ID of the closest cluster from the point
-********************************************************************************/
+ * method:		getIDClosestCenter
+ * description:	calculates the closest cluster for a given point and returns it's ID
+ * parameters:	point the point for which the closest cluster is to be found
+ * return value: int the ID of the closest cluster from the point
+ ********************************************************************************/
 int KMeans::getIDClosestCenter(Point point) {
 	double sum = 0.0, minDistance;
 	int idClusterCenter = 0;
-
+	
 	// check euclidean distance to the first cluster
-	for (int i = 0; i < totalValues; i++)
-	{
+	for (int i = 0; i < totalValues; i++) {
 		sum += pow(clusters[0].getCentralValue(i) - point.getValue(i), 2.0);
 	}
 	minDistance = sqrt(sum);
-
+	
 	// check distance for all the other cluster central_values 
-	for (int ii = 1; ii < emissions; ii++)
-	{
+	for (int ii = 1; ii < emissions; ii++) {
 		double distance;
 		sum = 0.0;
 		for (int jj = 0; jj < totalValues; jj++) {
 			sum += pow(clusters[ii].getCentralValue(jj) - point.getValue(jj), 2.0);
 		}
 		distance = sqrt(sum);
-
+		
 		// update the minimal distance 
-		if (distance < minDistance)
-		{
+		if (distance < minDistance) {
 			minDistance = distance;
 			idClusterCenter = ii;
 		}
@@ -273,24 +267,22 @@ int KMeans::getIDClosestCenter(Point point) {
 }
 
 /********************************************************************************
-* method:		runKMeans
-* description:	uses KMeans clustering algorithm to cluster the given set of points
-* parameters:	points a vector<Point> 
-********************************************************************************/
+ * method:		runKMeans
+ * description:	uses KMeans clustering algorithm to cluster the given set of points
+ * parameters:	points a vector<Point> 
+ ********************************************************************************/
 void KMeans::runKMeans(vector<Point> & points) {
 	if (emissions > totalPoints) { return; }
-
+	
 	vector<int> blockedIndexes;
-
+	
 	// pick <emissions> initial cluster_central_values
-	for (int ii = 0; ii < emissions; ii++)
-	{
+	for (int ii = 0; ii < emissions; ii++) {
 		while (true)
 		{
 			int point_index = rand() % totalPoints;
-
-			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end())
-			{
+			
+			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end()) {
 				blockedIndexes.push_back(point_index);
 				points[point_index].setCluster(ii);
 				Cluster cluster(ii, points[point_index]);
@@ -300,47 +292,40 @@ void KMeans::runKMeans(vector<Point> & points) {
 		}
 	}
 	int iter = 1;
-	while (true)
-	{
+	while (true) {
 		// a boolean to check the exit condition whether the clusters do still get updated
 		bool done = true;
-
+		
 		// assoiciate each point to its closest cluster
-		for (int ii = 0; ii < totalPoints; ii++)
-		{
+		for (int ii = 0; ii < totalPoints; ii++) {
 			int idOldCluster = points[ii].getCluster();
-
+			
 			// calculate closest cluster
 			int idClosestCluster = getIDClosestCenter(points[ii]);
-
+			
 			// check whether closest_cluster = old_cluster and if not update old_cluster
-			if (idOldCluster != idClosestCluster)
-			{
+			if (idOldCluster != idClosestCluster) {
 				// check if the point was already matched to a cluster, if so remove it from the old cluster
-				if (idOldCluster != -1)
-				{
+				if (idOldCluster != -1) {
 					clusters[idOldCluster].removePoint(points[ii].getID());
 				}
-
+				
 				points[ii].setCluster(idClosestCluster);
 				clusters[idClosestCluster].addPoint(points[ii]);
 				done = false;
 			}
 		}
-
+		
 		// recalculating central values of the cluster
-
+		
 		// iterateor for the clusters
-		for (int ii = 0; ii < emissions; ii++)
-		{
+		for (int ii = 0; ii < emissions; ii++) {
 			// iterator for the dimension
-			for (int jj = 0; jj < totalValues; jj++)
-			{
+			for (int jj = 0; jj < totalValues; jj++) {
 				int totalPointsCluster = clusters[ii].getTotalPoints();
 				double sum = 0.0;
-
-				if (totalPointsCluster > 0)
-				{
+				
+				if (totalPointsCluster > 0) {
 					// iterator for the points of each cluster
 					for (int kk = 0; kk < totalPointsCluster; kk++)
 						sum += clusters[ii].getPoint(kk).getValue(jj);
@@ -348,9 +333,8 @@ void KMeans::runKMeans(vector<Point> & points) {
 				}
 			}
 		}
-
-		if (done == true)
-		{
+		
+		if (done == true) {
 			cout << "finished in iteration " << iter << ".\n";
 			break;
 		}
@@ -363,12 +347,12 @@ void KMeans::runKMeans(vector<Point> & points) {
 }
 
 /********************************************************************************
-* method:		matchPointsToClusters
-* description:	matches each element of a given vector<Point> to to its cluster
-* parameters:	points a vector<Point>
-* return value: vector<int> containing the ids of the closest cluster in the 
-				order as  the input vector
-********************************************************************************/
+ * method:		matchPointsToClusters
+ * description:	matches each element of a given vector<Point> to to its cluster
+ * parameters:	points a vector<Point>
+ * return value: vector<int> containing the ids of the closest cluster in the 
+ order as  the input vector
+ ********************************************************************************/
 vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
 	vector<int> returnVector(points.size(), 0);
 	// find closest cluster ID for each element in points
@@ -379,46 +363,44 @@ vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
 }
 
 /********************************************************************************
-* method:		writeKMeans
-* description:	writes a KMeans object into a .txt file nameFormat : <fileName>_cluster.txt
-* parameters:	filePath the filepath where the .txt file is to be saved
-				fileName the name of the file to be created
-********************************************************************************/
+ * method:		writeKMeans
+ * description:	writes a KMeans object into a .txt file nameFormat : <fileName>_cluster.txt
+ * parameters:	filePath the filepath where the .txt file is to be saved
+ fileName the name of the file to be created
+ ********************************************************************************/
 void KMeans::writeKMeans(string filePath, string fileName) {
 	ofstream file;
 	file.open(filePath + fileName + "_cluster.txt", ios::out | ios::trunc);
 	if (file.is_open()) {
-
+		
 		file << emissions << " " << totalValues << " " << maxIterations << " " << totalPoints << " " << averagePoints << endl;
-
-		for (int ii = 0; ii < getClusters().size(); ii++)
-		{
-			for (int jj = 0; jj < 3; jj++)
-			{
+		
+		for (int ii = 0; ii < getClusters().size(); ii++) {
+			for (int jj = 0; jj < 3; jj++) {
 				file << getClusters()[ii].getCentralValue(jj) << " ";
 			}
 			file << endl;
 		}
 		file.close();
-	}
-	else
+	} else {
 		cout << "Unable to write calculated clusters into file.\n";
+	}
 }
 
 
 /********************************************************************************
-* method:		Cluster constructor
-* description:	creates a Cluster object with the given input
-* parameters:	idCluster the ID for the cluster to be constructed
-				point the coordinates of the cluster
-********************************************************************************/
+ * method:		Cluster constructor
+ * description:	creates a Cluster object with the given input
+ * parameters:	idCluster the ID for the cluster to be constructed
+ point the coordinates of the cluster
+ ********************************************************************************/
 Cluster::Cluster(int idCluster, Point point) {
 	this->idCluster = idCluster;
 	int totalValues = point.getTotalValues();
-
+	
 	for (int i = 0; i < totalValues; i++)
 		centralValues.push_back(point.getValue(i));
-
+	
 	points.push_back(point);
 }
 
@@ -448,18 +430,18 @@ int Cluster::getID() { return idCluster; }
 
 
 /********************************************************************************
-* method:		Point constructor
-* description:	creates a Point object with the given input
-* parameters:	idPoint the id for the point 
-				values the coordinates of the point
-********************************************************************************/
+ * method:		Point constructor
+ * description:	creates a Point object with the given input
+ * parameters:	idPoint the id for the point 
+ values the coordinates of the point
+ ********************************************************************************/
 Point::Point(int idPoint, vector<double>& values) {
 	this->idPoint = idPoint;
 	totalValue = (int)values.size();
 
 	for (int i = 0; i < totalValue; i++)
 		this->values.push_back(values[i]);
-
+	
 	idCluster = -1;
 }
 

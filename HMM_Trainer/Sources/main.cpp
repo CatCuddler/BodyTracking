@@ -1,15 +1,15 @@
 /********************************************************************************
-* file name: main.cpp
-* authors: Markus Stabel, Marco Fendrich
-* last changes: 22.03.2018
-* content: automatically being executed as main script of the program; calls all
-  relevant other scripts and calculates a new HMM either based on user input or
-  variables introduced below. Can alternatively be used to calculate the
-  probability of a new dataset based on existing HMMs by using the corresponding
-  variabels below.
-********************************************************************************/
+ * file name: main.cpp
+ * authors: Markus Stabel, Marco Fendrich
+ * last changes: 22.03.2018
+ * content: automatically being executed as main script of the program; calls all
+ relevant other scripts and calculates a new HMM either based on user input or
+ variables introduced below. Can alternatively be used to calculate the
+ probability of a new dataset based on existing HMMs by using the corresponding
+ variabels below.
+ ********************************************************************************/
 
-#include "matrix.h"
+#include "Matrix.h"
 #include "Markov.h"
 #include "kMeans.h"
 
@@ -74,11 +74,11 @@ vector<KMeans> kmeansX;
 ofstream file;
 
 /********************************************************************************
-* method: main
-* description: see file description
-* parameters: none
-* return value: 0
-********************************************************************************/
+ * method: main
+ * description: see file description
+ * parameters: none
+ * return value: 0
+ ********************************************************************************/
 int main() {
 	// set file paths in kMeans to input above
 	updateFilePaths();
@@ -89,18 +89,18 @@ int main() {
 		cout << "<Automatic execution>\n" << "Using predefined variables for execution.\n\n";
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		cout << "Create HMM using " << trainingNumber << " files.\n";
-
+		
 		/// ***** ***** Actual creation of HMM ***** ***** ///
 		cout << "Training HMM with " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
-
+		
 		// read data and use k-Means algorithm for clustering
 		cout << "Clustering data points using k-Means algorithm. \n";
 		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
 		cout << "Matching data points of current data sets to clusters. ";
 		vector<vector<vector<int>>> sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
-
+		
 		cout << "Single data sets clustered successfully. \n\n";
-
+		
 		if (debug) { // console output of clusters
 			for (int kk = 0; kk < 6; kk++) {
 				if (!sequence.at(kk).empty()) {
@@ -109,12 +109,14 @@ int main() {
 						cout << "File #" << ii + 1 << ": \n";
 						for (int &singleClusterNumber : sequence.at(kk).at(ii)) {
 							cout << singleClusterNumber << " ";
-						} cout << "\n";
-					} cout << "\n";
+						}
+						cout << "\n";
+					}
+					cout << "\n";
 				}
 			}
 		}
-
+		
 		// train HMM per tracker and calculate individual probability thresholds of trackers 
 		vector<double> probabilities(6, 0);
 		for (int ii = 0; ii < 6; ii++) {
@@ -134,15 +136,14 @@ int main() {
 				cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
 			}
 		}
-
+		
 		bool emptyTracker = false;
 		for (int ii = 0; ii < 6; ii++) {
 			if (sequence.at(ii).empty()) {
 				if (!emptyTracker) {
 					cout << "Some trackers were not found in the given data set: \n \{ ";
 					emptyTracker = true;
-				}
-				else {
+				} else {
 					cout << ", ";
 				}
 				cout << trackerNames[ii];
@@ -151,18 +152,18 @@ int main() {
 		if (emptyTracker) {
 			cout << " \n\nThose trackers have been skipped and no corresponding HMM was created. \n\n";
 		}
-
+		
 		for (int ii = 0; ii < 6; ii++) {
 			if (!sequence.at(ii).empty()) {
 				cout << "The log probability threshold of " << trackerNames[ii] << " is " << probabilities.at(ii) << ". \n";
 			}
 		}
 	}
-
+	
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
 	else if (calculateSingleProbability) {
 		cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
-
+		
 		cout << "Loading cluster coordinates.\n";
 		vector<KMeans> kmeanVector(6);
 		bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
@@ -172,17 +173,16 @@ int main() {
 				kmeanVector.at(ii) = kmeans;
 				cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
 				trackersPresent[ii] = true;
-			}
-			catch (invalid_argument) {
+			} catch (invalid_argument) {
 				trackersPresent[ii] = false;
 			}
 		}
 		cout << "\n";
-
+		
 		cout << "Sorting new data sets into clusters. ";
 		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeanVector);
 		cout << "Normalised data sets clustered. \n";
-
+		
 		if (debug) { // console output of clusters
 			for (int kk = 0; kk < 6; kk++) {
 				cout << "\n";
@@ -195,7 +195,7 @@ int main() {
 				}
 			}
 		}
-
+		
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
 				cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
@@ -204,21 +204,21 @@ int main() {
 			}
 		}
 	}
-
+	
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
 		// Open threads
 		thread t[num_threads];
-
+		
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
 		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "File number" << "; " << "Tracker name" << "; " << "Probability" << ";\n";
-
+		
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
 		int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
-
+		
 		// Actual calculations
 		for (int &numEmissions : emissionIterations) {
 			kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
@@ -226,7 +226,7 @@ int main() {
 			for (numStates = 6; numStates <= 16; numStates += 2) {
 				cout << "Splitting threads**********************************************************************\n";
 				cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
-
+				
 				// Uses threadIteration for lrDepth as well
 				for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
 					cout << "Launched from thread " << threadIteration << "\n";
@@ -236,7 +236,7 @@ int main() {
 					singleThread.join();
 				}
 				cout << "\nRejoined threads**********************************************************************\n\n";
-
+				
 			}
 		}
 	}
@@ -258,30 +258,29 @@ int main() {
 			singleThread.join();
 		}
 	}
-
 	cout << "\n";
 	return 0;
 }
 
 /********************************************************************************
-* method:		multiThreadOptimisation
-* description:	Creates an HMM based on a sequence of clusters and the necessary
-				parameters, calculate the probability of the given data sets and
-				writes them into a collective file for later evaluation. Used for
-				call of single threads while multithreading to save computation
-				time.
-* parameters:	lrDepth is the left to right depth of the HMMs to be created
-				numStates is the number of hidden states of the wanted HMMs
-				numEmissions is the number of clusters to be used in the HMMs
-				trainingNumber is the amount of data sets to be taken into account
-				sequence are the cluster numbers of the data sets used for creation
-				HMMtries is the number of HMMs created of which the best is taken
-* return value: none
-********************************************************************************/
+ * method:		multiThreadOptimisation
+ * description:	Creates an HMM based on a sequence of clusters and the necessary
+ parameters, calculate the probability of the given data sets and
+ writes them into a collective file for later evaluation. Used for
+ call of single threads while multithreading to save computation
+ time.
+ * parameters:	lrDepth is the left to right depth of the HMMs to be created
+ numStates is the number of hidden states of the wanted HMMs
+ numEmissions is the number of clusters to be used in the HMMs
+ trainingNumber is the amount of data sets to be taken into account
+ sequence are the cluster numbers of the data sets used for creation
+ HMMtries is the number of HMMs created of which the best is taken
+ * return value: none
+ ********************************************************************************/
 void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int hmmTries) {
 	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
-
+	
 	for (int ii = 0; ii < 6; ii++) {
 		if (!sequence.at(ii).empty()) {
 			for (int jj = 0; jj < hmmTries; jj++) {
@@ -296,9 +295,9 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 			}
 		}
 	}
-
+	
 	vector<double> probabilityVector(6);
-
+	
 	for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName); fileNumber++) {
 		currentMovement = trainingFileName + to_string(fileNumber);
 		probabilityVector = calculateProbability(finalModels);
@@ -306,7 +305,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 			file << numStates << "; " << numEmissions << "; " << lrDepth << "; " << fileNumber << "t; " << trackerNames[tracker] << "; " << probabilityVector.at(tracker) << ";\n";
 		}
 	}
-
+	
 	for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName + "_f"); fileNumber++) {
 		currentMovement = trainingFileName + "_f" + to_string(fileNumber);
 		probabilityVector = calculateProbability(finalModels);
@@ -317,20 +316,20 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 }
 
 /********************************************************************************
-* method:		multiThreadHMMCreation
-* description:	Creates an HMM based on a sequence of clusters and the necessary
-				parameters, calculate the probability of the given data sets and
-				writes them into a collective file for later evaluation. Used for
-				call of single threads while multithreading to save computation
-				time.
-* parameters:	lrDepth is the left to right depth of the HMMs to be created
-				numStates is the number of hidden states of the wanted HMMs
-				numEmissions is the number of clusters to be used in the HMMs
-				trainingNumber is the amount of data sets to be taken into account
-				sequence are the cluster numbers of the data sets used for creation
-				HMMtries is the number of HMMs created of which the best is taken
-* return value: none
-********************************************************************************/
+ * method:		multiThreadHMMCreation
+ * description:	Creates an HMM based on a sequence of clusters and the necessary
+ parameters, calculate the probability of the given data sets and
+ writes them into a collective file for later evaluation. Used for
+ call of single threads while multithreading to save computation
+ time.
+ * parameters:	lrDepth is the left to right depth of the HMMs to be created
+ numStates is the number of hidden states of the wanted HMMs
+ numEmissions is the number of clusters to be used in the HMMs
+ trainingNumber is the amount of data sets to be taken into account
+ sequence are the cluster numbers of the data sets used for creation
+ HMMtries is the number of HMMs created of which the best is taken
+ * return value: none
+ ********************************************************************************/
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber) {
 	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
@@ -348,23 +347,23 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 		}
 		cout << "HMM# " << jj << "_" << threadNumber << "; ";
 	}
-
+	
 }
 
 
 /********************************************************************************
-* method:		calculateProbability
-* description:	Calculates the probability of whether any given tracker (set via
-				currentMovement externally) followed the same movement as it did
-				in the HMM given as input
-* parameters:	models is an array of HMMs for the six trackers
-* return value: vector of the probability of each tracker
-********************************************************************************/
+ * method:		calculateProbability
+ * description:	Calculates the probability of whether any given tracker (set via
+ currentMovement externally) followed the same movement as it did
+ in the HMM given as input
+ * parameters:	models is an array of HMMs for the six trackers
+ * return value: vector of the probability of each tracker
+ ********************************************************************************/
 vector<double> calculateProbability(HMMModel models[6]) {
 	vector<double> returnVector(6);
-
+	
 	vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeans);
-
+	
 	for (int ii = 0; ii < 6; ii++) {
 		if (!dataClusters.at(ii).empty()) {
 			returnVector.at(ii) = models[ii].calculateProbability(dataClusters.at(ii).at(0));
@@ -374,13 +373,13 @@ vector<double> calculateProbability(HMMModel models[6]) {
 }
 
 /********************************************************************************
-* method:		getFullTrainingNumber
-* description:	Outputs total amount of files present in folder that correspond
-				to the naming convention when used with the input
-* parameters:	trainingFilePath is the path as string to the files to be read
-				trainingFileName is the base name of the files to be read
-* return value: the number of files corresponding to the input given
-********************************************************************************/
+ * method:		getFullTrainingNumber
+ * description:	Outputs total amount of files present in folder that correspond
+ to the naming convention when used with the input
+ * parameters:	trainingFilePath is the path as string to the files to be read
+ trainingFileName is the base name of the files to be read
+ * return value: the number of files corresponding to the input given
+ ********************************************************************************/
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	int trainingNumber = 0;
 	while (ifstream(trainingFilePath + trainingFileName + to_string(trainingNumber) + ".csv")) {
@@ -388,14 +387,14 @@ int getFullTrainingNumber(string trainingFilePath, string trainingFileName) {
 	}
 	return trainingNumber;
 }
- 
+
 
 /********************************************************************************
-* method:		updateFilePaths
-* description:	updates the file paths in kMeans with the ones in main
-* parameters:	none
-* return value: none
-********************************************************************************/
+ * method:		updateFilePaths
+ * description:	updates the file paths in kMeans with the ones in main
+ * parameters:	none
+ * return value: none
+ ********************************************************************************/
 void updateFilePaths() {
 	setTrainingFilePath(trainingFilePath);
 	setTrainingFileName(trainingFileName);

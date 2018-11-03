@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef KMEANS_H_INCLUDED
-#define KMEANS_H_INCLUDED
-
 #include <string>
 #include <vector>
 
@@ -53,7 +50,7 @@ private:
 	int maxIterations, totalPoints;
 	int averagePoints; // average number of points per sequence
 	std::vector <Cluster> clusters; // vector of clusters
-
+	
 	// returns the id of the closest ClusterCenter of a given point, using the euclidean distance
 	int getIDClosestCenter(Point point);
 public:
@@ -71,5 +68,3 @@ std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);
 std::vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations);
 std::vector<std::vector<std::vector<int>>> sortDataToClusters(std::string fileNameToBeSorted, int fileAmount, std::vector<KMeans> kmeans);
 std::vector<Point> normaliseMeasurements(std::vector<Point>, int dataVolume);
-
-#endif
