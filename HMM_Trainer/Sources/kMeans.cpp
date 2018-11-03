@@ -151,7 +151,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		int ii = 0;
 		for (;;) {
 			f >> tag >> time >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
-			vector<double> values = { posX, posY, posZ };
+			vector<double> values = { posX,posY,posZ,rotX,rotY,rotZ,rotW };
 			Point point = Point(ii, values);
 			
 			// differentiate the parsed points and add them to the correct vectors
