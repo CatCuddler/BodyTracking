@@ -366,8 +366,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	// Save log probability threshold
 	probabilityThreshold = probability * 2;
 	
-}
-
+}}
 /********************************************************************************
  * method:		writeHMM
  * description:	writes the HMM to a file
@@ -375,7 +374,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
  *				fileName is the HMMs name without the _HMM.txt ending
  * return value: none
  ********************************************************************************/
-void HMMModel::writeHMM(string filePath, string fileName) {
+void HMMModel::writeHMM(string filePath, string fileName){
 	
 	ofstream file;
 	file.open(filePath + fileName + "_HMM.txt", ios::out | ios::trunc);
@@ -414,3 +413,4 @@ void HMMModel::writeHMM(string filePath, string fileName) {
 		cout << "Unable to write HMM.\n";
 	}
 }
+

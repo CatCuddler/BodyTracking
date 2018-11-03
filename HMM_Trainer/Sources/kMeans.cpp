@@ -127,7 +127,6 @@ vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
 vector<vector<Point>> readData(string fileName, int fileAmount) {
 	fstream f;
 	vector<vector<Point>> returnVector(6);
-	int size = 0;
 	
 	string tag, time;
 	double posX, posY, posZ;
@@ -147,8 +146,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			cout << "The current data set file " << fullPath << " does not exist!\n\n\n";
 			throw invalid_argument("File does not exist");
 		}
-		
-		f >> tag >> time >> tag >> tag >> tag >> tag >> tag >> tag >> tag; // Skip header
+		f.ignore(100,'\n');//skip first line
 		
 		int ii = 0;
 		for (;;) {
