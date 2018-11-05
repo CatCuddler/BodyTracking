@@ -83,7 +83,7 @@ int main() {
 	// set file paths in kMeans to input above
 	updateFilePaths();
 	srand((unsigned int)time(NULL)); // randomises random numbers
-
+	
 	/// ***** ***** ***** Creating a new HMM ***** ***** ***** ///
 	if (createHMM) {
 		cout << "<Automatic execution>\n" << "Using predefined variables for execution.\n\n";

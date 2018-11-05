@@ -34,7 +34,7 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
 	b = matrix<double>(0, numStates, sigmaSize);
 	
 	srand((unsigned int)time(NULL)); // Seed for random number generation
-
+	
 	// Initialize Pi
 	if (LRdepth == 0) {		// left-to-right depth of 0: random initialization
 		double sum = 0;
@@ -176,7 +176,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 	
 	const int N = numStates;
 	const int T = (int)sequence.size();
-
+	
 	vector<double> c(T, 0);
 	
 	// 1. Initialization
@@ -221,7 +221,7 @@ void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, do
 	
 	const int N = numStates;
 	const int T = (int)sequence.size();
-
+	
 	// 1. Initialization
 	for (int i = 0; i < N; i++) {
 		beta[i][T - 1] = c.at(T - 1);
@@ -251,7 +251,7 @@ double HMMModel::calculateProbability(vector<int>& sequence) {
 	
 	const int N = numStates;
 	const int T = (int)sequence.size();
-
+	
 	double** alpha = matrix<double>(0, N, T); // forward probability matrix
 	
 	vector<double> c = updateAlphaNormalized(sequence, alpha); // run the forward algorithm
@@ -281,7 +281,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	const int N = numStates;
 	const int M = sigmaSize;
 	const int sequenceSize = (int)sequence.size();
-
+	
 	double probability = 0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
 	int iter; // iterator
@@ -355,18 +355,18 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		// Calculate log probability
 		prevProbability = probability;
 		probability = 0;
-        if (sequence.size()>0){
-		for (int t = 0; t < sequence.at(0).size(); t++) {
-			probability -= log(c.at(0).at(t));
+		if (sequence.size()>0){
+			for (int t = 0; t < sequence.at(0).size(); t++) {
+				probability -= log(c.at(0).at(t));
+			}
 		}
+		
+		cout << iter;
+		
+		// Save log probability threshold
+		probabilityThreshold = probability * 2;
 	}
-
-	cout << iter;
-
-	// Save log probability threshold
-	probabilityThreshold = probability * 2;
-	
-}}
+}
 /********************************************************************************
  * method:		writeHMM
  * description:	writes the HMM to a file
@@ -374,7 +374,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
  *				fileName is the HMMs name without the _HMM.txt ending
  * return value: none
  ********************************************************************************/
-void HMMModel::writeHMM(string filePath, string fileName){
+void HMMModel::writeHMM(string filePath, string fileName) {
 	
 	ofstream file;
 	file.open(filePath + fileName + "_HMM.txt", ios::out | ios::trunc);
@@ -413,4 +413,3 @@ void HMMModel::writeHMM(string filePath, string fileName){
 		cout << "Unable to write HMM.\n";
 	}
 }
-
