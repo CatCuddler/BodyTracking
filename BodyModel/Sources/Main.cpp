@@ -262,9 +262,9 @@ namespace {
 			
 			// Add offset
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
-			vec3 offserPosition = endEffector[endEffectorID]->getOffsetPosition();
+			vec3 offsetPosition = endEffector[endEffectorID]->getOffsetPosition();
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
+			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
