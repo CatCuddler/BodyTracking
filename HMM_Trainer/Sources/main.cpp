@@ -126,7 +126,7 @@ int main() {
 					// use Baum-Welch-Algorithm to train HMM and write it to a file 
 					HMMModel model(numStates, numEmissions, lrDepth);
 					model.trainHMM(sequence.at(ii));
-					if (jj < hmmTries - 1) cout << ", ";
+					//if (jj < hmmTries - 1) cout << ", ";
 					if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 						model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii));
 						probabilities.at(ii) = (model.getProbabilityThreshold());

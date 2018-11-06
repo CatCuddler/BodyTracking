@@ -284,7 +284,6 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	
 	double probability = 0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
-	int iter; // iterator
 	
 	// Initialize a forward and a backward matrix per observation sequence
 	vector<double **> alpha(sequenceSize, 0);
@@ -292,14 +291,15 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	vector<vector<double>> c(sequenceSize); // One normalization vector per sequence
 	
 	// set the size of each matrix
-	for (iter = 0; iter < sequenceSize; iter++) {
+	for (int iter = 0; iter < sequenceSize; iter++) {
 		int T = (int)sequence.at(iter).size();
 		alpha.at(iter) = matrix<double>(0, N, T);
 		beta.at(iter) = matrix<double>(0, N, T);
 	}
 	
 	// Baum-Welch-Agorithm
-	for (iter = 0; (iter < maxIter && abs(probability - prevProbability) > delta); iter++) { // iterate until the probability no longer changes more than delta or for a maximum of maxIter iterations
+	// Iterate until the probability no longer changes more than delta or for a maximum of maxIter iterations
+	for (int iter = 0; (iter < maxIter && abs(probability - prevProbability) > delta); iter++) {
 		
 		// Update forward and backward matrix
 		for (int l = 0; l < sequenceSize; l++) {
@@ -361,7 +361,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 			}
 		}
 		
-		cout << iter;
+		//cout << iter;
 		
 		// Save log probability threshold
 		probabilityThreshold = probability * 2;
