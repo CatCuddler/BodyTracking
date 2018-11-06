@@ -262,6 +262,8 @@ double HMMModel::calculateProbability(vector<int>& sequence) {
 		probability -= log(c.at(t));
 	}
 	
+	freeMatrix<double>(alpha, N);
+	
 	return probability;
 }
 
@@ -290,7 +292,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	vector<double **> beta(sequenceSize, 0);
 	vector<vector<double>> c(sequenceSize); // One normalization vector per sequence
 	
-	// set the size of each matrix
+	// Set the size of each matrix
 	for (int iter = 0; iter < sequenceSize; iter++) {
 		int T = (int)sequence.at(iter).size();
 		alpha.at(iter) = matrix<double>(0, N, T);
@@ -365,6 +367,11 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		
 		// Save log probability threshold
 		probabilityThreshold = probability * 2;
+	}
+	
+	for (int iter = 0; iter < sequenceSize; iter++) {
+		freeMatrix<double>(alpha.at(iter), N);
+		freeMatrix<double>(beta.at(iter), N);
 	}
 }
 /********************************************************************************
