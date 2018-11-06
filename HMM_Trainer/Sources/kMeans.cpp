@@ -77,7 +77,7 @@ vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, 
 		// else just create one file
 		else { currentDataSet = readData(fileName, 1); }
 		for (int currentTracker = 0; currentTracker < 6; currentTracker++) {
-			// if the vector at the currentTracker position is not empty 
+			// if the vector at the currentTracker position is not empty
 			if (!currentDataSet.at(currentTracker).empty()) {
 				// normalises a given data set of one tracker, matches it to the clusters of the given kMeans and adds it to the returnVector at the tracker's postition
 				returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
@@ -120,7 +120,7 @@ vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
  * description:	reads "fileAmount" number of files into a datatype with wich the
  HMM_Trainer can work
  * parameters:	filename is the filepath for the files to be parsed
- fileAmount is the amount of files to be parsed starting with the 
+ fileAmount is the amount of files to be parsed starting with the
  first
  * return value: vector of (trackers) of vector of <Point>
  ********************************************************************************/
@@ -146,12 +146,13 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			cout << "The current data set file " << fullPath << " does not exist!\n\n\n";
 			throw invalid_argument("File does not exist");
 		}
-		f.ignore(100,'\n');//skip first line
+		
+		f >> tag >> time >> tag >> tag >> tag >> tag >> tag >> tag >> tag; // Skip header
 		
 		int ii = 0;
 		for (;;) {
 			f >> tag >> time >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
-			vector<double> values = { posX,posY,posZ,rotX,rotY,rotZ,rotW };
+			vector<double> values = { posX, posY, posZ, rotX, rotY, rotZ, rotW };
 			Point point = Point(ii, values);
 			
 			// differentiate the parsed points and add them to the correct vectors
@@ -161,7 +162,7 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			else if (tag.compare("hip") == 0) returnVector.at(3).push_back(point);
 			else if (tag.compare("lFoot") == 0) returnVector.at(4).push_back(point);
 			else if (tag.compare("rFoot") == 0) returnVector.at(5).push_back(point);
-			else  cout << "Error! Unknown tracker data detected.";
+			else cout << "Error! Unknown tracker data detected.";
 			
 			++ii;
 			
@@ -202,8 +203,7 @@ KMeans::KMeans(string filePath, string fileName) {
 	string fullPath = filePath + fileName + "_cluster.txt";
 	if (ifstream(fullPath)) {
 		f.open(fullPath);
-	}
-	else {
+	} else {
 		throw invalid_argument("No corresponding file found!");
 	}
 	
@@ -246,7 +246,7 @@ int KMeans::getIDClosestCenter(Point point) {
 	}
 	minDistance = sqrt(sum);
 	
-	// check distance for all the other cluster central_values 
+	// check distance for all the other cluster central_values
 	for (int ii = 1; ii < emissions; ii++) {
 		double distance;
 		sum = 0.0;
@@ -255,7 +255,7 @@ int KMeans::getIDClosestCenter(Point point) {
 		}
 		distance = sqrt(sum);
 		
-		// update the minimal distance 
+		// update the minimal distance
 		if (distance < minDistance) {
 			minDistance = distance;
 			idClusterCenter = ii;
@@ -267,7 +267,7 @@ int KMeans::getIDClosestCenter(Point point) {
 /********************************************************************************
  * method:		runKMeans
  * description:	uses KMeans clustering algorithm to cluster the given set of points
- * parameters:	points a vector<Point> 
+ * parameters:	points a vector<Point>
  ********************************************************************************/
 void KMeans::runKMeans(vector<Point> & points) {
 	if (emissions > totalPoints) { return; }
@@ -276,8 +276,7 @@ void KMeans::runKMeans(vector<Point> & points) {
 	
 	// pick <emissions> initial cluster_central_values
 	for (int ii = 0; ii < emissions; ii++) {
-		while (true)
-		{
+		while (true) {
 			int point_index = rand() % totalPoints;
 			
 			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end()) {
@@ -348,7 +347,7 @@ void KMeans::runKMeans(vector<Point> & points) {
  * method:		matchPointsToClusters
  * description:	matches each element of a given vector<Point> to to its cluster
  * parameters:	points a vector<Point>
- * return value: vector<int> containing the ids of the closest cluster in the 
+ * return value: vector<int> containing the ids of the closest cluster in the
  order as  the input vector
  ********************************************************************************/
 vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
@@ -408,11 +407,9 @@ void Cluster::addPoint(Point point) {
 
 bool Cluster::removePoint(int idPoint) {
 	int totalPoints = (int)points.size();
-
-	for (int i = 0; i < totalPoints; i++)
-	{
-		if (points[i].getID() == idPoint)
-		{
+	
+	for (int i = 0; i < totalPoints; i++) {
+		if (points[i].getID() == idPoint) {
 			points.erase(points.begin() + i);
 			return true;
 		}
@@ -430,13 +427,13 @@ int Cluster::getID() { return idCluster; }
 /********************************************************************************
  * method:		Point constructor
  * description:	creates a Point object with the given input
- * parameters:	idPoint the id for the point 
+ * parameters:	idPoint the id for the point
  values the coordinates of the point
  ********************************************************************************/
 Point::Point(int idPoint, vector<double>& values) {
 	this->idPoint = idPoint;
 	totalValue = (int)values.size();
-
+	
 	for (int i = 0; i < totalValue; i++)
 		this->values.push_back(values[i]);
 	
