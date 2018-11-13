@@ -12,7 +12,10 @@ private:
 	// Input and output file to for raw data
 	std::fstream logDataReader;
 	std::ofstream logdataWriter;
-	
+
+	// Output file to save data for MotionRecognition
+	std::ofstream motionRecognitionWriter;
+
 	// Output file to save data for hmm
 	std::ofstream hmmWriter;
 	std::ofstream hmmAnalysisWriter;
@@ -32,7 +35,12 @@ public:
 	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
 	void saveEvaluationData(Avatar *avatar);
 	void endEvaluationLogger();
-	
+
+	// Motion Recognition
+	void startMotionRecognitionLogger(const char* filename);
+	void endMotionRecognitionLogger();
+	void saveMotionRecognitionData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time);
+
 	// HMM
 	void startHMMLogger(const char* filename, int num);
 	void endHMMLogger();

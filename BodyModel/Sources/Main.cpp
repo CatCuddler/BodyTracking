@@ -18,6 +18,7 @@
 #include "LivingRoom.h"
 #include "Logger.h"
 #include "HMM.h"
+#include "MachineLearningMotionRecognition.h"
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -40,6 +41,8 @@ namespace {
 	const int numOfEndEffectors = 6;
 	
 	Logger* logger;
+
+	MachineLearningMotionRecognition* motionRecognizer;
 	
 	HMM* hmm;
 	
@@ -104,7 +107,8 @@ namespace {
 	Kore::Quaternion initRot;
 	Kore::Quaternion initRotInv;
 	
-	bool calibratedAvatar = false;
+	bool calibratedAvatarScale = false;
+	bool calibratedAvatarControllersAndTrackers = false;
 	
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
@@ -149,7 +153,7 @@ namespace {
 			}
 
 			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
+			if (!calibratedAvatarControllersAndTrackers) {
 				renderVRDevice(2, M);
 				renderVRDevice(2, mirrorM);
 			}
@@ -178,7 +182,7 @@ namespace {
 			}
 			
 			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
+			if (!calibratedAvatarControllersAndTrackers) {
 				renderVRDevice(2, M);
 				renderVRDevice(2, mirrorM);
 			}
@@ -255,7 +259,7 @@ namespace {
 		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
-		if (calibratedAvatar) {
+		if (calibratedAvatarControllersAndTrackers) {
 			// Transform desired position/rotation to the character local coordinate system
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desRotation = initRotInv.rotated(desRotation);
@@ -272,6 +276,17 @@ namespace {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			
+			// TODO: -replace placholder vectors with actual data, once integrated in endEffector API
+			// TODO: -add additional sensor types, name and calibrate them
+			// Save calibrated data to either train Motion Recognizer or to recognize a movement
+			if (motionRecognizer->isProcessingMovementData()) {
+
+				vec3 angVelPlaceholder = vec3(1, 2, 3);
+				vec3 linVelPlaceholder = vec3(7, 8, 9);
+
+				motionRecognizer->processMovementData(endEffector[endEffectorID]->getName(), finalPos, finalRot, angVelPlaceholder, linVelPlaceholder, avatar->scale, lastTime);
+			}
+
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
@@ -298,10 +313,11 @@ namespace {
 	void record() {
 		logRawData = !logRawData;
 		
-		if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		if (!logRawData && !motionRecognizer->isActive() && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 			Audio1::play(startRecordingSound);
 			logger->startLogger("logData");
-		} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		}
+		else if (logRawData && !motionRecognizer->isActive() && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 			Audio1::play(stopRecordingSound);
 			logger->endLogger();
 		}
@@ -349,6 +365,8 @@ namespace {
 		
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
+
+		calibratedAvatarSize = true;
 		
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -411,9 +429,17 @@ namespace {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
+
+		// disable buttons if Motion Recognizer is currently recording data, to avoid e.g. avatar re-calibration
+		if (motionRecognizer.isRecordingMovementData()) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons are disabled during Movement Data recording");
+			return;
+		}
+
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
-			calibratedAvatar = false;
+			calibratedAvatarControllersAndTrackers = false;
 			avatar->resetPositionAndRotation();
 			setSize();
 		}
@@ -422,7 +448,7 @@ namespace {
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
-			calibratedAvatar = true;
+			calibratedAvatarControllersAndTrackers = true;
 			log(Info, "Calibrate avatar");
 		}
 		
@@ -539,11 +565,12 @@ namespace {
 				endEffector[i]->setDesRotation(desRotation[i]);
 			}
 			
-			if (!calibratedAvatar) {
+			if (!calibratedAvatarControllersAndTrackers) {
 				avatar->resetPositionAndRotation();
 				avatar->setScale(scaleFactor);
+				calibratedAvatarScale = true;
 				calibrate();
-				calibratedAvatar = true;
+				calibratedAvatarControllersAndTrackers = true;
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
@@ -589,7 +616,7 @@ namespace {
 				}
 			} else {
 				currentFile++;
-				calibratedAvatar = false;
+				calibratedAvatarControllersAndTrackers = false;
 			}
 		}
 		
@@ -608,6 +635,10 @@ namespace {
 
 		Graphics4::end();
 		Graphics4::swapBuffers();
+	}
+
+	bool calibratedAvatarCompletely() {
+		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
 	}
 	
 	void keyDown(KeyCode code) {
@@ -644,6 +675,14 @@ namespace {
 			default:
 				break;
 		}
+
+
+		// the motion recognizer handles its own input in order to start recording data for specific tasks
+		// uses the numpad and space bar (if the class is in use)
+		if (motionRecognizer->isActive()) {
+			motionRecognizer->processKeyDown(code, calibratedAvatarCompletely());
+		}
+
 	}
 	
 	void keyUp(KeyCode code) {
@@ -811,6 +850,8 @@ namespace {
 		}
 		
 		logger = new Logger();
+
+		motionRecognizer = new MachineLearningMotionRecognition(*logger);
 		
 		hmm = new HMM(*logger);
 		

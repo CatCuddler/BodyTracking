@@ -15,6 +15,7 @@ Logger::Logger() {
 Logger::~Logger() {
 	logDataReader.close();
 	logdataWriter.close();
+	motionRecognitionWriter.close();
 	hmmWriter.close();
 	hmmAnalysisWriter.close();
 }
@@ -44,6 +45,35 @@ void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRo
 	// Save position and rotation
 	logdataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
 	logdataWriter.flush();
+}
+
+void Logger::startMotionRecognitionLogger(const char* filename) {
+	time_t t = time(0);   // Get time now
+
+	char logFileName[100];
+	sprintf(logFileName, "%s_%li.csv", filename, t);
+
+	motionRecognitionWriter.open(logFileName, std::ios::app); // Append to the end
+
+	// Append header
+	motionRecognitionWriter << "tag;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
+	motionRecognitionWriter.flush();
+
+}
+
+void Logger::endMotionRecognitionLogger() {
+	motionRecognitionWriter.flush();
+	motionRecognitionWriter.close();
+}
+
+void Logger::saveMotionRecognitionData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
+
+	// Save position, rotation, angular and linear velocity
+	motionRecognitionWriter << tag << ";"
+		<< calPos.x() << ";" << calPos.y() << ";" << calPos.z() << ";" << calRot.x << ";" << calRot.y << ";" << calRot.z << ";" << calRot.w << ";"
+		<< angVel.x() << ";" << angVel.y() << ";" << angVel.z() << ";" << linVel.x() << ";" << linVel.y() << ";" << linVel.z() << ";"
+		<< scale << ";" << time << "\n";
+	motionRecognitionWriter.flush();
 }
 
 void Logger::startHMMLogger(const char* filename, int num) {
