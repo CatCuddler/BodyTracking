@@ -142,14 +142,14 @@ namespace {
 				// Render a tracker for both feet and back
 				renderVRDevice(0, M);
 				renderVRDevice(0, mirrorM);
-				// Render local coordinate system
-				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
 				// Render a controller for both hands
 				renderVRDevice(1, M);
 				renderVRDevice(1, mirrorM);
-				// Render local coordinate system
+			}
+
+			// Render a local coordinate system only if the avatar is not calibrated
+			if (!calibratedAvatar) {
 				renderVRDevice(2, M);
 				renderVRDevice(2, mirrorM);
 			}
@@ -177,7 +177,7 @@ namespace {
 				renderVRDevice(1, mirrorM);
 			}
 			
-			// Render local coordinate system only if the avatar is not calibrated
+			// Render a local coordinate system only if the avatar is not calibrated
 			if (!calibratedAvatar) {
 				renderVRDevice(2, M);
 				renderVRDevice(2, mirrorM);
