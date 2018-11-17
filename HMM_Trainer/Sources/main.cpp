@@ -95,7 +95,7 @@ int main() {
 		
 		// read data and use k-Means algorithm for clustering
 		cout << "Clustering data points using k-Means algorithm. \n";
-		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
+		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
 		cout << "Matching data points of current data sets to clusters. ";
 		vector<vector<vector<int>>> sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 		
@@ -221,7 +221,7 @@ int main() {
 		
 		// Actual calculations
 		for (int &numEmissions : emissionIterations) {
-			kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
+			kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
 			sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 			for (numStates = 6; numStates <= 16; numStates += 2) {
 				cout << "Splitting threads**********************************************************************\n";
@@ -246,7 +246,7 @@ int main() {
 		// Open threads
 		thread t[num_threads];
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-		kmeans = calculateClusters(0, trainingNumber, numEmissions, 3, 1000);
+		kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
 		sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 		cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
 		cout << "Splitting threads**********************************************************************\n";
