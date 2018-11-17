@@ -373,7 +373,7 @@ void KMeans::writeKMeans(string filePath, string fileName) {
 		file << emissions << " " << totalValues << " " << maxIterations << " " << totalPoints << " " << averagePoints << endl;
 		
 		for (int ii = 0; ii < getClusters().size(); ii++) {
-			for (int jj = 0; jj < 3; jj++) {
+			for (int jj = 0; jj < 7; jj++) {
 				file << getClusters()[ii].getCentralValue(jj) << " ";
 			}
 			file << endl;
