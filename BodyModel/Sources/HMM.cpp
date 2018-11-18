@@ -131,12 +131,12 @@ bool HMM::stopRecognition() {
 
 bool HMM::stopRecognitionAndIdentify() {
     if (recognition) {
+        char hmmNameWithNum[50];
         // Read clusters for all trackers from file
         bool trackersPresent[numOfDataPoints];
         vector<KMeans> kmeanVector(numOfDataPoints);
         for (int ii = 0; ii < numOfDataPoints; ii++) {
             try {
-                char hmmNameWithNum[50];
                 sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
                 KMeans kmeans(hmmPath0, hmmNameWithNum);
                 kmeanVector.at(ii) = kmeans;
@@ -158,7 +158,7 @@ bool HMM::stopRecognitionAndIdentify() {
         vector<double>probabilitymodel2(numOfDataPoints);
         vector<double>probabilityCurrentmovement(numOfDataPoints);
         // Create 3 HHModel for 3 different movement
-        char hmmNameWithNum[50];
+        
         HMMModel model0(hmmPath0, hmmNameWithNum);
         HMMModel model1(hmmPath1, hmmNameWithNum);
         HMMModel model2(hmmPath2, hmmNameWithNum);
@@ -189,28 +189,27 @@ bool HMM::stopRecognitionAndIdentify() {
 
             }
         }
+        for (int ii = 0; ii < numOfDataPoints; ii++) {
         if(n0 >= n1 && n0>= n2 ){
             Kore::log(Kore::Info, "Recognize the movement as yoga warrior1");
             // Calculating the probability and comparing with probability threshold as well as applying restfix
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
             trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel0.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
             logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
             }
-        }
-        if(n0 <= n1 && n1>= n2 ){
+        
+        else if(n0 <= n1 && n1>= n2 ){
             Kore::log(Kore::Info, "Recognize the movement as yoga warrior2");
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
                 trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel1.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
                 logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
-            }
+            
         }
         
-        if(n2 >= n1 && n2>= n0 ){
+        else if(n2 >= n1 && n2>= n0 ){
             Kore::log(Kore::Info, "Recognize the movement as extended side angle");
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
                 trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel1.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
                 logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
-            }
+            
+         }
         }
         logger.analyseHMM(hmmName, 0, true);
         
