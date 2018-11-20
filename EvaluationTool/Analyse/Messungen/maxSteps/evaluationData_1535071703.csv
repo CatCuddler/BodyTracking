@@ -1,0 +1,2 @@
+Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;Reached [%];Stucked [%]
+17.0686;0.124557;0.0377816;0.130161;309.726;20.7176;1;0.00743088;0.00103695;0.00750288;19;13;30;0.314853;0.251219;0.402795;1667;127;0.00696677;0.803859
