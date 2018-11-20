@@ -16,6 +16,10 @@
 
 - Open Terminal/Console
 - Run "node import" to import data from Deployment-folder (you can change it in config.json)
+- Eventuelly you have to execute:
+npm install <br />
+npm install csvjson --save <br />
+npm install fs-extra --save <br />
 - Run "yarn start"
 - The browser will open the tool automatically (otherwise open http://localhost:3000/ in browser)
 - Click on a file (left sidebar) and a value (upper navbar) to see the chart
