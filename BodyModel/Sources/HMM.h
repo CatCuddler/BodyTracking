@@ -29,7 +29,7 @@ public:
 	
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	bool stopRecognition();
-    bool stopRecognitionAndIdentify();
+	bool stopRecognitionAndIdentify();
 	
 	bool hmmActive();
 	bool hmmRecording();
