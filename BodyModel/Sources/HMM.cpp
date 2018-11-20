@@ -110,7 +110,7 @@ bool HMM::stopRecognition() {
 				// Reading HMM
 				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-				HMMModel model(hmmPath0, hmmNameWithNum);
+				HMMModel model(hmmPath, hmmNameWithNum);
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 			logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
