@@ -7,9 +7,9 @@
 
 namespace {
     const char hmmPath[] = "../../HMM_Trainer/Tracking/";
-    const char hmmPath0[] = "../../HMM_Trainer/Tracking/Movement0";
-	const char hmmPath1[] = "../../HMM_Trainer/Tracking/Movement1";
-    const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2";
+    const char hmmPath0[] = "../../HMM_Trainer/Tracking/Movement0/";
+	const char hmmPath1[] = "../../HMM_Trainer/Tracking/Movement1/";
+    const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 	
 	// Initial tracked position as base for rotation of any futher data points
@@ -137,7 +137,7 @@ bool HMM::stopRecognitionAndIdentify() {
         vector<KMeans> kmeanVector(numOfDataPoints);
         for (int ii = 0; ii < numOfDataPoints; ii++) {
             try {
-                sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
+				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
                 KMeans kmeans(hmmPath0, hmmNameWithNum);
                 kmeanVector.at(ii) = kmeans;
                 trackersPresent[ii] = true;
@@ -171,46 +171,51 @@ bool HMM::stopRecognitionAndIdentify() {
                 
                 sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
             
-                for (int ii = 0; ii < numOfDataPoints; ii++) {
                 probabilitymodel0.at(ii)=model0.getProbabilityThreshold();
                 probabilitymodel1.at(ii)=model1.getProbabilityThreshold();
                 probabilitymodel2.at(ii)=model2.getProbabilityThreshold();
                 probabilityCurrentmovement.at(ii)=model0.calculateProbability(clusteredPoints);
                 if(probabilityCurrentmovement.at(ii)>probabilitymodel0.at(ii)){
-                        n0=n0 +1;
+                        n0++;
                     }
                 if(probabilityCurrentmovement.at(ii)>probabilitymodel1.at(ii)){
-                        n1= n1+1;
+                        n1++;
                     }
                 if(probabilityCurrentmovement.at(ii)>probabilitymodel2.at(ii)){
-                        n2= n2+1;
+                        n2++;
                     }
                 }
+            }
+		
+			if (n0 >= n1 && n0 >= n2) {
+				Kore::log(Kore::Info, "Recognize the movement as yoga warrior1");
+				for (int ii = 0; ii < numOfDataPoints; ii++) {
+				// Calculating the probability and comparing with probability threshold as well as applying restfix
+				trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel0.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
+				logger.analyseHMM(hmmName, probabilityCurrentmovement.at(ii), false);
+				}
+			}
 
-            }
-        }
-        for (int ii = 0; ii < numOfDataPoints; ii++) {
-        if(n0 >= n1 && n0>= n2 ){
-            Kore::log(Kore::Info, "Recognize the movement as yoga warrior1");
-            // Calculating the probability and comparing with probability threshold as well as applying restfix
-            trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel0.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-            logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
-            }
-        
-        else if(n0 <= n1 && n1>= n2 ){
-            Kore::log(Kore::Info, "Recognize the movement as yoga warrior2");
-                trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel1.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-                logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
-            
-        }
-        
-        else if(n2 >= n1 && n2>= n0 ){
-            Kore::log(Kore::Info, "Recognize the movement as extended side angle");
-                trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel1.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-                logger.analyseHMM(hmmName,probabilityCurrentmovement.at(ii), false);
-            
-         }
-        }
+			else if (n1 >= n0 && n1 >= n2) {
+				Kore::log(Kore::Info, "Recognize the movement as yoga warrior2");
+				for (int ii = 0; ii < numOfDataPoints; ii++) {
+				trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel1.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
+				logger.analyseHMM(hmmName, probabilityCurrentmovement.at(ii), false);
+				}
+			}
+
+			else if (n2 >= n1 && n2 >= n0) {
+				Kore::log(Kore::Info, "Recognize the movement as extended side angle");
+				for (int ii = 0; ii < numOfDataPoints; ii++) {
+				trackerMovementRecognised.at(ii) = (probabilityCurrentmovement.at(ii) > probabilitymodel2.at(ii) && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
+				logger.analyseHMM(hmmName, probabilityCurrentmovement.at(ii), false);
+				}
+			}
+			else {
+				Kore::log(Kore::Info, "None movement is recognized");
+			}
+					
+		
         logger.analyseHMM(hmmName, 0, true);
         
         if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
