@@ -12,15 +12,6 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 	
-	// Initial tracked position as base for rotation of any futher data points
-	double startX;
-	double startZ;
-	double startRotCos;
-	double startRotSin;
-	double transitionX;
-	double transitionY;
-	double transitionZ;
-	
 	float currentUserHeight;
 	
 	int curentFileNumber = 0;
@@ -49,11 +40,6 @@ bool HMM::isRecognitionActive() {
 }
 
 void HMM::init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation) {
-	// Save current HMD position and rotation for data normalisation
-	startX = hmdPosition.x();
-	startZ = hmdPosition.z();
-	startRotCos = Kore::cos(hmdRotation.y * Kore::pi);
-	startRotSin = Kore::sin(hmdRotation.y * Kore::pi);
 	currentUserHeight = hmdPosition.y();
 	
 	curentLineNumber = 0;
@@ -241,16 +227,8 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 		
 		curentLineNumber++;
 		
-		//transitionX = position.x() - startX;
-		//transitionY = position.y();
-		//transitionZ = position.z() - startZ;
-		
 		if (record) {
 			// Data is recorded
-			// TODO: Why do we need 1.8?
-			//Kore::vec3 hmmPos((transitionX * startRotCos - transitionZ * startRotSin), ((transitionY / currentUserHeight) * 1.8), (transitionZ * startRotCos + transitionX * startRotSin));
-			//logger.saveHMMData(name, lastTime, hmmPos, rotation);
-			
 			logger.saveHMMData(name, lastTime, position.normalize(), rotation);
 		}
 		
@@ -264,10 +242,6 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 			rotx = rotation.x;
 			roty = rotation.y;
 			rotz = rotation.z;
-			
-			//	x = (transitionX * startRotCos - transitionZ * startRotSin);
-			//	y = (transitionY / currentUserHeight) * 1.8;
-			//	z = (transitionZ * startRotCos + transitionX * startRotSin);
 			
 			vector<double> values = { x, y, z, rotx, roty, rotz, rotw };
 			Point point = Point(dataPointNumber, values);
