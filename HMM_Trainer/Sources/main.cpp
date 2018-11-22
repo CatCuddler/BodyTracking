@@ -32,13 +32,13 @@ vector<double> calculateProbability(HMMModel models[6]);
 
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
-// Create new HMM based on at least one data set specified below
+// Create new HMM based on the all the training file
 bool createHMM = true;
-// Optimise a single HMM by indefinitely calculating new HMMs and replacing the old ones if those are better
+// Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
-// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
+// Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
 bool optimiseMovementRecognition = false;
-// Calculating the probability for a data set based on an already existing HMM
+// Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
 bool debug = false;
