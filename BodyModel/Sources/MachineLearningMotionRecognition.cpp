@@ -119,7 +119,7 @@ bool MachineLearningMotionRecognition::isRecordingMovementData()
 void MachineLearningMotionRecognition::processMovementData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
 
 	if (currentlyRecording) {
-		logger.saveMotionRecognitionData(tag, calPos, calRot, angVel, linVel, scale, time);
+		logger.saveMotionRecognitionData(tag, currentTestSubjectID.c_str(), taskCurrentlyRecording.c_str(), calPos, calRot, angVel, linVel, scale, time);
 	}
 }
 

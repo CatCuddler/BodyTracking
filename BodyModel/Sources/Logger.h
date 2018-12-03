@@ -39,7 +39,7 @@ public:
 	// Motion Recognition
 	void startMotionRecognitionLogger(const char* filename);
 	void endMotionRecognitionLogger();
-	void saveMotionRecognitionData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time);
+	void saveMotionRecognitionData(const char* tag, const char* subject, const char* activity, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time);
 
 	// HMM
 	void startHMMLogger(const char* filename, int num);

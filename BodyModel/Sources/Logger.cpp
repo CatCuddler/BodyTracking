@@ -56,7 +56,7 @@ void Logger::startMotionRecognitionLogger(const char* filename) {
 	motionRecognitionWriter.open(logFileName, std::ios::app); // Append to the end
 
 	// Append header
-	motionRecognitionWriter << "tag;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
+	motionRecognitionWriter << "tag;subject;activity;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
 	motionRecognitionWriter.flush();
 
 }
@@ -66,10 +66,10 @@ void Logger::endMotionRecognitionLogger() {
 	motionRecognitionWriter.close();
 }
 
-void Logger::saveMotionRecognitionData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
+void Logger::saveMotionRecognitionData(const char* tag, const char* subject, const char* activity, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
 
 	// Save position, rotation, angular and linear velocity
-	motionRecognitionWriter << tag << ";"
+	motionRecognitionWriter << tag << ";" << subject << ";" << activity << ";"
 		<< calPos.x() << ";" << calPos.y() << ";" << calPos.z() << ";" << calRot.x << ";" << calRot.y << ";" << calRot.z << ";" << calRot.w << ";"
 		<< angVel.x() << ";" << angVel.y() << ";" << angVel.z() << ";" << linVel.x() << ";" << linVel.y() << ";" << linVel.z() << ";"
 		<< scale << ";" << time << "\n";
