@@ -60,7 +60,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 1000000;
+int hmmTries = 10000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -333,20 +333,26 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber) {
 	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
-	for (int jj = 0; jj < hmmTries; jj++) {
-		for (int ii = 0; ii < 6; ii++) {
-			/* use Baum-Welch-Algorithm to train HMM and write it to a file */
-			HMMModel model(numStates, numEmissions, lrDepth);
-			model.trainHMM(sequence.at(ii));
-			if (jj < hmmTries - 1) cout << ", ";
-			if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
-				finalModels[ii] = model;
-				model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
-				probabilities.at(ii) = (model.getProbabilityThreshold());
-			}
-		}
-		cout << "HMM# " << jj << "_" << threadNumber << "; ";
-	}
+
+    for (int ii = 0; ii < 6; ii++) {
+        if (!sequence.at(ii).empty()) {
+            cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
+            for (int jj = 0; jj < hmmTries; jj++) {
+                // use Baum-Welch-Algorithm to train HMM and write it to a file
+                HMMModel model(numStates, numEmissions, lrDepth);
+                model.trainHMM(sequence.at(ii));
+                //if (jj < hmmTries - 1) cout << ", ";
+                if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
+                    finalModels[ii] = model;
+                    model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
+                    probabilities.at(ii) = (model.getProbabilityThreshold());
+                }
+                cout << jj << ", ";
+            }
+            cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
+            
+        }
+    }
 	
 }
 
