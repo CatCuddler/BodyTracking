@@ -20,7 +20,8 @@
 #include <time.h>
 #include <vector>
 #include <thread>
-
+#include <cmath>
+#include <cfloat>
 using namespace std;
 
 // declaration above main for function to be found instead of creating header file
@@ -296,13 +297,32 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 		}
 	}
 	
-	vector<double> probabilityTracker(6);
-    vector<double> probabilityFile(getFullTrainingNumber(trainingFilePath, trainingFileName));
+	vector<double> probabilityTracker;
+    vector<double> probabilityFile;
     for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName); fileNumber++) {
         currentMovement = trainingFileName + to_string(fileNumber);
         probabilityTracker = calculateProbability(finalModels);
+        //ignore NAN
+        auto iter = probabilityTracker.begin();
+        while (iter != probabilityTracker.end()) {
+            if (isnan(*iter)) {
+                iter = probabilityTracker.erase(iter);
+            }
+            else {
+                ++iter;
+            }
+        }
         double average = accumulate( probabilityTracker.begin(), probabilityTracker.end(), 0.0)/probabilityTracker.size();
         probabilityFile.push_back(average);
+    }
+    auto iter = probabilityFile.begin();
+    while (iter != probabilityFile.end()) {
+        if (isnan(*iter)) {
+            iter = probabilityFile.erase(iter);
+        }
+        else {
+            ++iter;
+        }
     }
     double averageFile = accumulate( probabilityFile.begin(), probabilityFile.end(), 0.0)/probabilityFile.size();
     file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< averageFile << ";\n";
