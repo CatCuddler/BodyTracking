@@ -33,11 +33,11 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = false;
+bool createHMM = true;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = true;
+bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -60,7 +60,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10;
+int hmmTries = 1000000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -212,7 +212,7 @@ int main() {
 		
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
-		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "File number" << "; " << "Tracker name" << "; " << "Probability" << ";\n";
+		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Probability" << ";\n";
 		
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
