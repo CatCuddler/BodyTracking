@@ -69,7 +69,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
  ********************************************************************************/
 vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, vector<KMeans> kmeans) {
 	vector<vector<vector<int>>> returnVector(6);
-	cout << "Normalising data set to same total movement duration. \n";
+//    cout << "Normalising data set to same total movement duration. \n";
 	vector<vector<Point>> currentDataSet;
 	for (int currentFile = 0; currentFile < fileAmount; currentFile++) {
 		// check whether there is more than one file to be checked, and creeate seperate files if it is the case

@@ -12,7 +12,7 @@
 #include "Matrix.h"
 #include "Markov.h"
 #include "kMeans.h"
-
+#include <numeric>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -33,11 +33,11 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = true;
+bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
+bool optimiseMovementRecognition = true;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -60,7 +60,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10000;
+int hmmTries = 10;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -296,23 +296,17 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 		}
 	}
 	
-	vector<double> probabilityVector(6);
-	
-	for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName); fileNumber++) {
-		currentMovement = trainingFileName + to_string(fileNumber);
-		probabilityVector = calculateProbability(finalModels);
-		for (int tracker = 0; tracker < 6; tracker++) {
-			file << numStates << "; " << numEmissions << "; " << lrDepth << "; " << fileNumber << "t; " << trackerNames[tracker] << "; " << probabilityVector.at(tracker) << ";\n";
-		}
-	}
-	
-	for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName + "_f"); fileNumber++) {
-		currentMovement = trainingFileName + "_f" + to_string(fileNumber);
-		probabilityVector = calculateProbability(finalModels);
-		for (int tracker = 0; tracker < 6; tracker++) {
-			file << numStates << "; " << numEmissions << "; " << lrDepth << "; " << fileNumber << "f; " << trackerNames[tracker] << "; " << probabilityVector.at(tracker) << ";\n";
-		}
-	}
+	vector<double> probabilityTracker(6);
+    vector<double> probabilityFile(getFullTrainingNumber(trainingFilePath, trainingFileName));
+    for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName); fileNumber++) {
+        currentMovement = trainingFileName + to_string(fileNumber);
+        probabilityTracker = calculateProbability(finalModels);
+        double average = accumulate( probabilityTracker.begin(), probabilityTracker.end(), 0.0)/probabilityTracker.size();
+        probabilityFile.push_back(average);
+    }
+    double averageFile = accumulate( probabilityFile.begin(), probabilityFile.end(), 0.0)/probabilityFile.size();
+    file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< averageFile << ";\n";
+
 }
 
 /********************************************************************************
