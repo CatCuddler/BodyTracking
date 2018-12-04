@@ -34,11 +34,11 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = true;
+bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
+bool optimiseMovementRecognition = true;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -61,7 +61,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 1000000;
+int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -128,7 +128,7 @@ int main() {
 					HMMModel model(numStates, numEmissions, lrDepth);
 					model.trainHMM(sequence.at(ii));
 					//if (jj < hmmTries - 1) cout << ", ";
-					if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
+					if (isnan(probabilities.at(ii))|| probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 						model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii));
 						probabilities.at(ii) = (model.getProbabilityThreshold());
 					}
@@ -356,7 +356,7 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
                 HMMModel model(numStates, numEmissions, lrDepth);
                 model.trainHMM(sequence.at(ii));
                 //if (jj < hmmTries - 1) cout << ", ";
-                if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
+                if (isnan(probabilities.at(ii))||probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
                     finalModels[ii] = model;
                     model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
                     probabilities.at(ii) = (model.getProbabilityThreshold());
