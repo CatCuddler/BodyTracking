@@ -36,13 +36,14 @@ vector<double> calculateProbability(HMMModel models[6]);
 // Create new HMM based on the all the training file
 bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
-bool optimiseInfiniteHMM = false;
+bool optimiseInfiniteHMM = true;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = true;
+bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
 bool debug = false;
+
 
 /// ***** Set paths and HMM parameters ***** ///
 // File name of the data set to be used used for single probability calculation
@@ -61,7 +62,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 100;
+int hmmTries = 10;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -73,7 +74,7 @@ vector<KMeans> kmeans;
 vector<vector<vector<int>>> sequenceX;
 vector<KMeans> kmeansX;
 ofstream file;
-
+vector<double> probabilitiesGather(num_threads*6,0);
 /********************************************************************************
  * method: main
  * description: see file description
@@ -258,8 +259,17 @@ int main() {
 		for (thread &singleThread : t) {
 			singleThread.join();
 		}
+        file.open(writeFilePath + writeFileName + "_MaxProbability.txt", ios::out /*| ios::trunc*/);
+        file<<"the Maximum Probability of head is";
+        double maxProbability =-10000000 ;
+        for(int point=0; point<24; point+=6){
+            if (maxProbability < probabilitiesGather.at(point))
+                maxProbability = probabilitiesGather.at(point);
+        }
+        file<<maxProbability;
+        
 	}
-	cout << "\n";
+	cout << "optimiseInfiniteHMM is finished.\n";
 	return 0;
 }
 
@@ -312,6 +322,8 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
                 ++iter;
             }
         }
+        //Get mean value
+        //TODO get variance
         double average = accumulate( probabilityTracker.begin(), probabilityTracker.end(), 0.0)/probabilityTracker.size();
         probabilityFile.push_back(average);
     }
@@ -347,7 +359,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber) {
 	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
-
+     probabilitiesGather.clear();
     for (int ii = 0; ii < 6; ii++) {
         if (!sequence.at(ii).empty()) {
             cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
@@ -363,11 +375,17 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
                 }
                 cout << jj << ", ";
             }
+            
             cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
             
         }
     }
-	
+    probabilitiesGather.insert(probabilitiesGather.end(),probabilities.begin(),probabilities.end());
+    cout<<"probabilitiesGather:"<<endl;
+    for (const auto &element : probabilitiesGather) {
+        cout<<element<<",";
+    }
+    cout<<endl<<"The size of probabilitiesGather is "<<probabilitiesGather.size()<<"."<<endl;
 }
 
 
