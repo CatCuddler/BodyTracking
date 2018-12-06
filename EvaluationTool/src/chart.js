@@ -13,7 +13,7 @@ const Div = createComponent(() => ({
   display: "flex",
   flexDirection: "column",
   "& text": {
-    fontSize: "14px !important"
+    fontSize: "28px !important"
   }
 }));
 
@@ -496,8 +496,8 @@ const Chart = ({
         margin={{
           top: 5,
           right: 25,
-          bottom: 60,
-          left: 50
+          bottom: 80,
+          left: 80
         }}
         curve={numeric ? "linear" : "step"}
         markers={extrema ? markers : undefined}
@@ -506,7 +506,7 @@ const Chart = ({
         colorBy={e => e.color}
         axisBottom={{
           legend: groupBy || "# of cycle",
-          legendOffset: 36,
+          legendOffset: 60,
           legendPosition: "center",
           tickValues
         }}
@@ -516,7 +516,7 @@ const Chart = ({
             : [average ? "Average" : null, ...selectedFields]
                 .filter(x => x)
                 .join(", "),
-          legendOffset: -36,
+          legendOffset: -60,
           legendPosition: "center"
         }}
         tooltipFormat={tooltipFormat}
