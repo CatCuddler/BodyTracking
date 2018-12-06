@@ -67,7 +67,7 @@ int hmmTries = 10;
 int lrDepth = 2;
 
 /// ***** General variables used by system ***** ///
-static const int num_threads = 4; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
+static const int num_threads = 8; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
 int trainingNumber;
 vector<vector<vector<int>>> sequence;
 vector<KMeans> kmeans;
@@ -260,16 +260,20 @@ int main() {
 			singleThread.join();
 		}
         file.open(writeFilePath + writeFileName + "_MaxProbability.txt", ios::out /*| ios::trunc*/);
-        file<<"the Maximum Probability of head is";
-        double maxProbability =-10000000 ;
-        for(int point=0; point<24; point+=6){
-            if (maxProbability < probabilitiesGather.at(point))
-                maxProbability = probabilitiesGather.at(point);
+        
+        for (int ii = 0; ii < 6; ii++) {
+            file<<"The Maximum Probability of " <<trackerNames[ii]<< " is ";
+            double maxProbability =-10000000 ;
+        for(int point=0+ii; point<24; point+=6){
+            if (maxProbability < probabilitiesGather.at(point)){
+            maxProbability = probabilitiesGather.at(point);
+            }
         }
-        file<<maxProbability;
+        file<<maxProbability<<".\n";
         
 	}
-	cout << "optimiseInfiniteHMM is finished.\n";
+    }
+	cout <<"\n"<<"optimiseInfiniteHMM is finished.\n";
 	return 0;
 }
 
@@ -360,32 +364,23 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 	HMMModel finalModels[6];
 	vector<double> probabilities(6, 0);
      probabilitiesGather.clear();
-    for (int ii = 0; ii < 6; ii++) {
-        if (!sequence.at(ii).empty()) {
-            cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
-            for (int jj = 0; jj < hmmTries; jj++) {
+    for (int jj = 0; jj < hmmTries; jj++) {
+             for (int ii = 0; ii < 6; ii++) {
+     
                 // use Baum-Welch-Algorithm to train HMM and write it to a file
                 HMMModel model(numStates, numEmissions, lrDepth);
                 model.trainHMM(sequence.at(ii));
-                //if (jj < hmmTries - 1) cout << ", ";
                 if (isnan(probabilities.at(ii))||probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
                     finalModels[ii] = model;
                     model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
                     probabilities.at(ii) = (model.getProbabilityThreshold());
+       //             cout << trackerNames[ii] + "_" << jj <<", "<<"_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. "  "The log probability threshold is " << probabilities.at(ii) << ".\n";
                 }
-                cout << jj << ", ";
             }
-            
-            cout << ".\n" << "HMM #" << ii << " has been trained and saved to " << writeFilePath + writeFileName + "_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. " << "The log probability threshold is " << probabilities.at(ii) << ".\n\n";
-            
-        }
+        cout << "HMM #" <<threadNumber<<"_"<< jj<< ";";
     }
     probabilitiesGather.insert(probabilitiesGather.end(),probabilities.begin(),probabilities.end());
-    cout<<"probabilitiesGather:"<<endl;
-    for (const auto &element : probabilitiesGather) {
-        cout<<element<<",";
-    }
-    cout<<endl<<"The size of probabilitiesGather is "<<probabilitiesGather.size()<<"."<<endl;
+
 }
 
 
