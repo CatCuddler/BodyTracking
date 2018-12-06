@@ -1,10 +1,21 @@
 import React from "react";
 import { compose, withPropsOnChange, withHandlers } from "recompose";
 import { get, groupBy as _groupBy, sortBy as _sortBy } from "lodash";
+import { createComponent } from "react-fela";
 import { ResponsiveLine } from "./line";
 import colorsMaterial from "./colors";
 
 const labelScale = ["", "min-max norm", "z-score norm"];
+
+const Div = createComponent(() => ({
+  flexGrow: 1,
+  marginLeft: "1rem",
+  display: "flex",
+  flexDirection: "column",
+  "& text": {
+    fontSize: "14px !important"
+  }
+}));
 
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
   // searchIndex is at the end
@@ -478,14 +489,7 @@ const Chart = ({
   extrema,
   numeric
 }) => (
-  <div
-    style={{
-      flexGrow: 1,
-      marginLeft: "1rem",
-      display: "flex",
-      flexDirection: "column"
-    }}
-  >
+  <Div>
     {!!data.length && (
       <ResponsiveLine
         data={data}
@@ -530,7 +534,7 @@ const Chart = ({
         ]}
       />
     )}
-  </div>
+  </Div>
 );
 
 export default enhance(Chart);
