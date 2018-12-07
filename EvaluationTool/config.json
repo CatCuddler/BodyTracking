@@ -1,5 +1,5 @@
 {
-  "input": "Analyse/Messungen/maxSteps",
+  "input": "Analyse/Messungen/lambda",
   "output": "",
-  "groupToFolderBy": false
+  "groupToFolderBy": "IK Mode"
 }
