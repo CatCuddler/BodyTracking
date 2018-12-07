@@ -273,7 +273,7 @@ int main() {
         
 	}
     }
-	cout <<"\n"<<"optimiseInfiniteHMM is finished.\n";
+	cout <<"\n"<<"OptimiseInfiniteHMM is finished.\n";
 	return 0;
 }
 
