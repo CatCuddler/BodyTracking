@@ -4,6 +4,8 @@
 #include "kMeans.h"
 #include "Markov.h"
 #include <Kore/Input/Keyboard.h>
+#include <iostream>
+#include <jni.h>
 
 class MachineLearningMotionRecognition {
 
@@ -13,10 +15,10 @@ class MachineLearningMotionRecognition {
 private:
 	// use this setting to disable the MotionRecognizer or to switch between recording and recognizing movements
 	enum MotionRecognitionMode { recordMovements, recognizeMovements, off };
-	const MotionRecognitionMode operatingMode = recordMovements;
+	const MotionRecognitionMode operatingMode = recognizeMovements;
 
 	// ID of the currently active user, to be used for data differentiation after recording movements
-	const string currentTestSubjectID = "TestUser";
+	const string currentTestSubjectID = "TestUser_04";
 
 	// the file name will be "user + task + session ID (incremented during runtime for each task) + optionalFileTag
 	// if you need to restart a recording session, consider incrementing the recordingID from the start, or to add an optionalFileTag
@@ -30,10 +32,13 @@ private:
 	void stopRecording();
 
 	void startRecognition();
-	bool stopRecognition();
+	void stopRecognition();
+	void toggleRecognition();
 
 	bool isCurrentlyRecording();
 	bool isCurrentlyRecognizing();
+
+	void initializeJavaNativeInterface();
 
 
 
