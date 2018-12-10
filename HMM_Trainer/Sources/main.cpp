@@ -209,14 +209,13 @@ int main() {
 	
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
-        //possible amount of numStates
-  //      int numStatesAmount = 5;
+//        possible amount of numStates
+        int numStatesAmount = 5;
         //possible amount of numEmissions
- //       int numEmissionAmount = 5;
+        int numEmissionAmount = 5;
         //Range of random number
-//        int randomRange = 10;
-        //Amount of random number
-//        int randomAmount = 10;
+        unsigned int randomRangeState = 10;
+        unsigned int randomRangeEmission = 10;
 		// Open threads
 		thread t[num_threads];
 		
@@ -227,15 +226,19 @@ int main() {
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
-    //     Grid search
+    //  Grid search
 	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
+    //  Random search
         srand((unsigned)time(NULL));
-        int emissionIterations[5];
-        int numStatesIterations[5];
-        for(int i = 0; i < 5;i++ ){
-            int randomNumber = rand() % 10;
+        int emissionIterations[numEmissionAmount];
+        int numStatesIterations[numStatesAmount];
+        for(int i = 0; i < numEmissionAmount;i++ ){
+            int randomNumber = rand() % randomRangeEmission;
             emissionIterations[i]=randomNumber;
-            int randomNumber2 =rand()% 10;
+   
+        }
+        for(int i = 0; i < numStatesAmount;i++ ){
+            int randomNumber2 =rand()% randomRangeState;
             numStatesIterations[i] = randomNumber2;
         }
 		// Actual calculations
