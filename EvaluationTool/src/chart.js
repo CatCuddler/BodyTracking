@@ -13,7 +13,7 @@ const Div = createComponent(() => ({
   display: "flex",
   flexDirection: "column",
   "& text": {
-    fontSize: "28px !important"
+    fontSize: "21px !important"
   }
 }));
 
