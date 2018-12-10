@@ -36,9 +36,9 @@ vector<double> calculateProbability(HMMModel models[6]);
 // Create new HMM based on the all the training file
 bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
-bool optimiseInfiniteHMM = true;
+bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
+bool optimiseMovementRecognition = true;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -62,12 +62,12 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10;
+int hmmTries = 1;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
 /// ***** General variables used by system ***** ///
-static const int num_threads = 8; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
+static const int num_threads = 4; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
 int trainingNumber;
 vector<vector<vector<int>>> sequence;
 vector<KMeans> kmeans;
@@ -209,6 +209,14 @@ int main() {
 	
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
+        //possible amount of numStates
+  //      int numStatesAmount = 5;
+        //possible amount of numEmissions
+ //       int numEmissionAmount = 5;
+        //Range of random number
+//        int randomRange = 10;
+        //Amount of random number
+//        int randomAmount = 10;
 		// Open threads
 		thread t[num_threads];
 		
@@ -219,13 +227,22 @@ int main() {
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
-		int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
-		
+    //     Grid search
+	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
+        srand((unsigned)time(NULL));
+        int emissionIterations[5];
+        int numStatesIterations[5];
+        for(int i = 0; i < 5;i++ ){
+            int randomNumber = rand() % 10;
+            emissionIterations[i]=randomNumber;
+            int randomNumber2 =rand()% 10;
+            numStatesIterations[i] = randomNumber2;
+        }
 		// Actual calculations
 		for (int &numEmissions : emissionIterations) {
 			kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
 			sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
-			for (numStates = 6; numStates <= 16; numStates += 2) {
+            for (int &numStates : numStatesIterations) {
 				cout << "Splitting threads**********************************************************************\n";
 				cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
 				
@@ -245,6 +262,7 @@ int main() {
 	
 	// Optimise a single HMM by indefinitely calculating new HMMs and replacing the old ones if those are better
 	else if (optimiseInfiniteHMM) {
+ 
 		// Open threads
 		thread t[num_threads];
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
