@@ -62,7 +62,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 1;
+int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -221,7 +221,7 @@ int main() {
 		
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
-		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Probability" << ";\n";
+		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";"<<"Variance"<<";\n";
 		
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
@@ -332,8 +332,9 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 		}
 	}
 	
-	vector<double> probabilityTracker;
-    vector<double> probabilityFile;
+    vector<double> probabilityTracker;
+    vector <double> probabilityTotal(getFullTrainingNumber(trainingFilePath, trainingFileName)*6,0);
+    probabilityTotal.clear();
     for (int fileNumber = 0; fileNumber < getFullTrainingNumber(trainingFilePath, trainingFileName); fileNumber++) {
         currentMovement = trainingFileName + to_string(fileNumber);
         probabilityTracker = calculateProbability(finalModels);
@@ -348,21 +349,19 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
             }
         }
         //Get mean value
-        //TODO get variance
-        double average = accumulate( probabilityTracker.begin(), probabilityTracker.end(), 0.0)/probabilityTracker.size();
-        probabilityFile.push_back(average);
+        
+        probabilityTotal.insert(probabilityTotal.end(),probabilityTracker.begin(),probabilityTracker.end());
     }
-    auto iter = probabilityFile.begin();
-    while (iter != probabilityFile.end()) {
-        if (isnan(*iter)) {
-            iter = probabilityFile.erase(iter);
-        }
-        else {
-            ++iter;
-        }
-    }
-    double averageFile = accumulate( probabilityFile.begin(), probabilityFile.end(), 0.0)/probabilityFile.size();
-    file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< averageFile << ";\n";
+        double mean = accumulate( probabilityTotal.begin(), probabilityTotal.end(), 0.0)/probabilityTotal.size();
+        //get variance
+        double accum  = 0.0;
+        std::for_each (std::begin(probabilityTotal), std::end(probabilityTotal), [&](const double d) {
+            accum  += (d-mean)*(d-mean);
+        });
+        
+        double stdev = sqrt(accum/(probabilityTotal.size()-1));
+
+       file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< mean<< "; "<<stdev << ";\n";
 
 }
 
