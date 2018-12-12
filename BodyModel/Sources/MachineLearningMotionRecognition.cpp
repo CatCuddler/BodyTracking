@@ -160,16 +160,19 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 
 			if (java_WekaObject) {
 				// get a method from the object
-				java_addDataPointToClassifier = java_JNI->GetMethodID(java_WekaClass, "addDataPoint", "()V");
+				java_addDataPointToClassifier = java_JNI->GetMethodID(java_WekaClass, "addFrameData",
+					"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DDDDDDDDDDDDDDD)V");
 				if (java_addDataPointToClassifier == nullptr) {
 					Kore::log(Kore::LogLevel::Error, "JNI ERROR: No addDataPoint method");
 				}
 				else {
-					java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier);
-					java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier);
-					java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier);
-					java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier);
-					java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier);
+					//java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+					//	java_JNI->NewStringUTF("pos"), java_JNI->NewStringUTF("subj"), java_JNI->NewStringUTF("activi"),
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1);
 
 				}
 			}
@@ -270,7 +273,25 @@ void MachineLearningMotionRecognition::processMovementData(const char* tag, Kore
 		}
 	}
 	else if (operatingMode == recognizeMovements) {
+		if (currentlyRecognizing) {
+			java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+				java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
+				(jdouble)calPos.x(), (jdouble)calPos.y(), (jdouble)calPos.z(),
+				(jdouble)calRot.x, (jdouble)calRot.y, (jdouble)calRot.z, (jdouble)calRot.w,
+				(jdouble)angVel.x(), (jdouble)angVel.y(), (jdouble)angVel.z(),
+				(jdouble)linVel.x(), (jdouble)linVel.y(), (jdouble)linVel.z(),
+				(jdouble)1, (jdouble)time);
 
+
+			/*
+						java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+							java_JNI->NewStringUTF("pos"), java_JNI->NewStringUTF("subj"), java_JNI->NewStringUTF("activi"),
+							(jdouble)calPos.x, (jdouble)calPos.y, (jdouble)calPos.z,
+							(jdouble)calRot.x, (jdouble)calRot.y, (jdouble)calRot.z, (jdouble)calRot.w,
+							(jdouble)angVel.x, (jdouble)angVel.y, (jdouble)angVel.z,
+							(jdouble)linVel.x, (jdouble)linVel.y, (jdouble)linVel.z,
+							(jdouble)scale, (jdouble)time);*/
+		}
 	}
 
 }
