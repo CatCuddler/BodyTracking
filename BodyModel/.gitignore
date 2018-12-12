@@ -1,4 +1,5 @@
 /build
 /Deployment/*.frag
 /Deployment/*.vert
+/Deployment/*.log
 *.blend1
