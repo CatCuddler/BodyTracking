@@ -62,7 +62,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 100;
+int hmmTries = 1000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -209,16 +209,12 @@ int main() {
 	
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
-//        possible amount of numStates
-        int numStatesAmount = 5;
-        //possible amount of numEmissions
-        int numEmissionAmount = 5;
-        //Range of random number
-        unsigned int randomRangeState = 10;
+        const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
+        const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
+        unsigned int randomRangeState = 10;//maximum value (of course, this must be at least the same as AMOUNT;
         unsigned int randomRangeEmission = 10;
 		// Open threads
 		thread t[num_threads];
-		
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
 		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";"<<"Variance"<<";\n";
@@ -229,18 +225,50 @@ int main() {
     //  Grid search
 	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
     //  Random search
-        srand((unsigned)time(NULL));
-        int emissionIterations[numEmissionAmount];
+        srand((unsigned)time(NULL));//always seed your RNG before using it
+        int emissionIterations[numEmissionAmount];//array to store the random numbers in
         int numStatesIterations[numStatesAmount];
-        for(int i = 0; i < numEmissionAmount;i++ ){
-            int randomNumber = rand() % randomRangeEmission;
-            emissionIterations[i]=randomNumber;
-   
+        
+        //   reference code from http://www.cplusplus.com/forum/general/7784/
+        //generate random numbers for Emission States without duplicates:
+        for (int i=0;i<numEmissionAmount;i++)
+        {
+            bool check; //variable to check or number is already used
+            int n; //variable to store the number in
+            do
+            {
+                n=rand()%randomRangeEmission;
+                //check or number is already used:
+                check=true;
+                for (int j=0;j<i;j++)
+                    if (n == emissionIterations[j]) //if number is already used
+                    {
+                        check=false; //set check to false
+                        break; //no need to check the other elements of value[]
+                    }
+            } while (!check); //loop until new, unique number is found
+            emissionIterations[i]=n; //store the generated number in the array
         }
-        for(int i = 0; i < numStatesAmount;i++ ){
-            int randomNumber2 =rand()% randomRangeState;
-            numStatesIterations[i] = randomNumber2;
+        //generate random numbers for numStates without duplicates:
+        for (int i=0;i<numStatesAmount;i++)
+        {
+            bool check; //variable to check or number is already used
+            int n; //variable to store the number in
+            do
+            {
+                n=rand()%randomRangeState;
+                //check or number is already used:
+                check=true;
+                for (int j=0;j<i;j++)
+                    if (n == numStatesIterations[j]) //if number is already used
+                    {
+                        check=false; //set check to false
+                        break; //no need to check the other elements of value[]
+                    }
+            } while (!check); //loop until new, unique number is found
+            numStatesIterations[i]=n; //store the generated number in the array
         }
+        
 		// Actual calculations
 		for (int &numEmissions : emissionIterations) {
 			kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
