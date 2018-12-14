@@ -13,7 +13,7 @@ const Div = createComponent(() => ({
   display: "flex",
   flexDirection: "column",
   "& text": {
-    fontSize: "28px !important"
+    fontSize: "35px !important"
   }
 }));
 
@@ -441,7 +441,7 @@ const enhance = compose(
       get(data, [0, "data"], []).forEach(({ x }) => newTicks.push(x));
     } else newTicks = [...tickValues];
 
-    if (newTicks.join("").length > 90)
+    if (newTicks.join("").length > 20)
       newTicks = newTicks.filter((x, i) => i % 2 === 0);
 
     const numeric = !isNaN(get(newTicks, 0));
@@ -494,10 +494,10 @@ const Chart = ({
       <ResponsiveLine
         data={data}
         margin={{
-          top: 5,
-          right: 25,
-          bottom: 80,
-          left: 80
+          top: 15,
+          right: 30,
+          bottom: 85,
+          left: 90
         }}
         curve={numeric ? "linear" : "step"}
         markers={extrema ? markers : undefined}
@@ -506,7 +506,7 @@ const Chart = ({
         colorBy={e => e.color}
         axisBottom={{
           legend: groupBy || "# of cycle",
-          legendOffset: 60,
+          legendOffset: 80,
           legendPosition: "center",
           tickValues
         }}
@@ -516,7 +516,7 @@ const Chart = ({
             : [average ? "Average" : null, ...selectedFields]
                 .filter(x => x)
                 .join(", "),
-          legendOffset: -60,
+          legendOffset: -65,
           legendPosition: "center"
         }}
         tooltipFormat={tooltipFormat}
@@ -526,8 +526,8 @@ const Chart = ({
           {
             anchor: "bottom-left",
             direction: "row",
-            translateX: -45,
-            translateY: 60,
+            translateX: -65,
+            translateY: 80,
             itemWidth: !large ? 100 : 180,
             itemHeight: 20
           }
