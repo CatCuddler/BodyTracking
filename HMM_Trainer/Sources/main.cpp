@@ -22,6 +22,7 @@
 #include <thread>
 #include <cmath>
 #include <cfloat>
+#include <algorithm>
 using namespace std;
 
 // declaration above main for function to be found instead of creating header file
@@ -50,11 +51,11 @@ bool debug = false;
 string currentMovement = "Yoga_Krieger5";
 // Path for the source files
 // NOTE: change working directory if necessary
-string trainingFilePath = "../Training/";
+string trainingFilePath = "./Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger_";
 // Path for HMM and clusters to be saved in
-string writeFilePath = "../Tracking/";
+string writeFilePath = "./Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
@@ -62,7 +63,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 1000;
+int hmmTries = 10;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -143,7 +144,7 @@ int main() {
 		for (int ii = 0; ii < 6; ii++) {
 			if (sequence.at(ii).empty()) {
 				if (!emptyTracker) {
-					cout << "Some trackers were not found in the given data set: \n \{ ";
+					cout << "Some trackers were not found in the given data set: \n \n ";
 					emptyTracker = true;
 				} else {
 					cout << ", ";
@@ -289,6 +290,7 @@ int main() {
 				
 			}
 		}
+		cout << "Optimize movement recognition is done\n";
 	}
 	
 	// Optimise a single HMM by indefinitely calculating new HMMs and replacing the old ones if those are better
