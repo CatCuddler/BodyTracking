@@ -39,7 +39,7 @@ bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = true;
+bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -51,11 +51,11 @@ bool debug = false;
 string currentMovement = "Yoga_Krieger5";
 // Path for the source files
 // NOTE: change working directory if necessary
-string trainingFilePath = "./Training/";
+string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger_";
 // Path for HMM and clusters to be saved in
-string writeFilePath = "./Tracking/";
+string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
@@ -63,7 +63,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10;
+int hmmTries = 10000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -212,8 +212,8 @@ int main() {
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
         const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
-        unsigned int randomRangeState = 10;//maximum value (of course, this must be at least the same as AMOUNT;
-        unsigned int randomRangeEmission = 10;
+        const int randomRangeState = 10;//maximum value (of course, this must be at least the same as AMOUNT;
+        const int randomRangeEmission = 10;
 		// Open threads
 		thread t[num_threads];
 		// Creates file for data and writes first row giving information about the data to come
@@ -229,7 +229,7 @@ int main() {
         srand((unsigned)time(NULL));//always seed your RNG before using it
         int emissionIterations[numEmissionAmount];//array to store the random numbers in
         int numStatesIterations[numStatesAmount];
-        
+     
         //   reference code from http://www.cplusplus.com/forum/general/7784/
         //generate random numbers for Emission States without duplicates:
         for (int i=0;i<numEmissionAmount;i++)
@@ -238,7 +238,7 @@ int main() {
             int n; //variable to store the number in
             do
             {
-                n=rand()%randomRangeEmission;
+                n=1+rand()%randomRangeEmission;
                 //check or number is already used:
                 check=true;
                 for (int j=0;j<i;j++)
@@ -257,7 +257,7 @@ int main() {
             int n; //variable to store the number in
             do
             {
-                n=rand()%randomRangeState;
+                n=1+rand()%randomRangeState;
                 //check or number is already used:
                 check=true;
                 for (int j=0;j<i;j++)
@@ -353,7 +353,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 				/* use Baum-Welch-Algorithm to train HMM and write it to a file */
 				HMMModel model(numStates, numEmissions, lrDepth);
 				model.trainHMM(sequence.at(ii));
-				if (jj < hmmTries - 1) cout << ", ";
+				if (jj < hmmTries - 1)cout <<jj<< ", ";
 				if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 					finalModels[ii] = model;
 					probabilities.at(ii) = (model.getProbabilityThreshold());
