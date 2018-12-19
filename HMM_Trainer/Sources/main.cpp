@@ -292,14 +292,21 @@ int main() {
         }
         
 		// Actual calculations
+        int EmissionIndex=0;
+        int numStatesIndex = 0;
+        int lrDrpthIndex =0;
 		for (int &numEmissions : emissionIterations) {
+            EmissionIndex++;
 			kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
 			sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
             for (int &numStates : numStatesIterations) {
 				cout << "Splitting threads**********************************************************************\n";
-				cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
+                numStatesIndex ++;
 				for (int &lrDepth : lrDepthIteration) {
+                    lrDrpthIndex++;
 				// Uses threadIteration for lrDepth as well
+                    cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
+                    cout<<"EmissionIndex: "<<EmissionIndex<<","<<"numStatesIndex: "<<numStatesIndex<<","<<"lrDrpthIndex: "<<lrDrpthIndex<<"\n";
 				for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
 					cout << "Launched from thread " << threadIteration << "\n";
 					t[threadIteration] = thread(multiThreadOptimisation, lrDepth, numStates, numEmissions, trainingNumber, sequence, hmmTries);
