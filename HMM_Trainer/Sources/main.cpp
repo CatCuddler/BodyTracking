@@ -39,7 +39,7 @@ bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
+bool optimiseMovementRecognition = true;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = false;
 // Show debug messages on console
@@ -63,7 +63,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10000;
+int hmmTries = 10;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -122,7 +122,7 @@ int main() {
 		
 		// train HMM per tracker and calculate individual probability thresholds of trackers 
 		vector<double> probabilities(6, 0);
-		for (int ii = 0; ii < 6; ii++) {
+		for (int ii = 4; ii < 6; ii++) {
 			if (!sequence.at(ii).empty()) {
 				cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
 				for (int jj = 0; jj < hmmTries; jj++) {
@@ -212,8 +212,10 @@ int main() {
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
         const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
+        const int lrDepthAmount =3;
         const int randomRangeState = 10;//maximum value (of course, this must be at least the same as AMOUNT;
         const int randomRangeEmission = 10;
+        const int randomlrDepth =10;
 		// Open threads
 		thread t[num_threads];
 		// Creates file for data and writes first row giving information about the data to come
@@ -229,7 +231,8 @@ int main() {
         srand((unsigned)time(NULL));//always seed your RNG before using it
         int emissionIterations[numEmissionAmount];//array to store the random numbers in
         int numStatesIterations[numStatesAmount];
-     
+        int lrDepthIteration[lrDepthAmount];
+
         //   reference code from http://www.cplusplus.com/forum/general/7784/
         //generate random numbers for Emission States without duplicates:
         for (int i=0;i<numEmissionAmount;i++)
@@ -269,6 +272,24 @@ int main() {
             } while (!check); //loop until new, unique number is found
             numStatesIterations[i]=n; //store the generated number in the array
         }
+        for (int i=0;i<lrDepthAmount;i++)
+        {
+            bool check; //variable to check or number is already used
+            int n; //variable to store the number in
+            do
+            {
+                n=1+rand()%randomlrDepth;
+                //check or number is already used:
+                check=true;
+                for (int j=0;j<i;j++)
+                    if (n == lrDepthIteration[j]) //if number is already used
+                    {
+                        check=false; //set check to false
+                        break; //no need to check the other elements of value[]
+                    }
+            } while (!check); //loop until new, unique number is found
+            lrDepthIteration[i]=n; //store the generated number in the array
+        }
         
 		// Actual calculations
 		for (int &numEmissions : emissionIterations) {
@@ -277,17 +298,17 @@ int main() {
             for (int &numStates : numStatesIterations) {
 				cout << "Splitting threads**********************************************************************\n";
 				cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
-				
+				for (int &lrDepth : lrDepthIteration) {
 				// Uses threadIteration for lrDepth as well
 				for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
 					cout << "Launched from thread " << threadIteration << "\n";
-					t[threadIteration] = thread(multiThreadOptimisation, threadIteration, numStates, numEmissions, trainingNumber, sequence, hmmTries);
+					t[threadIteration] = thread(multiThreadOptimisation, lrDepth, numStates, numEmissions, trainingNumber, sequence, hmmTries);
 				}
 				for (thread &singleThread : t) {
 					singleThread.join();
 				}
 				cout << "\nRejoined threads**********************************************************************\n\n";
-				
+                }
 			}
 		}
 		cout << "Optimize movement recognition is done\n";
