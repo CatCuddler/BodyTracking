@@ -366,7 +366,7 @@ namespace {
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
 
-		calibratedAvatarSize = true;
+		calibratedAvatarScale = true;
 		
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -431,7 +431,7 @@ namespace {
 	void gamepadButton(int buttonNr, float value) {
 
 		// disable buttons if Motion Recognizer is currently recording data, to avoid e.g. avatar re-calibration
-		if (motionRecognizer.isRecordingMovementData()) {
+		if (motionRecognizer->isRecordingMovementData()) {
 			Kore::log(Kore::LogLevel::Warning,
 				"Gamepad Buttons are disabled during Movement Data recording");
 			return;
