@@ -281,10 +281,27 @@ namespace {
 			// Save calibrated data to either train Motion Recognizer or to recognize a movement
 			if (motionRecognizer->isProcessingMovementData()) {
 
-				vec3 angVelPlaceholder = vec3(1, 2, 3);
-				vec3 linVelPlaceholder = vec3(7, 8, 9);
+				// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+				// if we do use VR sensors, the actual velocity can be used
+				vec3 angVel;
+				vec3 linVel;
+				#ifdef KORE_STEAMVR
+					VrPoseState controller = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+					angVel = controller.angularVelocity;
+					linVel = controller.linearVelocity;
 
-				motionRecognizer->processMovementData(endEffector[endEffectorID]->getName(), finalPos, finalRot, angVelPlaceholder, linVelPlaceholder, avatar->scale, lastTime);
+					Kore::log(Kore::LogLevel::Info, "sensor: (%s)", endEffector[endEffectorID]->getName());
+
+					Kore::log(Kore::LogLevel::Info, "linVel: (%f, %f, %f)", linVel.x(), linVel.y(), linVel.z());
+					Kore::log(Kore::LogLevel::Info, "angVel: (%f, %f, %f)", angVel.x(), angVel.y(), angVel.z());
+
+				#else
+					// these placeholder values are only meant for testing with predetermined movement sets, not for recording new data
+					angVel = vec3(1, 2, 3);
+					linVel = vec3(7, 8, 9);
+				#endif
+
+				motionRecognizer->processMovementData(endEffector[endEffectorID]->getName(), finalPos, finalRot, angVel, linVel, avatar->scale, lastTime);
 			}
 
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
