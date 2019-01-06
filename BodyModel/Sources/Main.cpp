@@ -32,12 +32,12 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = true;
+	const bool renderRoom = false;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
 	EndEffector** endEffector;
-	const int numOfEndEffectors = 6;
+	const int numOfEndEffectors = 12;
 	
 	Logger* logger;
 	
@@ -353,7 +353,8 @@ namespace {
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
-	void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
+	void initEndEffector(int efID, int deviceID, int boneIndex, vec3 pos, Kore::Quaternion rot) {
+		endEffector[efID] = new EndEffector(boneIndex);
 		endEffector[efID]->setDeviceIndex(deviceID);
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
@@ -364,6 +365,11 @@ namespace {
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
 		
+		const int numTrackers = 9;
+		int trackerCount = 0;
+		
+		std::vector<EndEffector*> trackers;
+		
 		// Get indices for VR devices
 		for (int i = 0; i < 16; ++i) {
 			vrDevice = VrInterface::getController(i);
@@ -371,32 +377,50 @@ namespace {
 			vec3 devicePos = vrDevice.vrPose.position;
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 			
-			// Transform desired position to the character local coordinate system
-			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
-			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-				if (devicePos.y() < currentUserHeight / 3) {
-					// Foot tracker
-					if (deviceTransPos.x() > 0) {
-						initEndEffector(leftFoot, i, devicePos, deviceRot);
-						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getDeviceIndex(), i);
-					} else {
-						initEndEffector(rightFoot, i, devicePos, deviceRot);
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getDeviceIndex(), i);
-					}
-				} else {
-					// Hip tracker
-					initEndEffector(hip, i, devicePos, deviceRot);
-					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
+				
+				EndEffector* tracker = new EndEffector(-1);
+				tracker->setDeviceIndex(i);
+				tracker->setDesPosition(devicePos);
+				tracker->setDesRotation(deviceRot);
+				trackers.push_back(tracker);
+				
+				++trackerCount;
+				if (trackerCount == numTrackers) {
+					// Sort trackers regarding the y-Axis (height)
+					std::sort(trackers.begin(), trackers.end(), sortByYAxis);
+					
+					// Left or Right Foot
+					// Sort first two trackers regarding the z-Axis (left-right)
+					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis);
+					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), leftFootBoneIndex, trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), rightFootBoneIndex, trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+					
+					// Left or Right Leg
+					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis);
+					initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), leftLegBoneIndex, trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
+					initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), rightLegBoneIndex, trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+					
+					// Hip
+					initEndEffector(hip, trackers[4]->getDeviceIndex(), hipBoneIndex, trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+					
+					// Spine
+					initEndEffector(spine, trackers[5]->getDeviceIndex(), spineBoneIndex, trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
+					
+					// Left Fore Arm, Right Fore Arm or Right Arm
+					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis);
+					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), leftForeArmBoneIndex, trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
+					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), rightArmBoneIndex, trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
+					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), rightForeArmBoneIndex, trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
 				}
+				
+				
 			} else if (vrDevice.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
-				if (deviceTransPos.x() > 0) {
-					initEndEffector(leftHand, i, devicePos, deviceRot);
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getDeviceIndex(), i);
+				if (devicePos.z() > 0) {
+					initEndEffector(rightHand, i, rightHandBoneIndex, devicePos, deviceRot);
 				} else {
-					initEndEffector(rightHand, i, devicePos, deviceRot);
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
+					initEndEffector(leftHand, i, leftHandBoneIndex, devicePos, deviceRot);
 				}
 			}
 		}
@@ -407,7 +431,7 @@ namespace {
 		vec3 leftEyePos = stateLeftEye.pose.vrPose.position;
 		vec3 rightEyePos = stateRightEye.pose.vrPose.position;
 		vec3 hmdPosCenter = (leftEyePos + rightEyePos) / 2;
-		initEndEffector(head, 0, hmdPosCenter, stateLeftEye.pose.vrPose.orientation);
+		initEndEffector(head, 0, headBoneIndex, devicePos, deviceRot);
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
@@ -533,7 +557,9 @@ namespace {
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
+		if (currentFile < numFiles) {
+			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
+			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
@@ -546,7 +572,15 @@ namespace {
 				calibratedAvatar = true;
 			}
 			
-			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				if (i == head || i == leftHand || i == rightHand || i == hip || i == leftFoot || i == rightFoot)
+					executeMovement(i);
+			}
+			
+			if (!dataAvailable) {
+				currentFile++;
+				calibratedAvatar = false;
+			}
 			
 		} else {
 			if (eval) {
@@ -587,9 +621,6 @@ namespace {
 						}
 					}
 				}
-			} else {
-				currentFile++;
-				calibratedAvatar = false;
 			}
 		}
 		
@@ -816,11 +847,17 @@ namespace {
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
 		endEffector[head] = new EndEffector(headBoneIndex);
+		endEffector[spine] = new EndEffector(spineBoneIndex);
 		endEffector[hip] = new EndEffector(hipBoneIndex);
 		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
+		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
 		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
+		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
+		endEffector[rightArm] = new EndEffector(rightArmBoneIndex);
 		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
+		endEffector[leftLeg] = new EndEffector(leftLegBoneIndex);
 		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
+		endEffector[rightLeg] = new EndEffector(rightLegBoneIndex);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
