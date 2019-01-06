@@ -41,11 +41,17 @@ const int rightFootBoneIndex = 31;
 
 // Tags used in .csv
 const char* const headTag = "head";
+const char* const spineTag = "spine";
 const char* const hipTag = "hip";
 const char* const lHandTag = "lHand";
 const char* const rHandTag = "rHand";
+const char* const lForeArm = "lForeArm";
+const char* const rForeArm = "rForeArm";
+const char* const rArm = "rArm";
 const char* const lFootTag = "lFoot";
 const char* const rFootTag = "rFoot";
+const char* const lLeg = "lLeg";
+const char* const rLeg = "rLeg";
 
 class EndEffector {
 public:
