@@ -52,6 +52,11 @@ int EndEffector::getBoneIndex() const {
 	return boneIndex;
 }
 
+void EndEffector::setBoneIndex(int mBoneIndex) {
+	boneIndex = mBoneIndex;
+	name = getNameForIndex(boneIndex);
+}
+
 const char* EndEffector::getName() const {
 	return name;
 }
