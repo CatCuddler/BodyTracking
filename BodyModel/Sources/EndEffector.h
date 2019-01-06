@@ -4,7 +4,7 @@
 #include <Kore/Math/Quaternion.h>
 
 enum EndEffectorIndices {
-	head, hip, leftHand, rightHand, leftFoot, rightFoot
+	head, spine, hip, leftHand, leftForeArm, rightHand, rightForeArm, rightArm, leftFoot, leftLeg, rightFoot, rightLeg
 };
 
 enum IKMode {
@@ -14,8 +14,10 @@ enum IKMode {
 // Head
 const int headBoneIndex = 20;
 const int neckBoneIndex = 18;
+// Spine
+const int spineBoneIndex = 9;
 // Upper body
-const int upperBack = 10;
+const int upperBackBoneIndex = 10;
 // Hip
 const int hipBoneIndex = 2;
 // Left arm
@@ -65,6 +67,8 @@ public:
 	void setDeviceIndex(int index);
 	
 	int getBoneIndex() const;
+	void setBoneIndex(int boneIndex);
+	
 	const char* getName() const;
 	
 	IKMode getIKMode() const;
@@ -84,5 +88,10 @@ private:
 	
 	const char* getNameForIndex(const int ID) const;
 	int getIndexForName(const char* name) const;
+};
 
+struct sortByYAxis {
+	bool operator() (const EndEffector* tracker1, const EndEffector* tracker2) {
+		return tracker1->getDesPosition().y() < tracker2->getDesPosition().y();
+	}
 };
