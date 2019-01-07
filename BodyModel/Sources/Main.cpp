@@ -19,6 +19,8 @@
 #include "Logger.h"
 #include "HMM.h"
 
+#include <algorithm> // std::sort
+
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
 #include <Kore/Vr/SensorState.h>
@@ -388,16 +390,16 @@ namespace {
 				++trackerCount;
 				if (trackerCount == numTrackers) {
 					// Sort trackers regarding the y-Axis (height)
-					std::sort(trackers.begin(), trackers.end(), sortByYAxis);
+					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
 					// Left or Right Foot
 					// Sort first two trackers regarding the z-Axis (left-right)
-					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis);
+					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), leftFootBoneIndex, trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
 					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), rightFootBoneIndex, trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
 					
 					// Left or Right Leg
-					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis);
+					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
 					initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), leftLegBoneIndex, trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
 					initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), rightLegBoneIndex, trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
 					
@@ -408,7 +410,7 @@ namespace {
 					initEndEffector(spine, trackers[5]->getDeviceIndex(), spineBoneIndex, trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
 					
 					// Left Fore Arm, Right Fore Arm or Right Arm
-					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis);
+					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
 					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), leftForeArmBoneIndex, trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), rightArmBoneIndex, trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), rightForeArmBoneIndex, trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
@@ -431,7 +433,7 @@ namespace {
 		vec3 leftEyePos = stateLeftEye.pose.vrPose.position;
 		vec3 rightEyePos = stateRightEye.pose.vrPose.position;
 		vec3 hmdPosCenter = (leftEyePos + rightEyePos) / 2;
-		initEndEffector(head, 0, headBoneIndex, devicePos, deviceRot);
+		initEndEffector(head, 0, headBoneIndex, hmdPosCenter, stateLeftEye.pose.vrPose.orientation);
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
