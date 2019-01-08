@@ -361,7 +361,7 @@ namespace {
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
 		
-		log(Info, "%s: %i -> %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
+		log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
 	}
 	
 	void assignControllerAndTracker() {
@@ -386,8 +386,8 @@ namespace {
 				tracker->setDesPosition(devicePos);
 				tracker->setDesRotation(deviceRot);
 				trackers.push_back(tracker);
-				
 				++trackerCount;
+
 				if (trackerCount == numTrackers) {
 					// Sort trackers regarding the y-Axis (height)
 					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
@@ -437,6 +437,8 @@ namespace {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
+		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
+
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
@@ -460,13 +462,21 @@ namespace {
 	
 	void initButtons() {
 		VrPoseState controller;
+
+		int count = 0;
 		
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
-			if (controller.trackedDevice == TrackedDevice::Controller)
+			if (controller.trackedDevice == TrackedDevice::Controller) {
 				Gamepad::get(i)->Button = gamepadButton;
+				++count;
+				log(Info, "Add gamepad controller %i", count);
+			}
 		}
+
+		assert(count == 2);
+		controllerButtonsInitialized = true;
 	}
 #endif
 	
@@ -493,7 +503,7 @@ namespace {
 		
 		VrPoseState vrDevice;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			if (endEffector[i]->getDeviceIndex() != -1) {
+			//if (endEffector[i]->getDeviceIndex() != -1) {
 
 				if (i == head) {
 					SensorState state = VrInterface::getSensorState(0);
@@ -502,16 +512,43 @@ namespace {
 					endEffector[i]->setDesPosition(state.pose.vrPose.position);
 					endEffector[i]->setDesRotation(state.pose.vrPose.orientation);
 
+					vec3 velocity = state.pose.linearVelocity;
+					vec3 angularVelocity = state.pose.angularVelocity;
+					vec3 acceleration = state.pose.linearAcceleration;
+					vec3 angularAcceleration = state.pose.angularAcceleration;
+
+					// You can access linear and angular velocity
+					log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
+					log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+
+					// Acceleration vector will always be (0, 0, 0)
+					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
+					//log(Info, "angularAcceleration %f %f %f", angularAcceleration.x(), angularAcceleration.y(), angularAcceleration.z());
+
 				} else {
 					vrDevice = VrInterface::getController(endEffector[i]->getDeviceIndex());
 
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+
+					// Get velocity and acceleration
+					vec3 velocity = vrDevice.linearVelocity;
+					vec3 angularVelocity = vrDevice.angularVelocity;
+					vec3 acceleration = vrDevice.linearAcceleration;
+					vec3 angularAcceleration = vrDevice.angularAcceleration;
+
+					// You can access linear and angular velocity
+					log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
+					log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+					
+					// Acceleration vector will always be (0, 0, 0)
+					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
+					//log(Info, "angularAcceleration %f %f %f", angularAcceleration.x(), angularAcceleration.y(), angularAcceleration.z());
 				}
 
 				executeMovement(i);
-			}
+			//}
 		}
 		
 		// Render for both eyes
