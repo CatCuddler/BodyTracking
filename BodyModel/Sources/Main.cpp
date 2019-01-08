@@ -270,7 +270,7 @@ namespace {
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-			} else {
+			} else if (endEffectorID == leftHand || endEffectorID == rightHand || endEffectorID == leftLeg || endEffectorID == rightLeg) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			
