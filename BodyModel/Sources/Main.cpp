@@ -503,7 +503,7 @@ namespace {
 		
 		VrPoseState vrDevice;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			//if (endEffector[i]->getDeviceIndex() != -1) {
+			if (endEffector[i]->getDeviceIndex() != -1) {
 
 				if (i == head) {
 					SensorState state = VrInterface::getSensorState(0);
@@ -548,7 +548,7 @@ namespace {
 				}
 
 				executeMovement(i);
-			//}
+			}
 		}
 		
 		// Render for both eyes
