@@ -286,9 +286,17 @@ namespace {
 				vec3 angVel;
 				vec3 linVel;
 				#ifdef KORE_STEAMVR
-					VrPoseState controller = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
-					angVel = controller.angularVelocity;
-					linVel = controller.linearVelocity;
+					// The HMD is accessed slightly different from controllers and trackers
+					if (endEffectorID == head) {
+						SensorState hmdSensorState = VrInterface::getSensorState(0);
+						linVel = hmdSensorState.pose.linearVelocity;
+						angVel = hmdSensorState.pose.angularVelocity;
+					}
+					else {
+						VrPoseState controllerVrPoseState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+						linVel = controllerVrPoseState.linearVelocity;
+						angVel = controllerVrPoseState.angularVelocity;
+					}
 
 					Kore::log(Kore::LogLevel::Info, "sensor: (%s)", endEffector[endEffectorID]->getName());
 
