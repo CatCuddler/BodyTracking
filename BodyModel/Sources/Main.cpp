@@ -170,10 +170,6 @@ namespace {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			// Delete
-			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			desRotation = initRotInv.rotated(desRotation);
-			
 			if (i == hip || i == rightFoot || i == leftFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
