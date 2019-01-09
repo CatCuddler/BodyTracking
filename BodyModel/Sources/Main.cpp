@@ -32,7 +32,7 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = true;
+	const bool renderRoom = false;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
@@ -170,6 +170,10 @@ namespace {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
+			// Delete
+			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			desRotation = initRotInv.rotated(desRotation);
+			
 			if (i == hip || i == rightFoot || i == leftFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
@@ -269,7 +273,21 @@ namespace {
 		}
 	}
 	
+	void initTransAndRot() {
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
+		initRot.normalize();
+		initRotInv = initRot.invert();
+		
+		vec3 initPos = initTrans * vec4(0, 0, 0, 1);
+		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
+	}
+	
 	void calibrate() {
+		initTransAndRot();
+		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
@@ -436,7 +454,6 @@ namespace {
 		}
 	}
 #endif
-	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -532,6 +549,17 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
+				
+				if (calibratedAvatar && i == hip) {
+					// Update Local Coordinate System
+					Kore::vec3 hipPos = desPosition[i];
+					Kore::Quaternion hipRot = desRotation[i];
+					
+					initRot = hipRot;
+					initRotInv = initRot.invert();
+					initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
+					initTransInv = initTrans.Invert();
+				}
 			}
 			
 			if (!calibratedAvatar) {
@@ -764,15 +792,7 @@ namespace {
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
 #endif
 		
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
-		initRot.normalize();
-		initRotInv = initRot.invert();
-		
-		vec3 initPos = initTrans * vec4(0, 0, 0, 1);
-		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
+		initTransAndRot();
 		
 		// Set camera initial position and orientation
 		cameraPos = vec3(2.6, 1.8, 0.0);
