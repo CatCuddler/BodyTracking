@@ -32,7 +32,7 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = false;
+	const bool renderRoom = true;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
@@ -256,7 +256,7 @@ namespace {
 			// Transform desired position/rotation to the character local coordinate system
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desRotation = initRotInv.rotated(desRotation);
-			
+
 			// Add offset
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
 			vec3 offsetPosition = endEffector[endEffectorID]->getOffsetPosition();
@@ -390,24 +390,19 @@ namespace {
 					// Foot tracker
 					if (deviceTransPos.x() > 0) {
 						initEndEffector(leftFoot, i, devicePos, deviceRot);
-						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getDeviceIndex(), i);
 					} else {
 						initEndEffector(rightFoot, i, devicePos, deviceRot);
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getDeviceIndex(), i);
 					}
 				} else {
 					// Hip tracker
 					initEndEffector(hip, i, devicePos, deviceRot);
-					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
 				}
 			} else if (vrDevice.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
 				if (deviceTransPos.x() > 0) {
 					initEndEffector(leftHand, i, devicePos, deviceRot);
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getDeviceIndex(), i);
 				} else {
 					initEndEffector(rightHand, i, devicePos, deviceRot);
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
 				}
 			}
 		}
