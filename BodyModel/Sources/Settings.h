@@ -2,7 +2,7 @@
 
 namespace {
 	const int numFiles = 7;
-    const char* files[numFiles] = {"walking.csv", "squats.csv", "lunges.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
+    const char* files[numFiles] = {"hands2.csv", "squats.csv", "lunges.csv", "kicks.csv", "monkey.csv", "yoga_warrior.csv", "crouch.csv"};
 	int currentFile = 0;
 	
 	const float nearNull = 0.0001f;
