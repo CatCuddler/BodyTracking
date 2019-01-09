@@ -119,6 +119,34 @@ namespace {
 		viveObjects[index]->render(tex);
 	}
 	
+	void renderControllerAndTracker(int tracker, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+		// World Transformation Matrix
+		Kore::mat4 W = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
+		
+		// Mirror Transformation Matrix
+		Kore::Quaternion rot(0, 0, 0, 1);
+		rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+		mat4 zMirror = mat4::Identity();
+		zMirror.Set(2, 2 , -1);
+		Kore::mat4 M = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * W;
+		
+		if (tracker) {
+			// Render a tracker for both feet and back
+			renderVRDevice(0, W);
+			renderVRDevice(0, M);
+		} else {
+			// Render a controller for both hands
+			renderVRDevice(1, W);
+			renderVRDevice(1, M);
+		}
+		
+		// Render a local coordinate system only if the avatar is not calibrated
+		if (!calibratedAvatar) {
+			renderVRDevice(2, W);
+			renderVRDevice(2, M);
+		}
+	}
+	
 	void renderAllVRDevices() {
 		Graphics4::setPipeline(pipeline);
 	
@@ -127,60 +155,25 @@ namespace {
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
-			vec3 pos = controller.vrPose.position;
-			Kore::Quaternion rot = controller.vrPose.orientation;
-			
-			Kore::mat4 M = mat4::Translation(pos.x(), pos.y(), pos.z()) * rot.matrix().Transpose();
-			
-			Kore::Quaternion yRot(0, 0, 0, 1);
-			yRot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
-			mat4 zMirror = mat4::Identity();
-			zMirror.Set(2, 2 , -1);
-			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * yRot.matrix().Transpose() * M;
+			vec3 desPosition = controller.vrPose.position;
+			Kore::Quaternion desRotation = controller.vrPose.orientation;
 			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
-				// Render a tracker for both feet and back
-				renderVRDevice(0, M);
-				renderVRDevice(0, mirrorM);
+				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
-				// Render a controller for both hands
-				renderVRDevice(1, M);
-				renderVRDevice(1, mirrorM);
+				renderControllerAndTracker(false, desPosition, desRotation);
 			}
-
-			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
-				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
-			}
+			
 		}
 #else
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			Kore::mat4 M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
-			
-			Kore::Quaternion rot(0, 0, 0, 1);
-			rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
-			mat4 zMirror = mat4::Identity();
-			zMirror.Set(2, 2 , -1);
-			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * M;
-			
 			if (i == hip || i == rightFoot || i == leftFoot) {
-				// Render a tracker for both feet and back
-				renderVRDevice(0, M);
-				renderVRDevice(0, mirrorM);
+				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
-				// Render a controller for both hands
-				renderVRDevice(1, M);
-				renderVRDevice(1, mirrorM);
-			}
-			
-			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
-				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
+				renderControllerAndTracker(false, desPosition, desRotation);
 			}
 		}
 #endif
@@ -533,7 +526,9 @@ namespace {
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
+		if (currentFile < numFiles) {
+			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
+			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
@@ -547,6 +542,11 @@ namespace {
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
+			
+			if (!dataAvailable) {
+				currentFile++;
+				calibratedAvatar = false;
+			}
 			
 		} else {
 			if (eval) {
@@ -587,9 +587,6 @@ namespace {
 						}
 					}
 				}
-			} else {
-				currentFile++;
-				calibratedAvatar = false;
 			}
 		}
 		
