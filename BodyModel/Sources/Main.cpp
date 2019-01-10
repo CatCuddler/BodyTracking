@@ -289,7 +289,7 @@ namespace {
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		
-		vec3 initPos = initTrans * vec4(0, 0, 0, 1);
+		vec3 initPos = vec4(0, 0, 0, 1);
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
@@ -378,7 +378,7 @@ namespace {
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
 		
-		log(Info, "%s: %i -> %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
+		log(Info, "%s: %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
 	}
 	
 	void assignControllerAndTracker() {
