@@ -119,16 +119,22 @@ namespace {
 		viveObjects[index]->render(tex);
 	}
 	
+	mat4 getMirrorMatrix() {
+		Kore::Quaternion rot(0, 0, 0, 1);
+		rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+		mat4 zMirror = mat4::Identity();
+		zMirror.Set(2, 2 , -1);
+		Kore::mat4 M = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		
+		return M;
+	}
+	
 	void renderControllerAndTracker(int tracker, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 		// World Transformation Matrix
 		Kore::mat4 W = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
 		
 		// Mirror Transformation Matrix
-		Kore::Quaternion rot(0, 0, 0, 1);
-		rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
-		mat4 zMirror = mat4::Identity();
-		zMirror.Set(2, 2 , -1);
-		Kore::mat4 M = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * W;
+		Kore::mat4 M = getMirrorMatrix() * W;
 		
 		if (tracker) {
 			// Render a tracker for both feet and back
@@ -215,11 +221,7 @@ namespace {
 		avatar->animate(tex);
 		
 		// Mirror the avatar
-		Kore::Quaternion rot = initRot;
-		rot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
-		mat4 mirrorMatrix = mat4::Identity();
-		mirrorMatrix.Set(2, 2 , -1);
-		mat4 initTransMirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		mat4 initTransMirror = getMirrorMatrix() * initTrans;
 		
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
