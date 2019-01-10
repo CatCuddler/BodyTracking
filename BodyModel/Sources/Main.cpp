@@ -269,6 +269,17 @@ namespace {
 		}
 	}
 	
+	void updateTransAndRot() {
+		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
+		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
+		
+		initRot = hipRot;
+		initRotInv = initRot.invert();
+		
+		initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
+	}
+	
 	void initTransAndRot() {
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
@@ -483,6 +494,11 @@ namespace {
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+					
+					if (calibratedAvatar && i == hip) {
+						// Update Local Coordinate System
+						updateTransAndRot();
+					}
 				}
 
 				executeMovement(i);
@@ -543,13 +559,7 @@ namespace {
 				
 				if (calibratedAvatar && i == hip) {
 					// Update Local Coordinate System
-					Kore::vec3 hipPos = desPosition[i];
-					Kore::Quaternion hipRot = desRotation[i];
-					
-					initRot = hipRot;
-					initRotInv = initRot.invert();
-					initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
-					initTransInv = initTrans.Invert();
+					updateTransAndRot();
 				}
 			}
 			
