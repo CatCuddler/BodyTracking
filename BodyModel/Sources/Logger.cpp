@@ -56,7 +56,27 @@ void Logger::startMotionRecognitionLogger(const char* filename) {
 	motionRecognitionWriter.open(logFileName, std::ios::app); // Append to the end
 
 	// Append header
-	motionRecognitionWriter << "tag;subject;activity;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
+	//"tag;subject;activity;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
+
+	motionRecognitionWriter  
+		<< "tag;subject;activity;"
+		
+		<< "rawPosX;rawPosY;rawPosZ;"
+		<< "desPosX;desPosY;desPosZ;"
+		<< "finalPosX;finalPosY;finalPosZ;"
+
+		<< "rawRotX;rawRotY;rawRotZ;rawRotW;"
+		<< "desRotX;desRotY;desRotZ;desRotW;"
+		<< "finalRotX;finalRotY;finalRotZ;finalRotW;"
+
+		<< "rawAngVelX;rawAngVelY;rawAngVelZ;"
+		<< "desAngVelX;desAngVelY;desAngVelZ;desAngVelW;"
+		
+		<< "rawLinVelX;rawLinVelY;rawLinVelZ;"
+		<< "desLinVelX;desLinVelY;desLinVelZ;"
+
+		<< "scale;time\n";
+
 	motionRecognitionWriter.flush();
 
 }
@@ -66,13 +86,34 @@ void Logger::endMotionRecognitionLogger() {
 	motionRecognitionWriter.close();
 }
 
-void Logger::saveMotionRecognitionData(const char* tag, const char* subject, const char* activity, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
+void Logger::saveMotionRecognitionData(
+	const char* tag, const char* subject, const char* activity, 
+	Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+	Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+	Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+	float scale, double time) {
 
 	// Save position, rotation, angular and linear velocity
-	motionRecognitionWriter << tag << ";" << subject << ";" << activity << ";"
-		<< calPos.x() << ";" << calPos.y() << ";" << calPos.z() << ";" << calRot.x << ";" << calRot.y << ";" << calRot.z << ";" << calRot.w << ";"
-		<< angVel.x() << ";" << angVel.y() << ";" << angVel.z() << ";" << linVel.x() << ";" << linVel.y() << ";" << linVel.z() << ";"
+	motionRecognitionWriter 
+		<< tag << ";" << subject << ";" << activity << ";"
+		
+		<< rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";"
+		<< desPos.x() << ";" << desPos.y() << ";" << desPos.z() << ";"
+		<< finalPos.x() << ";" << finalPos.y() << ";" << finalPos.z() << ";"
+		
+		<< rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";"
+		<< desRot.x << ";" << desRot.y << ";" << desRot.z << ";" << desRot.w << ";"
+		<< finalRot.x << ";" << finalRot.y << ";" << finalRot.z << ";" << finalRot.w << ";"
+		
+		<< rawAngVel.x() << ";" << rawAngVel.y() << ";" << rawAngVel.z() << ";"
+		<< desAngVel.x << ";" << desAngVel.y << ";" << desAngVel.z << ";" << desAngVel.w << ";"
+		
+		<< rawLinVel.x() << ";" << rawLinVel.y() << ";" << rawLinVel.z() << ";"
+		<< desLinVel.x() << ";" << desLinVel.y() << ";" << desLinVel.z() << ";"
+
 		<< scale << ";" << time << "\n";
+
 	motionRecognitionWriter.flush();
 }
 

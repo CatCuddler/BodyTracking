@@ -116,10 +116,22 @@ bool MachineLearningMotionRecognition::isRecordingMovementData()
 	return currentlyRecording;
 }
 
-void MachineLearningMotionRecognition::processMovementData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time) {
+void MachineLearningMotionRecognition::processMovementData(
+	const char* tag, 
+	Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+	Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+	Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+	float scale, double time) {
 
 	if (currentlyRecording) {
-		logger.saveMotionRecognitionData(tag, currentTestSubjectID.c_str(), taskCurrentlyRecording.c_str(), calPos, calRot, angVel, linVel, scale, time);
+		logger.saveMotionRecognitionData(
+			tag, currentTestSubjectID.c_str(), taskCurrentlyRecording.c_str(), 
+			rawPos, desPos, finalPos,
+			rawRot, desRot, finalRot,
+			rawAngVel, desAngVel,
+			rawLinVel, desLinVel,
+			scale, time);
 	}
 }
 

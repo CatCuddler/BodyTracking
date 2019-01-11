@@ -248,6 +248,28 @@ namespace {
 		return V;
 	}
 	
+
+	Kore::Quaternion toQuaternion(vec3 base)
+	{
+		// Abbreviations for the various angular functions
+		double cy = cos(base.z() * 0.5);
+		double sy = sin(base.z() * 0.5);
+		double cp = cos(base.y() * 0.5);
+		double sp = sin(base.y() * 0.5);
+		double cr = cos(base.x() * 0.5);
+		double sr = sin(base.x() * 0.5);
+
+		Kore::Quaternion q;
+
+		q.w = cy * cp * cr + sy * sp * sr;
+		q.x = cy * cp * sr - sy * sp * cr;
+		q.y = sy * cp * sr + cy * sp * cr;
+		q.z = sy * cp * cr - cy * sp * sr;
+
+		return q;
+	}
+
+
 	void executeMovement(int endEffectorID) {
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
@@ -283,38 +305,65 @@ namespace {
 
 				// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
 				// if we do use VR sensors, the actual velocity can be used
-				vec3 angVel;
-				vec3 linVel;
+				vec3 rawAngVel;
+				Kore::Quaternion desAngVel;
+				vec3 rawLinVel;
+				vec3 desLinVel;
+				vec3 rawPosition;
+				Kore::Quaternion rawRotation;
+
+				
 				#ifdef KORE_STEAMVR
+
+					VrPoseState sensorState;
 					// The HMD is accessed slightly different from controllers and trackers
 					if (endEffectorID == head) {
-						SensorState hmdSensorState = VrInterface::getSensorState(0);
-						linVel = hmdSensorState.pose.linearVelocity;
-						angVel = hmdSensorState.pose.angularVelocity;
+						sensorState = VrInterface::getSensorState(0).pose;
 					}
 					else {
-						VrPoseState controllerVrPoseState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
-						linVel = controllerVrPoseState.linearVelocity;
-						angVel = controllerVrPoseState.angularVelocity;
+						sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
 					}
 
-					Kore::log(Kore::LogLevel::Info, "sensor: (%s)", endEffector[endEffectorID]->getName());
+					rawLinVel = sensorState.linearVelocity;
+					rawAngVel = sensorState.angularVelocity;
 
-					Kore::log(Kore::LogLevel::Info, "linVel: (%f, %f, %f)", linVel.x(), linVel.y(), linVel.z());
-					Kore::log(Kore::LogLevel::Info, "angVel: (%f, %f, %f)", angVel.x(), angVel.y(), angVel.z());
+					desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+					
+					//TODO: - check toQuaternion function, and whether this produces the desired result
+					Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+					desAngVel = initRotInv.rotated(rawAngVelQuat);
+
+					rawPosition = sensorState.vrPose.position;
+					rawRotation = sensorState.vrPose.orientation;
+					
+
+					Kore::log(Kore::LogLevel::Info, "sensor: (%s)", endEffector[endEffectorID]->getName());
+					Kore::log(Kore::LogLevel::Info, "linVel: (%f, %f, %f)", rawLinVel.x(), rawLinVel.y(), rawLinVel.z());
+					Kore::log(Kore::LogLevel::Info, "angVel: (%f, %f, %f)", rawAngVel.x(), rawAngVel.y(), rawAngVel.z());
 
 				#else
 					// these placeholder values are only meant for testing with predetermined movement sets, not for recording new data
-					angVel = vec3(1, 2, 3);
-					linVel = vec3(7, 8, 9);
+					rawAngVel = vec3(1, 2, 3);
+					desAngVel = rawAngVel;
+					rawLinVel = vec3(7, 8, 9);
+					desLinVel = rawLinVel;
+					rawPosition = desPosition;
+					rawRotation = desRotation;
 				#endif
 
-				motionRecognizer->processMovementData(endEffector[endEffectorID]->getName(), finalPos, finalRot, angVel, linVel, avatar->scale, lastTime);
+				motionRecognizer->processMovementData(
+					endEffector[endEffectorID]->getName(), 
+					rawPosition, desPosition, finalPos, 
+					rawRotation, desRotation, finalRot, 
+					rawAngVel, desAngVel, 
+					rawLinVel, desLinVel, 
+					avatar->scale, lastTime);
 			}
 
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
+
 	
 	void calibrate() {
 		for (int i = 0; i < numOfEndEffectors; ++i) {

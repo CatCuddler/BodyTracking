@@ -46,6 +46,12 @@ public:
 	bool isActive();
 	bool isProcessingMovementData();
 	bool isRecordingMovementData();
-	void processMovementData(const char* tag, Kore::vec3 calPos, Kore::Quaternion calRot, Kore::vec3 angVel, Kore::vec3 linVel, float scale, double time);
+	void processMovementData(
+		const char* tag,
+		Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+		Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+		Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+		Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+		float scale, double time);
 
 };
