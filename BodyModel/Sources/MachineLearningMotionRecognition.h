@@ -11,17 +11,34 @@ class MachineLearningMotionRecognition {
 
 
 private:
-	// use this setting to disable the MotionRecognizer or to switch between recording and recognizing movements
-	enum MotionRecognitionMode { recordMovements, recognizeMovements, off };
-	const MotionRecognitionMode operatingMode = recordMovements;
+	// use this setting to disable the MotionRecognizer 
+	// or to switch between recording and recognizing movements
+	enum MotionRecognitionMode { RecordMovements, RecognizeMovements, Off };
+	const MotionRecognitionMode operatingMode = RecordMovements;
 
-	// ID of the currently active user, to be used for data differentiation after recording movements
-	const string currentTestSubjectID = "TestUser";
+	// ID of the currently active user, to be used for 
+	// data differentiation after recording movements
+	const string currentTestSubjectID = "ExampleUserName";
 
-	// the file name will be "user + task + session ID (incremented during runtime for each task) + optionalFileTag
-	// if you need to restart a recording session, consider incrementing the recordingID from the start, or to add an optionalFileTag
+	// the file name will be "user + task + session ID + optionalFileTag"
+	// The sessionID is incremented during runtime for each task. If you 
+	// need to restart a recording session, consider incrementing the 
+	// recordingID from the start, or to add an optionalFileTag
 	int sessionID = 0;
 	const string optionalFileTag = "";
+
+	// task 00 is recorded with numpad 0, 01 with 1...
+	// stop recording with space bar
+	const string task_00 = "walking";
+	const string task_01 = "jogging";
+	const string task_02 = "squats";
+	const string task_03 = "lunges";
+	const string task_04 = "standing";
+	const string task_05 = "sitting";
+	const string task_06 = "lateralBounding";
+	const string task_07 = "kick";
+	const string task_08 = "punch";
+	const string task_09 = "kickPunch";
 
 
 	Logger& logger;

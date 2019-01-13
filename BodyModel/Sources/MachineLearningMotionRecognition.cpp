@@ -75,7 +75,7 @@ void MachineLearningMotionRecognition::startRecording(bool fullyCalibratedAvatar
 		string fileNameString = safePath + currentTestSubjectID + "__" + taskCurrentlyRecording + "__SID" + std::to_string(sessionID) + "_" + optionalFileTag;
 		logger.startMotionRecognitionLogger(fileNameString.c_str());
 
-		Kore::log(Kore::LogLevel::Info, "now recording:   %s   (%s)", taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
+		Kore::log(Kore::LogLevel::Info, "started recording ID %i:   %s   (%s)", sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
 		Kore::Audio1::play(startRecordingSound);
 	}
 
@@ -87,7 +87,7 @@ void MachineLearningMotionRecognition::stopRecording() {
 		currentlyRecording = false;
 		logger.endMotionRecognitionLogger();
 
-		Kore::log(Kore::LogLevel::Info, "recording stopped for:   %s   (%s)", taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
+		Kore::log(Kore::LogLevel::Info, "recording ID %i stopped:   %s   (%s)", sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
 		Kore::Audio1::play(stopRecordingSound);
 	}
 	else {
@@ -152,39 +152,43 @@ void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool f
 			break;
 			// start a new recording if the corresponding numpad key is pressed
 		case Kore::KeyNumpad1:
-			taskNextToRecord = "Task1";
+			taskNextToRecord = task_01;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad2:
-			taskNextToRecord = "Task2";
+			taskNextToRecord = task_02;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad3:
-			taskNextToRecord = "Task3";
+			taskNextToRecord = task_03;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad4:
-			taskNextToRecord = "Task4";
+			taskNextToRecord = task_04;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad5:
-			taskNextToRecord = "Task5";
+			taskNextToRecord = task_05;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad6:
-			taskNextToRecord = "Task6";
+			taskNextToRecord = task_06;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad7:
-			taskNextToRecord = "Task7";
+			taskNextToRecord = task_07;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad8:
-			taskNextToRecord = "Task8";
+			taskNextToRecord = task_08;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		case Kore::KeyNumpad9:
-			taskNextToRecord = "Task9";
+			taskNextToRecord = task_09;
+			startRecording(fullyCalibratedAvatar);
+			break;
+		case Kore::KeyNumpad0:
+			taskNextToRecord = task_00;
 			startRecording(fullyCalibratedAvatar);
 			break;
 		default:
