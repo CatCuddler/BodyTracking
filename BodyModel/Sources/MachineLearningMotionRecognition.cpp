@@ -38,10 +38,10 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	wrongSound = new Kore::Sound("sound/wrong.wav");
 
 	// state debugging information
-	if (operatingMode == recordMovements) {
+	if (operatingMode == RecordMovements) {
 		Kore::log(Kore::LogLevel::Info, "Motion Recognition ready to record data for user: \n   %s", currentTestSubjectID.c_str());
 	}
-	else if (operatingMode == recognizeMovements) {
+	else if (operatingMode == RecognizeMovements) {
 		Kore::log(Kore::LogLevel::Info, "Motion Recognition ready to recognize incoming movements");
 	}
 }
@@ -136,14 +136,14 @@ void MachineLearningMotionRecognition::processMovementData(
 }
 
 bool MachineLearningMotionRecognition::isActive() {
-	return operatingMode != off;
+	return operatingMode != Off;
 }
 
 
 void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool fullyCalibratedAvatar)
 {
 
-	if (operatingMode == recordMovements) {
+	if (operatingMode == RecordMovements) {
 
 		switch (code) {
 			// end the recording if space is pressed
