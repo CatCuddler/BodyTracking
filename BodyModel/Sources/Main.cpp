@@ -134,6 +134,10 @@ namespace {
 		
 		return M;
 	}
+
+	bool calibratedAvatarCompletely() {
+		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
+	}
 	
 	void renderControllerAndTracker(int tracker, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 		// World Transformation Matrix
@@ -794,9 +798,7 @@ namespace {
 		Graphics4::swapBuffers();
 	}
 
-	bool calibratedAvatarCompletely() {
-		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
-	}
+
 	
 	void keyDown(KeyCode code) {
 		switch (code) {
