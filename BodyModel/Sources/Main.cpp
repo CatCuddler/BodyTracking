@@ -381,11 +381,7 @@ namespace {
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
 		
-<<<<<<< HEAD
-		log(Info, "%s: %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
-=======
 		log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 	}
 	
 	void assignControllerAndTracker() {
@@ -404,16 +400,11 @@ namespace {
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-<<<<<<< HEAD
-=======
-				
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 				EndEffector* tracker = new EndEffector(-1);
 				tracker->setDeviceIndex(i);
 				tracker->setDesPosition(devicePos);
 				tracker->setDesRotation(deviceRot);
 				trackers.push_back(tracker);
-<<<<<<< HEAD
 				
 				++trackerCount;
 				if (trackerCount == numTrackers) {
@@ -423,26 +414,11 @@ namespace {
 					// Left or Right Foot
 					// Sort first two trackers regarding the z-Axis (left-right)
 					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis);
-=======
-				++trackerCount;
-
-				if (trackerCount == numTrackers) {
-					// Sort trackers regarding the y-Axis (height)
-					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
-					
-					// Left or Right Foot
-					// Sort first two trackers regarding the z-Axis (left-right)
-					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), leftFootBoneIndex, trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
 					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), rightFootBoneIndex, trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
 					
 					// Left or Right Leg
-<<<<<<< HEAD
 					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis);
-=======
-					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 					initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), leftLegBoneIndex, trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
 					initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), rightLegBoneIndex, trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
 					
@@ -453,11 +429,7 @@ namespace {
 					initEndEffector(spine, trackers[5]->getDeviceIndex(), spineBoneIndex, trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
 					
 					// Left Fore Arm, Right Fore Arm or Right Arm
-<<<<<<< HEAD
 					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis);
-=======
-					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), leftForeArmBoneIndex, trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), rightArmBoneIndex, trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), rightForeArmBoneIndex, trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
@@ -480,11 +452,7 @@ namespace {
 		vec3 leftEyePos = stateLeftEye.pose.vrPose.position;
 		vec3 rightEyePos = stateRightEye.pose.vrPose.position;
 		vec3 hmdPosCenter = (leftEyePos + rightEyePos) / 2;
-<<<<<<< HEAD
-		initEndEffector(head, 0, headBoneIndex, devicePos, deviceRot);
-=======
 		initEndEffector(head, 0, headBoneIndex, hmdPosCenter, stateLeftEye.pose.vrPose.orientation);
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
@@ -581,28 +549,11 @@ namespace {
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
-<<<<<<< HEAD
 					
 					if (calibratedAvatar && i == hip) {
 						// Update Local Coordinate System
 						updateTransAndRot();
 					}
-=======
-
-					// Get velocity and acceleration
-					vec3 velocity = vrDevice.linearVelocity;
-					vec3 angularVelocity = vrDevice.angularVelocity;
-					vec3 acceleration = vrDevice.linearAcceleration;
-					vec3 angularAcceleration = vrDevice.angularAcceleration;
-
-					// You can access linear and angular velocity
-					log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
-					log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
-					
-					// Acceleration vector will always be (0, 0, 0)
-					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
-					//log(Info, "angularAcceleration %f %f %f", angularAcceleration.x(), angularAcceleration.y(), angularAcceleration.z());
->>>>>>> 968c58c4908ef31780dc8eeb27af36113371bf18
 				}
 
 				executeMovement(i);
