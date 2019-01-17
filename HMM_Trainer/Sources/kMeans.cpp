@@ -69,7 +69,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
  ********************************************************************************/
 vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, vector<KMeans> kmeans) {
 	vector<vector<vector<int>>> returnVector(6);
-	cout << "Normalising data set to same total movement duration. \n";
+//    cout << "Normalising data set to same total movement duration. \n";
 	vector<vector<Point>> currentDataSet;
 	for (int currentFile = 0; currentFile < fileAmount; currentFile++) {
 		// check whether there is more than one file to be checked, and creeate seperate files if it is the case
@@ -373,7 +373,7 @@ void KMeans::writeKMeans(string filePath, string fileName) {
 		file << emissions << " " << totalValues << " " << maxIterations << " " << totalPoints << " " << averagePoints << endl;
 		
 		for (int ii = 0; ii < getClusters().size(); ii++) {
-			for (int jj = 0; jj < 3; jj++) {
+			for (int jj = 0; jj < 7; jj++) {
 				file << getClusters()[ii].getCentralValue(jj) << " ";
 			}
 			file << endl;

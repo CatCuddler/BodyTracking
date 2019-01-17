@@ -237,7 +237,7 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 		rawPos[i] = Kore::vec3(posX, posY, posZ);
 		rawRot[i] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
 		
-		if (logDataReader.fail() || logDataReader.eof()) {
+		if (logDataReader.eof()) {
 			logDataReader.close();
 			return false;
 		}

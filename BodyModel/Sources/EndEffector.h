@@ -4,7 +4,7 @@
 #include <Kore/Math/Quaternion.h>
 
 enum EndEffectorIndices {
-	head, hip, leftHand, rightHand, leftFoot, rightFoot
+	head, spine, hip, leftHand, leftForeArm, rightHand, rightForeArm, rightArm, leftFoot, leftLeg, rightFoot, rightLeg
 };
 
 enum IKMode {
@@ -14,8 +14,10 @@ enum IKMode {
 // Head
 const int headBoneIndex = 20;
 const int neckBoneIndex = 18;
+// Spine
+const int spineBoneIndex = 9;
 // Upper body
-const int upperBack = 10;
+const int upperBackBoneIndex = 10;
 // Hip
 const int hipBoneIndex = 2;
 // Left arm
@@ -39,11 +41,17 @@ const int rightFootBoneIndex = 31;
 
 // Tags used in .csv
 const char* const headTag = "head";
+const char* const spineTag = "spine";
 const char* const hipTag = "hip";
 const char* const lHandTag = "lHand";
 const char* const rHandTag = "rHand";
+const char* const lForeArm = "lForeArm";
+const char* const rForeArm = "rForeArm";
+const char* const rArm = "rArm";
 const char* const lFootTag = "lFoot";
 const char* const rFootTag = "rFoot";
+const char* const lLeg = "lLeg";
+const char* const rLeg = "rLeg";
 
 class EndEffector {
 public:
@@ -65,6 +73,7 @@ public:
 	void setDeviceIndex(int index);
 	
 	int getBoneIndex() const;
+	
 	const char* getName() const;
 	
 	IKMode getIKMode() const;
@@ -84,5 +93,16 @@ private:
 	
 	const char* getNameForIndex(const int ID) const;
 	int getIndexForName(const char* name) const;
-
 };
+
+struct {
+	bool operator() (const EndEffector* tracker1, const EndEffector* tracker2) const{
+		return tracker1->getDesPosition().y() < tracker2->getDesPosition().y();
+	}
+} sortByYAxis;
+
+struct {
+	bool operator() (const EndEffector* tracker1, const EndEffector* tracker2) const {
+		return tracker1->getDesPosition().z() < tracker2->getDesPosition().z();
+	}
+} sortByZAxis;

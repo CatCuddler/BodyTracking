@@ -65,12 +65,18 @@ void EndEffector::setIKMode(IKMode mode) {
 }
 
 const char* EndEffector::getNameForIndex(const int ID) const {
-	if (ID == headBoneIndex)			return headTag;
-	else if(ID == hipBoneIndex)			return hipTag;
-	else if(ID == leftHandBoneIndex)	return lHandTag;
-	else if(ID == rightHandBoneIndex)	return rHandTag;
-	else if(ID == leftFootBoneIndex)	return lFootTag;
-	else if(ID == rightFootBoneIndex)	return rFootTag;
+	if (ID == headBoneIndex)				return headTag;
+	else if (ID == spineBoneIndex)			return spineTag;
+	else if (ID == hipBoneIndex)			return hipTag;
+	else if (ID == leftHandBoneIndex)		return lHandTag;
+	else if (ID == rightHandBoneIndex)		return rHandTag;
+	else if (ID == leftForeArmBoneIndex)	return lForeArm;
+	else if (ID == rightForeArmBoneIndex)	return rForeArm;
+	else if (ID == rightArmBoneIndex)		return rArm;
+	else if (ID == leftFootBoneIndex)		return lFootTag;
+	else if (ID == rightFootBoneIndex)		return rFootTag;
+	else if (ID == leftLegBoneIndex)		return lLeg;
+	else if (ID == rightLegBoneIndex)		return rLeg;
 	else return nullptr;
 }
 

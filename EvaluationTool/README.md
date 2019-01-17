@@ -16,7 +16,8 @@
 
 - Open Terminal/Console
 - Run "node import" to import data from Deployment-folder (you can change it in config.json)
-- Run "yarn start"
+- Eventuelly you have to run "npm install"
+- Run "yarn start" or "sudo yarn start"
 - The browser will open the tool automatically (otherwise open http://localhost:3000/ in browser)
 - Click on a file (left sidebar) and a value (upper navbar) to see the chart
 - Press Shift + Click to select multiple Files/Values
