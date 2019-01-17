@@ -34,7 +34,7 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = false;
+	const bool renderRoom = true;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	
@@ -361,7 +361,7 @@ namespace {
 		}
 	}
 	
-	void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
+	/*void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
 		endEffector[efID]->setDeviceIndex(deviceID);
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
@@ -391,16 +391,16 @@ namespace {
 				++trackerCount;
 				if (trackerCount == numTrackers) {
 					// Sort trackers regarding the y-Axis (height)
-					std::sort(trackers.begin(), trackers.end(), sortByYAxis);
+					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
 					// Left or Right Foot
 					// Sort first two trackers regarding the z-Axis (left-right)
-					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis);
+					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
 					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
 					
 					// Left or Right Leg
-					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis);
+					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
 					initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
 					initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
 					
@@ -411,7 +411,7 @@ namespace {
 					initEndEffector(spine, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
 					
 					// Left Fore Arm, Right Fore Arm or Right Arm
-					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis);
+					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
 					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
@@ -432,7 +432,7 @@ namespace {
 		}
 		
 		
-	}
+	}*/
 	
 
 #ifdef KORE_STEAMVR
@@ -482,16 +482,16 @@ namespace {
 				++trackerCount;
 				if (trackerCount == numTrackers) {
 					// Sort trackers regarding the y-Axis (height)
-					std::sort(trackers.begin(), trackers.end(), sortByYAxis);
+					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
 					// Left or Right Foot
 					// Sort first two trackers regarding the z-Axis (left-right)
-					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis);
+					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
 					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
 					
 					// Left or Right Leg
-					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis);
+					std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
 					initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
 					initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
 					
@@ -502,7 +502,7 @@ namespace {
 					initEndEffector(spine, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
 					
 					// Left Fore Arm, Right Fore Arm or Right Arm
-					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis);
+					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
 					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
@@ -534,6 +534,7 @@ namespace {
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
+			initTransAndRot();
 			avatar->resetPositionAndRotation();
 			setSize();
 		}

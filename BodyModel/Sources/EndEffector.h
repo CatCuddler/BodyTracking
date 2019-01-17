@@ -95,14 +95,14 @@ private:
 	int getIndexForName(const char* name) const;
 };
 
-struct {
+struct sortByYAxis {
 	bool operator() (const EndEffector* tracker1, const EndEffector* tracker2) const{
 		return tracker1->getDesPosition().y() < tracker2->getDesPosition().y();
 	}
-} sortByYAxis;
+};
 
-struct {
+struct sortByZAxis {
 	bool operator() (const EndEffector* tracker1, const EndEffector* tracker2) const {
 		return tracker1->getDesPosition().z() < tracker2->getDesPosition().z();
 	}
-} sortByZAxis;
+};
