@@ -270,6 +270,31 @@ namespace {
 		return q;
 	}
 
+	vec3 toEulerAngle(const Kore::Quaternion q)
+	{
+		// roll (x-axis rotation)
+		double roll;
+		double sinr_cosp = +2.0 * (q.w * q.x + q.y * q.z);
+		double cosr_cosp = +1.0 - 2.0 * (q.x * q.x + q.y * q.y);
+		roll = atan2(sinr_cosp, cosr_cosp);
+
+		// pitch (y-axis rotation)
+		double pitch;
+		double sinp = +2.0 * (q.w * q.y - q.z * q.x);
+		if (fabs(sinp) >= 1)
+			pitch = copysign(Kore::pi / 2, sinp); // use 90 degrees if out of range
+		else
+			pitch = asin(sinp);
+
+		// yaw (z-axis rotation)
+		double yaw;
+		double siny_cosp = +2.0 * (q.w * q.z + q.x * q.y);
+		double cosy_cosp = +1.0 - 2.0 * (q.y * q.y + q.z * q.z);
+		yaw = atan2(siny_cosp, cosy_cosp);
+
+		return vec3(roll, pitch, yaw);
+	}
+
 
 	void executeMovement(int endEffectorID) {
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
@@ -336,11 +361,6 @@ namespace {
 
 					rawPosition = sensorState.vrPose.position;
 					rawRotation = sensorState.vrPose.orientation;
-					
-
-					Kore::log(Kore::LogLevel::Info, "sensor: (%s)", endEffector[endEffectorID]->getName());
-					Kore::log(Kore::LogLevel::Info, "linVel: (%f, %f, %f)", rawLinVel.x(), rawLinVel.y(), rawLinVel.z());
-					Kore::log(Kore::LogLevel::Info, "angVel: (%f, %f, %f)", rawAngVel.x(), rawAngVel.y(), rawAngVel.z());
 
 				#else
 					// these placeholder values are only meant for testing with predetermined movement sets, not for recording new data
@@ -361,7 +381,70 @@ namespace {
 					avatar->scale, lastTime);
 			}
 
+
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+
+
+
+
+
+			//
+			//
+			//	Debug output
+			//
+			//
+
+
+
+			// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+			// if we do use VR sensors, the actual velocity can be used
+			vec3 rawAngVel;
+			Kore::Quaternion desAngVel;
+			vec3 rawLinVel;
+			vec3 desLinVel;
+			vec3 rawPosition;
+			Kore::Quaternion rawRotation;
+
+
+#ifdef KORE_STEAMVR
+
+			VrPoseState sensorState;
+			// The HMD is accessed slightly different from controllers and trackers
+			if (endEffectorID == head) {
+				sensorState = VrInterface::getSensorState(0).pose;
+			}
+			else {
+				sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+			}
+
+			rawLinVel = sensorState.linearVelocity;
+			rawAngVel = sensorState.angularVelocity;
+
+			desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+
+			//TODO: - check toQuaternion function, and whether this produces the desired result
+			Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+			desAngVel = initRotInv.rotated(rawAngVelQuat);
+
+			rawPosition = sensorState.vrPose.position;
+			rawRotation = sensorState.vrPose.orientation;
+
+
+			Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desPos: (%f, %f, %f)   rawPos: (%f, %f, %f)",
+				endEffector[endEffectorID]->getName(),
+				desPosition.x(), desPosition.y(), desPosition.z(),
+				rawPosition.x(), rawPosition.y(), rawPosition.z());
+
+			//vec3 desRotationEuler = toEulerAngle(desRotation);
+			//vec3 rawRotationEuler = toEulerAngle(rawRotation);
+
+			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desRot: (%f, %f, %f)   rawRot: (%f, %f, %f)",
+			//	endEffector[endEffectorID]->getName(),
+			//	desRotationEuler.x(), desRotationEuler.y(), desRotationEuler.z(),
+			//	rawRotationEuler.x(), rawRotationEuler.y(), rawRotationEuler.z());
+
+#endif
+
 		}
 	}
 
@@ -639,8 +722,8 @@ namespace {
 					vec3 angularAcceleration = state.pose.angularAcceleration;
 
 					// You can access linear and angular velocity
-					log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
-					log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+					//log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
+					//log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
 
 					// Acceleration vector will always be (0, 0, 0)
 					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
