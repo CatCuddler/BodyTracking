@@ -912,6 +912,13 @@ namespace {
 			case KeyQ:
 				System::stop();
 				break;
+				// simulate gamepad inputs
+			case Kore::KeyH:
+				gamepadButton(2, 1); // set avatar size
+				break;
+			case Kore::KeyK:
+				gamepadButton(1, 1); // calibrate controllers and trackers
+				break;
 			default:
 				break;
 		}
