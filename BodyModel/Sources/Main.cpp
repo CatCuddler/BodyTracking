@@ -831,12 +831,7 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		
-#ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-#else
-		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-#endif
 		
 		initTransAndRot();
 		
