@@ -429,12 +429,10 @@ namespace {
 					// Hip
 					initEndEffector(hip, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
 					
-					// Spine
-					initEndEffector(spine, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
-					
-					// Left Fore Arm, Right Fore Arm or Right Arm
-					std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
-					initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
+					// Left Fore Arm, Spine, Right Fore Arm or Right Arm
+					std::sort(trackers.begin()+5, trackers.begin()+9, sortByZAxis());
+					initEndEffector(leftForeArm, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
+					initEndEffector(spine, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					initEndEffector(rightArm, trackers[7]->getDeviceIndex(), trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
 				}
@@ -534,20 +532,6 @@ namespace {
 					// Get HMD position and rotation
 					endEffector[i]->setDesPosition(state.pose.vrPose.position);
 					endEffector[i]->setDesRotation(state.pose.vrPose.orientation);
-
-					vec3 velocity = state.pose.linearVelocity;
-					vec3 angularVelocity = state.pose.angularVelocity;
-					vec3 acceleration = state.pose.linearAcceleration;
-					vec3 angularAcceleration = state.pose.angularAcceleration;
-
-					// You can access linear and angular velocity
-					log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
-					log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
-
-					// Acceleration vector will always be (0, 0, 0)
-					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
-					//log(Info, "angularAcceleration %f %f %f", angularAcceleration.x(), angularAcceleration.y(), angularAcceleration.z());
-
 				} else {
 					vrDevice = VrInterface::getController(endEffector[i]->getDeviceIndex());
 
