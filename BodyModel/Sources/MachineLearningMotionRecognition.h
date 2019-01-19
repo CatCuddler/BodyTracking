@@ -18,7 +18,7 @@ private:
 
 	// ID of the currently active user, to be used for 
 	// data differentiation after recording movements
-	const string currentTestSubjectID = "ExampleUserName";
+	const string currentTestSubjectID = "Joerg";
 
 	// the file name will be "user + task + session ID + optionalFileTag"
 	// The sessionID is incremented during runtime for each task. If you 

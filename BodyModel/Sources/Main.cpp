@@ -430,10 +430,10 @@ namespace {
 			rawRotation = sensorState.vrPose.orientation;
 
 
-			Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desPos: (%f, %f, %f)   rawPos: (%f, %f, %f)",
-				endEffector[endEffectorID]->getName(),
-				desPosition.x(), desPosition.y(), desPosition.z(),
-				rawPosition.x(), rawPosition.y(), rawPosition.z());
+			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desPos: (%f, %f, %f)   rawPos: (%f, %f, %f)",
+			//	endEffector[endEffectorID]->getName(),
+			//	desPosition.x(), desPosition.y(), desPosition.z(),
+			//	rawPosition.x(), rawPosition.y(), rawPosition.z());
 
 			//vec3 desRotationEuler = toEulerAngle(desRotation);
 			//vec3 rawRotationEuler = toEulerAngle(rawRotation);
