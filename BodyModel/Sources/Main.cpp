@@ -277,10 +277,16 @@ namespace {
 		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
 		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
 		
-		initRot = hipRot;
+		Kore::Quaternion offsetRotation = endEffector[hip]->getOffsetRotation();
+		//vec3 offsetPosition = endEffector[hip]->getOffsetPosition();
+		
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(hipRot);
+		initRot.rotate(offsetRotation); // Add offset
+		//initRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
 		initRotInv = initRot.invert();
 		
-		initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
+		initTrans = mat4::Translation(hipPos.x(), 0, hipPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
 	
