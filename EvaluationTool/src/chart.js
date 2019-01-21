@@ -505,7 +505,7 @@ const Chart = ({
         animate
         colorBy={e => e.color}
         axisBottom={{
-          legend: groupBy || "# of cycle",
+          legend: groupBy.split("error").join("errorMax") || "# of cycle",
           legendOffset: 36,
           legendPosition: "center",
           tickValues
