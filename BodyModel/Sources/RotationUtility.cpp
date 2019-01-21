@@ -62,4 +62,3 @@ void Kore::RotationUtility::getOrientation(const Kore::mat4* m, Kore::Quaternion
 	orientation->normalize();
 }
 
-

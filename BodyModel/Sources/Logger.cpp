@@ -2,71 +2,121 @@
 #include "Logger.h"
 
 #include <Kore/Log.h>
+
 #include <ctime>
 
-Logger::~Logger() {
-	positionDataOutputFile.close();
-	positionDataOutputFile.close();
+namespace {
+	bool initHmmAnalysisData = false;
 }
 
-void Logger::startLogger() {
+Logger::Logger() {
+}
+
+Logger::~Logger() {
+	logDataReader.close();
+	logdataWriter.close();
+	hmmWriter.close();
+	hmmAnalysisWriter.close();
+}
+
+void Logger::startLogger(const char* filename) {
 	time_t t = time(0);   // Get time now
 	
-	positionDataPath.str(std::string());
-	positionDataPath << positionData << "_" << t << ".csv";
+	char logFileName[50];
+	sprintf(logFileName, "%s_%li.csv", filename, t);
 	
-	positionDataOutputFile.open(positionDataPath.str(), std::ios::app); // Append to the end
-	positionDataOutputFile << "rawPosX;rawPosY;rawPosZ;rawRotX;rawRotY;rawRotZ;rawRotW;scale\n";
-	positionDataOutputFile.flush();
+	logdataWriter.open(logFileName, std::ios::app); // Append to the end
 	
-	log(Kore::Info, "start logging!");
+	// Append header
+	logdataWriter << "tag rawPosX rawPosY rawPosZ rawRotX rawRotY rawRotZ rawRotW scale\n";
+	logdataWriter.flush();
+	
+	log(Kore::Info, "Start logging");
 }
 
 void Logger::endLogger() {
-	positionDataOutputFile.close();
-    prevScale = 0;
+	logdataWriter.close();
 	
-	log(Kore::Info, "stop logging!");
+	log(Kore::Info, "Stop logging");
 }
 
-void Logger::startEvaluationLogger() {
+void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
+	// Save position and rotation
+	logdataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
+	logdataWriter.flush();
+}
+
+void Logger::startHMMLogger(const char* filename, int num) {
+	char logFileName[50];
+	sprintf(logFileName, "%s_%i.csv", filename, num);
+	
+	hmmWriter.open(logFileName, std::ios::out);
+	
+	// Append header
+	char hmmHeader[] = "tag time posX posY posZ rotX rotY rotZ rotW\n";
+	hmmWriter << hmmHeader;
+	hmmWriter.flush();
+	
+	log(Kore::Info, "Start logging data for HMM");
+}
+
+void Logger::endHMMLogger() {
+	hmmWriter.flush();
+	hmmWriter.close();
+	
+	log(Kore::Info, "Stop logging data for HMM");
+}
+
+void Logger::saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot) {
+	// Save position
+	hmmWriter << tag << " " << lastTime << " "  << pos.x() << " " << pos.y() << " " << pos.z() << " " << rot.x << " " << rot.y << " " << rot.z << " " << rot.y << "\n";
+	hmmWriter.flush();
+}
+
+void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
+	if (!initHmmAnalysisData) {
+		char hmmAnalysisPath[100];
+		strcat(hmmAnalysisPath, hmmName);
+		strcat(hmmAnalysisPath, "_analysis.txt");
+		hmmAnalysisWriter.open(hmmAnalysisPath, std::ios::out | std::ios::app);
+		initHmmAnalysisData = true;
+	}
+	
+	if (newLine) hmmAnalysisWriter << "\n";
+	else hmmAnalysisWriter << probability << " ";
+	
+	hmmAnalysisWriter.flush();
+}
+
+void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
 	time_t t = time(0);   // Get time now
 	
-	evaluationDataPath.str(std::string());
-	evaluationConfigPath.str(std::string());
-	evaluationDataPath << "eval/" << evaluationDataFilename << "_" << t << ".csv";
-	evaluationConfigPath << "eval/" << evaluationConfigFilename << "_" << t << ".csv";
+	char evaluationDataPath[100];
+	sprintf(evaluationDataPath, "eval/evaluationData_%li.csv", t);
 	
-	evaluationConfigOutputFile.open(evaluationConfigPath.str(), std::ios::app);
-	evaluationConfigOutputFile << "IK Mode;with Orientation;File;lambda;Error Pos Max;Error Rot Max;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << withOrientation << ";" << currentGroup[currentFile] << ";" << lambda[ikMode] << ";" << errorMaxPos[ikMode] << ";" << errorMaxRot[ikMode] << ";" << maxSteps[ikMode] << "\n";
+	char evaluationConfigPath[100];
+	sprintf(evaluationConfigPath, "eval/evaluationConfig_%li.csv", t);
+	
+	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app);
+	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Steps Max\n";
+	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxSteps << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	
-	evaluationDataOutputFile.open(evaluationDataPath.str(), std::ios::app);
+	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
 	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
 	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
 	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
 	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
 	evaluationDataOutputFile.flush();
 	
-	log(Kore::Info, "start eval-logging!");
+	log(Kore::Info, "Start eval-logging!");
 }
 
 void Logger::endEvaluationLogger() {
 	evaluationDataOutputFile.close();
 	
-	log(Kore::Info, "stop eval-logging!");
-}
-
-void Logger::saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
-	// Save positional and rotation data
-	if (scale != prevScale) {
-		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";" << scale << "\n";
-		prevScale = scale;
-	} else
-		positionDataOutputFile << rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";" << rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << "\n";
-	positionDataOutputFile.flush();
+	log(Kore::Info, "Stop eval-logging!");
 }
 
 void Logger::saveEvaluationData(Avatar *avatar) {
@@ -91,67 +141,36 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	evaluationDataOutputFile.flush();
 }
 
-bool Logger::readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
-	int column = 0;
+bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
+	string tag;
+	float posX, posY, posZ;
+	float rotX, rotY, rotZ, rotW;
 	
-	if (std::getline(positionDataInputFile, str, '\n')) {
-		std::stringstream ss;
-		ss.str(str);
-		std::string item;
+	if(!logDataReader.is_open()) {
 		
-		while(std::getline(ss, item, ';')) {
-			float num = std::stof(item);
+		if (ifstream(filename)) {
+			logDataReader.open(filename);
+			log(Kore::Info, "Read data from %s", filename);
 			
-			if (column == 0) rawPos->x() = num;
-			else if (column == 1) rawPos->y() = num;
-			else if (column == 2) rawPos->z() = num;
-			else if (column == 3) rawRot->x = num;
-			else if (column == 4) rawRot->y = num;
-			else if (column == 5) rawRot->z = num;
-			else if (column == 6) rawRot->w = num;
-			
-			if (currLineNumber == 1 && column == 7)
-				scale = num;
-			
-			++column;
+			// Skip header
+			logDataReader >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag;
+		} else {
+			log(Kore::Info, "Could not find file %s", filename);
 		}
-		
-		return true;
 	}
 	
-	return false;
-}
-
-bool Logger::readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot) {
-	std::string str;
-	bool success = false;
-	
-	if (!positionDataInputFile.is_open())
-		positionDataInputFile.open(filename);
-	
-	// Skip lines
-	while(line > currLineNumber - 1) {
-		std::getline(positionDataInputFile, str, '\n');
-		++currLineNumber;
-	}
-	
-	// Read line
+	// Read lines
 	for (int i = 0; i < numOfEndEffectors; ++i) {
-		Kore::vec3 pos = Kore::vec3(0, 0, 0);
-		Kore::Quaternion rot = Kore::Quaternion(0, 0, 0, 1);
+		logDataReader >> tag >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW >> scale;
 		
-		success = readLine(str, &pos, &rot);
-		if (success) {
-			++currLineNumber;
-			rawPos[i] = pos;
-			rawRot[i] = rot;
+		rawPos[i] = Kore::vec3(posX, posY, posZ);
+		rawRot[i] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
+		
+		if (logDataReader.eof()) {
+			logDataReader.close();
+			return false;
 		}
 	}
 	
-	if (positionDataInputFile.eof()) {
-		positionDataInputFile.close();
-		currLineNumber = 0;
-	}
-	
-	return success;
+	return true;
 }

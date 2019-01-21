@@ -2,53 +2,42 @@
 
 #include "Avatar.h"
 
-#include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
-
-extern int currentFile, ikMode;
-extern float lambda[], maxSteps[], errorMaxPos[], errorMaxRot[];
 
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
-	std::fstream positionDataOutputFile;
-	std::stringstream positionDataPath;
+	// Input and output file to for raw data
+	std::fstream logDataReader;
+	std::ofstream logdataWriter;
 	
-	const char* evaluationDataFilename = "evaluationData";
+	// Output file to save data for hmm
+	std::ofstream hmmWriter;
+	std::ofstream hmmAnalysisWriter;
+	
+	// Output file to save data for evaluation
 	std::fstream evaluationDataOutputFile;
-	std::stringstream evaluationDataPath;
-	
-	const char* evaluationConfigFilename = "evaluationConfig";
 	std::fstream evaluationConfigOutputFile;
-	std::stringstream evaluationConfigPath;
-	
-	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
-	
-	float prevScale;
-	float scale;
 	
 public:
+	Logger();
 	~Logger();
 	
-	void startLogger();
+	void startLogger(const char* filename);
 	void endLogger();
+	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void startEvaluationLogger();
+	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
+	void saveEvaluationData(Avatar *avatar);
 	void endEvaluationLogger();
 	
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
-	void saveEvaluationData(Avatar *avatar);
+	// HMM
+	void startHMMLogger(const char* filename, int num);
+	void endHMMLogger();
+	void saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot);
+	void analyseHMM(const char* filename, double probability, bool newLine);
 	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	
-	float getScale() {
-		return scale;
-	}
+	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };
