@@ -496,7 +496,7 @@ const Chart = ({
         margin={{
           top: 15,
           right: 30,
-          bottom: 85,
+          bottom: 130,
           left: 90
         }}
         curve={numeric ? "linear" : "step"}
@@ -505,7 +505,7 @@ const Chart = ({
         animate
         colorBy={e => e.color}
         axisBottom={{
-          legend: groupBy || "# of cycle",
+          legend: groupBy.split("error").join("errorMax") || "# of cycle",
           legendOffset: 80,
           legendPosition: "center",
           tickValues
@@ -527,7 +527,7 @@ const Chart = ({
             anchor: "bottom-left",
             direction: "row",
             translateX: -65,
-            translateY: 80,
+            translateY: 120,
             itemWidth: !large ? 100 : 180,
             itemHeight: 20
           }

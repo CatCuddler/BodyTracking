@@ -271,17 +271,6 @@ namespace {
 		}
 	}
 	
-	void updateTransAndRot() {
-		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
-		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
-		
-		initRot = hipRot;
-		initRotInv = initRot.invert();
-		
-		initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
-	}
-	
 	void initTransAndRot() {
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
@@ -496,11 +485,6 @@ namespace {
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
-					
-					if (calibratedAvatar && i == hip) {
-						// Update Local Coordinate System
-						updateTransAndRot();
-					}
 				}
 
 				executeMovement(i);
@@ -558,11 +542,6 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
-				
-				if (calibratedAvatar && i == hip) {
-					// Update Local Coordinate System
-					updateTransAndRot();
-				}
 			}
 			
 			if (!calibratedAvatar) {
@@ -788,12 +767,7 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		
-#ifdef KORE_STEAMVR
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-#else
-		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-#endif
 		
 		initTransAndRot();
 		
