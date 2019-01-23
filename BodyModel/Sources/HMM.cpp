@@ -98,6 +98,9 @@ bool HMM::stopRecognition() {
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
 				HMMModel model(hmmPath, hmmNameWithNum);
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
+				float n = 0;
+				n = model.calculateProbability(clusteredPoints);
+				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", n, model.getProbabilityThreshold());
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
 			}
