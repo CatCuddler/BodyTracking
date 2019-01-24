@@ -39,18 +39,20 @@ bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = true;
+bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
-bool calculateSingleProbability = false;
+bool calculateSingleProbability = true;
 // Show debug messages on console
 bool debug = false;
 
 
 /// ***** Set paths and HMM parameters ***** ///
 // File name of the data set to be used used for single probability calculation
-string currentMovement = "Yoga_Krieger5";
+string currentMovement;
 // Path for the source files
 // NOTE: change working directory if necessary
+string validationFileName = "Yoga_Krieger_";
+string validationFilePath = "../Validation/";
 string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger_";
@@ -183,7 +185,11 @@ int main() {
 		cout << "\n";
 		
 		cout << "Sorting new data sets into clusters. ";
-		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeanVector);
+        int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
+        vector<vector<Point>> currentDataSet;
+        for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
+            currentMovement = validationFileName + to_string(currentFile);
+		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
 		cout << "Normalised data sets clustered. \n";
 		
 		if (debug) { // console output of clusters
@@ -207,7 +213,7 @@ int main() {
 			}
 		}
 	}
-	
+    }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
