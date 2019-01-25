@@ -124,7 +124,7 @@ int main() {
 		
 		// train HMM per tracker and calculate individual probability thresholds of trackers 
 		vector<double> probabilities(6, 0);
-		for (int ii = 4; ii < 6; ii++) {
+		for (int ii = 0; ii < 6; ii++) {
 			if (!sequence.at(ii).empty()) {
 				cout << "Training HMM for " + trackerNames[ii] + " using the Baum-Welch algorithm with " << hmmTries << " executes. Converged after iteration: ";
 				for (int jj = 0; jj < hmmTries; jj++) {
@@ -187,8 +187,11 @@ int main() {
 		cout << "Sorting new data sets into clusters. ";
         int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
         vector<vector<Point>> currentDataSet;
+        file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
+        
         for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
             currentMovement = validationFileName + to_string(currentFile);
+            file << "\nValidation test of file:"<< currentMovement<<";\n";
 		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
 		cout << "Normalised data sets clustered. \n";
 		
@@ -204,15 +207,29 @@ int main() {
 				}
 			}
 		}
-		
+		vector<bool> trackerMovementRecognised(6, true);
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
+                //Calculating probability for "trackerNames" based on given HMM:
 				cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
 				cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
+                
+                trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > model.getProbabilityThreshold());
+       file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
+            
 			}
 		}
-	}
+            bool result;
+            if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+                // All (present) trackers were recognised as correct
+                result = true;
+            } else {
+                result = false;
+            }
+            file<<"The result is "<<result<<".\n";
+            
+	  }
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
