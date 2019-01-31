@@ -111,6 +111,7 @@ namespace {
 	
 	bool calibratedAvatarScale = false;
 	bool calibratedAvatarControllersAndTrackers = false;
+	bool blockAllGamepadButtons = false;
 	
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
@@ -641,6 +642,13 @@ namespace {
 			return;
 		}
 
+		// disable buttons if they have been locked by keyboard
+		if (blockAllGamepadButtons) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons have been disabled by keyboard");
+			return;		
+		}
+
 		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
 
 		// Grip button => set size and reset an avatar to a default T-Pose
@@ -918,6 +926,17 @@ namespace {
 				break;
 			case Kore::KeyK:
 				gamepadButton(1, 1); // calibrate controllers and trackers
+				break;
+			case Kore::KeyB:
+				blockAllGamepadButtons = !blockAllGamepadButtons;
+				if (blockAllGamepadButtons) {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been disabled by keyboard");
+				}
+				else {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been enabled by keyboard");
+				}
 				break;
 			default:
 				break;
