@@ -9,7 +9,6 @@
 
 #include "Markov.h"
 #include "Matrix.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -33,7 +32,7 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
 	
-	srand((unsigned int)time(NULL)); // Seed for random number generation
+	srand(time(NULL)); // Seed for random number generation
 	
 	// Initialize Pi
 	if (LRdepth == 0) {		// left-to-right depth of 0: random initialization
@@ -167,7 +166,7 @@ double HMMModel::getProbabilityThreshold() { return probabilityThreshold; }
  * method:		updateAlphaNormalized
  * description:	updates the forward probability matrix alpha using normalization
  and returns the normalization vector
- * parameters:	sequence is the observation sequence for which the forward
+ * parameters:	sequence is the observation   for which the forward
  probability is calculated
  *				alpha is the forward probability matrix to be updated
  * return value: the vector of normalization coefficients
@@ -175,10 +174,9 @@ double HMMModel::getProbabilityThreshold() { return probabilityThreshold; }
 vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** alpha) {
 	
 	const int N = numStates;
-	const int T = (int)sequence.size();
-	
+	const int T = sequence.size();
 	vector<double> c(T, 0);
-	
+
 	// 1. Initialization
 	for (int i = 0; i < N; i++) {
 		alpha[i][0] = pi.at(i) * b[i][sequence.at(0)];
@@ -189,7 +187,11 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 	for (int i = 0; i < N; i++) {
 		alpha[i][0] *= c.at(0);
 	}
-	
+    
+//    for (const auto &element : c) {
+//        cout<<element<<",";
+//    }
+//    cout<<endl;
 	// 2. Induction
 	for (int t = 1; t < T; t++) {
 		for (int j = 0; j < N; j++) {
@@ -205,6 +207,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 			alpha[j][t] *= c.at(t);
 		}
 	}
+
 	return c;
 }
 
@@ -220,7 +223,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta) {
 	
 	const int N = numStates;
-	const int T = (int)sequence.size();
+	const int T = sequence.size();
 	
 	// 1. Initialization
 	for (int i = 0; i < N; i++) {
@@ -250,18 +253,21 @@ void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, do
 double HMMModel::calculateProbability(vector<int>& sequence) {
 	
 	const int N = numStates;
-	const int T = (int)sequence.size();
-	
+	const int T = sequence.size();
+//        for (const auto &element : sequence) {
+//           cout<<element<<",";
+//       }
+//        cout<<endl;
+    double probability = 0;
 	double** alpha = matrix<double>(0, N, T); // forward probability matrix
-	
 	vector<double> c = updateAlphaNormalized(sequence, alpha); // run the forward algorithm
 	
 	// Calculate probability
-	double probability = 0;
 	for (int t = 0; t < sequence.size(); t++) {
 		probability -= log(c.at(t));
+//        cout<<probability<<";";
 	}
-	
+    
 	freeMatrix<double>(alpha, N);
 	
 	return probability;
@@ -282,7 +288,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	
 	const int N = numStates;
 	const int M = sigmaSize;
-	const int sequenceSize = (int)sequence.size();
+	const int sequenceSize = sequence.size();
 	
 	double probability = 0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
@@ -366,7 +372,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		//cout << iter;
 		
 		// Save log probability threshold
-		probabilityThreshold = probability * 2;
+		probabilityThreshold = probability * 3;
 	}
 	
 	for (int iter = 0; iter < sequenceSize; iter++) {

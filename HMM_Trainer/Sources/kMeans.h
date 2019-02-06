@@ -9,6 +9,8 @@ void setTrainingFilePath(std::string trainingFilePath);
 void setTrainingFileName(std::string trainingFileName);
 void setWriteFilePath(std::string writeFilePath);
 void setWriteFileName(std::string writeFileName);
+void setValidationFilePath(std::string ValidationFilePath);
+void setValidationFileName(std::string ValidationFileName);
 
 class Point {
 private:

@@ -43,7 +43,7 @@ bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
 bool calculateSingleProbability = true;
 // Show debug messages on console
-bool debug = false;
+bool debug =false;
 
 
 /// ***** Set paths and HMM parameters ***** ///
@@ -65,7 +65,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10;
+int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 2;
 
@@ -167,8 +167,8 @@ int main() {
 	
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
 	else if (calculateSingleProbability) {
+        int count=0;
 		cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
-		
 		cout << "Loading cluster coordinates.\n";
 		vector<KMeans> kmeanVector(6);
 		bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
@@ -183,9 +183,10 @@ int main() {
 			}
 		}
 		cout << "\n";
-		
+         int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
+        cout<< "Validation test for "<<validationFileNumber <<" Files."<< "\n";
 		cout << "Sorting new data sets into clusters. ";
-        int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
+       
         vector<vector<Point>> currentDataSet;
         file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
         
@@ -207,29 +208,34 @@ int main() {
 				}
 			}
 		}
+       
 		vector<bool> trackerMovementRecognised(6, true);
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
                 //Calculating probability for "trackerNames" based on given HMM:
 				cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
+                
 				cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
                 
                 trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > model.getProbabilityThreshold());
        file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
-            
 			}
 		}
             bool result;
             if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
                 // All (present) trackers were recognised as correct
                 result = true;
+                count++;
             } else {
                 result = false;
+              
             }
             file<<"The result is "<<result<<".\n";
-            
-	  }
+            	  }
+        double probability = (double)count/validationFileNumber;
+        file<<"The recognition probability is "<<probability <<".\n";
+        cout<<"Probability: "<<probability <<".\n";
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
@@ -247,7 +253,7 @@ int main() {
 		
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-		if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
+//        if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
     //  Grid search
 	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
     //  Random search
@@ -534,4 +540,6 @@ void updateFilePaths() {
 	setTrainingFileName(trainingFileName);
 	setWriteFilePath(writeFilePath);
 	setWriteFileName(writeFileName);
+    setValidationFilePath(validationFilePath);
+    setValidationFileName(validationFileName);
 }

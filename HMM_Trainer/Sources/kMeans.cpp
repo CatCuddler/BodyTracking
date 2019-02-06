@@ -26,11 +26,15 @@ string trainingFilePathKMeans;
 string trainingFileNameKMeans;
 string writeFilePathKMeans;
 string writeFileNameKMeans;
+string validationFilePathKmeans;
+string validationFileNameKmeans;
 
 void setTrainingFilePath(string trainingFilePath) { trainingFilePathKMeans = trainingFilePath; }
 void setTrainingFileName(string trainingFileName) { trainingFileNameKMeans = trainingFileName; }
 void setWriteFilePath(string writeFilePath) { writeFilePathKMeans = writeFilePath; }
 void setWriteFileName(string writeFileName) { writeFileNameKMeans = writeFileName; }
+void setValidationFilePath(string validationFilePath){validationFilePathKmeans = validationFilePath;}
+void setValidationFileName(string validationFileName){validationFileNameKmeans = validationFileName;}
 
 /********************************************************************************
  * method:		calculateClusters
@@ -80,7 +84,7 @@ vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, 
 			// if the vector at the currentTracker position is not empty
 			if (!currentDataSet.at(currentTracker).empty()) {
 				// normalises a given data set of one tracker, matches it to the clusters of the given kMeans and adds it to the returnVector at the tracker's postition
-				returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
+           returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
 			}
 		}
 	}
@@ -109,9 +113,10 @@ vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
 			// recalculates each point of inputData in dependance from the increment calculated at the top
 			point.addValue((inputData.at(ceil(currentPos)).getValue(jj) - inputData.at(floor(currentPos)).getValue(jj)) * (currentPos - (floor(currentPos))) + inputData.at(floor(currentPos)).getValue(jj));
 		}
-		returnVector.at(ii) = point;
+		returnVector.at(ii) = point;        
 	}
 	returnVector.at(dataVolume) = inputData.at(inputData.size() - 1);
+
 	return returnVector;
 }
 
@@ -148,13 +153,12 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		}
 		
 		f >> tag >> time >> tag >> tag >> tag >> tag >> tag >> tag >> tag; // Skip header
-		
-		int ii = 0;
+       
+        int ii = 0;
 		for (;;) {
 			f >> tag >> time >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
 			vector<double> values = { posX, posY, posZ, rotX, rotY, rotZ, rotW };
 			Point point = Point(ii, values);
-			
 			// differentiate the parsed points and add them to the correct vectors
 			if (tag.compare("head") == 0)      returnVector.at(0).push_back(point);
 			else if (tag.compare("lHand") == 0) returnVector.at(1).push_back(point);
@@ -163,13 +167,12 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 			else if (tag.compare("lFoot") == 0) returnVector.at(4).push_back(point);
 			else if (tag.compare("rFoot") == 0) returnVector.at(5).push_back(point);
 			else cout << "Error! Unknown tracker data detected.";
-			
-			++ii;
-			
+            ++ii;
 			if (f.fail() || f.eof())
 				break;
 		}
 		f.close();
+   
 	}
 	return returnVector;
 }
@@ -209,11 +212,11 @@ KMeans::KMeans(string filePath, string fileName) {
 	
 	f >> emissions >> totalValues >> maxIterations >> totalPoints >> averagePoints;
 	
-	double x, y, z;
+	double x, y, z,rotx,roty,rotz,rotw;
 	
 	for (int ii = 0; ii < emissions; ii++) {
-		f >> x >> y >> z;
-		vector<double> values = { x, y, z };
+		f >> x >> y >> z >>rotx>>roty>>rotz>>rotw;
+		vector<double> values = { x, y, z,rotx,roty,rotz,rotw };
 		Point point = Point(ii, values);
 		Cluster cluster(ii, point);
 		clusters.push_back(cluster);
@@ -239,13 +242,13 @@ int KMeans::getAveragePoints() { return averagePoints; }
 int KMeans::getIDClosestCenter(Point point) {
 	double sum = 0.0, minDistance;
 	int idClusterCenter = 0;
-	
 	// check euclidean distance to the first cluster
 	for (int i = 0; i < totalValues; i++) {
+//        cout<<clusters[0].getCentralValue(i)<<";"<<endl;
 		sum += pow(clusters[0].getCentralValue(i) - point.getValue(i), 2.0);
 	}
 	minDistance = sqrt(sum);
-	
+   
 	// check distance for all the other cluster central_values
 	for (int ii = 1; ii < emissions; ii++) {
 		double distance;
@@ -253,14 +256,15 @@ int KMeans::getIDClosestCenter(Point point) {
 		for (int jj = 0; jj < totalValues; jj++) {
 			sum += pow(clusters[ii].getCentralValue(jj) - point.getValue(jj), 2.0);
 		}
+
 		distance = sqrt(sum);
-		
 		// update the minimal distance
 		if (distance < minDistance) {
 			minDistance = distance;
 			idClusterCenter = ii;
 		}
 	}
+    
 	return idClusterCenter;
 }
 
@@ -271,9 +275,8 @@ int KMeans::getIDClosestCenter(Point point) {
  ********************************************************************************/
 void KMeans::runKMeans(vector<Point> & points) {
 	if (emissions > totalPoints) { return; }
-	
+   
 	vector<int> blockedIndexes;
-	
 	// pick <emissions> initial cluster_central_values
 	for (int ii = 0; ii < emissions; ii++) {
 		while (true) {
@@ -356,6 +359,10 @@ vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
 	for (int ii = 0; ii < points.size(); ii++) {
 		returnVector.at(ii) = getIDClosestCenter(points[ii]);
 	}
+//            for (const auto &element :returnVector) {
+//                cout<<element<<",";
+//            }
+//            cout<<endl;
 	return returnVector;
 }
 
@@ -394,10 +401,8 @@ void KMeans::writeKMeans(string filePath, string fileName) {
 Cluster::Cluster(int idCluster, Point point) {
 	this->idCluster = idCluster;
 	int totalValues = point.getTotalValues();
-	
-	for (int i = 0; i < totalValues; i++)
+    for (int i = 0; i < totalValues; i++)
 		centralValues.push_back(point.getValue(i));
-	
 	points.push_back(point);
 }
 
@@ -433,7 +438,6 @@ int Cluster::getID() { return idCluster; }
 Point::Point(int idPoint, vector<double>& values) {
 	this->idPoint = idPoint;
 	totalValue = (int)values.size();
-	
 	for (int i = 0; i < totalValue; i++)
 		this->values.push_back(values[i]);
 	
