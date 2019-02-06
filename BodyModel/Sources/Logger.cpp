@@ -3,6 +3,8 @@
 
 #include <Kore/Log.h>
 
+#include <iostream>
+#include <string>
 #include <ctime>
 
 namespace {
