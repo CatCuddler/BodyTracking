@@ -12,6 +12,13 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 	
+	double startX;
+	double startZ;
+	double startRotCos;
+	double startRotSin;
+	double transitionX;
+	double transitionY;
+	double transitionZ;
 	float currentUserHeight;
 	
 	int curentFileNumber = 0;
@@ -229,7 +236,10 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 	if (recording || recognizing) {
 		
 		curentLineNumber++;
-		
+
+		transitionX = position.x() - startX;
+		transitionY = position.y();
+		transitionZ = position.z() - startZ;
 		if (record) {
 			// Data is recorded
 			logger.saveHMMData(name, lastTime, position.normalize(), rotation);
@@ -238,24 +248,28 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 		if (recognition) { // data is stored internally for evaluation at the end of recognition
 			double x, y, z, rotw, rotx, roty, rotz;
 			// TODO: do we need to normalize position?
-			x = position.x();
-			y = position.y();
-			z = position.z();
+			x = position.normalize().x();
+			y = position.normalize().y();
+			z = position.normalize().z();
 			rotw = rotation.w;
 			rotx = rotation.x;
 			roty = rotation.y;
 			rotz = rotation.z;
+//			x = (transitionX * startRotCos - transitionZ * startRotSin);
+//			y = (transitionY / currentUserHeight) * 1.8;
+//			z = (transitionZ * startRotCos + transitionX * startRotSin);
 			
 			vector<double> values = { x, y, z, rotx, roty, rotz, rotw };
 			Point point = Point(dataPointNumber, values);
 			dataPointNumber++;
-			
 			if (std::strcmp(name, headTag) == 0)		recognitionPoints.at(0).push_back(point);
 			else if (std::strcmp(name, lHandTag) == 0)	recognitionPoints.at(1).push_back(point);
 			else if (std::strcmp(name, rHandTag) == 0)	recognitionPoints.at(2).push_back(point);
 			else if (std::strcmp(name, hipTag) == 0)	recognitionPoints.at(3).push_back(point);
 			else if (std::strcmp(name, lFootTag) == 0)	recognitionPoints.at(4).push_back(point);
 			else if (std::strcmp(name, rFootTag) == 0)	recognitionPoints.at(5).push_back(point);
+			
+			
 		}
 	}
 }
