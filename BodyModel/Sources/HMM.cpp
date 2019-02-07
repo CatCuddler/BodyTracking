@@ -107,20 +107,30 @@ bool HMM::stopRecognition() {
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
 				float n = 0;
 				n = model.calculateProbability(clusteredPoints);
-				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", n, model.getProbabilityThreshold());
-				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
+				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", n, model.getProbabilityThreshold() * 6);
+				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold()*10 && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
+				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() * 6);
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
 			}
 		}
 		
 		logger.analyseHMM(hmmName, 0, true);
+		int truenumber = 0;
+		for(int i=0;i<6;i++) {
+			if (trackerMovementRecognised.at(i) == true) {
+				truenumber++;
+			}
+		}
+				Kore::log(Kore::LogLevel::Info, "truenumber: (%d)", truenumber);
+			
 		
-		if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+		//if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+			if (truenumber > 5) {
 			// All (present) trackers were recognised as correct
 			return true;
 		} else {
 			return false;
-		}
+			}
 	}
 	return false;
 }
