@@ -26,15 +26,15 @@ string trainingFilePathKMeans;
 string trainingFileNameKMeans;
 string writeFilePathKMeans;
 string writeFileNameKMeans;
-string validationFilePathKmeans;
-string validationFileNameKmeans;
+string validationFilePathKMeans;
+string validationFileNameKMeans;
 
 void setTrainingFilePath(string trainingFilePath) { trainingFilePathKMeans = trainingFilePath; }
 void setTrainingFileName(string trainingFileName) { trainingFileNameKMeans = trainingFileName; }
 void setWriteFilePath(string writeFilePath) { writeFilePathKMeans = writeFilePath; }
 void setWriteFileName(string writeFileName) { writeFileNameKMeans = writeFileName; }
-void setValidationFilePath(string validationFilePath){validationFilePathKmeans = validationFilePath;}
-void setValidationFileName(string validationFileName){validationFileNameKmeans = validationFileName;}
+void setValidationFilePath(string validationFilePath){validationFilePathKMeans = validationFilePath;}
+void setValidationFileName(string validationFileName){validationFileNameKMeans = validationFileName;}
 
 /********************************************************************************
  * method:		calculateClusters

@@ -35,13 +35,13 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = false;
+bool createHMM =true;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
 bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
-bool calculateSingleProbability = true;
+bool calculateSingleProbability = false;
 // Show debug messages on console
 bool debug =false;
 
@@ -61,9 +61,9 @@ string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
-int numStates = 6;
+int numStates = 16;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
-int numEmissions = 8;
+int numEmissions = 12;
 // Number of times an HMM is created per tracker before using the one with the best threshold
 int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
@@ -189,12 +189,14 @@ int main() {
        
         vector<vector<Point>> currentDataSet;
         file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
-        
+        int thresholdIndex [10] = { 1, 5, 10, 20, 30, 40, 50,60,80, 100 };
+        for (int &index : thresholdIndex){
+            count=0;
         for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
             currentMovement = validationFileName + to_string(currentFile);
             file << "\nValidation test of file:"<< currentMovement<<";\n";
 		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
-		cout << "Normalised data sets clustered. \n";
+//        cout << "Normalised data sets clustered. \n";
 		
 		if (debug) { // console output of clusters
 			for (int kk = 0; kk < 6; kk++) {
@@ -213,12 +215,11 @@ int main() {
 		for (int ii = 0; ii < 6; ii++) {
 			if (trackersPresent[ii]) {
                 //Calculating probability for "trackerNames" based on given HMM:
-				cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
+//                cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
                 
-				cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
-                
-                trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > model.getProbabilityThreshold());
+//                cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
+                trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
        file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
 			}
 		}
@@ -235,7 +236,8 @@ int main() {
             	  }
         double probability = (double)count/validationFileNumber;
         file<<"The recognition probability is "<<probability <<".\n";
-        cout<<"Probability: "<<probability <<".\n";
+        cout<<"Threshold index is "<< index<<";"<<"Probability: "<<probability <<".\n";
+    }
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
