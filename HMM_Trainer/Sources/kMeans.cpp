@@ -56,6 +56,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 			cout << "Calculating clusters for " << trackerNames[ii] << "; ";
 			kmeans.runKMeans(parsedPoints.at(ii));
 			kmeans.writeKMeans(writeFilePathKMeans, writeFileNameKMeans + "_" + to_string(ii));
+            cout<<"The final distance is "<<kmeans.getFinalDistance(parsedPoints.at(ii))<<"."<<endl;
 			returnVector.at(ii) = kmeans;
 		}
 	}
@@ -248,8 +249,8 @@ int KMeans::getIDClosestCenter(Point point) {
 		sum += pow(clusters[0].getCentralValue(i) - point.getValue(i), 2.0);
 	}
 	minDistance = sqrt(sum);
-   
 	// check distance for all the other cluster central_values
+    
 	for (int ii = 1; ii < emissions; ii++) {
 		double distance;
 		sum = 0.0;
@@ -267,7 +268,28 @@ int KMeans::getIDClosestCenter(Point point) {
     
 	return idClusterCenter;
 }
-
+/********************************************************************************
+ * method:        Calculate final distance for Kmeans
+ * description:   Calculate the sithin-cluster sum of squares，later used for elbow method to determin K
+ ********************************************************************************/
+double KMeans::getFinalDistance(vector<Point> & points){
+    double wss = 0.0;
+    double sum = 0.0;
+    for (int ii = 0; ii < emissions; ii++) {
+        // iterator for the dimension
+        for (int jj = 0; jj < totalValues; jj++) {
+            int totalPointsCluster = clusters[ii].getTotalPoints();
+            double centralPoint =clusters[ii].getCentralValue(jj);
+            if (totalPointsCluster > 0) {
+                // iterator for the points of each cluster
+                for (int kk = 0; kk < totalPointsCluster; kk++)
+                    sum  += pow(clusters[ii].getPoint(kk).getValue(jj)-centralPoint, 2.0 );
+            }
+        }
+    }
+    wss = sum;
+    return wss;
+}
 /********************************************************************************
  * method:		runKMeans
  * description:	uses KMeans clustering algorithm to cluster the given set of points
@@ -336,6 +358,7 @@ void KMeans::runKMeans(vector<Point> & points) {
 		
 		if (done == true) {
 			cout << "finished in iteration " << iter << ".\n";
+
 			break;
 		}
 		if (iter >= maxIterations) {

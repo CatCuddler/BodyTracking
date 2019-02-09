@@ -63,7 +63,7 @@ string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
 int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
-int numEmissions = 8;
+int numEmissions = 5;
 // Number of times an HMM is created per tracker before using the one with the best threshold
 int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random

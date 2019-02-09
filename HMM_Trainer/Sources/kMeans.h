@@ -64,6 +64,7 @@ public:
 	void writeKMeans(std::string filePath, std::string fileName);
 	std::vector<Cluster> getClusters();
 	int getAveragePoints();
+    double getFinalDistance(std::vector<Point> & points);
 };
 
 std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);
