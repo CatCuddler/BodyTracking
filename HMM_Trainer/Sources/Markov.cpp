@@ -288,9 +288,9 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 	
 	const int N = numStates;
 	const int M = sigmaSize;
-	const int sequenceSize = sequence.size();
-	
-	double probability = 0;
+    //sequenceSize:The number of training file
+	const int sequenceSize = (int)sequence.size();
+	double probability = 0.0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
 	
 	// Initialize a forward and a backward matrix per observation sequence
@@ -362,15 +362,17 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		
 		// Calculate log probability
 		prevProbability = probability;
-		probability = 0;
-		if (sequence.size() > 0) {
+        vector<double> v(sequenceSize,0);
+		for(int l = 0; l < sequenceSize; l++) {
+            probability = 0;
 			for (int t = 0; t < sequence.at(0).size(); t++) {
-				probability -= log(c.at(0).at(t));
-			}
-		}
-		
-		//cout << iter;
-		
+				probability -= log(c.at(l).at(t));
+            }
+			
+           v.at(l)= probability;
+        }
+        sort(v.begin(), v.end());
+        probability = v.at(0);
 		// Save log probability threshold
 		probabilityThreshold = probability;
 	}

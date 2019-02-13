@@ -35,15 +35,15 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM =true;
+bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
 bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
-bool calculateSingleProbability = false;
+bool calculateSingleProbability = true;
 // Show debug messages on console
-bool debug =false;
+bool debug= false;
 
 
 /// ***** Set paths and HMM parameters ***** ///
@@ -63,11 +63,11 @@ string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
 int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
-int numEmissions = 5;
+int numEmissions = 8;
 // Number of times an HMM is created per tracker before using the one with the best threshold
 int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
-int lrDepth = 2;
+int lrDepth = 0;
 
 /// ***** General variables used by system ***** ///
 static const int num_threads = 4; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
@@ -189,9 +189,10 @@ int main() {
        
         vector<vector<Point>> currentDataSet;
         file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
-        int thresholdIndex [10] = { 1, 5, 10, 20, 30, 40, 50,60,80, 100 };
+        int thresholdIndex [5] = {1,2,3,4,5};
         for (int &index : thresholdIndex){
-            count=0;
+        count=0;
+        vector<int>singlePointCount(6,0);
         for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
             currentMovement = validationFileName + to_string(currentFile);
             file << "\nValidation test of file:"<< currentMovement<<";\n";
@@ -222,6 +223,8 @@ int main() {
                 trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
        file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
 			}
+            if(trackerMovementRecognised.at(ii)==1)
+                singlePointCount.at(ii)++;
 		}
             bool result;
             if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
@@ -237,6 +240,11 @@ int main() {
         double probability = (double)count/validationFileNumber;
         file<<"The recognition probability is "<<probability <<".\n";
         cout<<"Threshold index is "<< index<<";"<<"Probability: "<<probability <<".\n";
+            cout<<"The right percentage of each point are: ";
+            for (const auto &element : singlePointCount) {
+                cout<<element<<",";
+            }
+            cout<<endl;
     }
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)

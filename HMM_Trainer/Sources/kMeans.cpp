@@ -297,13 +297,12 @@ double KMeans::getFinalDistance(vector<Point> & points){
  ********************************************************************************/
 void KMeans::runKMeans(vector<Point> & points) {
 	if (emissions > totalPoints) { return; }
-   
 	vector<int> blockedIndexes;
 	// pick <emissions> initial cluster_central_values
 	for (int ii = 0; ii < emissions; ii++) {
 		while (true) {
 			int point_index = rand() % totalPoints;
-			
+//			sort(points.begin(), points.end());
 			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end()) {
 				blockedIndexes.push_back(point_index);
 				points[point_index].setCluster(ii);
@@ -313,6 +312,7 @@ void KMeans::runKMeans(vector<Point> & points) {
 			}
 		}
 	}
+    
 	int iter = 1;
 	while (true) {
 		// a boolean to check the exit condition whether the clusters do still get updated
