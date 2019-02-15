@@ -48,7 +48,7 @@ public:
 class KMeans {
 private:
 	int emissions; // number of clusters to be created
-	int totalValues; // dimension of the input points (x,y,z)
+	int totalValues; // dimension of the input points (x,y,z,rotx,roty,rotz,royw)
 	int maxIterations, totalPoints;
 	int averagePoints; // average number of points per sequence
 	std::vector <Cluster> clusters; // vector of clusters

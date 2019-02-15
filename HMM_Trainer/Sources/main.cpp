@@ -61,11 +61,11 @@ string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
-int numStates = 6;
+int numStates = 7;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
-int numEmissions = 8;
+int numEmissions = 7;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 100;
+int hmmTries = 1000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 0;
 
@@ -218,7 +218,6 @@ int main() {
                 //Calculating probability for "trackerNames" based on given HMM:
 //                cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
-                
 //                cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
                 trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
        file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";

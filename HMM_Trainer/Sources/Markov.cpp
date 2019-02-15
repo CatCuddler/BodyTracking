@@ -360,19 +360,19 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 			}
 		}
 		
-		// Calculate log probability
+		// Calculate log probabilit
 		prevProbability = probability;
         vector<double> v(sequenceSize,0);
 		for(int l = 0; l < sequenceSize; l++) {
             probability = 0;
-			for (int t = 0; t < sequence.at(0).size(); t++) {
+			for (int t = 0; t < sequence.at(l).size(); t++) {
 				probability -= log(c.at(l).at(t));
             }
 			
            v.at(l)= probability;
         }
         sort(v.begin(), v.end());
-        probability = v.at(0);
+        probability = v.at(10);
 		// Save log probability threshold
 		probabilityThreshold = probability;
 	}
