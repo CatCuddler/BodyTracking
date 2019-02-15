@@ -4,6 +4,8 @@
 #include <Kore/Log.h>
 
 #include <algorithm>
+#include <iterator>
+#include <valarray>
 
 namespace {
 	const char hmmPath[] = "../../HMM_Trainer/Tracking/";
@@ -107,7 +109,7 @@ bool HMM::stopRecognition() {
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
 				float n = 0;
 				n = model.calculateProbability(clusteredPoints);
-				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", n, model.getProbabilityThreshold() * 6);
+				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", n, model.getProbabilityThreshold());
 				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold());
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
@@ -139,9 +141,10 @@ bool HMM::stopRecognitionAndIdentify() {
 		char hmmNameWithNum[50];
 		// Read clusters for all trackers from file
 		bool trackersPresent[numOfDataPoints];
-		vector<vector<KMeans>> kmeanVector(3);
+		vector<vector<KMeans>> kmeanVector(3, vector <KMeans> (numOfDataPoints));
 		for (int ii = 0; ii < numOfDataPoints; ii++) {
 			try {
+				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
 				KMeans kmeans0(hmmPath0, hmmNameWithNum);
                 KMeans kmeans1(hmmPath1, hmmNameWithNum);
@@ -157,13 +160,11 @@ bool HMM::stopRecognitionAndIdentify() {
 		}
 		// Store which trackers were recognised as the correct
 		vector<bool> trackerMovementRecognised(numOfDataPoints, true);
-		vector<vector<int>>clusteredPoints(3);
-		vector<vector<double>>probabilityCurrentmovement(3);
-        vector<int>identifyProbability(0,6);
+		vector<vector<int>>clusteredPoints(3, vector <int>());
+		
+        vector<int>identifyProbability(6,0);
 		// Create 3 HHModel for 3 different movement
-        HMMModel model0(hmmPath0, hmmNameWithNum);
-        HMMModel model1(hmmPath1, hmmNameWithNum);
-        HMMModel model2(hmmPath2, hmmNameWithNum);
+       
 		for (int ii = 0; ii < numOfDataPoints; ii++) {
 			// Make sure the tracker is currently present and there is a HMM for it
 			if (!recognitionPoints.at(ii).empty() && trackersPresent[ii]) {
@@ -172,16 +173,21 @@ bool HMM::stopRecognitionAndIdentify() {
                 clusteredPoints.at(1) = kmeanVector.at(1).at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(1).at(ii).getAveragePoints()));
                 clusteredPoints.at(2) = kmeanVector.at(2).at(ii).matchPointsToClusters(normaliseMeasurements(recognitionPoints.at(ii), kmeanVector.at(2).at(ii).getAveragePoints()));
 				// Reading HMM
-				
+				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-               
-				probabilityCurrentmovement.at(0).at(ii)=model0.calculateProbability(clusteredPoints.at(0));
-                probabilityCurrentmovement.at(1).at(ii)=model1.calculateProbability(clusteredPoints.at(1));
-                probabilityCurrentmovement.at(2).at(ii)=model2.calculateProbability(clusteredPoints.at(2));
-
-                auto maxPosition = max_element(probabilityCurrentmovement.begin(), probabilityCurrentmovement.end());
-               identifyProbability.push_back((int)(maxPosition - probabilityCurrentmovement.begin()));
-           
+				HMMModel model0(hmmPath0, hmmNameWithNum);
+				HMMModel model1(hmmPath1, hmmNameWithNum);
+				HMMModel model2(hmmPath2, hmmNameWithNum);
+				double probabilityCurrentmovement[3] = { model0.calculateProbability(clusteredPoints.at(0)),model1.calculateProbability(clusteredPoints.at(1)),model2.calculateProbability(clusteredPoints.at(2)) };
+			
+				Kore::log(Kore::LogLevel::Info, "model0: (%f,%f)", model0.calculateProbability(clusteredPoints.at(0)), model0.getProbabilityThreshold());
+				Kore::log(Kore::LogLevel::Info, "model1: (%f,%f)", model1.calculateProbability(clusteredPoints.at(1)), model1.getProbabilityThreshold());
+				Kore::log(Kore::LogLevel::Info, "model2: (%f,%f)", model2.calculateProbability(clusteredPoints.at(2)), model2.getProbabilityThreshold());
+			
+			//	Kore::log(Kore::LogLevel::Info, "max: (%f)", probabilityCurrentmovement.end());
+				const int N = sizeof(probabilityCurrentmovement) / sizeof(int);
+				identifyProbability.push_back(distance(probabilityCurrentmovement, max_element(probabilityCurrentmovement, probabilityCurrentmovement + N)));
+				Kore::log(Kore::LogLevel::Info, "position: (%d)", distance(probabilityCurrentmovement, max_element(probabilityCurrentmovement, probabilityCurrentmovement + N)));
 			}
 		}
         int n0,n1,n2 = -1;
@@ -189,35 +195,39 @@ bool HMM::stopRecognitionAndIdentify() {
         n1= count(identifyProbability.begin(),identifyProbability.end(),1);
         n2= count(identifyProbability.begin(),identifyProbability.end(),2);
 		logger.analyseHMM(hmmName, 0, true);
-        if(n0 >= n1 && n0>= n2){
+		Kore::log(Kore::LogLevel::Info, "Probability: (%d,%d,%d)", n0,n1,n2);
+        if(n0 > n1 && n0 > n2){
             log(Kore::Info, "Current movement is recognized as Pose 1.");
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
-            trackerMovementRecognised.at(ii) = (model0.calculateProbability(clusteredPoints.at(0)) > model0.getProbabilityThreshold());
-              }
+      //      for (int ii = 0; ii < numOfDataPoints; ii++) {
+    //        trackerMovementRecognised.at(ii) = (model0.calculateProbability(clusteredPoints.at(0)) > model0.getProbabilityThreshold());
+	//		Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", model0.calculateProbability(clusteredPoints.at(0)), model0.getProbabilityThreshold());
+     //         }
         }
-        if(n1 >= n0 && n1>= n2){
+        if(n1 > n0 && n1> n2){
             log(Kore::Info, "Current movement is recognized as Pose 2.");
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
-                trackerMovementRecognised.at(ii) = (model1.calculateProbability(clusteredPoints.at(1)) > model1.getProbabilityThreshold());
-            }
+       //     for (int ii = 0; ii < numOfDataPoints; ii++) {
+        //        trackerMovementRecognised.at(ii) = (model1.calculateProbability(clusteredPoints.at(1)) > model1.getProbabilityThreshold());
+	//			Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", model1.calculateProbability(clusteredPoints.at(1)), model1.getProbabilityThreshold());
+        //    }
         }
-        else if(n2 >= n0 && n2>= n1)
+        else if(n2 > n0 && n2> n1)
         {
             log(Kore::Info, "Current movement is recognized as Pose 3.");
-            for (int ii = 0; ii < numOfDataPoints; ii++) {
-                trackerMovementRecognised.at(ii) = (model2.calculateProbability(clusteredPoints
-                                                    .at(2)) > model2.getProbabilityThreshold());
+          //  for (int ii = 0; ii < numOfDataPoints; ii++) {
+          //      trackerMovementRecognised.at(ii) = (model2.calculateProbability(clusteredPoints
+           //                                         .at(2)) > model2.getProbabilityThreshold());
+		//		Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f)", model2.calculateProbability(clusteredPoints.at(2)), model2.getProbabilityThreshold());
             }
         }
         else{log(Kore::Info, "None movement is recognized");}
-        if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+   //     if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
 			// All (present) trackers were recognised as correct
-			return true;
-		} else {
-			return false;
-		}
-	}
-	return false;
+	//		return true;
+	//	} else {
+//			return false;
+	//	}
+//	}
+//	return false;
 }
 
 bool HMM::hmmActive() {
