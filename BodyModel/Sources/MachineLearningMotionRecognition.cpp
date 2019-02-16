@@ -28,10 +28,19 @@ namespace {
 	bool currentlyRecognizing = false;
 
 	// Audio cues
-	// TODO: -replace placeholder sounds with specific sounds for each task, and a proper error sound
 	Kore::Sound* startRecordingSound;
 	Kore::Sound* stopRecordingSound;
 	Kore::Sound* wrongSound;
+	Kore::Sound* joggingSound;
+	Kore::Sound* kickSound;
+	Kore::Sound* kickPunchSound;
+	Kore::Sound* lateralBoundingSound;
+	Kore::Sound* lungesSound;
+	Kore::Sound* punchSound;
+	Kore::Sound* sittingSound;
+	Kore::Sound* squatsSound;
+	Kore::Sound* standingSound;
+	Kore::Sound* walkingSound;
 
 	// Weka access through the Java Native Interface JNI
 	JavaVM *java_VirtualMachine;				// Pointer to the JVM (Java Virtual Machine)
@@ -46,6 +55,17 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	startRecordingSound = new Kore::Sound("sound/start.wav");
 	stopRecordingSound = new Kore::Sound("sound/stop.wav");
 	wrongSound = new Kore::Sound("sound/wrong.wav");
+	joggingSound = new Kore::Sound("sound/mlmr/jogging.wav");
+	kickSound = new Kore::Sound("sound/mlmr/kick.wav");
+	kickPunchSound = new Kore::Sound("sound/mlmr/kickPunch.wav");
+	lateralBoundingSound = new Kore::Sound("sound/mlmr/bounding.wav");
+	lungesSound = new Kore::Sound("sound/mlmr/lunges.wav");
+	punchSound = new Kore::Sound("sound/mlmr/punch.wav");
+	sittingSound = new Kore::Sound("sound/mlmr/sitting.wav");
+	squatsSound = new Kore::Sound("sound/mlmr/squats.wav");
+	standingSound = new Kore::Sound("sound/mlmr/standing.wav");
+	walkingSound = new Kore::Sound("sound/mlmr/walking.wav");
+
 
 	// state debugging information
 	if (operatingMode == RecordMovements) {
@@ -60,8 +80,41 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult) {
 
 	// convert and print result string
-	const char *charResult = (*env).GetStringUTFChars(jStringResult, 0);
+	const char* charResult = (*env).GetStringUTFChars(jStringResult, 0);
 	Kore::log(Kore::LogLevel::Info, "%s", charResult);
+	
+	
+	if (strcmp(charResult, "jogging") == 0) {
+		Kore::Audio1::play(joggingSound);
+	} 
+	else if (strcmp(charResult, "kick") == 0) {
+		Kore::Audio1::play(kickSound);
+	}
+	else if (strcmp(charResult, "kickPunch") == 0) {
+		Kore::Audio1::play(kickPunchSound);
+	}
+	else if (strcmp(charResult, "lateralBounding") == 0) {
+		Kore::Audio1::play(lateralBoundingSound);
+	}
+	else if (strcmp(charResult, "lunges") == 0) {
+		Kore::Audio1::play(lungesSound);
+	}
+	else if (strcmp(charResult, "punch") == 0) {
+		Kore::Audio1::play(punchSound);
+	}
+	else if (strcmp(charResult, "sitting") == 0) {
+		Kore::Audio1::play(sittingSound);
+	}
+	else if (strcmp(charResult, "squats") == 0) {
+		Kore::Audio1::play(squatsSound);
+	}
+	else if (strcmp(charResult, "standing") == 0) {
+		Kore::Audio1::play(standingSound);
+	}
+	else if (strcmp(charResult, "walking") == 0) {
+		Kore::Audio1::play(walkingSound);
+	}
+	
 
 	//release the string to	avoid memory leak
 	(*env).ReleaseStringUTFChars(jStringResult, charResult);
@@ -289,13 +342,16 @@ void MachineLearningMotionRecognition::processMovementData(
 	}
 	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
-			java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
-				java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
-				(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),
-				(jdouble)rawRot.x, (jdouble)rawRot.y, (jdouble)rawRot.z, (jdouble)rawRot.w,
-				(jdouble)rawAngVel.x(), (jdouble)rawAngVel.y(), (jdouble)rawAngVel.z(),
-				(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
-				(jdouble)1, (jdouble)time);
+			if (tag == "rForeArm" || tag == "lLeg") {
+				java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+					java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
+					(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),
+					(jdouble)rawRot.x, (jdouble)rawRot.y, (jdouble)rawRot.z, (jdouble)rawRot.w,
+					(jdouble)rawAngVel.x(), (jdouble)rawAngVel.y(), (jdouble)rawAngVel.z(),
+					(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
+					(jdouble)1, (jdouble)time);
+			}
+
 
 
 			/*
