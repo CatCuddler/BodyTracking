@@ -25,6 +25,21 @@ Open VisualStudio or Xcode project in BodyModel/build <br />
 Change to "Release" mode. <br />
 Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose deployment directory
 
+
+### JNI integration
+This fork of the project uses the Java Native Interface to recognize movements with Weka
+In order to use JNI:
+1. Install JDK (Java Development Kit) 11
+2. Add <JDK-x64-Install-Directory>\bin\server to the PATH variable of your Windows installation
+3. Restart your computer
+4. Add <JDK-x64-Install-Directory>\include and <JDK-x64-Install-Directory>\include\win32 to the include directories of your compiler
+(for Visual Studio, right-click on project in Solution Explorer -> Properties -> Configuration Properties -> C/C++ -> General -> Additional Include Directories)
+5. Add <JDK-x64-Install-Directory>\lib\jvm.lib to the linker input files as additional dependencies
+(for Visual Studio, right-click on project in Solution Explorer -> Properties -> Configuration Properties -> Linker -> Input -> Additional Dependencies)
+
+For a detailled description of these steps with screenshots, see https://codeproject.com/Articles/993067/Calling-Java-from-Cplusplus-with-JNI
+
+
 ### Avatar Calibration
 1. Strap one Vive Tracker on your left foot and another one on your right foot (above ankles)
 2. Strap the third Vive tracker on your waist

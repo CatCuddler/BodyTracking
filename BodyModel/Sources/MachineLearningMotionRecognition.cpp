@@ -9,6 +9,10 @@
 
 #include <algorithm>
 
+#include <iostream>
+#include <jni.h>
+#include <windows.h>
+
 
 namespace {
 
@@ -28,6 +32,12 @@ namespace {
 	Kore::Sound* startRecordingSound;
 	Kore::Sound* stopRecordingSound;
 	Kore::Sound* wrongSound;
+
+	// Weka access through the Java Native Interface JNI
+	JavaVM *java_VirtualMachine;				// Pointer to the JVM (Java Virtual Machine)
+	JNIEnv *java_JNI;				// Pointer to native interface
+	jobject java_WekaObject;
+	jmethodID java_addDataPointToClassifier;
 }
 
 MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logger) : logger(logger) {
@@ -43,8 +53,144 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	}
 	else if (operatingMode == RecognizeMovements) {
 		Kore::log(Kore::LogLevel::Info, "Motion Recognition ready to recognize incoming movements");
+		initializeJavaNativeInterface();
 	}
 }
+
+void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult) {
+
+	// convert and print result string
+	const char *charResult = (*env).GetStringUTFChars(jStringResult, 0);
+	Kore::log(Kore::LogLevel::Info, "%s", charResult);
+
+	//release the string to	avoid memory leak
+	(*env).ReleaseStringUTFChars(jStringResult, charResult);
+
+}
+
+void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
+
+	// type signature reference for method construction:
+	// https://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276
+	// JNI setup example:
+	// https://www.codeproject.com/Articles/993067/Calling-Java-from-Cplusplus-with-JNI
+
+
+	//==================== prepare loading of Java VM ============================
+
+	JavaVMInitArgs vm_args;                        // Initialization arguments
+	JavaVMOption* options = new JavaVMOption[1];   // JVM invocation options
+	// where to find the java .class or .jar to load
+	// name the folder for single class files, name the jar (including .jar) for classes within a jar
+	options[0].optionString =
+		"-Djava.class.path=../../MachineLearningMotionRecognition/Weka/WekaMotionRecognitionForCpp-1.0-jar-with-dependencies.jar";
+	vm_args.version = JNI_VERSION_1_6;             // minimum Java version
+	vm_args.nOptions = 1;                          // number of options
+	vm_args.options = options;
+	vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
+
+	//================= load and initialize Java VM and JNI interface ===============
+
+	// There WILL be an exception caused by a JVM internal bugfix for certain old operating systems
+	// It is handled by the JVM as well and can be ignored
+	Kore::log(Kore::LogLevel::Info,
+		"The following exception is produced and handled by the Java Virtual Machine, to test for an old OS bug. It can be ignored:");
+	// actually load the JVM, causing the exception
+	jint rc = JNI_CreateJavaVM(&java_VirtualMachine, (void**)&java_JNI, &vm_args);
+	delete options;    // we then no longer need the initialisation options. 
+	Kore::log(Kore::LogLevel::Info,
+		"The previous exception is produced and handled by the Java Virtual Machine, to test for an old OS bug. It can be ignored.");
+	//========================= output error or success  ==============================
+	// if process interuped before error is returned, it is often because jvm.dll can't be found,
+	// e.g. because its directory is not in the PATH system environment variable
+
+	if (rc != JNI_OK) {
+		if (rc == JNI_EVERSION)
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR: JVM is oudated and doesn't meet requirements");
+		else if (rc == JNI_ENOMEM)
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR: not enough memory for JVM");
+		else if (rc == JNI_EINVAL)
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR: invalid ragument for launching JVM");
+		else if (rc == JNI_EEXIST)
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR: the process can only launch one JVM and not more");
+		else
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR:  could not create the JVM instance (error code %i)", rc);
+		exit(EXIT_FAILURE);
+	}
+	else {
+		Kore::log(Kore::LogLevel::Info, "JVM loaded without errors");
+	}
+
+	// GetVersion returns the major version number in the higher 16 bits and the minor version number in the lower 16 bits
+	jint nativeMethodInterfaceVersion = java_JNI->GetVersion();
+	int nmiMajorVersion = (int)(nativeMethodInterfaceVersion >> 16);
+	int nmiMinorVersion = (int)(nativeMethodInterfaceVersion & 0x0f);
+	Kore::log(Kore::LogLevel::Info,
+		"Loaded Java Virtual Machine for Weka motion recognition through Java Native Interface, version %i.%i",
+		nmiMajorVersion, nmiMinorVersion);
+
+
+	// try to find the class
+	jclass java_WekaClass = java_JNI->FindClass("com/romanuhlig/weka/lifeClassification/CppDataClassifier");
+
+
+	if (java_WekaClass == nullptr) {
+		Kore::log(Kore::LogLevel::Error, "JNI ERROR: class not found!");
+	}
+	else {
+		// if class found, continue
+		Kore::log(Kore::LogLevel::Info, "Java class found");
+
+		// Register native output method in Java class
+		JNINativeMethod methods[]
+		{ { "outputClassifierResultToCpp", "(Ljava/lang/String;)V", (void *)&outputClassifierResultFromWeka } };  // mapping table
+
+		if (java_JNI->RegisterNatives(java_WekaClass, methods, 1) < 0) {                        // register it
+			if (java_JNI->ExceptionOccurred())                                        // verify if it's ok
+				Kore::log(Kore::LogLevel::Error, "JNI ERROR: exception when registreing naives!");
+			else
+				Kore::log(Kore::LogLevel::Error, "JNI ERROR: problem when registreing naives!");
+		}
+
+		// create the java object
+		// find the object constructor
+		jmethodID java_WekaClassConstructor = java_JNI->GetMethodID(java_WekaClass, "<init>", "()V");
+		if (java_WekaClassConstructor == nullptr) {
+			Kore::log(Kore::LogLevel::Error, "JNI ERROR: constructor not found!");
+		}
+		else {
+			// create the actual java object
+			java_WekaObject = java_JNI->NewObject(java_WekaClass, java_WekaClassConstructor);
+			Kore::log(Kore::LogLevel::Info, "JNI: Object succesfully constructed");
+
+			if (java_WekaObject) {
+				// get a method from the object
+				java_addDataPointToClassifier = java_JNI->GetMethodID(java_WekaClass, "addFrameData",
+					"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DDDDDDDDDDDDDDD)V");
+				if (java_addDataPointToClassifier == nullptr) {
+					Kore::log(Kore::LogLevel::Error, "JNI ERROR: No addDataPoint method");
+				}
+				else {
+					//java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+					//	java_JNI->NewStringUTF("pos"), java_JNI->NewStringUTF("subj"), java_JNI->NewStringUTF("activi"),
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1, (jdouble)1,
+					//	(jdouble)1, (jdouble)1);
+
+				}
+			}
+		}
+
+	}
+
+
+}
+
+
+
+
 
 bool MachineLearningMotionRecognition::isCurrentlyRecording() {
 	return (currentlyRecording);
@@ -97,14 +243,22 @@ void MachineLearningMotionRecognition::stopRecording() {
 }
 
 void MachineLearningMotionRecognition::startRecognition() {
-	Kore::log(Kore::Error, "Motion Recognition not yet implemented");
+	Kore::log(Kore::Info, "Motion Recognition started");
 	currentlyRecognizing = true;
 }
 
-bool MachineLearningMotionRecognition::stopRecognition() {
-	Kore::log(Kore::Error, "Motion Recognition not yet implemented");
+void MachineLearningMotionRecognition::stopRecognition() {
+	Kore::log(Kore::Info, "Motion Recognition stopped");
 	currentlyRecognizing = false;
-	return false;
+}
+
+void MachineLearningMotionRecognition::toggleRecognition() {
+	if (currentlyRecognizing) {
+		stopRecognition();
+	}
+	else {
+		startRecognition();
+	}
 }
 
 bool MachineLearningMotionRecognition::isProcessingMovementData() {
@@ -124,7 +278,7 @@ void MachineLearningMotionRecognition::processMovementData(
 	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
 	float scale, double time) {
 
-	if (currentlyRecording) {
+	if (operatingMode == recordMovements) {
 		logger.saveMotionRecognitionData(
 			tag, currentTestSubjectID.c_str(), taskCurrentlyRecording.c_str(), 
 			rawPos, desPos, finalPos,
@@ -133,6 +287,28 @@ void MachineLearningMotionRecognition::processMovementData(
 			rawLinVel, desLinVel,
 			scale, time);
 	}
+	else if (operatingMode == recognizeMovements) {
+		if (currentlyRecognizing) {
+			java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+				java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
+				(jdouble)calPos.x(), (jdouble)calPos.y(), (jdouble)calPos.z(),
+				(jdouble)calRot.x, (jdouble)calRot.y, (jdouble)calRot.z, (jdouble)calRot.w,
+				(jdouble)angVel.x(), (jdouble)angVel.y(), (jdouble)angVel.z(),
+				(jdouble)linVel.x(), (jdouble)linVel.y(), (jdouble)linVel.z(),
+				(jdouble)1, (jdouble)time);
+
+
+			/*
+						java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
+							java_JNI->NewStringUTF("pos"), java_JNI->NewStringUTF("subj"), java_JNI->NewStringUTF("activi"),
+							(jdouble)calPos.x, (jdouble)calPos.y, (jdouble)calPos.z,
+							(jdouble)calRot.x, (jdouble)calRot.y, (jdouble)calRot.z, (jdouble)calRot.w,
+							(jdouble)angVel.x, (jdouble)angVel.y, (jdouble)angVel.z,
+							(jdouble)linVel.x, (jdouble)linVel.y, (jdouble)linVel.z,
+							(jdouble)scale, (jdouble)time);*/
+		}
+	}
+
 }
 
 bool MachineLearningMotionRecognition::isActive() {
@@ -190,6 +366,15 @@ void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool f
 		case Kore::KeyNumpad0:
 			taskNextToRecord = task_00;
 			startRecording(fullyCalibratedAvatar);
+		default:
+			break;
+		}
+	}
+	else if (operatingMode == recognizeMovements) {
+		switch (code) {
+			// end the recording if space is pressed
+		case Kore::KeySpace:
+			toggleRecognition();
 			break;
 		default:
 			break;

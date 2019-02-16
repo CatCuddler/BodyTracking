@@ -4,6 +4,8 @@
 #include "kMeans.h"
 #include "Markov.h"
 #include <Kore/Input/Keyboard.h>
+#include <iostream>
+#include <jni.h>
 
 class MachineLearningMotionRecognition {
 
@@ -47,10 +49,13 @@ private:
 	void stopRecording();
 
 	void startRecognition();
-	bool stopRecognition();
+	void stopRecognition();
+	void toggleRecognition();
 
 	bool isCurrentlyRecording();
 	bool isCurrentlyRecognizing();
+
+	void initializeJavaNativeInterface();
 
 
 
