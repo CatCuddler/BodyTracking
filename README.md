@@ -29,13 +29,15 @@ Change working directory in Xcode: Edit Scheme -> Use custom working directory -
 ### JNI integration
 This fork of the project uses the Java Native Interface to recognize movements with Weka
 In order to use JNI:
-- Install JDK (Java Development Kit) 11
-- Add <JDK-x64-Install-Directory>/bin/server to the PATH variable of your Windows installation
-- Add <JDK-x64-Install-Directory>/include and <JDK-x64-Install-Directory>/include/win32 to the include directories of your compiler
+1. Install JDK (Java Development Kit) 11
+2. Add <JDK-x64-Install-Directory>\bin\server to the PATH variable of your Windows installation
+3. Restart your computer
+4. Add <JDK-x64-Install-Directory>\include and <JDK-x64-Install-Directory>\include\win32 to the include directories of your compiler
 (for Visual Studio, right-click on project in Solution Explorer -> Properties -> Configuration Properties -> C/C++ -> General -> Additional Include Directories)
-- Add <JDK-x64-Install-Directory>/lib/jvm.lib to the linker input files as additional dependencies
+5. Add <JDK-x64-Install-Directory>\lib\jvm.lib to the linker input files as additional dependencies
 (for Visual Studio, right-click on project in Solution Explorer -> Properties -> Configuration Properties -> Linker -> Input -> Additional Dependencies)
-For a detailled description of these steps with screenshots, see codeproject.com/Articles/993067/Calling-Java-from-Cplusplus-with-JNI
+
+For a detailled description of these steps with screenshots, see https://codeproject.com/Articles/993067/Calling-Java-from-Cplusplus-with-JNI
 
 
 ### Avatar Calibration

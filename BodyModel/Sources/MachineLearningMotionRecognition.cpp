@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <jni.h>
+#include <windows.h>
 
 
 namespace {
@@ -83,7 +84,7 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 	// name the folder for single class files, name the jar (including .jar) for classes within a jar
 	options[0].optionString =
 		"-Djava.class.path=../../MachineLearningMotionRecognition/Weka/WekaMotionRecognitionForCpp-1.0-jar-with-dependencies.jar";
-	vm_args.version = JNI_VERSION_1_8;             // minimum Java version
+	vm_args.version = JNI_VERSION_1_6;             // minimum Java version
 	vm_args.nOptions = 1;                          // number of options
 	vm_args.options = options;
 	vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
@@ -96,13 +97,12 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 		"The following exception is produced and handled by the Java Virtual Machine, to test for an old OS bug. It can be ignored:");
 	// actually load the JVM, causing the exception
 	jint rc = JNI_CreateJavaVM(&java_VirtualMachine, (void**)&java_JNI, &vm_args);
+	delete options;    // we then no longer need the initialisation options. 
 	Kore::log(Kore::LogLevel::Info,
 		"The previous exception is produced and handled by the Java Virtual Machine, to test for an old OS bug. It can be ignored.");
-	delete options;    // we then no longer need the initialisation options. 
-
 	//========================= output error or success  ==============================
-	// if process interuped before error is returned, it's because jvm.dll can't be 
-	// found, i.e.  its directory is not in the PATH. 
+	// if process interuped before error is returned, it is often because jvm.dll can't be found,
+	// e.g. because its directory is not in the PATH system environment variable
 
 	if (rc != JNI_OK) {
 		if (rc == JNI_EVERSION)
@@ -117,6 +117,9 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 			Kore::log(Kore::LogLevel::Error, "JNI ERROR:  could not create the JVM instance (error code %i)", rc);
 		exit(EXIT_FAILURE);
 	}
+	else {
+		Kore::log(Kore::LogLevel::Info, "JVM loaded without errors");
+	}
 
 	// GetVersion returns the major version number in the higher 16 bits and the minor version number in the lower 16 bits
 	jint nativeMethodInterfaceVersion = java_JNI->GetVersion();
@@ -129,6 +132,8 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 
 	// try to find the class
 	jclass java_WekaClass = java_JNI->FindClass("com/romanuhlig/weka/lifeClassification/CppDataClassifier");
+
+
 	if (java_WekaClass == nullptr) {
 		Kore::log(Kore::LogLevel::Error, "JNI ERROR: class not found!");
 	}
