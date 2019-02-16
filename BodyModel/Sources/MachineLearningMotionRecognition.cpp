@@ -278,7 +278,7 @@ void MachineLearningMotionRecognition::processMovementData(
 	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
 	float scale, double time) {
 
-	if (operatingMode == recordMovements) {
+	if (operatingMode == RecordMovements) {
 		logger.saveMotionRecognitionData(
 			tag, currentTestSubjectID.c_str(), taskCurrentlyRecording.c_str(), 
 			rawPos, desPos, finalPos,
@@ -287,14 +287,14 @@ void MachineLearningMotionRecognition::processMovementData(
 			rawLinVel, desLinVel,
 			scale, time);
 	}
-	else if (operatingMode == recognizeMovements) {
+	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
 			java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
 				java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
-				(jdouble)calPos.x(), (jdouble)calPos.y(), (jdouble)calPos.z(),
-				(jdouble)calRot.x, (jdouble)calRot.y, (jdouble)calRot.z, (jdouble)calRot.w,
-				(jdouble)angVel.x(), (jdouble)angVel.y(), (jdouble)angVel.z(),
-				(jdouble)linVel.x(), (jdouble)linVel.y(), (jdouble)linVel.z(),
+				(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),
+				(jdouble)rawRot.x, (jdouble)rawRot.y, (jdouble)rawRot.z, (jdouble)rawRot.w,
+				(jdouble)rawAngVel.x(), (jdouble)rawAngVel.y(), (jdouble)rawAngVel.z(),
+				(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
 				(jdouble)1, (jdouble)time);
 
 
@@ -370,7 +370,7 @@ void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool f
 			break;
 		}
 	}
-	else if (operatingMode == recognizeMovements) {
+	else if (operatingMode == RecognizeMovements) {
 		switch (code) {
 			// end the recording if space is pressed
 		case Kore::KeySpace:
