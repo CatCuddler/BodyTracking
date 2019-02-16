@@ -325,8 +325,6 @@ namespace {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			
-			// TODO: -replace placholder vectors with actual data, once integrated in endEffector API
-			// TODO: -add additional sensor types, name and calibrate them
 			// Save calibrated data to either train Motion Recognizer or to recognize a movement
 			if (motionRecognizer->isProcessingMovementData()) {
 
@@ -356,7 +354,6 @@ namespace {
 
 					desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
 					
-					//TODO: - check toQuaternion function, and whether this produces the desired result
 					Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
 					desAngVel = initRotInv.rotated(rawAngVelQuat);
 
@@ -423,7 +420,6 @@ namespace {
 
 			desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
 
-			//TODO: - check toQuaternion function, and whether this produces the desired result
 			Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
 			desAngVel = initRotInv.rotated(rawAngVelQuat);
 
