@@ -342,7 +342,9 @@ void MachineLearningMotionRecognition::processMovementData(
 	}
 	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
-			if (tag == "rForeArm" || tag == "lLeg") {
+
+			if (tag == "rForeArm" || tag == "lLeg" || tag == "lForeArm" || tag == "rLeg" 
+				|| tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "head") {
 				java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
 					java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
 					(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),

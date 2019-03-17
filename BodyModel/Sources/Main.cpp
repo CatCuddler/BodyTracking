@@ -744,18 +744,10 @@ namespace {
 		if (!controllerButtonsInitialized) initButtons();
 		
 		VrPoseState vrDevice;
-		
-		log(Info, "going to update endeffectors");
-
 
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 
-			log(Info, "updating endeffector");
-
 			if (endEffector[i]->getDeviceIndex() != -1) {
-
-				log(Info, "check 1");
-
 
 				if (i == head) {
 					SensorState state = VrInterface::getSensorState(0);
