@@ -85,7 +85,8 @@ vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, 
 			// if the vector at the currentTracker position is not empty
 			if (!currentDataSet.at(currentTracker).empty()) {
 				// normalises a given data set of one tracker, matches it to the clusters of the given kMeans and adds it to the returnVector at the tracker's postition
-           returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
+                returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
+//         returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker),30)));
 			}
 		}
 	}
@@ -142,9 +143,9 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		
 		string fullPath;
 		// if the amount of files is > 1 create a different file for each file
-		if (fileAmount != 1) fullPath = (trainingFilePathKMeans + fileName + to_string(kk) + ".csv");
+		if (fileAmount != 1) fullPath = (validationFilePathKMeans + fileName + to_string(kk) + ".csv");
 		// else only create one path
-		else fullPath = (trainingFilePathKMeans + fileName + ".csv");
+		else fullPath = (validationFilePathKMeans + fileName + ".csv");
 		
 		if (ifstream(fullPath)) {
 			f.open(fullPath);

@@ -118,7 +118,7 @@ bool HMM::stopRecognition() {
 		
 		logger.analyseHMM(hmmName, 0, true);
 //        int truenumber = 0;
-//        for(int i=0;i<6;i++) {
+//        for(int i=0;i<numOfDataPoints;i++) {
 //            if (trackerMovementRecognised.at(i) == true) {
 //                truenumber++;
 //            }

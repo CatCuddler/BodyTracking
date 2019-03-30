@@ -61,11 +61,11 @@ string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
-int numStates = 7;
+int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 7;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 1000;
+int hmmTries = 100;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 0;
 
@@ -166,85 +166,98 @@ int main() {
 	}
 	
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
-	else if (calculateSingleProbability) {
+    else if (calculateSingleProbability) {
         int count=0;
-		cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
-		cout << "Loading cluster coordinates.\n";
-		vector<KMeans> kmeanVector(6);
-		bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
-		for (int ii = 0; ii < 6; ii++) {
-			try {
-				KMeans kmeans(writeFilePath, writeFileName + "_" + to_string(ii));
-				kmeanVector.at(ii) = kmeans;
-				cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
-				trackersPresent[ii] = true;
-			} catch (invalid_argument) {
-				trackersPresent[ii] = false;
-			}
-		}
-		cout << "\n";
-         int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
+        cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
+        cout << "Loading cluster coordinates.\n";
+        vector<KMeans> kmeanVector(6);
+        bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
+        for (int ii = 0; ii < 6; ii++) {
+            try {
+                KMeans kmeans(writeFilePath, writeFileName + "_" + to_string(ii));
+                kmeanVector.at(ii) = kmeans;
+                cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
+                trackersPresent[ii] = true;
+            } catch (invalid_argument) {
+                trackersPresent[ii] = false;
+            }
+        }
+        cout << "\n";
+        int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
         cout<< "Validation test for "<<validationFileNumber <<" Files."<< "\n";
-		cout << "Sorting new data sets into clusters. ";
-       
+        cout << "Sorting new data sets into clusters. ";
+        
         vector<vector<Point>> currentDataSet;
         file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
-        int thresholdIndex [5] = {1,2,3,4,5};
-        for (int &index : thresholdIndex){
-        count=0;
-        vector<int>singlePointCount(6,0);
-        for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
-            currentMovement = validationFileName + to_string(currentFile);
-            file << "\nValidation test of file:"<< currentMovement<<";\n";
-		vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
-//        cout << "Normalised data sets clustered. \n";
-		
-		if (debug) { // console output of clusters
-			for (int kk = 0; kk < 6; kk++) {
-				cout << "\n";
-				if (!dataClusters.at(kk).empty()) {
-					cout << trackerNames[kk] << " clusters: \n";
-					for (int &singleClusterNumber : dataClusters.at(kk).at(0)) {
-						cout << singleClusterNumber << " ";
-					}
-					cout << "\n";
-				}
-			}
-		}
-       
-		vector<bool> trackerMovementRecognised(6, true);
-		for (int ii = 0; ii < 6; ii++) {
-			if (trackersPresent[ii]) {
-                //Calculating probability for "trackerNames" based on given HMM:
-//                cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
-				HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
-//                cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
-                trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
-       file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
-			}
-            if(trackerMovementRecognised.at(ii)==1)
-                singlePointCount.at(ii)++;
-		}
-            bool result;
-            if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
-                // All (present) trackers were recognised as correct
-                result = true;
-                count++;
-            } else {
-                result = false;
-              
+        double thresholdIndex [4] = {1,1.5,2,3};
+        for (double &index : thresholdIndex){
+            count=0;
+            vector<int>singlePointCount(6,0);
+            vector<vector<double>>probabilityMean(6,vector<double>());
+            for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
+                currentMovement = validationFileName + to_string(currentFile);
+                file << "\nValidation test of file:"<< currentMovement<<";\n";
+                vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
+                //        cout << "Normalised data sets clustered. \n";
+                
+                if (debug) { // console output of clusters
+                    for (int kk = 4; kk < 5; kk++) {
+                        cout << "\n";
+                        if (!dataClusters.at(kk).empty()) {
+                            cout << trackerNames[kk] << " clusters: \n";
+                            for (int &singleClusterNumber : dataClusters.at(kk).at(0)) {
+                                cout << singleClusterNumber << " ";
+                            }
+                            cout << "\n";
+                        }
+                    }
+                }
+                
+                vector<bool> trackerMovementRecognised(6, true);
+                
+                for (int ii = 0; ii < 6; ii++) {
+                    if (trackersPresent[ii]) {
+                        //Calculating probability for "trackerNames" based on given HMM:
+                        //                cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
+                        HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
+                        //                cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
+                        trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
+                        if(!isnan(model.calculateProbability(dataClusters.at(ii).at(0)))&&model.calculateProbability(dataClusters.at(ii).at(0))>-3000)
+                            probabilityMean.at(ii).push_back(model.calculateProbability(dataClusters.at(ii).at(0)));
+                        file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold()<<";"<<trackerMovementRecognised.at(ii)<<"\n";
+                    }
+                    if(trackerMovementRecognised.at(ii)==1)
+                        singlePointCount.at(ii)++;
+                }
+                bool result;
+                if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+                    // All (present) trackers were recognised as correct
+                    result = true;
+                    count++;
+                } else {
+                    result = false;
+                    
+                }
+                
+                //            file<<"The result is "<<result<<".\n";
             }
-            file<<"The result is "<<result<<".\n";
-            	  }
-        double probability = (double)count/validationFileNumber;
-        file<<"The recognition probability is "<<probability <<".\n";
-        cout<<"Threshold index is "<< index<<";"<<"Probability: "<<probability <<".\n";
+            for (int ii = 0; ii < 6; ii++) {
+                double mean = accumulate( probabilityMean.at(ii).begin(), probabilityMean.at(ii).end(), 0.0)/probabilityMean.at(ii).size();
+//                cout<<"Mean value of "<<trackerNames[ii]<<" is "<< mean<<".\n";
+            }
+            double probability = (double)count/validationFileNumber;
+            file<<"The recognition probability is "<<probability <<".\n";
+            
+            cout<<"Threshold index is "<< index<<";"<<"Probability: "<<probability <<".\n";
             cout<<"The right percentage of each point are: ";
+            file<<"The right percentage of each point are: ";
             for (const auto &element : singlePointCount) {
                 cout<<element<<",";
+                file<<element<<",";
             }
+            file<<";\n";
             cout<<endl;
-    }
+        }
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
 	else if (optimiseMovementRecognition) {
