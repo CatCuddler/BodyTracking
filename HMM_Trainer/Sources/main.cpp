@@ -39,9 +39,9 @@ bool createHMM = false;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
+bool optimiseMovementRecognition = true;
 // Calculating the probability for a data set based on an already existing HMM.
-bool calculateSingleProbability = true;
+bool recognitionTest = false;
 // Show debug messages on console
 bool debug= false;
 
@@ -65,7 +65,7 @@ int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 8)
 int numEmissions = 7;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 100;
+int hmmTries = 10000;
 // Left to right depth of HMM; 0 leaves the start points to be random
 int lrDepth = 0;
 
@@ -166,7 +166,7 @@ int main() {
 	}
 	
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
-    else if (calculateSingleProbability) {
+    else if (recognitionTest) {
         int count=0;
         cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
         cout << "Loading cluster coordinates.\n";
@@ -201,7 +201,7 @@ int main() {
                 //        cout << "Normalised data sets clustered. \n";
                 
                 if (debug) { // console output of clusters
-                    for (int kk = 4; kk < 5; kk++) {
+                    for (int kk = 0; kk < 6; kk++) {
                         cout << "\n";
                         if (!dataClusters.at(kk).empty()) {
                             cout << trackerNames[kk] << " clusters: \n";
@@ -243,7 +243,7 @@ int main() {
             }
             for (int ii = 0; ii < 6; ii++) {
                 double mean = accumulate( probabilityMean.at(ii).begin(), probabilityMean.at(ii).end(), 0.0)/probabilityMean.at(ii).size();
-//                cout<<"Mean value of "<<trackerNames[ii]<<" is "<< mean<<".\n";
+                cout<<"Mean value of "<<trackerNames[ii]<<" is "<< mean<<".\n";
             }
             double probability = (double)count/validationFileNumber;
             file<<"The recognition probability is "<<probability <<".\n";
@@ -263,10 +263,10 @@ int main() {
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
         const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
-        const int lrDepthAmount =3;
-        const int randomRangeState = 10;//maximum value (of course, this must be at least the same as AMOUNT;
-        const int randomRangeEmission = 10;
-        const int randomlrDepth =10;
+        const int lrDepthAmount =1;
+        const int randomRangeState = 100;//maximum value (of course, this must be at least the same as AMOUNT;
+        const int randomRangeEmission = 100;
+        const int randomlrDepth =0;
 		// Open threads
 		thread t[num_threads];
 		// Creates file for data and writes first row giving information about the data to come
@@ -311,7 +311,7 @@ int main() {
             int n; //variable to store the number in
             do
             {
-                n=1+rand()%randomRangeState;
+                n=16+rand()%randomRangeState;
                 //check or number is already used:
                 check=true;
                 for (int j=0;j<i;j++)

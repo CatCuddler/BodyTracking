@@ -143,9 +143,9 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		
 		string fullPath;
 		// if the amount of files is > 1 create a different file for each file
-		if (fileAmount != 1) fullPath = (validationFilePathKMeans + fileName + to_string(kk) + ".csv");
-		// else only create one path
-		else fullPath = (validationFilePathKMeans + fileName + ".csv");
+		if (fileAmount != 1) fullPath = (trainingFilePathKMeans + fileName + to_string(kk) + ".csv");
+		// else only create one pathtraining
+		else fullPath = (trainingFilePathKMeans + fileName + ".csv");
 		
 		if (ifstream(fullPath)) {
 			f.open(fullPath);
@@ -271,7 +271,7 @@ int KMeans::getIDClosestCenter(Point point) {
 }
 /********************************************************************************
  * method:        Calculate final distance for Kmeans
- * description:   Calculate the sithin-cluster sum of squares，later used for elbow method to determin K
+ * description:   Calculate the within-cluster sum of squares，later used for elbow method to determin K
  ********************************************************************************/
 double KMeans::getFinalDistance(vector<Point> & points){
     double wss = 0.0;
