@@ -35,11 +35,11 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = false;
+bool createHMM = true;
 // Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = true;
+bool optimiseMovementRecognition = false;
 // Calculating the probability for a data set based on an already existing HMM.
 bool recognitionTest = false;
 // Show debug messages on console
@@ -263,10 +263,10 @@ int main() {
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
         const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
-        const int lrDepthAmount =1;
+        const int lrDepthAmount =3;
         const int randomRangeState = 100;//maximum value (of course, this must be at least the same as AMOUNT;
         const int randomRangeEmission = 100;
-        const int randomlrDepth =0;
+        const int randomlrDepth =2;
 		// Open threads
 		thread t[num_threads];
 		// Creates file for data and writes first row giving information about the data to come
@@ -275,7 +275,7 @@ int main() {
 		
 		// Variables to be used in training
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-//        if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
+//      if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
     //  Grid search
 	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
     //  Random search
@@ -311,7 +311,7 @@ int main() {
             int n; //variable to store the number in
             do
             {
-                n=16+rand()%randomRangeState;
+                n=1+rand()%randomRangeState;
                 //check or number is already used:
                 check=true;
                 for (int j=0;j<i;j++)
