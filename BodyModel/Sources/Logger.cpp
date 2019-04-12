@@ -15,6 +15,7 @@ Logger::Logger() {
 Logger::~Logger() {
 	logDataReader.close();
 	logdataWriter.close();
+	motionRecognitionWriter.close();
 	hmmWriter.close();
 	hmmAnalysisWriter.close();
 }
@@ -44,6 +45,76 @@ void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRo
 	// Save position and rotation
 	logdataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
 	logdataWriter.flush();
+}
+
+void Logger::startMotionRecognitionLogger(const char* filename) {
+	time_t t = time(0);   // Get time now
+
+	char logFileName[100];
+	sprintf(logFileName, "%s_%li.csv", filename, t);
+
+	motionRecognitionWriter.open(logFileName, std::ios::app); // Append to the end
+
+	// Append header
+	//"tag;subject;activity;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
+
+	motionRecognitionWriter  
+		<< "tag;subject;activity;"
+		
+		<< "rawPosX;rawPosY;rawPosZ;"
+		<< "desPosX;desPosY;desPosZ;"
+		<< "finalPosX;finalPosY;finalPosZ;"
+
+		<< "rawRotX;rawRotY;rawRotZ;rawRotW;"
+		<< "desRotX;desRotY;desRotZ;desRotW;"
+		<< "finalRotX;finalRotY;finalRotZ;finalRotW;"
+
+		<< "rawAngVelX;rawAngVelY;rawAngVelZ;"
+		<< "desAngVelX;desAngVelY;desAngVelZ;desAngVelW;"
+		
+		<< "rawLinVelX;rawLinVelY;rawLinVelZ;"
+		<< "desLinVelX;desLinVelY;desLinVelZ;"
+
+		<< "scale;time\n";
+
+	motionRecognitionWriter.flush();
+
+}
+
+void Logger::endMotionRecognitionLogger() {
+	motionRecognitionWriter.flush();
+	motionRecognitionWriter.close();
+}
+
+void Logger::saveMotionRecognitionData(
+	const char* tag, const char* subject, const char* activity, 
+	Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+	Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+	Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+	float scale, double time) {
+
+	// Save position, rotation, angular and linear velocity
+	motionRecognitionWriter 
+		<< tag << ";" << subject << ";" << activity << ";"
+		
+		<< rawPos.x() << ";" << rawPos.y() << ";" << rawPos.z() << ";"
+		<< desPos.x() << ";" << desPos.y() << ";" << desPos.z() << ";"
+		<< finalPos.x() << ";" << finalPos.y() << ";" << finalPos.z() << ";"
+		
+		<< rawRot.x << ";" << rawRot.y << ";" << rawRot.z << ";" << rawRot.w << ";"
+		<< desRot.x << ";" << desRot.y << ";" << desRot.z << ";" << desRot.w << ";"
+		<< finalRot.x << ";" << finalRot.y << ";" << finalRot.z << ";" << finalRot.w << ";"
+		
+		<< rawAngVel.x() << ";" << rawAngVel.y() << ";" << rawAngVel.z() << ";"
+		<< desAngVel.x << ";" << desAngVel.y << ";" << desAngVel.z << ";" << desAngVel.w << ";"
+		
+		<< rawLinVel.x() << ";" << rawLinVel.y() << ";" << rawLinVel.z() << ";"
+		<< desLinVel.x() << ";" << desLinVel.y() << ";" << desLinVel.z() << ";"
+
+		<< scale << ";" << time << "\n";
+
+	motionRecognitionWriter.flush();
 }
 
 void Logger::startHMMLogger(const char* filename, int num) {
@@ -166,7 +237,7 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 		rawPos[i] = Kore::vec3(posX, posY, posZ);
 		rawRot[i] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
 		
-		if (logDataReader.fail() || logDataReader.eof()) {
+		if (logDataReader.eof()) {
 			logDataReader.close();
 			return false;
 		}

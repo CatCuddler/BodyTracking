@@ -1,10 +1,21 @@
-import React from 'react';
-import { compose, withPropsOnChange, withHandlers } from 'recompose';
-import { get, groupBy as _groupBy, sortBy as _sortBy } from 'lodash';
-import { ResponsiveLine } from './line';
-import colorsMaterial from './colors';
+import React from "react";
+import { compose, withPropsOnChange, withHandlers } from "recompose";
+import { get, groupBy as _groupBy, sortBy as _sortBy } from "lodash";
+import { createComponent } from "react-fela";
+import { ResponsiveLine } from "./line";
+import colorsMaterial from "./colors";
 
-const labelScale = ['', 'min-max norm', 'z-score norm'];
+const labelScale = ["", "min-max norm", "z-score norm"];
+
+const Div = createComponent(() => ({
+  flexGrow: 1,
+  marginLeft: "1rem",
+  display: "flex",
+  flexDirection: "column",
+  "& text": {
+    fontSize: "35px !important"
+  }
+}));
 
 const averageDuplicates = (data, searchIndex = 0, values = []) => {
   // searchIndex is at the end
@@ -41,18 +52,18 @@ const averageDuplicates = (data, searchIndex = 0, values = []) => {
 };
 
 const enhance = compose(
-  withPropsOnChange(['selectedFiles'], ({ selectedFiles }) => ({
+  withPropsOnChange(["selectedFiles"], ({ selectedFiles }) => ({
     large: selectedFiles.length > 1
   })),
   withPropsOnChange(
     [
-      'files',
-      'selectedFiles',
-      'selectedFields',
-      'sortBy',
-      'groupBy',
-      'min',
-      'max'
+      "files",
+      "selectedFiles",
+      "selectedFields",
+      "sortBy",
+      "groupBy",
+      "min",
+      "max"
     ],
     ({
       files,
@@ -79,9 +90,9 @@ const enhance = compose(
         selectedFields.forEach(field => {
           extendedFields.push(field);
 
-          if (min && get(selectedFiles, [0, 'values', `${field} Min`], []))
+          if (min && get(selectedFiles, [0, "values", `${field} Min`], []))
             extendedFields.push(`${field} Min`);
-          if (max && get(selectedFiles, [0, 'values', `${field} Max`], []))
+          if (max && get(selectedFiles, [0, "values", `${field} Max`], []))
             extendedFields.push(`${field} Max`);
         });
 
@@ -98,13 +109,13 @@ const enhance = compose(
 
               xData[field].push(file[groupBy]);
               yData[field].push(
-                get(file, ['values', field], []).reduce(
+                get(file, ["values", field], []).reduce(
                   (p, c, i, a) => p + c / a.length,
                   0
                 )
               );
               sortData[field].push(
-                groupBy === 'mode' ? file.modeNumber : file[groupBy]
+                groupBy === "mode" ? file.modeNumber : file[groupBy]
               );
             });
           });
@@ -123,17 +134,17 @@ const enhance = compose(
               groupNames.length > 1
                 ? index
                 : Object.keys(xData).findIndex(
-                    x => x === field.replace(' Min', '').replace(' Max', '')
+                    x => x === field.replace(" Min", "").replace(" Max", "")
                   );
             const palette =
-              (min && field.includes(' Min')) || (max && field.includes(' Max'))
+              (min && field.includes(" Min")) || (max && field.includes(" Max"))
                 ? 1
                 : 6;
 
             data.push({
               id: groupNames.length > 1 ? `${field} [${group}]` : field,
               data: chartData,
-              color: get(colorsMaterial, [color, 'palette', palette], 'black')
+              color: get(colorsMaterial, [color, "palette", palette], "black")
             });
           });
         });
@@ -149,10 +160,10 @@ const enhance = compose(
             fileName => file.name === fileName
           );
           const minValues = min
-            ? get(file, ['values', `${field} Min`], [])
+            ? get(file, ["values", `${field} Min`], [])
             : [];
           const maxValues = max
-            ? get(file, ['values', `${field} Max`], [])
+            ? get(file, ["values", `${field} Max`], [])
             : [];
 
           if (minValues.length)
@@ -166,8 +177,8 @@ const enhance = compose(
               })),
               color: get(
                 colorsMaterial,
-                [selectedFiles.length === 1 ? j : index, 'palette', 1],
-                'black'
+                [selectedFiles.length === 1 ? j : index, "palette", 1],
+                "black"
               )
             });
           if (maxValues.length)
@@ -181,8 +192,8 @@ const enhance = compose(
               })),
               color: get(
                 colorsMaterial,
-                [selectedFiles.length === 1 ? j : index, 'palette', 1],
-                'black'
+                [selectedFiles.length === 1 ? j : index, "palette", 1],
+                "black"
               )
             });
 
@@ -190,14 +201,14 @@ const enhance = compose(
             id: !large
               ? field
               : `${field} - #${index + 1} [${sortBy}: ${file[sortBy]}]`,
-            data: get(file, ['values', field], []).map((y, x) => ({
+            data: get(file, ["values", field], []).map((y, x) => ({
               x: x + 1,
               y: parseFloat(y)
             })),
             color: get(
               colorsMaterial,
-              [selectedFiles.length === 1 ? j : index, 'palette', 6],
-              'black'
+              [selectedFiles.length === 1 ? j : index, "palette", 6],
+              "black"
             )
           });
         });
@@ -206,7 +217,7 @@ const enhance = compose(
       return { data };
     }
   ),
-  withPropsOnChange(['scale', 'data'], ({ scale, data }) => ({
+  withPropsOnChange(["scale", "data"], ({ scale, data }) => ({
     // scale values from 0% to 100%
     data:
       scale === 1 || scale === -1
@@ -227,22 +238,24 @@ const enhance = compose(
           })
         : data
   })),
-  withPropsOnChange(['files', 'data'], ({ files, data }) => {
+  withPropsOnChange(["files", "data"], ({ files, data }) => {
     if (files.length === 1) return {};
 
     // reduce all data to consistent length
     data.forEach(d => {
       d.data.forEach(({ x }) => {
-        data.filter(d2 => d2.id !== d.id).forEach(d2 => {
-          if (d2.data.findIndex(({ x: x2 }) => x2 === x) < 0)
-            d2.data.push({ x, y: null });
-        });
+        data
+          .filter(d2 => d2.id !== d.id)
+          .forEach(d2 => {
+            if (d2.data.findIndex(({ x: x2 }) => x2 === x) < 0)
+              d2.data.push({ x, y: null });
+          });
       });
     });
 
     return { data };
   }),
-  withPropsOnChange(['data', 'scale'], ({ data: d, scale }) => {
+  withPropsOnChange(["data", "scale"], ({ data: d, scale }) => {
     if (scale === 2)
       return {
         data: d.map(({ data, ...rest }) => {
@@ -276,17 +289,17 @@ const enhance = compose(
 
     return { data: d };
   }),
-  withPropsOnChange(['data', 'average'], ({ data: d, average: a }) => {
+  withPropsOnChange(["data", "average"], ({ data: d, average: a }) => {
     if (a) {
       const filteredData = d.filter(
-        ({ id }) => !id.includes(' Min') && !id.includes(' Max')
+        ({ id }) => !id.includes(" Min") && !id.includes(" Max")
       );
       const average = {
-        id: 'Average',
+        id: "Average",
         color: get(
           colorsMaterial,
-          [a === 1 ? filteredData.length : 0, 'palette', 6],
-          'black'
+          [a === 1 ? filteredData.length : 0, "palette", 6],
+          "black"
         ),
         data: []
       };
@@ -307,7 +320,7 @@ const enhance = compose(
 
     return {};
   }),
-  withPropsOnChange(['data', 'interpolate'], ({ data, interpolate }) => {
+  withPropsOnChange(["data", "interpolate"], ({ data, interpolate }) => {
     const tickValues = [];
     let min = Infinity;
     let max = 0;
@@ -356,17 +369,17 @@ const enhance = compose(
 
     return { data, tickValues };
   }),
-  withPropsOnChange(['data', 'average'], ({ data: d, average }) => {
+  withPropsOnChange(["data", "average"], ({ data: d, average }) => {
     const markers = [];
 
-    d.filter(({ id }) => !id.includes(' Min') && !id.includes(' Max')).forEach(
+    d.filter(({ id }) => !id.includes(" Min") && !id.includes(" Max")).forEach(
       ({ data, id }, i) => {
         let min = Infinity;
         let minX;
         let max = -Infinity;
         let maxX;
 
-        if (id === 'Average' || !average)
+        if (id === "Average" || !average)
           data.forEach(({ x, y }) => {
             if (y < min) {
               min = y;
@@ -382,36 +395,36 @@ const enhance = compose(
           const index = markers.findIndex(m => m.value === minX);
 
           if (index >= 0) {
-            markers[index].legend = 'multiple extrema';
-            markers[index].lineStyle.stroke = 'black';
+            markers[index].legend = "multiple extrema";
+            markers[index].lineStyle.stroke = "black";
           } else
             markers.push({
-              axis: 'x',
+              axis: "x",
               value: minX,
               lineStyle: {
-                stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+                stroke: get(colorsMaterial, [i, "palette", 3], "black"),
                 strokeWidth: 1
               },
               legend: `min ${id} [${minX}, ${min}]`,
-              legendOrientation: 'vertical'
+              legendOrientation: "vertical"
             });
         }
         if (maxX !== undefined) {
           const index = markers.findIndex(m => m.value === maxX);
 
           if (index >= 0) {
-            markers[index].legend = 'multiple extrema';
-            markers[index].lineStyle.stroke = 'black';
+            markers[index].legend = "multiple extrema";
+            markers[index].lineStyle.stroke = "black";
           } else
             markers.push({
-              axis: 'x',
+              axis: "x",
               value: maxX,
               lineStyle: {
-                stroke: get(colorsMaterial, [i, 'palette', 3], 'black'),
+                stroke: get(colorsMaterial, [i, "palette", 3], "black"),
                 strokeWidth: 1
               },
               legend: `max ${id} [${maxX}, ${max}]`,
-              legendOrientation: 'vertical'
+              legendOrientation: "vertical"
             });
         }
       }
@@ -421,14 +434,14 @@ const enhance = compose(
       markers
     };
   }),
-  withPropsOnChange(['data', 'tickValues'], ({ data, tickValues }) => {
+  withPropsOnChange(["data", "tickValues"], ({ data, tickValues }) => {
     let newTicks = [];
 
     if (!tickValues || !tickValues.length) {
-      get(data, [0, 'data'], []).forEach(({ x }) => newTicks.push(x));
+      get(data, [0, "data"], []).forEach(({ x }) => newTicks.push(x));
     } else newTicks = [...tickValues];
 
-    if (newTicks.join('').length > 90)
+    if (newTicks.join("").length > 20)
       newTicks = newTicks.filter((x, i) => i % 2 === 0);
 
     const numeric = !isNaN(get(newTicks, 0));
@@ -466,6 +479,8 @@ const Chart = ({
   tickValues,
   markers,
   large,
+  minY,
+  maxY,
   scale,
   tooltipFormat,
   selectedFields,
@@ -474,58 +489,52 @@ const Chart = ({
   extrema,
   numeric
 }) => (
-  <div
-    style={{
-      flexGrow: 1,
-      marginLeft: '1rem',
-      display: 'flex',
-      flexDirection: 'column'
-    }}
-  >
+  <Div>
     {!!data.length && (
       <ResponsiveLine
         data={data}
         margin={{
-          top: 5,
-          right: 25,
-          bottom: 60,
-          left: 50
+          top: 15,
+          right: 30,
+          bottom: 85,
+          left: 90
         }}
-        curve={numeric ? 'linear' : 'step'}
+        curve={numeric ? "linear" : "step"}
         markers={extrema ? markers : undefined}
         enableDots={false}
         animate
         colorBy={e => e.color}
         axisBottom={{
-          legend: groupBy || '# of cycle',
-          legendOffset: 36,
-          legendPosition: 'center',
+          legend: groupBy || "# of cycle",
+          legendOffset: 80,
+          legendPosition: "center",
           tickValues
         }}
         axisLeft={{
           legend: scale
             ? labelScale[Math.abs(scale)]
-            : [average ? 'Average' : null, ...selectedFields]
+            : [average ? "Average" : null, ...selectedFields]
                 .filter(x => x)
-                .join(', '),
-          legendOffset: -36,
-          legendPosition: 'center'
+                .join(", "),
+          legendOffset: -65,
+          legendPosition: "center"
         }}
         tooltipFormat={tooltipFormat}
-        minY={scale === 2 ? 'auto' : 0}
+        minY={parseInt(minY, 10) || (scale === 2 ? "auto" : 0)}
+        maxY={parseInt(maxY, 10) || "auto"}
         legends={[
           {
-            anchor: 'bottom-left',
-            direction: 'row',
-            translateX: -45,
-            translateY: 60,
+            anchor: "bottom-left",
+            direction: "row",
+            translateX: -65,
+            translateY: 80,
             itemWidth: !large ? 100 : 180,
             itemHeight: 20
           }
         ]}
       />
     )}
-  </div>
+  </Div>
 );
 
 export default enhance(Chart);

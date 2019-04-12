@@ -1,5 +1,5 @@
 {
-  "input": "../BodyModel/Deployment/eval",
+  "input": "Analyse/Messungen/lambda",
   "output": "",
-  "groupToFolderBy": false
+  "groupToFolderBy": "IK Mode"
 }

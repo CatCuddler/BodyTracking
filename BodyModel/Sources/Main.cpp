@@ -18,6 +18,9 @@
 #include "LivingRoom.h"
 #include "Logger.h"
 #include "HMM.h"
+#include "MachineLearningMotionRecognition.h"
+
+#include <algorithm> // std::sort
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -37,14 +40,20 @@ namespace {
 	const bool renderAxisForEndEffector = false;
 	
 	EndEffector** endEffector;
-	const int numOfEndEffectors = 6;
+	const int numOfEndEffectors = 12;
+
+	// if set to true, only five trackers (hip, left and right forearm, left and right leg) will be required
+	const bool onlyUseFullInverseKinematicTrackerSetup = true;
 	
 	Logger* logger;
+
+	MachineLearningMotionRecognition* motionRecognizer;
 	
 	HMM* hmm;
 	
 	double startTime;
 	double lastTime;
+
 	
 	// Audio cues
 	Sound* startRecordingSound;
@@ -104,7 +113,9 @@ namespace {
 	Kore::Quaternion initRot;
 	Kore::Quaternion initRotInv;
 	
-	bool calibratedAvatar = false;
+	bool calibratedAvatarScale = false;
+	bool calibratedAvatarControllersAndTrackers = false;
+	bool blockAllGamepadButtons = false;
 	
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
@@ -119,6 +130,44 @@ namespace {
 		viveObjects[index]->render(tex);
 	}
 	
+	mat4 getMirrorMatrix() {
+		Kore::Quaternion rot(0, 0, 0, 1);
+		rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
+		mat4 zMirror = mat4::Identity();
+		zMirror.Set(2, 2 , -1);
+		Kore::mat4 M = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		
+		return M;
+	}
+
+	bool calibratedAvatarCompletely() {
+		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
+	}
+	
+	void renderControllerAndTracker(int tracker, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
+		// World Transformation Matrix
+		Kore::mat4 W = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
+		
+		// Mirror Transformation Matrix
+		Kore::mat4 M = getMirrorMatrix() * W;
+		
+		if (tracker) {
+			// Render a tracker for both feet and back
+			renderVRDevice(0, W);
+			renderVRDevice(0, M);
+		} else {
+			// Render a controller for both hands
+			renderVRDevice(1, W);
+			renderVRDevice(1, M);
+		}
+		
+		// Render a local coordinate system only if the avatar is not calibrated
+		if (!calibratedAvatarCompletely()) {
+			renderVRDevice(2, W);
+			renderVRDevice(2, M);
+		}
+	}
+	
 	void renderAllVRDevices() {
 		Graphics4::setPipeline(pipeline);
 	
@@ -127,60 +176,25 @@ namespace {
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
-			vec3 pos = controller.vrPose.position;
-			Kore::Quaternion rot = controller.vrPose.orientation;
-			
-			Kore::mat4 M = mat4::Translation(pos.x(), pos.y(), pos.z()) * rot.matrix().Transpose();
-			
-			Kore::Quaternion yRot(0, 0, 0, 1);
-			yRot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
-			mat4 zMirror = mat4::Identity();
-			zMirror.Set(2, 2 , -1);
-			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * yRot.matrix().Transpose() * M;
+			vec3 desPosition = controller.vrPose.position;
+			Kore::Quaternion desRotation = controller.vrPose.orientation;
 			
 			if (controller.trackedDevice == TrackedDevice::ViveTracker) {
-				// Render a tracker for both feet and back
-				renderVRDevice(0, M);
-				renderVRDevice(0, mirrorM);
+				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (controller.trackedDevice == TrackedDevice::Controller) {
-				// Render a controller for both hands
-				renderVRDevice(1, M);
-				renderVRDevice(1, mirrorM);
+				renderControllerAndTracker(false, desPosition, desRotation);
 			}
-
-			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
-				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
-			}
+			
 		}
 #else
 		for(int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			Kore::mat4 M = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * desRotation.matrix().Transpose();
-			
-			Kore::Quaternion rot(0, 0, 0, 1);
-			rot.rotate(Kore::Quaternion(vec3(0, 1, 0), Kore::pi));
-			mat4 zMirror = mat4::Identity();
-			zMirror.Set(2, 2 , -1);
-			Kore::mat4 mirrorM = zMirror * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose() * M;
-			
-			if (i == hip || i == rightFoot || i == leftFoot) {
-				// Render a tracker for both feet and back
-				renderVRDevice(0, M);
-				renderVRDevice(0, mirrorM);
+			if (i == spine || i == hip || i == leftForeArm || i == rightForeArm || i == rightArm || i == leftFoot || i == leftLeg || i == rightFoot || i == rightLeg) {
+				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
-				// Render a controller for both hands
-				renderVRDevice(1, M);
-				renderVRDevice(1, mirrorM);
-			}
-			
-			// Render a local coordinate system only if the avatar is not calibrated
-			if (!calibratedAvatar) {
-				renderVRDevice(2, M);
-				renderVRDevice(2, mirrorM);
+				renderControllerAndTracker(false, desPosition, desRotation);
 			}
 		}
 #endif
@@ -222,11 +236,7 @@ namespace {
 		avatar->animate(tex);
 		
 		// Mirror the avatar
-		Kore::Quaternion rot = initRot;
-		rot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
-		mat4 mirrorMatrix = mat4::Identity();
-		mirrorMatrix.Set(2, 2 , -1);
-		mat4 initTransMirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * rot.matrix().Transpose();
+		mat4 initTransMirror = getMirrorMatrix() * initTrans;
 		
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
@@ -244,7 +254,55 @@ namespace {
 		return V;
 	}
 	
+
+	Kore::Quaternion toQuaternion(vec3 base)
+	{
+		// Abbreviations for the various angular functions
+		double cy = cos(base.z() * 0.5);
+		double sy = sin(base.z() * 0.5);
+		double cp = cos(base.y() * 0.5);
+		double sp = sin(base.y() * 0.5);
+		double cr = cos(base.x() * 0.5);
+		double sr = sin(base.x() * 0.5);
+
+		Kore::Quaternion q;
+
+		q.w = cy * cp * cr + sy * sp * sr;
+		q.x = cy * cp * sr - sy * sp * cr;
+		q.y = sy * cp * sr + cy * sp * cr;
+		q.z = sy * cp * cr - cy * sp * sr;
+
+		return q;
+	}
+
+	vec3 toEulerAngle(const Kore::Quaternion q)
+	{
+		// roll (x-axis rotation)
+		double roll;
+		double sinr_cosp = +2.0 * (q.w * q.x + q.y * q.z);
+		double cosr_cosp = +1.0 - 2.0 * (q.x * q.x + q.y * q.y);
+		roll = atan2(sinr_cosp, cosr_cosp);
+
+		// pitch (y-axis rotation)
+		double pitch;
+		double sinp = +2.0 * (q.w * q.y - q.z * q.x);
+		if (fabs(sinp) >= 1)
+			pitch = copysign(Kore::pi / 2, sinp); // use 90 degrees if out of range
+		else
+			pitch = asin(sinp);
+
+		// yaw (z-axis rotation)
+		double yaw;
+		double siny_cosp = +2.0 * (q.w * q.z + q.x * q.y);
+		double cosy_cosp = +1.0 - 2.0 * (q.y * q.y + q.z * q.z);
+		yaw = atan2(siny_cosp, cosy_cosp);
+
+		return vec3(roll, pitch, yaw);
+	}
+
+
 	void executeMovement(int endEffectorID) {
+
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
 
@@ -255,28 +313,170 @@ namespace {
 		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
-		if (calibratedAvatar) {
+		if (calibratedAvatarControllersAndTrackers) {
 			// Transform desired position/rotation to the character local coordinate system
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desRotation = initRotInv.rotated(desRotation);
-			
+
 			// Add offset
 			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
-			vec3 offserPosition = endEffector[endEffectorID]->getOffsetPosition();
+			vec3 offsetPosition = endEffector[endEffectorID]->getOffsetPosition();
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offserPosition.x(), offserPosition.y(), offserPosition.z()) * vec4(0, 0, 0, 1);
+			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-			} else {
+			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftLeg || endEffectorID == rightLeg) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			
+			// Save calibrated data to either train Motion Recognizer or to recognize a movement
+			if (motionRecognizer->isProcessingMovementData()) {
+
+				// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+				// if we do use VR sensors, the actual velocity can be used
+				vec3 rawAngVel;
+				Kore::Quaternion desAngVel;
+				vec3 rawLinVel;
+				vec3 desLinVel;
+				vec3 rawPosition;
+				Kore::Quaternion rawRotation;
+
+				
+				#ifdef KORE_STEAMVR
+
+					VrPoseState sensorState;
+					// The HMD is accessed slightly different from controllers and trackers
+					if (endEffectorID == head) {
+						sensorState = VrInterface::getSensorState(0).pose;
+					}
+					else {
+						sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+					}
+
+					rawLinVel = sensorState.linearVelocity;
+					rawAngVel = sensorState.angularVelocity;
+
+					desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+					
+					Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+					desAngVel = initRotInv.rotated(rawAngVelQuat);
+
+					rawPosition = sensorState.vrPose.position;
+					rawRotation = sensorState.vrPose.orientation;
+
+				#else
+					// these placeholder values are only meant for testing with predetermined movement sets, not for recording new data
+					rawAngVel = vec3(1, 2, 3);
+					desAngVel = desRotation;
+					rawLinVel = vec3(7, 8, 9);
+					desLinVel = rawLinVel;
+					rawPosition = desPosition;
+					rawRotation = desRotation;
+				#endif
+
+				motionRecognizer->processMovementData(
+					endEffector[endEffectorID]->getName(), 
+					rawPosition, desPosition, finalPos, 
+					rawRotation, desRotation, finalRot, 
+					rawAngVel, desAngVel, 
+					rawLinVel, desLinVel, 
+					avatar->scale, lastTime);
+			}
+
+
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+
+
+
+
+
+			//
+			//
+			//	Debug output
+			//
+			//
+
+
+
+			// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+			// if we do use VR sensors, the actual velocity can be used
+			vec3 rawAngVel;
+			Kore::Quaternion desAngVel;
+			vec3 rawLinVel;
+			vec3 desLinVel;
+			vec3 rawPosition;
+			Kore::Quaternion rawRotation;
+
+
+#ifdef KORE_STEAMVR
+
+			VrPoseState sensorState;
+			// The HMD is accessed slightly different from controllers and trackers
+			if (endEffectorID == head) {
+				sensorState = VrInterface::getSensorState(0).pose;
+			}
+			else {
+				sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+			}
+
+			rawLinVel = sensorState.linearVelocity;
+			rawAngVel = sensorState.angularVelocity;
+
+			desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+
+			Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+			desAngVel = initRotInv.rotated(rawAngVelQuat);
+
+			rawPosition = sensorState.vrPose.position;
+			rawRotation = sensorState.vrPose.orientation;
+
+
+			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desPos: (%f, %f, %f)   rawPos: (%f, %f, %f)",
+			//	endEffector[endEffectorID]->getName(),
+			//	desPosition.x(), desPosition.y(), desPosition.z(),
+			//	rawPosition.x(), rawPosition.y(), rawPosition.z());
+
+			//vec3 desRotationEuler = toEulerAngle(desRotation);
+			//vec3 rawRotationEuler = toEulerAngle(rawRotation);
+
+			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desRot: (%f, %f, %f)   rawRot: (%f, %f, %f)",
+			//	endEffector[endEffectorID]->getName(),
+			//	desRotationEuler.x(), desRotationEuler.y(), desRotationEuler.z(),
+			//	rawRotationEuler.x(), rawRotationEuler.y(), rawRotationEuler.z());
+
+#endif
+
 		}
+	}
+
+	
+	void updateTransAndRot() {
+		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
+		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
+		
+		initRot = hipRot;
+		initRotInv = initRot.invert();
+		
+		initTrans = mat4::Translation(hipPos.x(), hipPos.y(), hipPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
+	}
+	
+	void initTransAndRot() {
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
+		initRot.normalize();
+		initRotInv = initRot.invert();
+		
+		vec3 initPos = vec4(0, 0, 0, 1);
+		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
 	}
 	
 	void calibrate() {
+		initTransAndRot();
+		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
@@ -298,10 +498,11 @@ namespace {
 	void record() {
 		logRawData = !logRawData;
 		
-		if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		if (!logRawData && !motionRecognizer->isActive() && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 			Audio1::play(startRecordingSound);
 			logger->startLogger("logData");
-		} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		}
+		else if (logRawData && !motionRecognizer->isActive() && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
 			Audio1::play(stopRecordingSound);
 			logger->endLogger();
 		}
@@ -337,7 +538,6 @@ namespace {
 			}
 		}
 	}
-	
 
 #ifdef KORE_STEAMVR
 	void setSize() {
@@ -349,6 +549,8 @@ namespace {
 		
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
+
+		calibratedAvatarScale = true;
 		
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -358,11 +560,23 @@ namespace {
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
 		
-		log(Info, "%s: %i -> %i", endEffector[efID]->getName(), endEffector[efID]->getDeviceIndex(), deviceID);
+		log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
 	}
 	
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
+		
+		int numTrackers;
+		if (onlyUseFullInverseKinematicTrackerSetup) {
+			numTrackers = 5;
+		}
+		else {
+			numTrackers = 9;
+		}
+
+		int trackerCount = 0;
+		
+		std::vector<EndEffector*> trackers;
 		
 		// Get indices for VR devices
 		for (int i = 0; i < 16; ++i) {
@@ -371,32 +585,71 @@ namespace {
 			vec3 devicePos = vrDevice.vrPose.position;
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 			
-			// Transform desired position to the character local coordinate system
-			vec4 deviceTransPos = initTransInv * vec4(devicePos.x(), devicePos.y(), devicePos.z(), 1);
-			
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-				if (devicePos.y() < currentUserHeight / 3) {
-					// Foot tracker
-					if (deviceTransPos.x() > 0) {
-						initEndEffector(leftFoot, i, devicePos, deviceRot);
-						log(Info, "leftFoot: %i -> %i", endEffector[leftFoot]->getDeviceIndex(), i);
-					} else {
-						initEndEffector(rightFoot, i, devicePos, deviceRot);
-						log(Info, "rightFoot: %i -> %i", endEffector[rightFoot]->getDeviceIndex(), i);
+				EndEffector* tracker = new EndEffector(-1);
+				tracker->setDeviceIndex(i);
+				tracker->setDesPosition(devicePos);
+				tracker->setDesRotation(deviceRot);
+				trackers.push_back(tracker);
+				
+				++trackerCount;
+				if (trackerCount == numTrackers) {
+					// Sort trackers regarding the y-Axis (height)
+					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
+					
+
+					if (onlyUseFullInverseKinematicTrackerSetup) {
+
+						// Left or Right Leg
+						// Sort first two trackers regarding the z-Axis (left-right)
+						std::sort(trackers.begin(), trackers.begin() + 2, sortByZAxis());
+						initEndEffector(leftLeg, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+						initEndEffector(rightLeg, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+
+						// Hip
+						initEndEffector(hip, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
+						
+						// Left Fore Arm or Right Fore Arm
+						std::sort(trackers.begin() + 3, trackers.begin() + 5, sortByZAxis());
+						initEndEffector(leftForeArm, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+						initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+
 					}
-				} else {
-					// Hip tracker
-					initEndEffector(hip, i, devicePos, deviceRot);
-					log(Info, "hip: %i -> %i", endEffector[hip]->getDeviceIndex(), i);
+					else {
+
+						// Left or Right Foot
+						// Sort first two trackers regarding the z-Axis (left-right)
+						std::sort(trackers.begin(), trackers.begin() + 2, sortByZAxis());
+						initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+						initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+					
+						// Left or Right Leg
+						std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
+						initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
+						initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+					
+						// Hip
+						initEndEffector(hip, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+					
+						// Spine
+						initEndEffector(spine, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
+					
+						// Left Fore Arm, Right Fore Arm or Right Arm
+						std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
+						initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
+						initEndEffector(rightArm, trackers[7]->getDeviceIndex(), trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
+						initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
+					}
+
 				}
+				
+				
 			} else if (vrDevice.trackedDevice == TrackedDevice::Controller) {
 				// Hand controller
-				if (deviceTransPos.x() > 0) {
-					initEndEffector(leftHand, i, devicePos, deviceRot);
-					log(Info, "leftHand: %i -> %i", endEffector[leftHand]->getDeviceIndex(), i);
-				} else {
+				if (devicePos.z() > 0) {
 					initEndEffector(rightHand, i, devicePos, deviceRot);
-					log(Info, "rightHand: %i -> %i", endEffector[rightHand]->getDeviceIndex(), i);
+				} else {
+					initEndEffector(leftHand, i, devicePos, deviceRot);
 				}
 			}
 		}
@@ -411,9 +664,27 @@ namespace {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
+
+		// disable buttons if Motion Recognizer is currently recording data, to avoid e.g. avatar re-calibration
+		if (motionRecognizer->isRecordingMovementData()) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons are disabled during Movement Data recording");
+			return;
+		}
+
+		// disable buttons if they have been locked by keyboard
+		if (blockAllGamepadButtons) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons have been disabled by keyboard");
+			return;		
+		}
+
+		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
+
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
-			calibratedAvatar = false;
+			calibratedAvatarControllersAndTrackers = false;
+			initTransAndRot();
 			avatar->resetPositionAndRotation();
 			setSize();
 		}
@@ -422,7 +693,7 @@ namespace {
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
-			calibratedAvatar = true;
+			calibratedAvatarControllersAndTrackers = true;
 			log(Info, "Calibrate avatar");
 		}
 		
@@ -434,16 +705,23 @@ namespace {
 	
 	void initButtons() {
 		VrPoseState controller;
+
+		int count = 0;
 		
 		for (int i = 0; i < 16; ++i) {
 			controller = VrInterface::getController(i);
 			
-			if (controller.trackedDevice == TrackedDevice::Controller)
+			if (controller.trackedDevice == TrackedDevice::Controller) {
 				Gamepad::get(i)->Button = gamepadButton;
+				++count;
+				log(Info, "Add gamepad controller %i", count);
+			}
 		}
+
+		assert(count == 2);
+		controllerButtonsInitialized = true;
 	}
 #endif
-	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -466,7 +744,9 @@ namespace {
 		if (!controllerButtonsInitialized) initButtons();
 		
 		VrPoseState vrDevice;
+
 		for (int i = 0; i < numOfEndEffectors; ++i) {
+
 			if (endEffector[i]->getDeviceIndex() != -1) {
 
 				if (i == head) {
@@ -476,12 +756,30 @@ namespace {
 					endEffector[i]->setDesPosition(state.pose.vrPose.position);
 					endEffector[i]->setDesRotation(state.pose.vrPose.orientation);
 
+					vec3 velocity = state.pose.linearVelocity;
+					vec3 angularVelocity = state.pose.angularVelocity;
+					vec3 acceleration = state.pose.linearAcceleration;
+					vec3 angularAcceleration = state.pose.angularAcceleration;
+
+					// You can access linear and angular velocity
+					//log(Info, "linearVelocity %f %f %f", velocity.x(), velocity.y(), velocity.z());
+					//log(Info, "angularVelocity %f %f %f", angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+
+					// Acceleration vector will always be (0, 0, 0)
+					//log(Info, "linearAcceleration %f %f %f", acceleration.x(), acceleration.y(), acceleration.z());
+					//log(Info, "angularAcceleration %f %f %f", angularAcceleration.x(), angularAcceleration.y(), angularAcceleration.z());
+
 				} else {
 					vrDevice = VrInterface::getController(endEffector[i]->getDeviceIndex());
 
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+					
+					if (calibratedAvatarCompletely() && i == hip) {
+						// Update Local Coordinate System
+						updateTransAndRot();
+					}
 				}
 
 				executeMovement(i);
@@ -533,21 +831,35 @@ namespace {
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles && logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor)) {
+		if (currentFile < numFiles) {
+			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
+			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
+				
+				if (calibratedAvatarCompletely() && i == hip) {
+					// Update Local Coordinate System
+					updateTransAndRot();
+				}
 			}
 			
-			if (!calibratedAvatar) {
+			if (!calibratedAvatarControllersAndTrackers) {
 				avatar->resetPositionAndRotation();
 				avatar->setScale(scaleFactor);
+				calibratedAvatarScale = true;
 				calibrate();
-				calibratedAvatar = true;
+				calibratedAvatarControllersAndTrackers = true;
 			}
 			
-			for (int i = 0; i < numOfEndEffectors; ++i) executeMovement(i);
+			for (int i = 0; i < numOfEndEffectors; ++i) {
+				executeMovement(i);
+			}
 			
+			if (!dataAvailable) {
+				currentFile++;
+				calibratedAvatar = false;
+			}
 		} else {
 			if (eval) {
 				if (loop >= 0) {
@@ -587,9 +899,6 @@ namespace {
 						}
 					}
 				}
-			} else {
-				currentFile++;
-				calibratedAvatar = false;
 			}
 		}
 		
@@ -609,6 +918,8 @@ namespace {
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
+
+
 	
 	void keyDown(KeyCode code) {
 		switch (code) {
@@ -641,9 +952,35 @@ namespace {
 			case KeyQ:
 				System::stop();
 				break;
+				// simulate gamepad inputs
+			case Kore::KeyH:
+				gamepadButton(2, 1); // set avatar size
+				break;
+			case Kore::KeyK:
+				gamepadButton(1, 1); // calibrate controllers and trackers
+				break;
+			case Kore::KeyB:
+				blockAllGamepadButtons = !blockAllGamepadButtons;
+				if (blockAllGamepadButtons) {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been disabled by keyboard");
+				}
+				else {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been enabled by keyboard");
+				}
+				break;
 			default:
 				break;
 		}
+
+
+		// the motion recognizer handles its own input in order to start recording data for specific tasks
+		// uses the numpad and space bar (if the class is in use)
+		if (motionRecognizer->isActive()) {
+			motionRecognizer->processKeyDown(code, calibratedAvatarCompletely());
+		}
+
 	}
 	
 	void keyUp(KeyCode code) {
@@ -767,15 +1104,7 @@ namespace {
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
 #endif
 		
-		initRot = Kore::Quaternion(0, 0, 0, 1);
-		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
-		initRot.normalize();
-		initRotInv = initRot.invert();
-		
-		vec3 initPos = initTrans * vec4(0, 0, 0, 1);
-		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
-		initTransInv = initTrans.Invert();
+		initTransAndRot();
 		
 		// Set camera initial position and orientation
 		cameraPos = vec3(2.6, 1.8, 0.0);
@@ -811,16 +1140,26 @@ namespace {
 		}
 		
 		logger = new Logger();
+
+		motionRecognizer = new MachineLearningMotionRecognition(*logger);
 		
 		hmm = new HMM(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
+
 		endEffector[head] = new EndEffector(headBoneIndex);
+		endEffector[spine] = new EndEffector(spineBoneIndex);
 		endEffector[hip] = new EndEffector(hipBoneIndex);
 		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
+		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
 		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
+		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
+		endEffector[rightArm] = new EndEffector(rightArmBoneIndex);
 		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
+		endEffector[leftLeg] = new EndEffector(leftLegBoneIndex);
 		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
+		endEffector[rightLeg] = new EndEffector(rightLegBoneIndex);
+
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
