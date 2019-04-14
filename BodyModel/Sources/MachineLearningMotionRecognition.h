@@ -16,11 +16,11 @@ private:
 	// use this setting to disable the MotionRecognizer 
 	// or to switch between recording and recognizing movements
 	enum MotionRecognitionMode { RecordMovements, RecognizeMovements, Off };
-	const MotionRecognitionMode operatingMode = RecognizeMovements;
+	const MotionRecognitionMode operatingMode = Off;
 
 	// ID of the currently active user, to be used for 
 	// data differentiation after recording movements
-	const string currentTestSubjectID = "Bastian";
+	const string currentTestSubjectID = "TestSubjectName";
 
 	// the file name will be "user + task + session ID + optionalFileTag"
 	// The sessionID is incremented during runtime for each task. If you 

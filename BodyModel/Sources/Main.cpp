@@ -858,7 +858,8 @@ namespace {
 			
 			if (!dataAvailable) {
 				currentFile++;
-				calibratedAvatar = false;
+				calibratedAvatarScale = false;
+				calibratedAvatarControllersAndTrackers = false;
 			}
 		} else {
 			if (eval) {
@@ -952,6 +953,7 @@ namespace {
 			case KeyQ:
 				System::stop();
 				break;
+#ifdef KORE_STEAMVR
 				// simulate gamepad inputs
 			case Kore::KeyH:
 				gamepadButton(2, 1); // set avatar size
@@ -970,6 +972,7 @@ namespace {
 						"Gamepad Buttons have been enabled by keyboard");
 				}
 				break;
+#endif
 			default:
 				break;
 		}
