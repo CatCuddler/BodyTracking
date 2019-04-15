@@ -258,27 +258,28 @@ namespace {
 	}
 	
 
-	Kore::Quaternion toQuaternion(vec3 base)
+	// Convert a 3D vector to a quaternion
+	Kore::Quaternion toQuaternion(vec3 vector3D)
 	{
-		// Abbreviations for the various angular functions
-		double cy = cos(base.z() * 0.5);
-		double sy = sin(base.z() * 0.5);
-		double cp = cos(base.y() * 0.5);
-		double sp = sin(base.y() * 0.5);
-		double cr = cos(base.x() * 0.5);
-		double sr = sin(base.x() * 0.5);
+		double cosinusYaw = cos(vector3D.z() * 0.5);
+		double sinusYaw = sin(vector3D.z() * 0.5);
+		double cosinusPitch = cos(vector3D.y() * 0.5);
+		double sinusPitch = sin(vector3D.y() * 0.5);
+		double cosinusRoll = cos(vector3D.x() * 0.5);
+		double sinusRoll = sin(vector3D.x() * 0.5);
 
-		Kore::Quaternion q;
+		Kore::Quaternion quaternion;
 
-		q.w = cy * cp * cr + sy * sp * sr;
-		q.x = cy * cp * sr - sy * sp * cr;
-		q.y = sy * cp * sr + cy * sp * cr;
-		q.z = sy * cp * cr - cy * sp * sr;
+		quaternion.w = cosinusYaw * cosinusPitch * cosinusRoll + sinusYaw * sinusPitch * sinusRoll;
+		quaternion.x = cosinusYaw * cosinusPitch * sinusRoll - sinusYaw * sinusPitch * cosinusRoll;
+		quaternion.y = sinusYaw * cosinusPitch * sinusRoll + cosinusYaw * sinusPitch * cosinusRoll;
+		quaternion.z = sinusYaw * cosinusPitch * cosinusRoll - cosinusYaw * sinusPitch * sinusRoll;
 
-		return q;
+		return quaternion;
 	}
 
-	vec3 toEulerAngle(const Kore::Quaternion q)
+	// Convert a quaternion to euler angles
+	vec3 toEulerAngles(const Kore::Quaternion q)
 	{
 		// roll (x-axis rotation)
 		double roll;
