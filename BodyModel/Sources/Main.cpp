@@ -113,6 +113,7 @@ namespace {
 	Kore::Quaternion initRot;
 	Kore::Quaternion initRotInv;
 	
+	// safety checks for machine learning motion recognition
 	bool calibratedAvatarScale = false;
 	bool calibratedAvatarControllersAndTrackers = false;
 	bool blockAllGamepadButtons = false;
@@ -140,6 +141,8 @@ namespace {
 		return M;
 	}
 
+	// Whether the user has completet all calibration steps, 
+	// namely size calibration and sensor position calibration 
 	bool calibratedAvatarCompletely() {
 		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
 	}
@@ -310,7 +313,6 @@ namespace {
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		// Save data to either train hmm or to recognize a movement
-		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
 		
 		if (calibratedAvatarControllersAndTrackers) {
@@ -342,31 +344,29 @@ namespace {
 				vec3 rawPosition;
 				Kore::Quaternion rawRotation;
 
-				
+				// actual VR hardware present
 				#ifdef KORE_STEAMVR
 
 					VrPoseState sensorState;
-					// The HMD is accessed slightly different from controllers and trackers
+					// retrieve sensor or HMD state (data is the same, retrieval is slightly different)
 					if (endEffectorID == head) {
 						sensorState = VrInterface::getSensorState(0).pose;
-					}
-					else {
+					} else {
 						sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
 					}
 
+					// collect data
 					rawLinVel = sensorState.linearVelocity;
 					rawAngVel = sensorState.angularVelocity;
-
 					desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
-					
 					Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
 					desAngVel = initRotInv.rotated(rawAngVelQuat);
-
 					rawPosition = sensorState.vrPose.position;
 					rawRotation = sensorState.vrPose.orientation;
 
+				// no actual VR hardware present
 				#else
-					// these placeholder values are only meant for testing with predetermined movement sets, not for recording new data
+					// these placeholder values are only used for testing with predetermined movement sets, not for recording new data
 					rawAngVel = vec3(1, 2, 3);
 					desAngVel = desRotation;
 					rawLinVel = vec3(7, 8, 9);
@@ -375,6 +375,7 @@ namespace {
 					rawRotation = desRotation;
 				#endif
 
+				// forward data
 				motionRecognizer->processMovementData(
 					endEffector[endEffectorID]->getName(), 
 					rawPosition, desPosition, finalPos, 
@@ -384,69 +385,7 @@ namespace {
 					avatar->scale, lastTime);
 			}
 
-
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
-
-
-
-
-
-			//
-			//
-			//	Debug output
-			//
-			//
-
-
-
-			// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
-			// if we do use VR sensors, the actual velocity can be used
-			vec3 rawAngVel;
-			Kore::Quaternion desAngVel;
-			vec3 rawLinVel;
-			vec3 desLinVel;
-			vec3 rawPosition;
-			Kore::Quaternion rawRotation;
-
-
-#ifdef KORE_STEAMVR
-
-			VrPoseState sensorState;
-			// The HMD is accessed slightly different from controllers and trackers
-			if (endEffectorID == head) {
-				sensorState = VrInterface::getSensorState(0).pose;
-			}
-			else {
-				sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
-			}
-
-			rawLinVel = sensorState.linearVelocity;
-			rawAngVel = sensorState.angularVelocity;
-
-			desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
-
-			Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
-			desAngVel = initRotInv.rotated(rawAngVelQuat);
-
-			rawPosition = sensorState.vrPose.position;
-			rawRotation = sensorState.vrPose.orientation;
-
-
-			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desPos: (%f, %f, %f)   rawPos: (%f, %f, %f)",
-			//	endEffector[endEffectorID]->getName(),
-			//	desPosition.x(), desPosition.y(), desPosition.z(),
-			//	rawPosition.x(), rawPosition.y(), rawPosition.z());
-
-			//vec3 desRotationEuler = toEulerAngle(desRotation);
-			//vec3 rawRotationEuler = toEulerAngle(rawRotation);
-
-			//Kore::log(Kore::LogLevel::Info, "sensor: (%s)   desRot: (%f, %f, %f)   rawRot: (%f, %f, %f)",
-			//	endEffector[endEffectorID]->getName(),
-			//	desRotationEuler.x(), desRotationEuler.y(), desRotationEuler.z(),
-			//	rawRotationEuler.x(), rawRotationEuler.y(), rawRotationEuler.z());
-
-#endif
-
 		}
 	}
 
@@ -598,6 +537,7 @@ namespace {
 					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
 
+					// if requested, use only the 2 leg trackers, the 2 forearm trackers, and the hip tracker
 					if (onlyUseFullInverseKinematicTrackerSetup) {
 
 						// Left or Right Leg
@@ -615,6 +555,7 @@ namespace {
 						initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
 
 					}
+					// otherwise, use all 9 trackers
 					else {
 
 						// Left or Right Foot
@@ -672,14 +613,12 @@ namespace {
 			return;
 		}
 
-		// disable buttons if they have been locked by keyboard
+		// disable buttons if they have been locked by keyboard command
 		if (blockAllGamepadButtons) {
 			Kore::log(Kore::LogLevel::Warning,
 				"Gamepad Buttons have been disabled by keyboard");
 			return;		
 		}
-
-		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
 
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
@@ -977,14 +916,12 @@ namespace {
 			default:
 				break;
 		}
-
-
+		
 		// the motion recognizer handles its own input in order to start recording data for specific tasks
-		// uses the numpad and space bar (if the class is in use)
+		// uses the numpad number keys, and the space bar (if the class is in use)
 		if (motionRecognizer->isActive()) {
 			motionRecognizer->processKeyDown(code, calibratedAvatarCompletely());
 		}
-
 	}
 	
 	void keyUp(KeyCode code) {
