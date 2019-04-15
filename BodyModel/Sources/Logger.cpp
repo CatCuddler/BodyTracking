@@ -48,16 +48,14 @@ void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRo
 }
 
 void Logger::startMotionRecognitionLogger(const char* filename) {
-	time_t t = time(0);   // Get time now
+	time_t t = time(0);   // Get current time
 
+	// create a new file with the given name
 	char logFileName[100];
 	sprintf(logFileName, "%s_%li.csv", filename, t);
-
 	motionRecognitionWriter.open(logFileName, std::ios::app); // Append to the end
 
-	// Append header
-	//"tag;subject;activity;calPosX;calPosY;calPosZ;calRotX;calRotY;calRotZ;calRotW;angVelX;angVelY;angVelZ;linVelX;linVelY;linVelZ;scale;time\n";
-
+	// Writer the header for the sensor reading table
 	motionRecognitionWriter  
 		<< "tag;subject;activity;"
 		
@@ -76,9 +74,7 @@ void Logger::startMotionRecognitionLogger(const char* filename) {
 		<< "desLinVelX;desLinVelY;desLinVelZ;"
 
 		<< "scale;time\n";
-
 	motionRecognitionWriter.flush();
-
 }
 
 void Logger::endMotionRecognitionLogger() {
@@ -113,7 +109,6 @@ void Logger::saveMotionRecognitionData(
 		<< desLinVel.x() << ";" << desLinVel.y() << ";" << desLinVel.z() << ";"
 
 		<< scale << ";" << time << "\n";
-
 	motionRecognitionWriter.flush();
 }
 

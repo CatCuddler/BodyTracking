@@ -954,14 +954,15 @@ namespace {
 				System::stop();
 				break;
 #ifdef KORE_STEAMVR
-				// simulate gamepad inputs
+				// simulate gamepad inputs, so tester can take control 
+				// and avoid wrong inputs from test subjects
 			case Kore::KeyH:
-				gamepadButton(2, 1); // set avatar size
+				gamepadButton(2, 1);	// set avatar size
 				break;
 			case Kore::KeyK:
-				gamepadButton(1, 1); // calibrate controllers and trackers
+				gamepadButton(1, 1);	// calibrate controllers and trackers
 				break;
-			case Kore::KeyB:
+			case Kore::KeyB:			// disable gamepad buttons
 				blockAllGamepadButtons = !blockAllGamepadButtons;
 				if (blockAllGamepadButtons) {
 					Kore::log(Kore::LogLevel::Info,

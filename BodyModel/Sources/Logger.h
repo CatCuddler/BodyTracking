@@ -36,9 +36,12 @@ public:
 	void saveEvaluationData(Avatar *avatar);
 	void endEvaluationLogger();
 
-	// Motion Recognition
+	// Machine Learning Motion Recognition:
+	// Create a new sensor reading table
 	void startMotionRecognitionLogger(const char* filename);
+	// Stop writing to the previously created sensor reading table
 	void endMotionRecognitionLogger();
+	// Write sensor data to the previously created sensor reading table
 	void saveMotionRecognitionData(
 		const char* tag, const char* subject, const char* activity,
 		Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
