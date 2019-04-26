@@ -255,7 +255,8 @@ void MachineLearningMotionRecognition::startRecording(bool fullyCalibratedAvatar
 	// do not start a new recording, if a previous recording is still in progress
 	else if (currentlyRecording) {
 		Kore::log(Kore::LogLevel::Warning,
-			"Recording already in progress !!! \n   %s can not be recorded \n   You did not stop recording for %s !!!", taskNextToRecord.c_str(), taskCurrentlyRecording.c_str());
+			"Recording already in progress !!! \n   %s can not be recorded \n   You did not stop recording for %s !!!",
+			taskNextToRecord.c_str(), taskCurrentlyRecording.c_str());
 		Kore::Audio1::play(wrongSound);
 	}
 	// otherwise, go for it
@@ -267,11 +268,13 @@ void MachineLearningMotionRecognition::startRecording(bool fullyCalibratedAvatar
 		sessionID++;
 
 		// determine file name and start recording
-		string fileNameString = safePath + currentTestSubjectID + "__" + taskCurrentlyRecording + "__SID" + std::to_string(sessionID) + "_" + optionalFileTag;
+		string fileNameString = safePath + currentTestSubjectID + "__" + taskCurrentlyRecording
+			+ "__SID" + std::to_string(sessionID) + "_" + optionalFileTag;
 		logger.startMotionRecognitionLogger(fileNameString.c_str());
 
 		// log start of new recording, and notify user via sound
-		Kore::log(Kore::LogLevel::Info, "started recording ID %i:   %s   (%s)", sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
+		Kore::log(Kore::LogLevel::Info, "started recording ID %i:   %s   (%s)",
+			sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
 		Kore::Audio1::play(startRecordingSound);
 	}
 
@@ -287,14 +290,17 @@ void MachineLearningMotionRecognition::stopRecording() {
 		logger.endMotionRecognitionLogger();
 
 		// log end of recording, and notify user via sound
-		Kore::log(Kore::LogLevel::Info, "recording ID %i stopped:   %s   (%s)", sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
+		Kore::log(Kore::LogLevel::Info, "recording ID %i stopped:   %s   (%s)",
+			sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
 		Kore::Audio1::play(stopRecordingSound);
 	}
 	// if user tried to stop a recording that was not actually in progress,
 	// let them know that they made a mistake via log and sound
 	// (user needs to know they might have forgotten to start previous recording)
 	else {
-		Kore::log(Kore::LogLevel::Warning, "You tried to stop recording while no recording was in progress !!! \n   Last recording was %s", taskCurrentlyRecording.c_str());
+		Kore::log(Kore::LogLevel::Warning,
+			"You tried to stop recording while no recording was in progress !!! \n   Last recording was %s",
+			taskCurrentlyRecording.c_str());
 		Kore::Audio1::play(wrongSound);
 	}
 }

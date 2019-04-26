@@ -7,8 +7,13 @@
 #include <iostream>
 #include <jni.h>
 
-// Responsible for recording data produced by HTC Vive sensors,
-// and predicting the currently performed exercise through the Weka machine learning framework
+
+/**
+	Responsible for recording data produced by HTC Vive sensors,
+	and predicting the currently performed exercise through the Weka machine learning framework
+
+	@author Roman Uhlig
+*/
 class MachineLearningMotionRecognition {
 
 private:
