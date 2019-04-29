@@ -9,6 +9,8 @@ void setTrainingFilePath(std::string trainingFilePath);
 void setTrainingFileName(std::string trainingFileName);
 void setWriteFilePath(std::string writeFilePath);
 void setWriteFileName(std::string writeFileName);
+void setValidationFilePath(std::string ValidationFilePath);
+void setValidationFileName(std::string ValidationFileName);
 
 class Point {
 private:
@@ -46,7 +48,7 @@ public:
 class KMeans {
 private:
 	int emissions; // number of clusters to be created
-	int totalValues; // dimension of the input points (x,y,z)
+	int totalValues; // dimension of the input points (x,y,z,rotx,roty,rotz,royw)
 	int maxIterations, totalPoints;
 	int averagePoints; // average number of points per sequence
 	std::vector <Cluster> clusters; // vector of clusters
@@ -62,6 +64,7 @@ public:
 	void writeKMeans(std::string filePath, std::string fileName);
 	std::vector<Cluster> getClusters();
 	int getAveragePoints();
+    double getFinalDistance(std::vector<Point> & points);
 };
 
 std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);

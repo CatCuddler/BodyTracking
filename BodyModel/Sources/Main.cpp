@@ -248,7 +248,7 @@ namespace {
 		
 		// Save data to either train hmm or to recognize a movement
 		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
-		if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
+		
 		
 		if (calibratedAvatar) {
 			// Transform desired position/rotation to the character local coordinate system
@@ -268,6 +268,7 @@ namespace {
 			}
 			
 			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+			if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
 	
