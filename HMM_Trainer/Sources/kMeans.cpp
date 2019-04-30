@@ -214,7 +214,7 @@ KMeans::KMeans(string filePath, string fileName) {
 	
 	f >> emissions >> totalValues >> maxIterations >> totalPoints >> averagePoints;
 	
-	double x, y, z,rotx,roty,rotz,rotw;
+	double x, y, z, rotx, roty, rotz, rotw;
 	
 	for (int ii = 0; ii < emissions; ii++) {
 		f >> x >> y >> z >>rotx>>roty>>rotz>>rotw;
@@ -303,7 +303,6 @@ void KMeans::runKMeans(vector<Point> & points) {
 	for (int ii = 0; ii < emissions; ii++) {
 		while (true) {
 			int point_index = rand() % totalPoints;
-//			sort(points.begin(), points.end());
 			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end()) {
 				blockedIndexes.push_back(point_index);
 				points[point_index].setCluster(ii);
@@ -383,10 +382,6 @@ vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
 	for (int ii = 0; ii < points.size(); ii++) {
 		returnVector.at(ii) = getIDClosestCenter(points[ii]);
 	}
-//            for (const auto &element :returnVector) {
-//                cout<<element<<",";
-//            }
-//            cout<<endl;
 	return returnVector;
 }
 

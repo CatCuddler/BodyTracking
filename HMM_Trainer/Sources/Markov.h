@@ -25,7 +25,7 @@ class HMMModel {
 	
 	// TODO public for now as throwing errors in BodyTracking otherwise
 public:
-	int numStates; // number of possible states
+	int numStates; // number of hidden states
 	int sigmaSize; // size of the emmission alphabet
 	double **a; // transition matrix
 	double **b; // emmission matrix
