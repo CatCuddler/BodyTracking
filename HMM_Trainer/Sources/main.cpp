@@ -277,8 +277,7 @@ int main() {
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
 		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";"<<"Variance"<<";\n";
-		
-		// Variables to be used in training
+
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 
     //  Grid search
@@ -400,6 +399,7 @@ int main() {
         for (int ii = 0; ii < 6; ii++) {
             file<<"The Maximum Probability of " <<trackerNames[ii]<< " is ";
             double maxProbability = -10000000 ;
+            
         for(int point=0+ii; point<24; point+=6){
             if (maxProbability < probabilitiesGather.at(point)){
             maxProbability = probabilitiesGather.at(point);

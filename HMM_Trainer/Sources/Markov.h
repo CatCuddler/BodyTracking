@@ -1,10 +1,10 @@
 /***********************************************************
  * file name: Markov.h
- * author: Markus Stabel
- * last changes: 08.03.2018
+ * author: Markus Stabel, Shule Liu
+ * last changes: 30.04.2019
  * content: contains the class representation of a Hidden 
  Markov Model, including function representations of the
- Baum-Welch- and forward Algorithm. The naming convention
+ Baum-Welch and forward Algorithm. The naming convention
  follows "A Tutorial on Hidden Markov Models and Selected 
  Applications in Speech Recognition" by Rabiner, 1989.
  ***********************************************************/
