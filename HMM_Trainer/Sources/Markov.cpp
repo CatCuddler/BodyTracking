@@ -1,7 +1,7 @@
 /********************************************************************************
  * file name: Markov.cpp
- * author: Markus Stabel
- * last changes: 08.03.2018
+ * author: Markus Stabel, Shule Liu
+ * last changes: 30.04.2019
  * content: contains the function definitions of the HMM class from Markov.h. The
  naming convention follows "A Tutorial on Hidden Markov Models and Selected
  Applications in Speech Recognition" by Rabiner, 1989.
@@ -89,7 +89,7 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
  * method:		default HMM construtor
  * description:	initializes a HMM
  * parameters:	none
- * return value:	Hidden Markov Model
+ * return value:Hidden Markov Model
  ********************************************************************************/
 HMMModel::HMMModel(): numStates(1), sigmaSize(1), pi(numStates, 0), probabilityThreshold(0) {
 	a = matrix<double>(0, numStates, numStates);
@@ -187,11 +187,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 	for (int i = 0; i < N; i++) {
 		alpha[i][0] *= c.at(0);
 	}
-    
-//    for (const auto &element : c) {
-//        cout<<element<<",";
-//    }
-//    cout<<endl;
+
 	// 2. Induction
 	for (int t = 1; t < T; t++) {
 		for (int j = 0; j < N; j++) {
@@ -254,10 +250,7 @@ double HMMModel::calculateProbability(vector<int>& sequence) {
 	
 	const int N = numStates;
 	const int T = sequence.size();
-//        for (const auto &element : sequence) {
-//           cout<<element<<",";
-//       }
-//        cout<<endl;
+
     double probability = 0;
 	double** alpha = matrix<double>(0, N, T); // forward probability matrix
 	vector<double> c = updateAlphaNormalized(sequence, alpha); // run the forward algorithm
@@ -265,7 +258,7 @@ double HMMModel::calculateProbability(vector<int>& sequence) {
 	// Calculate probability
 	for (int t = 0; t < sequence.size(); t++) {
 		probability -= log(c.at(t));
-//        cout<<probability<<";";
+
 	}
     
 	freeMatrix<double>(alpha, N);
@@ -372,6 +365,7 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
            v.at(l)= probability;
         }
         sort(v.begin(), v.end());
+        //the probabilitythreshold is now setted as the lowest probability,changable variable
         probability = v.at(0);
 		// Save log probability threshold
 		probabilityThreshold = probability;

@@ -1,7 +1,7 @@
 /********************************************************************************
  * file name: main.cpp
- * authors: Markus Stabel, Marco Fendrich
- * last changes: 22.03.2018
+ * authors: Markus Stabel, Marco Fendrich,Shule Liu
+ * last changes: 30.04.2019
  * content: automatically being executed as main script of the program; calls all
  relevant other scripts and calculates a new HMM either based on user input or
  variables introduced below. Can alternatively be used to calculate the
@@ -35,26 +35,27 @@ vector<double> calculateProbability(HMMModel models[6]);
 /// ***** ***** ***** Settings to be changed by user ***** ***** ***** ///
 /// ***** Choose operational mode ***** ///
 // Create new HMM based on the all the training file
-bool createHMM = true;
-// Create HMMs using 4 thread and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
+bool createHMM = false;
+// Create HMMs using 4 threads and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
 bool optimiseInfiniteHMM = false;
 // Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
 bool optimiseMovementRecognition = false;
-// Calculating the probability for a data set based on an already existing HMM.
-bool recognitionTest = false;
+// Calculating the probability for a dataset based on an already existing HMM.
+bool recognitionTest = true;
 // Show debug messages on console
 bool debug= false;
 
 
 /// ***** Set paths and HMM parameters ***** ///
-// File name of the data set to be used used for single probability calculation
+// File name of the data set to be used for single probability calculation
 string currentMovement;
 // Path for the source files
 // NOTE: change working directory if necessary
 string validationFileName = "Yoga_Krieger_";
+// NOTE: in Windows should have one point ".", Mac has two point ".."
 string validationFilePath = "../Validation/";
 string trainingFilePath = "../Training/";
-// Base file name in the format "<trainingFileName>_<number>.txt" (only trainingFileName required)
+// Base file name in the format "<trainingFileName>_<number>.csv" (only trainingFileName required)
 string trainingFileName = "Yoga_Krieger_";
 // Path for HMM and clusters to be saved in
 string writeFilePath = "../Tracking/";
@@ -62,11 +63,11 @@ string writeFilePath = "../Tracking/";
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
 int numStates = 6;
-// Number of clusters used for the data set taken as input for the HMM (standard is 8)
+// Number of clusters used for the data set taken as input for the HMM (standard is 7)
 int numEmissions = 7;
 // Number of times an HMM is created per tracker before using the one with the best threshold
 int hmmTries = 10000;
-// Left to right depth of HMM; 0 leaves the start points to be random
+// Left to right depth of HMM; 0 leaves the start points to be random(all connected topology)
 int lrDepth = 0;
 
 /// ***** General variables used by system ***** ///
@@ -131,7 +132,7 @@ int main() {
 					// use Baum-Welch-Algorithm to train HMM and write it to a file 
 					HMMModel model(numStates, numEmissions, lrDepth);
 					model.trainHMM(sequence.at(ii));
-					//if (jj < hmmTries - 1) cout << ", ";
+                    // check if the probability is not a number
 					if (isnan(probabilities.at(ii))|| probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 						model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii));
 						probabilities.at(ii) = (model.getProbabilityThreshold());
@@ -166,29 +167,31 @@ int main() {
 	}
 	
 	/// ***** ***** ***** Calculating probability for data set ***** ***** ***** ///
+    //Put the files to be recognized in the training folder
     else if (recognitionTest) {
-        int count=0;
+        int count = 0;
         cout << "<Calculating probability for data set>\n" << "Using predefined variables for execution." "\n\n";
         cout << "Loading cluster coordinates.\n";
         vector<KMeans> kmeanVector(6);
         bool trackersPresent[6]; // stores which trackers are present in HMMs/clusters
-        for (int ii = 0; ii < 6; ii++) {
-            try {
-                KMeans kmeans(writeFilePath, writeFileName + "_" + to_string(ii));
-                kmeanVector.at(ii) = kmeans;
-                cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
-                trackersPresent[ii] = true;
-            } catch (invalid_argument) {
-                trackersPresent[ii] = false;
+            for (int ii = 0; ii < 6; ii++) {
+                try {
+                    KMeans kmeans(writeFilePath, writeFileName + "_" + to_string(ii));
+                    kmeanVector.at(ii) = kmeans;
+                    cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
+                    trackersPresent[ii] = true;
+                    }catch (invalid_argument) {
+                        trackersPresent[ii] = false;
+                    }
             }
-        }
         cout << "\n";
-        int validationFileNumber = getFullTrainingNumber(validationFilePath, validationFileName);
+        int validationFileNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
         cout<< "Validation test for "<<validationFileNumber <<" Files."<< "\n";
         cout << "Sorting new data sets into clusters. ";
         
         vector<vector<Point>> currentDataSet;
         file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
+        //Traverse all the possible values of probabilityThreshold
         double thresholdIndex [4] = {1,1.5,2,3};
         for (double &index : thresholdIndex){
             count=0;
@@ -212,7 +215,7 @@ int main() {
                         }
                     }
                 }
-                
+                // Calculate the average probability of each tracker.
                 vector<bool> trackerMovementRecognised(6, true);
                 
                 for (int ii = 0; ii < 6; ii++) {
@@ -241,6 +244,7 @@ int main() {
                 
                 //            file<<"The result is "<<result<<".\n";
             }
+            //calculate the right percentage of recognition.
             for (int ii = 0; ii < 6; ii++) {
                 double mean = accumulate( probabilityMean.at(ii).begin(), probabilityMean.at(ii).end(), 0.0)/probabilityMean.at(ii).size();
                 cout<<"Mean value of "<<trackerNames[ii]<<" is "<< mean<<".\n";
@@ -260,6 +264,7 @@ int main() {
         }
     }
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
+    //traverse all the possible parameter combination and output the corresponding probabilities, this function is help to find out which parameters have better result.
 	else if (optimiseMovementRecognition) {
         const int numStatesAmount = 3;//amount of random numbers for numStates that need to be generated
         const int numEmissionAmount = 3;//amount of random numbers for Emission States that need to be generated
@@ -272,12 +277,12 @@ int main() {
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
 		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";"<<"Variance"<<";\n";
-		
-		// Variables to be used in training
+
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-//      if (trainingNumber > 10) trainingNumber = 10; // Limit training to ten files to see whether other correct files are being correctly recognized as such
+
     //  Grid search
 	//	int emissionIterations[9] = { 8, 10, 12, 16, 20, 30, 40, 50, 100 };
+        
     //  Random search
         srand((unsigned)time(NULL));//always seed your RNG before using it
         int emissionIterations[numEmissionAmount];//array to store the random numbers in
@@ -305,13 +310,13 @@ int main() {
             emissionIterations[i]=n; //store the generated number in the array
         }
         //generate random numbers for numStates without duplicates:
-        for (int i=0;i<numStatesAmount;i++)
+        for (int i = 0;i<numStatesAmount;i++)
         {
             bool check; //variable to check or number is already used
             int n; //variable to store the number in
             do
             {
-                n=1+rand()%randomRangeState;
+                n = 1+rand()%randomRangeState;
                 //check or number is already used:
                 check=true;
                 for (int j=0;j<i;j++)
@@ -393,7 +398,8 @@ int main() {
         
         for (int ii = 0; ii < 6; ii++) {
             file<<"The Maximum Probability of " <<trackerNames[ii]<< " is ";
-            double maxProbability =-10000000 ;
+            double maxProbability = -10000000 ;
+            
         for(int point=0+ii; point<24; point+=6){
             if (maxProbability < probabilitiesGather.at(point)){
             maxProbability = probabilitiesGather.at(point);
@@ -503,7 +509,7 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
                     finalModels[ii] = model;
                     model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
                     probabilities.at(ii) = (model.getProbabilityThreshold());
-       //             cout << trackerNames[ii] + "_" << jj <<", "<<"_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. "  "The log probability threshold is " << probabilities.at(ii) << ".\n";
+       //           cout << trackerNames[ii] + "_" << jj <<", "<<"_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. "  "The log probability threshold is " << probabilities.at(ii) << ".\n";
                 }
             }
         cout << "HMM #" <<threadNumber<<"_"<< jj<< ";";

@@ -1,7 +1,7 @@
 /********************************************************************************
  * file name: kMeans.cpp
- * authors: Markus Stabel, Moritz Kolvenbach, Marco Fendrich
- * last changes: 15.03.2018
+ * authors: Markus Stabel, Moritz Kolvenbach, Marco Fendrich, Shule Liu
+ * last changes: 30.04.2019
  * content: means to calculate clusters of data points in varying forms. Used to
  create HMMs and calculate probabilities of new data sets
  ********************************************************************************/
@@ -125,7 +125,7 @@ vector<Point> normaliseMeasurements(vector<Point> inputData, int dataVolume) {
 /********************************************************************************
  * method:		readData
  * description:	reads "fileAmount" number of files into a datatype with wich the
- HMM_Trainer can work
+ HMM_Trainer can work, read data from "training" file folder
  * parameters:	filename is the filepath for the files to be parsed
  fileAmount is the amount of files to be parsed starting with the
  first
@@ -214,7 +214,7 @@ KMeans::KMeans(string filePath, string fileName) {
 	
 	f >> emissions >> totalValues >> maxIterations >> totalPoints >> averagePoints;
 	
-	double x, y, z,rotx,roty,rotz,rotw;
+	double x, y, z, rotx, roty, rotz, rotw;
 	
 	for (int ii = 0; ii < emissions; ii++) {
 		f >> x >> y >> z >>rotx>>roty>>rotz>>rotw;
@@ -272,6 +272,7 @@ int KMeans::getIDClosestCenter(Point point) {
 /********************************************************************************
  * method:        Calculate final distance for Kmeans
  * description:   Calculate the within-cluster sum of squares，later used for elbow method to determin K
+ * return : Distance between points wss
  ********************************************************************************/
 double KMeans::getFinalDistance(vector<Point> & points){
     double wss = 0.0;
@@ -303,7 +304,6 @@ void KMeans::runKMeans(vector<Point> & points) {
 	for (int ii = 0; ii < emissions; ii++) {
 		while (true) {
 			int point_index = rand() % totalPoints;
-//			sort(points.begin(), points.end());
 			if (find(blockedIndexes.begin(), blockedIndexes.end(), point_index) == blockedIndexes.end()) {
 				blockedIndexes.push_back(point_index);
 				points[point_index].setCluster(ii);
@@ -383,10 +383,6 @@ vector<int> KMeans::matchPointsToClusters(vector<Point> points) {
 	for (int ii = 0; ii < points.size(); ii++) {
 		returnVector.at(ii) = getIDClosestCenter(points[ii]);
 	}
-//            for (const auto &element :returnVector) {
-//                cout<<element<<",";
-//            }
-//            cout<<endl;
 	return returnVector;
 }
 
