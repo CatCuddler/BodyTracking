@@ -20,12 +20,12 @@ node Kore/make --vr steamvr
 Currently Metal does not work. Use Opengl. <br />
 node Kore/make -g opengl
 
-If you dont use Visual Studio 2019:
+If you dont use Visual Studio 2019: <br />
 node Kore/make -v vs20xx
 
 ### Open VS or XCode
 Open VisualStudio or Xcode project in BodyModel/build <br />
-Change to "Release" mode. <br />
+Change to "Release x86" mode. <br />
 Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose deployment directory
 
 ### Avatar Calibration
