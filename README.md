@@ -4,7 +4,7 @@ This project implements an accurate full-body recognition approach for VR-based 
 
 ## Requirements:
 - node.js
-- VisualStudio or Xcode
+- VisualStudio 2019 or Xcode
 
 ## Clone the project:
 git clone --recursive git@github.com:CatCuddler/BodyTracking.git <br />
@@ -19,6 +19,9 @@ node Kore/make --vr steamvr
 #### Only for Mac User:
 Currently Metal does not work. Use Opengl. <br />
 node Kore/make -g opengl
+
+If you dont use Visual Studio 2019:
+node Kore/make -v vs20xx
 
 ### Open VS or XCode
 Open VisualStudio or Xcode project in BodyModel/build <br />
