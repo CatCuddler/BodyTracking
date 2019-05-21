@@ -290,7 +290,6 @@ namespace {
 		initTransAndRot();
 		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::log(Kore::Info, "Calibrate device %i", i);
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
