@@ -4,7 +4,6 @@
 #include <string>
 
 EndEffector::EndEffector(int boneIndex, IKMode ikMode) : desPosition(Kore::vec3(0, 0, 0)), desRotation(Kore::Quaternion(0, 0, 0, 1)), offsetPosition(Kore::vec3(0, 0, 0)), offsetRotation(Kore::Quaternion(0, 0, 0, 1)), boneIndex(boneIndex), deviceID(-1), ikMode(ikMode) {
-
 	name = getNameForIndex(boneIndex);
 }
 
@@ -71,8 +70,8 @@ const char* EndEffector::getNameForIndex(const int ID) const {
 	else if (ID == rightHandBoneIndex)		return rHandTag;
 	else if (ID == leftForeArmBoneIndex)	return lForeArm;
 	else if (ID == rightForeArmBoneIndex)	return rForeArm;
-	else if (ID == leftLegBoneIndex)		return lLegTag;
-	else if (ID == rightLegBoneIndex)		return rLegTag;
+	else if (ID == leftLegBoneIndex)		return lFootTag;
+	else if (ID == rightLegBoneIndex)		return rFootTag;
 	else return nullptr;
 }
 
@@ -81,7 +80,9 @@ int EndEffector::getIndexForName(const char* name) const {
 	else if(std::strcmp(name, hipTag) == 0)		return hipBoneIndex;
 	else if(std::strcmp(name, lHandTag) == 0)	return leftHandBoneIndex;
 	else if(std::strcmp(name, rHandTag) == 0)	return rightHandBoneIndex;
-	else if(std::strcmp(name, lLegTag) == 0)	return leftFootBoneIndex;
-	else if(std::strcmp(name, rLegTag) == 0)	return rightFootBoneIndex;
+	else if (std::strcmp(name, lForeArm) == 0)	return leftForeArmBoneIndex;
+	else if (std::strcmp(name, rForeArm) == 0)	return rightForeArmBoneIndex;
+	else if (std::strcmp(name, lFootTag) == 0)	return leftLegBoneIndex;
+	else if (std::strcmp(name, rFootTag) == 0)	return rightLegBoneIndex;
 	else return -1;
 }

@@ -48,8 +48,6 @@ const char* const lForeArm = "lForeArm";
 const char* const rForeArm = "rForeArm";
 const char* const lFootTag = "lFoot";
 const char* const rFootTag = "rFoot";
-const char* const lLegTag = "lLeg";
-const char* const rLegTag = "rLeg";
 
 class EndEffector {
 public:
