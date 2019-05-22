@@ -1,8 +1,8 @@
 #pragma once
 
 namespace {
-	const int numFiles = 8;
-    const char* files[numFiles] = {"walking.csv", "lunges.csv", "squats.csv", "kicks.csv", "monkey.csv", "yoga1.csv", "yoga2.csv", "yoga3.csv"};
+	const int numFiles = 7;
+    const char* files[numFiles] = {"walking.csv", "lunges.csv", "squats.csv", "kicks.csv", "yoga1.csv", "yoga2.csv", "yoga3.csv"};
 	int currentFile = 0;
 	
 	const float nearNull = 0.0001f;

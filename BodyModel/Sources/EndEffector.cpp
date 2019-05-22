@@ -70,8 +70,8 @@ const char* EndEffector::getNameForIndex(const int ID) const {
 	else if (ID == rightHandBoneIndex)		return rHandTag;
 	else if (ID == leftForeArmBoneIndex)	return lForeArm;
 	else if (ID == rightForeArmBoneIndex)	return rForeArm;
-	else if (ID == leftLegBoneIndex)		return lFootTag;
-	else if (ID == rightLegBoneIndex)		return rFootTag;
+	else if (ID == leftFootBoneIndex)		return lFootTag;
+	else if (ID == rightFootBoneIndex)		return rFootTag;
 	else return nullptr;
 }
 
@@ -82,7 +82,7 @@ int EndEffector::getIndexForName(const char* name) const {
 	else if(std::strcmp(name, rHandTag) == 0)	return rightHandBoneIndex;
 	else if (std::strcmp(name, lForeArm) == 0)	return leftForeArmBoneIndex;
 	else if (std::strcmp(name, rForeArm) == 0)	return rightForeArmBoneIndex;
-	else if (std::strcmp(name, lFootTag) == 0)	return leftLegBoneIndex;
-	else if (std::strcmp(name, rFootTag) == 0)	return rightLegBoneIndex;
+	else if (std::strcmp(name, lFootTag) == 0)	return leftFootBoneIndex;
+	else if (std::strcmp(name, rFootTag) == 0)	return rightFootBoneIndex;
 	else return -1;
 }

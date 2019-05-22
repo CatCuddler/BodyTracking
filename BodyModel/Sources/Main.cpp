@@ -178,7 +178,7 @@ namespace {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			if (i == hip || i == leftForeArm || i == rightForeArm || i == leftLeg || i == rightLeg) {
+			if (i == hip || i == leftForeArm || i == rightForeArm || i == leftFoot || i == rightFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
 				renderControllerAndTracker(false, desPosition, desRotation);
@@ -265,7 +265,7 @@ namespace {
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftLeg || endEffectorID == rightLeg) {
+			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			
@@ -401,8 +401,8 @@ namespace {
 					
 					// Left or Right Leg
 					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
-					initEndEffector(leftLeg, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
-					initEndEffector(rightLeg, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
 					
 					// Hip
 					initEndEffector(hip, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
@@ -609,8 +609,8 @@ namespace {
 								endEffector[head]->setIKMode((IKMode)ikMode);
 								endEffector[leftHand]->setIKMode((IKMode)ikMode);
 								endEffector[rightHand]->setIKMode((IKMode)ikMode);
-								endEffector[leftLeg]->setIKMode((IKMode)ikMode);
-								endEffector[rightLeg]->setIKMode((IKMode)ikMode);
+								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
 								endEffector[hip]->setIKMode((IKMode)ikMode);
 							} else {
 								evalValue[ikMode] += evalStep;
@@ -845,8 +845,8 @@ namespace {
 		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
 		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
 		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
-		endEffector[leftLeg] = new EndEffector(leftLegBoneIndex);
-		endEffector[rightLeg] = new EndEffector(rightLegBoneIndex);
+		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
+		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove

@@ -64,7 +64,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 			deltaTheta = jacobianHand->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianHand->getPositionError();
 			errorRot = jacobianHand->getRotationError();
-		} else if (targetBone->nodeIndex == leftLegBoneIndex|| targetBone->nodeIndex == rightLegBoneIndex) {
+		} else if (targetBone->nodeIndex == leftFootBoneIndex|| targetBone->nodeIndex == rightFootBoneIndex) {
 			// deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, tracker[3]->ikMode);
 			deltaTheta = jacobianFoot->calcDeltaTheta(targetBone, desPosition, desRotation, ikMode); // todo: remove after eval
 			errorPos = jacobianFoot->getPositionError();

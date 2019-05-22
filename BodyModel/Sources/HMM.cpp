@@ -10,7 +10,6 @@
 namespace {
 	const char hmmPath[] = "../../HMM_Trainer/Tracking/";
 	const char hmmPath0[] = "../../HMM_Trainer/Tracking/Movement0/";
-	const char hmmPath0[] = "../../HMM_Trainer/Tracking/Movement0/";
 	const char hmmPath1[] = "../../HMM_Trainer/Tracking/Movement1/";
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
