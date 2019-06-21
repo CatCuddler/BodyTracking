@@ -34,9 +34,9 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = true;
-	const bool renderTrackerAndController = true;
-	const bool renderAxisForEndEffector = false;
+	const bool renderRoom = false;
+	const bool renderTrackerAndController = false;
+	const bool renderAxisForEndEffector = true;
 	
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -97,6 +97,7 @@ namespace {
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
 	Avatar* avatar;
 	LivingRoom* livingRoom;
+	LivingRoom* plattforms[] = { nullptr, nullptr, nullptr };
 	
 	// Variables to mirror the room and the avatar
 	vec3 mirrorOver(6.057f, 0.0f, 0.04f);
@@ -212,6 +213,32 @@ namespace {
 		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, false);
 		
 		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
+	}
+	
+	void renderPlattforms(mat4 V, mat4 P) {
+		Graphics4::setPipeline(pipeline_living_room);
+		
+		Graphics4::setMatrix(vLocation_living_room, V);
+		Graphics4::setMatrix(pLocation_living_room, P);
+		
+		Kore::mat4 M = plattforms[0]->M;
+		Graphics4::setMatrix(mLocation, M);
+		plattforms[0]->setLights(lightCount_living_room, lightPosLocation_living_room);
+		plattforms[0]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, false);
+		
+		M = plattforms[1]->M;
+		Graphics4::setMatrix(mLocation, M);
+		plattforms[1]->setLights(lightCount_living_room, lightPosLocation_living_room);
+		plattforms[1]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, false);
+		
+		M = plattforms[2]->M;
+		Graphics4::setMatrix(mLocation, M);
+		plattforms[2]->setLights(lightCount_living_room, lightPosLocation_living_room);
+		plattforms[2]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, false);
+		
+		plattforms[0]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
+		plattforms[1]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
+		plattforms[2]->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -641,6 +668,8 @@ namespace {
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) renderLivingRoom(V, P);
+		
+		renderPlattforms(V, P);
 #endif
 
 		Graphics4::end();
@@ -820,8 +849,8 @@ namespace {
 			viveObjects[2] = new MeshObject("vivemodels/axis.ogex", "vivemodels/", structure, 1);
 		}
 		
+		loadLivingRoomShader();
 		if (renderRoom) {
-			loadLivingRoomShader();
 			livingRoom = new LivingRoom("sherlock_living_room/sherlock_living_room.ogex", "sherlock_living_room/", structure_living_room, 1);
 			Kore::Quaternion livingRoomRot = Kore::Quaternion(0, 0, 0, 1);
 			livingRoomRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
@@ -833,6 +862,15 @@ namespace {
 			livingRoomRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi));
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
+		
+		plattforms[0] = new LivingRoom("plattform/plattform.ogex", "plattform/", structure_living_room, 0.5);
+		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
+		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose();
+		plattforms[1] = new LivingRoom("plattform/plattform.ogex", "plattform/", structure_living_room, 0.5);
+		plattforms[1]->M = mat4::Translation(0, 0, 1.5f) * plattformRot.matrix().Transpose();
+		plattforms[2] = new LivingRoom("plattform/plattform.ogex", "plattform/", structure_living_room, 0.5);
+		plattforms[2]->M = mat4::Translation(0, 0, -1.5) * plattformRot.matrix().Transpose();
 		
 		logger = new Logger();
 		
