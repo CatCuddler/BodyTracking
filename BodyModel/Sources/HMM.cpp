@@ -14,6 +14,8 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 
+	float threshold = 2.0f;
+
 	double startX;
 	double startZ;
 	double startRotCos;
@@ -110,7 +112,7 @@ bool HMM::stopRecognition() {
 				float n = 0;
 				n = model.calculateProbability(clusteredPoints);
 				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold());
+				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() * threshold);
 				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
 			}
