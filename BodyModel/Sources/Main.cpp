@@ -65,6 +65,7 @@ namespace {
 	ConstantLocation pLocation;
 	ConstantLocation vLocation;
 	ConstantLocation mLocation;
+	ConstantLocation cLocation;
 	
 	// Living room shader
 	VertexStructure structure_living_room;
@@ -225,17 +226,23 @@ namespace {
 		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		
 		Kore::mat4 M = Kore::mat4::Identity();
-		M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f); //plattform->geometries[0]->transform
 		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
 		plattform->render(tex);
 		
 		M = mat4::Translation(0, 0, 1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
 		plattform->render(tex);
 		
 		M = mat4::Translation(0, 0, -1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
 		plattform->render(tex);
+		
+		// Reset color
+		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -781,6 +788,7 @@ namespace {
 		pLocation = pipeline->getConstantLocation("P");
 		vLocation = pipeline->getConstantLocation("V");
 		mLocation = pipeline->getConstantLocation("M");
+		cLocation = pipeline->getConstantLocation("color");
 	}
 	
 	void loadLivingRoomShader() {
@@ -860,7 +868,7 @@ namespace {
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
-		plattform = new LivingRoom("plattform/plattform.ogex", "plattform/", structure, 1);
+		plattform = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);
 		
 		logger = new Logger();
 		
