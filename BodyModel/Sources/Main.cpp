@@ -19,6 +19,8 @@
 #include "Logger.h"
 #include "HMM.h"
 
+#include "BinaryTree.h"
+
 #include <algorithm> // std::sort
 
 #ifdef KORE_STEAMVR
@@ -887,6 +889,8 @@ namespace {
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 #endif
+		
+		BinaryTree* gameplay = new BinaryTree();
 	}
 }
 
