@@ -51,6 +51,9 @@ namespace {
 	double startTime;
 	double lastTime;
 	
+	BinaryTree* gameplayTree;
+	const char* gameplayText;
+	
 	Graphics2::Graphics2* g2;
 	
 	Kravur* font14;
@@ -695,7 +698,7 @@ namespace {
 		renderPlattforms(V, P);
 		
 		g2->begin(false, width, height, false);
-		drawGUI("Gameplay text");
+		drawGUI(gameplayText);
 		g2->end();
 #endif
 
@@ -733,6 +736,18 @@ namespace {
 			case Kore::KeyEscape:
 			case KeyQ:
 				System::stop();
+				break;
+			case Kore::KeyLeft:
+				if (gameplayTree->getCurrentNode() != nullptr && gameplayTree->getLeftNode() != nullptr)
+					gameplayText = gameplayTree->getCurrentNode()->getData();
+				else
+					gameplayText = "Finished!";
+				break;
+			case Kore::KeyRight:
+				if (gameplayTree->getCurrentNode() != nullptr && gameplayTree->getRightNode() != nullptr)
+					gameplayText = gameplayTree->getCurrentNode()->getData();
+				else
+					gameplayText = "Finished!";
 				break;
 			default:
 				break;
@@ -911,7 +926,8 @@ namespace {
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 #endif
 		
-		BinaryTree* gameplay = new BinaryTree();
+		gameplayTree = new BinaryTree();
+		gameplayText = gameplayTree->getCurrentNode()->getData();
 	}
 }
 

@@ -7,16 +7,35 @@ using namespace Kore;
 
 BinaryTree::BinaryTree() {
 	
-	Node* root = new Node(0);
-	Node* node1 = new Node(1);
-	Node* node2 = new Node(2);
+	const char* const text0 = "Deine Karriere läuft gut. Du arbeitest im Zirkus – ein Traum, den du schon von Kindheit an verfolgst.";
+	Node* root = new Node(text0);
+	const char* const text1 = "Sprich mit deinem Assistenten";
+	Node* node1 = new Node(text1);
+	const char* const text2 = "Oh Gott es tut mir so leid! Das war alles meine Schuld! Ich muss was übersehen haben! Aber ich wüsste nicht was…. Ich hatte alles kontrolliert! Ich…ich schwör´s! Nach mir hat sogar der Dompteur noch die Seile Gecheckt!";
+	Node* node2 = new Node(text2);
 	
 	
 	root->setLeftNode(node1);
 	root->setRightNode(node2);
+
+	node1->setLeftNode(nullptr);
+	node1->setRightNode(nullptr);
+	node2->setLeftNode(nullptr);
+	node2->setRightNode(nullptr);
 	
-	
-	log(LogLevel::Info, "root: %i -> left %i -> right %i", root->getData(), root->getLeft()->getData(), root->getRight()->getData());
-	
-	log(LogLevel::Info, "left: %i -> left %i -> right %i", node1->getData(), node1->getLeft(), node1->getRight());
+	currentNode = root;
+}
+
+Node* BinaryTree::getCurrentNode() {
+	return currentNode;
+}
+
+Node* BinaryTree::getLeftNode() {
+	currentNode = currentNode->getLeft();
+	return currentNode;
+}
+
+Node* BinaryTree::getRightNode() {
+	currentNode = currentNode->getRight();
+	return currentNode;
 }

@@ -3,7 +3,7 @@
 
 using namespace Kore;
 
-Node::Node(int data) : data(data), left(nullptr), right(nullptr) {
+Node::Node(const char* const data) : data(data), left(nullptr), right(nullptr) {
 	
 }
 
@@ -15,7 +15,7 @@ void Node::setRightNode(Node* node) {
 	right = node;
 }
 
-int Node::getData() const {
+const char* Node::getData() const {
 	return data;
 }
 

@@ -3,17 +3,17 @@
 class Node {
 	
 private:
-	int data;
+	const char* const data;
 	Node* left;
 	Node* right;
 	
 public:
-	Node(int data);
+	Node(const char* const data);
 	
 	void setLeftNode(Node* node);
 	void setRightNode(Node* node);
 	
-	int getData() const;
+	const char* getData() const;
 	Node* getLeft() const;
 	Node* getRight() const;
 };
