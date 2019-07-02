@@ -3,6 +3,7 @@
 #include <Kore/IO/FileReader.h>
 #include <Kore/Graphics4/PipelineState.h>
 #include <Kore/Graphics1/Color.h>
+#include <Kore/Graphics2/Graphics.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
 #include <Kore/Audio2/Audio.h>
@@ -49,6 +50,13 @@ namespace {
 	
 	double startTime;
 	double lastTime;
+	
+	Graphics2::Graphics2* g2;
+	
+	Kravur* font14;
+	Kravur* font24;
+	Kravur* font34;
+	Kravur* font44;
 	
 	// Audio cues
 	Sound* startRecordingSound;
@@ -510,6 +518,15 @@ namespace {
 		controllerButtonsInitialized = true;
 	}
 #endif
+	
+	void drawGUI(const char* text) {
+		if (text != nullptr) {
+			g2->drawString(text, 10, 10);
+		}
+		
+		g2->setColor(Graphics1::Color::White);
+	}
+	
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -676,6 +693,10 @@ namespace {
 		if (renderRoom) renderLivingRoom(V, P);
 		
 		renderPlattforms(V, P);
+		
+		g2->begin(false, width, height, false);
+		drawGUI("Gameplay text");
+		g2->end();
 #endif
 
 		Graphics4::end();
@@ -908,6 +929,16 @@ int kore(int argc, char** argv) {
 	Mouse::the()->Move = mouseMove;
 	Mouse::the()->Press = mousePress;
 	Mouse::the()->Release = mouseRelease;
+	
+	font14 = Kravur::load("fonts/arial", FontStyle(), 14);
+	font24 = Kravur::load("fonts/arial", FontStyle(), 24);
+	font34 = Kravur::load("fonts/arial", FontStyle(), 34);
+	font44 = Kravur::load("fonts/arial", FontStyle(), 44);
+	
+	g2 = new Graphics2::Graphics2(width, height, false);
+	g2->setFont(font14);
+	g2->setFontColor(Graphics1::Color::White);
+	g2->setFontSize(14);
 	
 	// Sound initiation
 	Audio1::init();
