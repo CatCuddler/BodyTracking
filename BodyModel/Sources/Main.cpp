@@ -791,6 +791,7 @@ namespace {
 				} else {
 					storyLineText = "Finished!";
 				}
+				log(LogLevel::Info, storyLineText);
 				break;
 			case Kore::KeyRight:
 				if (storyLineTree->getCurrentNode() != nullptr && storyLineTree->getCurrentNode()->getRight() != nullptr) {
@@ -810,6 +811,7 @@ namespace {
 					speakWithCharacter1 = None;
 					speakWithCharacter2 = None;
 				}
+				log(LogLevel::Info, storyLineText);
 				break;
 			default:
 				break;
