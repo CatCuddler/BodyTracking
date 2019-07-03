@@ -111,7 +111,7 @@ namespace {
 	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
 	MeshObject* plattform;
-	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	Avatar* avatar;
 	LivingRoom* livingRoom;
 	
@@ -269,11 +269,57 @@ namespace {
 		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
 		textRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
 		
+		float yPos = 5.0f;
 		Kore::mat4 M = Kore::mat4::Identity();
-		M = mat4::Translation(2.95f, 3.5f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 		Graphics4::setMatrix(mLocation, M);
 		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
 		textMesh[0]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[1]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 0.4f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[2]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 0.6f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[3]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 0.8f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[4]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 1.0f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[5]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 1.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[6]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 1.4f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[7]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 1.6f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[8]->render(tex);
+		
+		M = mat4::Translation(2.95f, yPos - 1.8f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[9]->render(tex);
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
@@ -933,7 +979,16 @@ namespace {
 		plattform = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);
 		
 		if (render3DText) {
-			textMesh[0] = new MeshObject("3dtext/clown1.ogex", "3dtext/", structure, 1);
+			textMesh[0] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
+			textMesh[1] = new MeshObject("3dtext/Clown2.ogex", "3dtext/", structure, 1);
+			textMesh[2] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
+			textMesh[3] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
+			textMesh[4] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
+			textMesh[5] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
+			textMesh[6] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
+			textMesh[7] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
+			textMesh[8] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
+			textMesh[9] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
 		}
 		
 		logger = new Logger();
