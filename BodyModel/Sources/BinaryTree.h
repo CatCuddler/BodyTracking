@@ -12,6 +12,6 @@ public:
 	BinaryTree();
 	
 	Node* getCurrentNode();
-	Node* getLeftNode();
-	Node* getRightNode();
+	void getLeftNode();
+	void getRightNode();
 };

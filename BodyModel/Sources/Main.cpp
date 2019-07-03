@@ -37,7 +37,7 @@ namespace {
 	const int width = 1024;
 	const int height = 768;
 	
-	const bool renderRoom = true;
+	const bool renderRoom = false;
 	const bool renderTrackerAndController = false;
 	const bool renderAxisForEndEffector = false;
 	const bool render3DText = true;
@@ -52,8 +52,8 @@ namespace {
 	double startTime;
 	double lastTime;
 	
-	BinaryTree* gameplayTree;
-	const char* gameplayText;
+	BinaryTree* storyLineTree;
+	const char* storyLineText;
 	
 	Graphics2::Graphics2* g2;
 	
@@ -114,6 +114,9 @@ namespace {
 	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	Avatar* avatar;
 	LivingRoom* livingRoom;
+	
+	Character speakWithCharacter1 = None;
+	Character speakWithCharacter2 = None;
 	
 	// Variables to mirror the room and the avatar
 	vec3 mirrorOver(6.057f, 0.0f, 0.04f);
@@ -269,57 +272,22 @@ namespace {
 		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
 		textRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
 		
-		float yPos = 5.0f;
 		Kore::mat4 M = Kore::mat4::Identity();
-		M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[0]->render(tex);
+		float yPos = 3.5f;
 		
-		M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[1]->render(tex);
+		if (speakWithCharacter1 != None) {
+			M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+			Graphics4::setMatrix(mLocation, M);
+			Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
+			textMesh[speakWithCharacter1]->render(tex);
+		}
 		
-		M = mat4::Translation(2.95f, yPos - 0.4f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[2]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 0.6f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[3]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 0.8f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[4]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 1.0f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[5]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 1.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[6]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 1.4f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[7]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 1.6f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[8]->render(tex);
-		
-		M = mat4::Translation(2.95f, yPos - 1.8f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		textMesh[9]->render(tex);
+		if (speakWithCharacter2 != None) {
+			M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+			Graphics4::setMatrix(mLocation, M);
+			Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
+			textMesh[speakWithCharacter2]->render(tex);
+		}
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
@@ -768,7 +736,7 @@ namespace {
 		renderPlattforms(V, P);
 		
 		g2->begin(false, width, height, false);
-		drawGUI(gameplayText);
+		drawGUI(storyLineText);
 		g2->end();
 #endif
 
@@ -808,16 +776,40 @@ namespace {
 				System::stop();
 				break;
 			case Kore::KeyLeft:
-				if (gameplayTree->getCurrentNode() != nullptr && gameplayTree->getLeftNode() != nullptr)
-					gameplayText = gameplayTree->getCurrentNode()->getData();
-				else
-					gameplayText = "Finished!";
+				if (storyLineTree->getCurrentNode() != nullptr && storyLineTree->getCurrentNode()->getLeft() != nullptr) {
+					storyLineTree->getLeftNode();
+					storyLineText = storyLineTree->getCurrentNode()->getData();
+					
+					if (storyLineTree->getCurrentNode()->getLeft() != nullptr)
+						speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
+					else
+						speakWithCharacter1 = None;
+					if (storyLineTree->getCurrentNode()->getRight() != nullptr)
+						speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
+					else
+						speakWithCharacter2 = None;
+				} else {
+					storyLineText = "Finished!";
+				}
 				break;
 			case Kore::KeyRight:
-				if (gameplayTree->getCurrentNode() != nullptr && gameplayTree->getRightNode() != nullptr)
-					gameplayText = gameplayTree->getCurrentNode()->getData();
-				else
-					gameplayText = "Finished!";
+				if (storyLineTree->getCurrentNode() != nullptr && storyLineTree->getCurrentNode()->getRight() != nullptr) {
+					storyLineTree->getRightNode();
+					storyLineText = storyLineTree->getCurrentNode()->getData();
+					
+					if (storyLineTree->getCurrentNode()->getLeft() != nullptr)
+						speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
+					else
+						speakWithCharacter1 = None;
+					if (storyLineTree->getCurrentNode()->getRight() != nullptr)
+						speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
+					else
+						speakWithCharacter2 = None;
+				} else {
+					storyLineText = "Finished!";
+					speakWithCharacter1 = None;
+					speakWithCharacter2 = None;
+				}
 				break;
 			default:
 				break;
@@ -979,16 +971,16 @@ namespace {
 		plattform = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);
 		
 		if (render3DText) {
-			textMesh[0] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
-			textMesh[1] = new MeshObject("3dtext/Clown2.ogex", "3dtext/", structure, 1);
-			textMesh[2] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
-			textMesh[3] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
-			textMesh[4] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
-			textMesh[5] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
-			textMesh[6] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
-			textMesh[7] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
-			textMesh[8] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
-			textMesh[9] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
+			textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
+			textMesh[Clown2] = new MeshObject("3dtext/Clown2.ogex", "3dtext/", structure, 1);
+			textMesh[Clown3] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
+			textMesh[Clown4] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
+			textMesh[Assistent] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
+			textMesh[AssistentMagier] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
+			textMesh[Dompteur] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
+			textMesh[Dude] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
+			textMesh[Magier] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
+			textMesh[Zirkusdirektor] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
 		}
 		
 		logger = new Logger();
@@ -1009,8 +1001,10 @@ namespace {
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 #endif
 		
-		gameplayTree = new BinaryTree();
-		gameplayText = gameplayTree->getCurrentNode()->getData();
+		storyLineTree = new BinaryTree();
+		storyLineText = storyLineTree->getCurrentNode()->getData();
+		speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
+		speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
 	}
 }
 
