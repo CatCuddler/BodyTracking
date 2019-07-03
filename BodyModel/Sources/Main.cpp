@@ -40,6 +40,7 @@ namespace {
 	const bool renderRoom = true;
 	const bool renderTrackerAndController = false;
 	const bool renderAxisForEndEffector = false;
+	const bool render3DText = true;
 	
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -110,6 +111,7 @@ namespace {
 	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
 	MeshObject* plattform;
+	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	Avatar* avatar;
 	LivingRoom* livingRoom;
 	
@@ -256,6 +258,26 @@ namespace {
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+	}
+	
+	void render3Dtext(mat4 V, mat4 P) {
+		Graphics4::setPipeline(pipeline);
+		
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
+		
+		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
+		textRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
+		
+		Kore::mat4 M = Kore::mat4::Identity();
+		M = mat4::Translation(2.95f, 3.5f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+		textMesh[0]->render(tex);
+		
+		// Reset color
+		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+		
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -695,6 +717,8 @@ namespace {
 		
 		if (renderRoom) renderLivingRoom(V, P);
 		
+		if (render3DText) render3Dtext(V, P);
+		
 		renderPlattforms(V, P);
 		
 		g2->begin(false, width, height, false);
@@ -907,6 +931,10 @@ namespace {
 		}
 		
 		plattform = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);
+		
+		if (render3DText) {
+			textMesh[0] = new MeshObject("3dtext/clown1.ogex", "3dtext/", structure, 1);
+		}
 		
 		logger = new Logger();
 		
