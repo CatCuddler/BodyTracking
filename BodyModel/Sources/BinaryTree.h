@@ -6,12 +6,21 @@ class BinaryTree {
 	
 private:
 	
-	Node* currentNode;
+	Node** nodes;
+	int numOfNodes = 97;
+	
+	int currentID;
+	
+	void createNewNode(Character speakWithCharacter, const char* const data);
 	
 public:
 	BinaryTree();
+	~BinaryTree();
 	
-	Node* getCurrentNode();
-	void getLeftNode();
-	void getRightNode();
+	Node* getCurrentNode() const;
+	int getCurrentNodeID() const;
+	Node* getLeftNode() const;
+	Node* getRightNode() const;
+	
+	bool setCurrentNode(int ID);
 };

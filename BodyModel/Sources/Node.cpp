@@ -3,16 +3,12 @@
 
 using namespace Kore;
 
-Node::Node(Character speakWithCharacter, const char* const data) : speakWithCharacter(speakWithCharacter), data(data), left(nullptr), right(nullptr) {
+Node::Node(int ID, Character speakWithCharacter, const char* const data) : ID(ID), speakWithCharacter(speakWithCharacter), data(data) {
 	
 }
 
-void Node::setLeftNode(Node* node) {
-	left = node;
-}
-
-void Node::setRightNode(Node* node) {
-	right = node;
+int Node::getID() const {
+	return ID;
 }
 
 const char* Node::getData() const {
@@ -21,12 +17,4 @@ const char* Node::getData() const {
 
 Character Node::speakWith() const {
 	return speakWithCharacter;
-}
-
-Node* Node::getLeft() const {
-	return left;
-}
-
-Node* Node::getRight() const {
-	return right;
 }

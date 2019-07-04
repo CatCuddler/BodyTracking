@@ -776,34 +776,36 @@ namespace {
 				System::stop();
 				break;
 			case Kore::KeyLeft:
-				if (storyLineTree->getCurrentNode() != nullptr && storyLineTree->getCurrentNode()->getLeft() != nullptr) {
-					storyLineTree->getLeftNode();
+				if (storyLineTree->getLeftNode() != nullptr) {
+					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
-					if (storyLineTree->getCurrentNode()->getLeft() != nullptr)
-						speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
+					if (storyLineTree->getLeftNode() != nullptr)
+						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 					else
 						speakWithCharacter1 = None;
-					if (storyLineTree->getCurrentNode()->getRight() != nullptr)
-						speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
+					if (storyLineTree->getRightNode() != nullptr)
+						speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
 					else
 						speakWithCharacter2 = None;
 				} else {
 					storyLineText = "Finished!";
+					speakWithCharacter1 = None;
+					speakWithCharacter2 = None;
 				}
 				log(LogLevel::Info, storyLineText);
 				break;
 			case Kore::KeyRight:
-				if (storyLineTree->getCurrentNode() != nullptr && storyLineTree->getCurrentNode()->getRight() != nullptr) {
-					storyLineTree->getRightNode();
+				if (storyLineTree->getRightNode() != nullptr) {
+					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
-					if (storyLineTree->getCurrentNode()->getLeft() != nullptr)
-						speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
+					if (storyLineTree->getLeftNode() != nullptr)
+						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 					else
 						speakWithCharacter1 = None;
-					if (storyLineTree->getCurrentNode()->getRight() != nullptr)
-						speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
+					if (storyLineTree->getRightNode() != nullptr)
+						speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
 					else
 						speakWithCharacter2 = None;
 				} else {
@@ -1005,8 +1007,10 @@ namespace {
 		
 		storyLineTree = new BinaryTree();
 		storyLineText = storyLineTree->getCurrentNode()->getData();
-		speakWithCharacter1 = storyLineTree->getCurrentNode()->getLeft()->speakWith();
-		speakWithCharacter2 = storyLineTree->getCurrentNode()->getRight()->speakWith();
+		if (storyLineTree->getLeftNode() != nullptr)
+			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+		if (storyLineTree->getRightNode() != nullptr)
+			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
 	}
 }
 

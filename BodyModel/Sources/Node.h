@@ -7,19 +7,14 @@ enum Character {
 class Node {
 	
 private:
+	const int ID;
 	const char* const data;
 	Character speakWithCharacter;
-	Node* left;
-	Node* right;
 	
 public:
-	Node(Character speakWithCharacter, const char* const data);
+	Node(int ID, Character speakWithCharacter, const char* const data);
 	
-	void setLeftNode(Node* node);
-	void setRightNode(Node* node);
-	
+	int getID() const;
 	const char* getData() const;
 	Character speakWith() const;
-	Node* getLeft() const;
-	Node* getRight() const;
 };
