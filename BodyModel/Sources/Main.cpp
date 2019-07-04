@@ -19,7 +19,7 @@
 #include "LivingRoom.h"
 #include "Logger.h"
 #include "HMM.h"
-
+#include "YogaMovement.h"
 #include "BinaryTree.h"
 
 #include <algorithm> // std::sort
@@ -1047,6 +1047,9 @@ int kore(int argc, char** argv) {
 	correctSound = new Sound("sound/correct.wav");
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
+	
+	Movement* movement = new Movement();
+	movement->getRandomMovement();
 	
 	System::start();
 	
