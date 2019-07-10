@@ -34,24 +34,112 @@ BinaryTree::BinaryTree() {
 	const char* const text19 = "Sprich mit dem Magier: Eventuell kann dir dein Assistent ja bei der Suche weiter helfen. Wozu sind Assistenten denn sonst da?";
 	
 	currentID = 0;
-	createNewNode(None, text0);
-	createNewNode(Assistent, text1);
-	createNewNode(Zirkusdirektor, text18);
-	createNewNode(Dompteur, text2);
-	createNewNode(Zirkusdirektor, text18);
-	createNewNode(Magier, text6);
-	createNewNode(Dompteur, text2);
-	
-	currentID = 0;
+	createNewNode(0, None, text0);
+	createNewNode(1, Assistent, text1);
+	createNewNode(2, Zirkusdirektor, text18);
+	createNewNode(3, Dompteur, text2);
+	createNewNode(4, Zirkusdirektor, text18);
+	createNewNode(5, Magier, text6);
+	createNewNode(6, Dompteur, text2);
+	createNewNode(7, Clown1, text3);
+	createNewNode(9, Magier, text6);
+	createNewNode(10, Assistent, text13);
+	createNewNode(11, Clown4, text7);
+	createNewNode(12, Dompteur, text2);
+	createNewNode(13, Dude, text9);
+	createNewNode(14, Assistent, text13);
+	createNewNode(15, Dude, text4);
+	createNewNode(19, Clown4, text7);
+	createNewNode(20, Dompteur, text2);
+	createNewNode(21, AssistentMagier, text11);
+	createNewNode(23, Clown2, text8);
+	createNewNode(24, Dompteur, text2);
+	createNewNode(25, Dude, text9);
+	createNewNode(26, Assistent, text13);
+	createNewNode(27, Clown3, text10);
+	createNewNode(29, AssistentMagier, text11);
+	createNewNode(31, Dompteur, text5);
+	createNewNode(32, Clown2, text15);
+	createNewNode(39, Clown2, text8);
+	createNewNode(40, Clown1, text14);
+	createNewNode(41, Assistent, text13);
+	createNewNode(42, Magier, text19);
+	createNewNode(47, Dude, text9);
+	createNewNode(48, Assistent, text13);
+	createNewNode(49, Clown4, text7);
+	createNewNode(50, Assistent, text13);
+	createNewNode(51, Clown3, text10);
+	createNewNode(53, AssistentMagier, text11);
+	createNewNode(55, AssistentMagier, text11);
+	createNewNode(63, Magier, text6);
+	createNewNode(64, Dude, text4);
+	createNewNode(65, Dude, text16);
+	createNewNode(66, Dompteur, text17);
+	createNewNode(79, Dude, text9);
+	createNewNode(81, AssistentMagier, text11);
+	createNewNode(83, AssistentMagier, text11);
+	createNewNode(85, AssistentMagier, text11);
+	createNewNode(95, Clown3, text10);
+	createNewNode(96, Clown1, text14);
+	createNewNode(97, AssistentMagier, text11);
+	createNewNode(99, Clown2, text8);
+	createNewNode(100, Assistent, text13);
+	createNewNode(101, AssistentMagier, text11);
+	createNewNode(103, AssistentMagier, text11);
+	createNewNode(127, Clown4, text7);
+	createNewNode(128, Clown1, text14);
+	createNewNode(129, Clown3, text10);
+	createNewNode(130, Clown1, text10);
+	createNewNode(131, Clown3, text10);
+	createNewNode(133, Clown1, text14);
+	createNewNode(134, Assistent, text13);
+	createNewNode(159, Clown3, text10);
+	createNewNode(160, Dompteur, text5);
+	createNewNode(191, AssistentMagier, text11);
+	createNewNode(193, AssistentMagier, text11);
+	createNewNode(199, Dude, text9);
+	createNewNode(200, Clown1, text14);
+	createNewNode(201, AssistentMagier, text11);
+	createNewNode(255, Clown2, text8);
+	createNewNode(256, Assistent, text13);
+	createNewNode(257, AssistentMagier, text11);
+	createNewNode(259, AssistentMagier, text11);
+	createNewNode(261, AssistentMagier, text11);
+	createNewNode(263, AssistentMagier, text11);
+	createNewNode(265, AssistentMagier, text11);
+	createNewNode(267, AssistentMagier, text11);
+	createNewNode(269, AssistentMagier, text11);
+	createNewNode(319, AssistentMagier, text11);
+	createNewNode(321, Clown4, text7);
+	createNewNode(322, Clown1, text14);
+	createNewNode(399, Clown3, text10);
+	createNewNode(401, AssistentMagier, text11);
+	createNewNode(511, Dude, text9);
+	createNewNode(512, Clown1, text12);
+	createNewNode(513, AssistentMagier, text11);
+	createNewNode(643, Clown2, text8);
+	createNewNode(645, AssistentMagier, text11);
+	createNewNode(644, Assistent, text13);
+	createNewNode(799, AssistentMagier, text11);
+	createNewNode(1023, Clown3, text10);
+	createNewNode(1024, Clown1, text12);
+	createNewNode(1025, Clown1, text11);
+	createNewNode(1287, Dude, text9);
+	createNewNode(1288, Clown1, text14);
+	createNewNode(1289, AssistentMagier, text11);
+	createNewNode(2047, AssistentMagier, text11);
+	createNewNode(2049, AssistentMagier, text11);
+	createNewNode(2575, Clown3, text10);
+	createNewNode(2577, AssistentMagier, text11);
+	createNewNode(5151, AssistentMagier, text11);
 }
 
 BinaryTree::~BinaryTree() {
 	delete []nodes;
 }
 
-void BinaryTree::createNewNode(Character speakWithCharacter, const char* const data) {
-	nodes[currentID] = new Node(currentID, speakWithCharacter, data);
-	++currentID;
+void BinaryTree::createNewNode(int index, Character speakWithCharacter, const char* const data) {
+	nodes[index] = new Node(currentID, speakWithCharacter, data);
 }
 
 Node* BinaryTree::getCurrentNode() const {

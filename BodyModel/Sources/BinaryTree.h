@@ -7,11 +7,11 @@ class BinaryTree {
 private:
 	
 	Node** nodes;
-	int numOfNodes = 97;
+	int numOfNodes = 5151;
 	
 	int currentID;
 	
-	void createNewNode(Character speakWithCharacter, const char* const data);
+	void createNewNode(int index, Character speakWithCharacter, const char* const data);
 	
 public:
 	BinaryTree();
