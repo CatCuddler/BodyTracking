@@ -89,8 +89,9 @@ BinaryTree::BinaryTree() {
 	createNewNode(127, Clown4, text7);
 	createNewNode(128, Clown1, text14);
 	createNewNode(129, Clown3, text10);
-	createNewNode(130, Clown1, text10);
+	createNewNode(130, Clown1, text14);
 	createNewNode(131, Clown3, text10);
+	createNewNode(132, Clown1, text14);
 	createNewNode(133, Clown1, text14);
 	createNewNode(134, Assistent, text13);
 	createNewNode(159, Clown3, text10);
@@ -123,7 +124,7 @@ BinaryTree::BinaryTree() {
 	createNewNode(799, AssistentMagier, text11);
 	createNewNode(1023, Clown3, text10);
 	createNewNode(1024, Clown1, text12);
-	createNewNode(1025, Clown1, text11);
+	createNewNode(1025, AssistentMagier, text11);
 	createNewNode(1287, Dude, text9);
 	createNewNode(1288, Clown1, text14);
 	createNewNode(1289, AssistentMagier, text11);
