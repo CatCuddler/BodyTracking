@@ -789,7 +789,7 @@ namespace {
 					else
 						speakWithCharacter2 = None;
 				} else {
-					storyLineText = "Finished!";
+					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
 					speakWithCharacter2 = None;
 				}
@@ -809,7 +809,7 @@ namespace {
 					else
 						speakWithCharacter2 = None;
 				} else {
-					storyLineText = "Finished!";
+					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
 					speakWithCharacter2 = None;
 				}

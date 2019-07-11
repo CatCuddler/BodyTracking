@@ -134,6 +134,7 @@ BinaryTree::BinaryTree() {
 	createNewNode(2575, Clown3, text10);
 	createNewNode(2577, AssistentMagier, text17);
 	createNewNode(5151, AssistentMagier, text17);
+	createNewNode(5152, None, outroText);
 }
 
 BinaryTree::~BinaryTree() {
@@ -146,6 +147,10 @@ void BinaryTree::createNewNode(int index, Character speakWithCharacter, const ch
 
 Node* BinaryTree::getCurrentNode() const {
 	return nodes[currentID];
+}
+
+Node* BinaryTree::getLastNode() const {
+	return nodes[numOfNodes];
 }
 
 int BinaryTree::getCurrentNodeID() const {

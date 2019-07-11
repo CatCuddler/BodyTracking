@@ -7,7 +7,7 @@ class BinaryTree {
 private:
 	
 	Node** nodes;
-	int numOfNodes = 5151;
+	int numOfNodes = 5152;
 	
 	int currentID;
 	
@@ -18,6 +18,7 @@ public:
 	~BinaryTree();
 	
 	Node* getCurrentNode() const;
+	Node* getLastNode() const;
 	int getCurrentNodeID() const;
 	Node* getLeftNode() const;
 	Node* getRightNode() const;
