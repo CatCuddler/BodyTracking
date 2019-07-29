@@ -120,7 +120,8 @@ bool HMM::stopRecognition() {
 
 		logger.analyseHMM(hmmName, 0, true);
 
-		if (std::all_of(trackerMovementRecognised.begin(), trackerMovementRecognised.end(), [](bool v) { return v; })) {
+		// Ignore HMD (+1)
+		if (std::all_of(trackerMovementRecognised.begin() + 1, trackerMovementRecognised.end(), [](bool v) { return v; })) {
 			// All (present) trackers were recognised as correct
 			return true;
 		} else {
