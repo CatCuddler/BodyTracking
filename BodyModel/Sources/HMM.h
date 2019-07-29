@@ -9,7 +9,7 @@ class HMM {
 private:
 	// Either record or recognition can be true
 	const bool record = false;
-	const bool recognition = false;
+	const bool recognition = true;
 	
 	Logger& logger;
 	

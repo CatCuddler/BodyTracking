@@ -338,7 +338,7 @@ namespace {
 				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 			} else {
 				log(Info, "Stop recognizing the motion");
-				bool correct = hmm->stopRecognition();
+				bool correct = hmm->stopRecognitionAndIdentify();// hmm->stopRecognition();
 				if (correct) {
 					log(Info, "The movement is correct!");
 					Audio1::play(correctSound);
