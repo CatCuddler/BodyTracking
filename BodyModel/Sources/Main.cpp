@@ -117,15 +117,15 @@ namespace {
 	
 	// Avatar
 	Avatar* avatar;
-	BoxCollider* boxCollider;
+	SphereCollider* avatarCollider;
+	MeshObject* sphereMesh;
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
 	
 	// Plattform mesh objects and collider
 	MeshObject* plattforms[] = { nullptr, nullptr, nullptr };
-	//SphereCollider* sphereCollider;
-	
+	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 	
 	Character speakWithCharacter1 = None;
 	Character speakWithCharacter2 = None;
@@ -304,6 +304,11 @@ namespace {
 		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
 		avatar->animate(tex);
+		
+		// Render collider
+		mat4 colliderM = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
+		Graphics4::setMatrix(mLocation, colliderM);
+		sphereMesh->render(tex);
 		
 		// Mirror the avatar
 		mat4 initTransMirror = getMirrorMatrix() * initTrans;
@@ -676,6 +681,9 @@ namespace {
 				executeMovement(i);
 			}
 			
+			// Update the sphere collider for the avatar
+			avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
+			
 			if (!dataAvailable) {
 				currentFile++;
 				calibratedAvatar = false;
@@ -699,12 +707,15 @@ namespace {
 		renderPlattforms(V, P);
 		
 		// TODO: check if avatar is colliding with a plattform
-		/*PhysicsObject* SpherePO = physics.physicsObjects[0];
-		bool result = SpherePO->Collider.IntersectsWith(boxCollider);
-		if (result && !playedSound) {
-			playedSound = true;
-			Audio1::play(winSound);
-		}*/
+		SphereCollider** currentSphereCollider = &sphereColliders[0];
+		while (*currentSphereCollider != nullptr) {
+			// Check collision
+			bool colliding = (*currentSphereCollider)->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				log(LogLevel::Info, "colliding");
+			}
+			++currentSphereCollider;
+		}
 		
 		g2->begin(false, width, height, false);
 		drawGUI(storyLineText);
@@ -907,7 +918,8 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-		boxCollider = new BoxCollider(vec3(0, 0, 0), vec3(1,4,1));
+		avatarCollider = new SphereCollider(vec3(0, 0, 0), 0.3f);
+		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
 		
 		initTransAndRot();
 		
@@ -952,7 +964,9 @@ namespace {
 		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[1]->M = mat4::Translation(0, 0, 1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[2]->M = mat4::Translation(0, 0, -1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		//plattform->Collider = new SphereCollider();
+		sphereColliders[0] = new SphereCollider(vec3(0, 0, 0), 0.3f);
+		sphereColliders[1] = new SphereCollider(vec3(0, 0, 1.5f), 0.3f);
+		sphereColliders[2] = new SphereCollider(vec3(0, 0, -1.5f), 0.3f);
 		
 		if (render3DText) {
 			textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);

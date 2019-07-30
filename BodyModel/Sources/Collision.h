@@ -92,9 +92,12 @@ public:
 // A sphere is defined by a radius and a center.
 class SphereCollider {
 public:
-	
 	vec3 center;
 	float radius;
+	
+	SphereCollider(Kore::vec3 center, float radius) : center(center), radius(radius) {
+		
+	}
 	
 	// Return true iff there is an intersection with the other sphere
 	bool IntersectsWith(const SphereCollider& other) {
