@@ -21,6 +21,7 @@
 #include "HMM.h"
 #include "YogaMovement.h"
 #include "BinaryTree.h"
+//#include "Collision.h"
 
 #include <algorithm> // std::sort
 
@@ -110,10 +111,20 @@ namespace {
 	
 	// Null terminated array of MeshObject pointers (Vive Controller and Tracker)
 	MeshObject* viveObjects[] = { nullptr, nullptr, nullptr };
-	MeshObject* plattform;
+	
+	// Null terminated array of 3d text
 	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	
+	// Avatar
 	Avatar* avatar;
+	
+	// Virtual environment
 	LivingRoom* livingRoom;
+	
+	// Plattform mesh objects and collider
+	MeshObject* plattforms[] = { nullptr, nullptr, nullptr };
+	//SphereCollider* sphereCollider;
+	
 	
 	Character speakWithCharacter1 = None;
 	Character speakWithCharacter2 = None;
@@ -240,24 +251,17 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
-		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
-		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		
-		Kore::mat4 M = Kore::mat4::Identity();
-		M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f); //plattform->geometries[0]->transform
-		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setMatrix(mLocation, plattforms[0]->M);
 		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		plattform->render(tex);
+		plattforms[0]->render(tex);
 		
-		M = mat4::Translation(0, 0, 1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setMatrix(mLocation, plattforms[1]->M);
 		Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
-		plattform->render(tex);
+		plattforms[1]->render(tex);
 		
-		M = mat4::Translation(0, 0, -1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		Graphics4::setMatrix(mLocation, M);
+		Graphics4::setMatrix(mLocation, plattforms[2]->M);
 		Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
-		plattform->render(tex);
+		plattforms[2]->render(tex);
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
@@ -695,6 +699,14 @@ namespace {
 		
 		renderPlattforms(V, P);
 		
+		// TODO: check if avatar is colliding with a plattform
+		/*PhysicsObject* SpherePO = physics.physicsObjects[0];
+		bool result = SpherePO->Collider.IntersectsWith(boxCollider);
+		if (result && !playedSound) {
+			playedSound = true;
+			Audio1::play(winSound);
+		}*/
+		
 		g2->begin(false, width, height, false);
 		drawGUI(storyLineText);
 		g2->end();
@@ -932,7 +944,15 @@ namespace {
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
-		plattform = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);
+		plattforms[0] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);;
+		plattforms[1] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);;
+		plattforms[2] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 1);;
+		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
+		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		plattforms[1]->M = mat4::Translation(0, 0, 1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		plattforms[2]->M = mat4::Translation(0, 0, -1.5f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		//plattform->Collider = new SphereCollider();
 		
 		if (render3DText) {
 			textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
