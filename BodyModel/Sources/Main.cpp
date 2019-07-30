@@ -21,7 +21,7 @@
 #include "HMM.h"
 #include "YogaMovement.h"
 #include "BinaryTree.h"
-//#include "Collision.h"
+#include "Collision.h"
 
 #include <algorithm> // std::sort
 
@@ -117,6 +117,7 @@ namespace {
 	
 	// Avatar
 	Avatar* avatar;
+	BoxCollider* boxCollider;
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -143,8 +144,6 @@ namespace {
 	bool controllerButtonsInitialized = false;
 	float currentUserHeight;
 	bool firstPersonMonitor = false;
-#else
-	int loop = 0;
 #endif
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
@@ -908,6 +907,7 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
+		boxCollider = new BoxCollider(vec3(0, 0, 0), vec3(1,4,1));
 		
 		initTransAndRot();
 		
