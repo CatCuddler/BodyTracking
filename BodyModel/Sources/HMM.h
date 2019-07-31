@@ -4,6 +4,10 @@
 #include "kMeans.h"
 #include "Markov.h"
 
+enum Yoga {
+	Yoga1 = 0, Yoga2 = 1, Yoga3 = 2
+};
+
 class HMM {
 	
 private:
@@ -14,6 +18,8 @@ private:
 	Logger& logger;
 	
 	void init(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
+	
+	bool stopRecognition(const char* path);
 	
 public:
 	HMM(Logger& logger);
@@ -28,7 +34,7 @@ public:
 	void stopRecording();
 	
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
-	bool stopRecognition();
+	bool stopRecognition(Yoga yogaPos);
 	bool stopRecognitionAndIdentify();
 	
 	bool hmmActive();

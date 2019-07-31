@@ -80,7 +80,7 @@ void HMM::startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation)
 	}
 }
 
-bool HMM::stopRecognition() {
+bool HMM::stopRecognition(const char* path = hmmPath) {
 	if (recognition) {
 		// Read clusters for all trackers from file
 		bool trackersPresent[numOfDataPoints];
@@ -89,7 +89,7 @@ bool HMM::stopRecognition() {
 			try {
 				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-				KMeans kmeans(hmmPath, hmmNameWithNum);
+				KMeans kmeans(path, hmmNameWithNum);
 				kmeanVector.at(ii) = kmeans;
 				trackersPresent[ii] = true;
 			} catch (std::invalid_argument) {
@@ -128,6 +128,24 @@ bool HMM::stopRecognition() {
 		}
 	}
 	return false;
+}
+
+bool HMM::stopRecognition(Yoga yogaPos) {
+	bool recognized = false;
+	switch (yogaPos) {
+		case Yoga1:
+			recognized = stopRecognition(hmmPath0);
+			break;
+		case Yoga2:
+			recognized = stopRecognition(hmmPath1);
+			break;
+		case Yoga3:
+			recognized = stopRecognition(hmmPath2);
+			break;
+		default:
+			break;
+	}
+	return recognized;
 }
 
 bool HMM::stopRecognitionAndIdentify() {

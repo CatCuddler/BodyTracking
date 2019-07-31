@@ -16,9 +16,9 @@ int Movement::getRandom() {
 	return value;
 }
 
-Yoga Movement::getRandomMovement() {
+void Movement::getRandomMovement() {
 	int random = getRandom();
-	Yoga movement = static_cast<Yoga>(random);
+	//Yoga movement = static_cast<Yoga>(random);
 	log(LogLevel::Info, "random %i", random);
-	return movement;
+	//return movement;
 }

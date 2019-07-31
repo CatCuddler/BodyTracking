@@ -306,8 +306,7 @@ namespace {
 		avatar->animate(tex);
 		
 		// Render collider
-		mat4 colliderM = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
-		Graphics4::setMatrix(mLocation, colliderM);
+		Graphics4::setMatrix(mLocation, sphereMesh->M);
 		sphereMesh->render(tex);
 		
 		// Mirror the avatar
@@ -395,6 +394,9 @@ namespace {
 		}
 	}
 	
+	bool colliding = false;
+	Yoga yogaPose;
+	
 	void record() {
 		logRawData = !logRawData;
 		
@@ -424,9 +426,36 @@ namespace {
 				Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
 				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				
+				// Check if avatar is colliding with a plattform
+				for (int i = 0; i < 3; ++i) {
+					// Check collision
+					colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
+					if (colliding) {
+						log(LogLevel::Info, "Colliding with plattform %i", i);
+						
+						switch (i) {
+							case 0:
+								yogaPose = Yoga1;
+								break;
+								
+							case 1:
+								yogaPose = Yoga2;
+								break;
+								
+							case 2:
+								yogaPose = Yoga3;
+								break;
+								
+							default:
+								break;
+						}
+						
+					}
+				}
 			} else {
 				log(Info, "Stop recognizing the motion");
-				bool correct = hmm->stopRecognitionAndIdentify();// hmm->stopRecognition();
+				bool correct = hmm->stopRecognition(yogaPose);// hmm->stopRecognition();
 				if (correct) {
 					log(Info, "The movement is correct!");
 					Audio1::play(correctSound);
@@ -434,6 +463,8 @@ namespace {
 					log(Info, "The movement is wrong");
 					Audio1::play(wrongSound);
 				}
+				
+				colliding = false;
 			}
 		}
 	}
@@ -683,6 +714,7 @@ namespace {
 			
 			// Update the sphere collider for the avatar
 			avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
+			sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
 			
 			if (!dataAvailable) {
 				currentFile++;
@@ -705,17 +737,6 @@ namespace {
 		if (render3DText) render3Dtext(V, P);
 		
 		renderPlattforms(V, P);
-		
-		// TODO: check if avatar is colliding with a plattform
-		SphereCollider** currentSphereCollider = &sphereColliders[0];
-		while (*currentSphereCollider != nullptr) {
-			// Check collision
-			bool colliding = (*currentSphereCollider)->IntersectsWith(*avatarCollider);
-			if (colliding) {
-				log(LogLevel::Info, "colliding");
-			}
-			++currentSphereCollider;
-		}
 		
 		g2->begin(false, width, height, false);
 		drawGUI(storyLineText);
@@ -832,7 +853,6 @@ namespace {
 		mat4 mat = q2.matrix();
 		camForward = mat * camForward;
 	}
-	
 	
 	void mousePress(int windowId, int button, int x, int y) {
 		rotate = true;
