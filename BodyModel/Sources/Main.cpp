@@ -291,14 +291,14 @@ namespace {
 		if (speakWithCharacter1 != None) {
 			M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
+			Graphics4::setFloat3(cLocation, vec3(pose1 == Yoga1, pose1 == Yoga2, pose1 == Yoga3));
 			textMesh[speakWithCharacter1]->render(tex);
 		}
 		
 		if (speakWithCharacter2 != None) {
 			M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
+			Graphics4::setFloat3(cLocation, vec3(pose2 == Yoga1, pose2 == Yoga2, pose2 == Yoga3));
 			textMesh[speakWithCharacter2]->render(tex);
 		}
 		
@@ -1041,6 +1041,8 @@ namespace {
 			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 		if (storyLineTree->getRightNode() != nullptr)
 			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+		movement = new Movement();
+		getRandomPose();
 	}
 }
 
@@ -1077,11 +1079,6 @@ int kickstart(int argc, char** argv) {
 	correctSound = new Sound("sound/correct.wav");
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
-	
-	pose1 = Unknown;
-	pose2 = Unknown;
-	movement = new Movement();
-	movement->getRandomMovement(pose1, pose2);
 	
 	System::start();
 	
