@@ -5,7 +5,7 @@
 #include "Markov.h"
 
 enum Yoga {
-	Yoga1 = 0, Yoga2 = 1, Yoga3 = 2
+	Yoga1, Yoga2, Yoga3, Unknown,
 };
 
 class HMM {

@@ -146,6 +146,10 @@ namespace {
 	bool firstPersonMonitor = false;
 #endif
 	
+	Movement* movement;
+	Yoga pose1;
+	Yoga pose2;
+	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
 		viveObjects[index]->render(tex);
@@ -334,10 +338,6 @@ namespace {
 
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
-		
-		// Save data to either train hmm or to recognize a movement
-		//if (hmm->hmmActive()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), desPosition, desRotation);
-		
 		
 		if (calibratedAvatar) {
 			// Transform desired position/rotation to the character local coordinate system
@@ -783,6 +783,9 @@ namespace {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
+					movement->getRandomMovement(pose1, pose2);
+					
+					// Update 3D text
 					if (storyLineTree->getLeftNode() != nullptr)
 						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 					else
@@ -803,6 +806,9 @@ namespace {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
+					movement->getRandomMovement(pose1, pose2);
+					
+					// Update 3d text
 					if (storyLineTree->getLeftNode() != nullptr)
 						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 					else
@@ -1062,8 +1068,7 @@ int kickstart(int argc, char** argv) {
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
 	
-	Movement* movement = new Movement();
-	movement->getRandomMovement();
+	movement = new Movement();
 	
 	System::start();
 	
