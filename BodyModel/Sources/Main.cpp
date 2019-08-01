@@ -254,17 +254,23 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
-		Graphics4::setMatrix(mLocation, plattforms[0]->M);
-		Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
-		plattforms[0]->render(tex);
+		if (pose1 == Yoga1 || pose2 == Yoga1) {
+			Graphics4::setMatrix(mLocation, plattforms[0]->M);
+			Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+			plattforms[0]->render(tex);
+		}
 		
-		Graphics4::setMatrix(mLocation, plattforms[1]->M);
-		Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
-		plattforms[1]->render(tex);
+		if (pose1 == Yoga2 || pose2 == Yoga2) {
+			Graphics4::setMatrix(mLocation, plattforms[1]->M);
+			Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
+			plattforms[1]->render(tex);
+		}
 		
-		Graphics4::setMatrix(mLocation, plattforms[2]->M);
-		Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
-		plattforms[2]->render(tex);
+		if (pose1 == Yoga3 || pose2 == Yoga3) {
+			Graphics4::setMatrix(mLocation, plattforms[2]->M);
+			Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
+			plattforms[2]->render(tex);
+		}
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
@@ -747,6 +753,27 @@ namespace {
 		Graphics4::swapBuffers();
 	}
 	
+	void updateCharacterText() {
+		if (storyLineTree->getLeftNode() != nullptr)
+			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+		else
+			speakWithCharacter1 = None;
+		if (storyLineTree->getRightNode() != nullptr)
+			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+		else
+			speakWithCharacter2 = None;
+	}
+	
+	void getRandomPose() {
+		// Get random pose
+		pose1 = Unknown;
+		pose2 = Unknown;
+		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
+			movement->getRandomMovement(pose1, pose2);
+		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
+			movement->getRandomMovement(pose1);
+	}
+	
 	void keyDown(KeyCode code) {
 		switch (code) {
 			case Kore::KeyW:
@@ -783,17 +810,9 @@ namespace {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
-					movement->getRandomMovement(pose1, pose2);
-					
-					// Update 3D text
-					if (storyLineTree->getLeftNode() != nullptr)
-						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-					else
-						speakWithCharacter1 = None;
-					if (storyLineTree->getRightNode() != nullptr)
-						speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-					else
-						speakWithCharacter2 = None;
+					updateCharacterText();
+					getRandomPose();
+						
 				} else {
 					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
@@ -806,17 +825,8 @@ namespace {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
 					
-					movement->getRandomMovement(pose1, pose2);
-					
-					// Update 3d text
-					if (storyLineTree->getLeftNode() != nullptr)
-						speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-					else
-						speakWithCharacter1 = None;
-					if (storyLineTree->getRightNode() != nullptr)
-						speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-					else
-						speakWithCharacter2 = None;
+					updateCharacterText();
+					getRandomPose();
 				} else {
 					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
@@ -1068,7 +1078,10 @@ int kickstart(int argc, char** argv) {
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
 	
+	pose1 = Unknown;
+	pose2 = Unknown;
 	movement = new Movement();
+	movement->getRandomMovement(pose1, pose2);
 	
 	System::start();
 	
