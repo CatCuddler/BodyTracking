@@ -70,6 +70,8 @@ namespace {
 	Sound* wrongSound;
 	Sound* startRecognitionSound;
 	
+	Sound* currentAudio;
+	
 	// Avatar shader
 	VertexStructure structure;
 	Shader* vertexShader;
@@ -809,6 +811,11 @@ namespace {
 				if (storyLineTree->getLeftNode() != nullptr) {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
+					storyLineTree->getCurrentNode()->getID();
+					currentAudio = storyLineTree->getCurrentNode()->getAudio();
+					Audio1::stop(currentAudio);
+					if(currentAudio != nullptr)
+						Audio1::play(currentAudio);
 					
 					updateCharacterText();
 					getRandomPose();
@@ -824,6 +831,10 @@ namespace {
 				if (storyLineTree->getRightNode() != nullptr) {
 					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
 					storyLineText = storyLineTree->getCurrentNode()->getData();
+					currentAudio = storyLineTree->getCurrentNode()->getAudio();
+					Audio1::stop(currentAudio);
+					if(currentAudio != nullptr)
+						Audio1::play(currentAudio);
 					
 					updateCharacterText();
 					getRandomPose();

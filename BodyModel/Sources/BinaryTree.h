@@ -2,6 +2,8 @@
 
 #include "Node.h"
 
+#include <Kore/Audio1/Sound.h>
+
 class BinaryTree {
 	
 private:
@@ -11,7 +13,7 @@ private:
 	
 	int currentID;
 	
-	void createNewNode(int index, Character speakWithCharacter, const char* const data);
+	void createNewNode(int index, Character speakWithCharacter, const char* const data, Kore::Sound* audio);
 	
 public:
 	BinaryTree();
@@ -22,6 +24,7 @@ public:
 	int getCurrentNodeID() const;
 	Node* getLeftNode() const;
 	Node* getRightNode() const;
+	Kore::Sound* getAudio() const;
 	
 	bool setCurrentNode(int ID);
 };

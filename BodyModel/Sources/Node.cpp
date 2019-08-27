@@ -3,7 +3,7 @@
 
 using namespace Kore;
 
-Node::Node(int ID, Character speakWithCharacter, const char* const data) : ID(ID), speakWithCharacter(speakWithCharacter), data(data) {
+Node::Node(int ID, Character speakWithCharacter, const char* const data, Sound* audio) : ID(ID), speakWithCharacter(speakWithCharacter), data(data), audio(audio) {
 	
 }
 
@@ -17,4 +17,8 @@ const char* Node::getData() const {
 
 Character Node::speakWith() const {
 	return speakWithCharacter;
+}
+
+Sound* Node::getAudio() const {
+	return audio;
 }
