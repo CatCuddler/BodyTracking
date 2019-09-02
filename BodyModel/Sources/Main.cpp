@@ -824,6 +824,11 @@ namespace {
 					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
 					speakWithCharacter2 = None;
+					
+					currentAudio = storyLineTree->getLastNode()->getAudio();
+					Audio1::stop(currentAudio);
+					if(currentAudio != nullptr)
+						Audio1::play(currentAudio);
 				}
 				log(LogLevel::Info, storyLineText);
 				break;
@@ -842,6 +847,11 @@ namespace {
 					storyLineText = storyLineTree->getLastNode()->getData();
 					speakWithCharacter1 = None;
 					speakWithCharacter2 = None;
+					
+					currentAudio = storyLineTree->getLastNode()->getAudio();
+					Audio1::stop(currentAudio);
+					if(currentAudio != nullptr)
+						Audio1::play(currentAudio);
 				}
 				log(LogLevel::Info, storyLineText);
 				break;
@@ -1090,6 +1100,11 @@ int kickstart(int argc, char** argv) {
 	correctSound = new Sound("sound/correct.wav");
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
+	
+	currentAudio = storyLineTree->getCurrentNode()->getAudio();
+	//Audio1::stop(currentAudio);
+	if(currentAudio != nullptr)
+		Audio1::play(currentAudio);
 	
 	System::start();
 	
