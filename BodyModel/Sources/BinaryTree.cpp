@@ -162,14 +162,14 @@ BinaryTree::BinaryTree() {
 	createNewNode(399, Clown3, text10, clown3_1);
 	createNewNode(401, AssistentMagier, text18, assistent_magier);
 	createNewNode(511, Dude, text14, dude_2);
-	createNewNode(512, Clown1, text5, clown1_2);
+	createNewNode(512, Clown1, text6, clown1_2);
 	createNewNode(513, AssistentMagier, text18, assistent_magier);
 	createNewNode(643, Clown2, text9, clown2_2);
 	createNewNode(645, AssistentMagier, text18, assistent_magier);
 	createNewNode(644, Assistent, text1, assistent_2);
 	createNewNode(799, AssistentMagier, text18, assistent_magier);
 	createNewNode(1023, Clown3, text10, clown3_1);
-	createNewNode(1024, Clown1, text5, clown1_2);
+	createNewNode(1024, Clown1, text6, clown1_2);
 	createNewNode(1025, AssistentMagier, text18, assistent_magier);
 	createNewNode(1287, Dude, text15, dude_3);
 	createNewNode(1288, Clown1, text7, clown1_3);
