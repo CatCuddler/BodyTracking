@@ -250,24 +250,24 @@ namespace {
 		
 		if (pose1 == Yoga1 || pose2 == Yoga1) {
 			Graphics4::setMatrix(mLocation, plattforms[0]->M);
-			Graphics4::setFloat3(cLocation, vec3(1, 0, 0));
+			Graphics4::setFloat3(cLocation, vec3(1.0, 0.0, 0.0));
 			plattforms[0]->render(tex);
 		}
 		
 		if (pose1 == Yoga2 || pose2 == Yoga2) {
 			Graphics4::setMatrix(mLocation, plattforms[1]->M);
-			Graphics4::setFloat3(cLocation, vec3(0, 1, 0));
+			Graphics4::setFloat3(cLocation, vec3(0.0, 1.0, 0.0));
 			plattforms[1]->render(tex);
 		}
 		
 		if (pose1 == Yoga3 || pose2 == Yoga3) {
 			Graphics4::setMatrix(mLocation, plattforms[2]->M);
-			Graphics4::setFloat3(cLocation, vec3(0, 0, 1));
+			Graphics4::setFloat3(cLocation, vec3(0.0, 0.0, 1.0));
 			plattforms[2]->render(tex);
 		}
 		
 		// Reset color
-		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+		Graphics4::setFloat3(cLocation, vec3(1.0, 1.0, 1.0));
 	}
 	
 	void render3Dtext(mat4 V, mat4 P) {
