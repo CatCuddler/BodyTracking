@@ -416,6 +416,57 @@ namespace {
 	bool colliding = false;
 	Yoga yogaPose;
 	
+	
+	void updateCharacterText() {
+		if (storyLineTree->getLeftNode() != nullptr)
+			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+		else
+			speakWithCharacter1 = None;
+		if (storyLineTree->getRightNode() != nullptr)
+			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+		else
+			speakWithCharacter2 = None;
+	}
+	
+	void getRandomPose() {
+		// Get random pose
+		pose0 = Unknown;
+		pose1 = Unknown;
+		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
+			movement->getRandomMovement(pose0, pose1);
+		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
+			movement->getRandomMovement(pose0);
+	}
+	void getNextStoryElement(bool left) {
+		if (left && storyLineTree->getLeftNode() != nullptr) {
+			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
+		} else if (!left && storyLineTree->getRightNode() != nullptr) {
+			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
+		} else {
+			storyLineText = storyLineTree->getLastNode()->getData();
+			speakWithCharacter1 = None;
+			speakWithCharacter2 = None;
+			
+			currentAudio = storyLineTree->getLastNode()->getAudio();
+			Audio1::stop(currentAudio);
+			if(currentAudio != nullptr)
+				Audio1::play(currentAudio);
+			
+			return;
+		}
+		
+		storyLineText = storyLineTree->getCurrentNode()->getData();
+		currentAudio = storyLineTree->getCurrentNode()->getAudio();
+		Audio1::stop(currentAudio);
+		if(currentAudio != nullptr)
+			Audio1::play(currentAudio);
+		
+		updateCharacterText();
+		getRandomPose();
+		
+		log(LogLevel::Info, storyLineText);
+	}
+	
 	void record() {
 		logRawData = !logRawData;
 		
@@ -482,6 +533,9 @@ namespace {
 				if (correct) {
 					log(Info, "The movement is correct!");
 					Audio1::play(correctSound);
+					
+					if (pose0 == yogaPose) getNextStoryElement(true);
+					else if (pose1 == yogaPose) getNextStoryElement(false);
 				} else {
 					log(Info, "The movement is wrong");
 					Audio1::play(wrongSound);
@@ -762,27 +816,6 @@ namespace {
 		Graphics4::swapBuffers();
 	}
 	
-	void updateCharacterText() {
-		if (storyLineTree->getLeftNode() != nullptr)
-			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-		else
-			speakWithCharacter1 = None;
-		if (storyLineTree->getRightNode() != nullptr)
-			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-		else
-			speakWithCharacter2 = None;
-	}
-	
-	void getRandomPose() {
-		// Get random pose
-		pose0 = Unknown;
-		pose1 = Unknown;
-		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
-			movement->getRandomMovement(pose0, pose1);
-		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
-			movement->getRandomMovement(pose0);
-	}
-	
 	void keyDown(KeyCode code) {
 		switch (code) {
 			case Kore::KeyW:
@@ -815,52 +848,10 @@ namespace {
 				System::stop();
 				break;
 			case Kore::KeyLeft:
-				if (storyLineTree->getLeftNode() != nullptr) {
-					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
-					storyLineText = storyLineTree->getCurrentNode()->getData();
-					storyLineTree->getCurrentNode()->getID();
-					currentAudio = storyLineTree->getCurrentNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-					
-					updateCharacterText();
-					getRandomPose();
-						
-				} else {
-					storyLineText = storyLineTree->getLastNode()->getData();
-					speakWithCharacter1 = None;
-					speakWithCharacter2 = None;
-					
-					currentAudio = storyLineTree->getLastNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-				}
-				log(LogLevel::Info, storyLineText);
+				getNextStoryElement(true);
 				break;
 			case Kore::KeyRight:
-				if (storyLineTree->getRightNode() != nullptr) {
-					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
-					storyLineText = storyLineTree->getCurrentNode()->getData();
-					currentAudio = storyLineTree->getCurrentNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-					
-					updateCharacterText();
-					getRandomPose();
-				} else {
-					storyLineText = storyLineTree->getLastNode()->getData();
-					speakWithCharacter1 = None;
-					speakWithCharacter2 = None;
-					
-					currentAudio = storyLineTree->getLastNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-				}
-				log(LogLevel::Info, storyLineText);
+				getNextStoryElement(false);
 				break;
 			default:
 				break;
