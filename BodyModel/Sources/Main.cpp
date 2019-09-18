@@ -717,10 +717,6 @@ namespace {
 				executeMovement(i);
 			}
 			
-			// Update the sphere collider for the avatar
-			//avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
-			//sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
-			
 			if (!dataAvailable) {
 				currentFile++;
 				calibratedAvatar = false;
