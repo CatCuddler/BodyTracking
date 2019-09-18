@@ -352,6 +352,11 @@ namespace {
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
+
+				// Update the sphere collider for the avatar
+				avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
+				sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
+
 			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
@@ -656,6 +661,10 @@ namespace {
 			if (renderAxisForEndEffector) renderCSForEndEffector();
 			
 			if (renderRoom) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+
+			if (render3DText) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
+
+			renderPlattforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -680,6 +689,10 @@ namespace {
 			if (!firstPersonMonitor) renderLivingRoom(V, P);
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
+
+		if (render3DText) render3Dtext(V, P);
+
+		renderPlattforms(V, P);
 #else
 		// Read line
 		float scaleFactor;
