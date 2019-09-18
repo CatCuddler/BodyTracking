@@ -34,7 +34,7 @@ public:
 	void stopRecording();
 	
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
-	bool stopRecognition(Yoga yogaPos);
+	bool stopRecognitionAndIdentify(Yoga yogaPos);
 	bool stopRecognitionAndIdentify();
 	
 	bool hmmActive();

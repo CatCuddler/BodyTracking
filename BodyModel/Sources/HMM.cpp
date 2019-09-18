@@ -14,7 +14,7 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 
-	float threshold = 1.5f;
+	float threshold = 2.0f;// 1.5f;
 
 	double startX;
 	double startZ;
@@ -107,7 +107,7 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 				// Reading HMM
 				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-				HMMModel model(hmmPath, hmmNameWithNum);
+				HMMModel model(path, hmmNameWithNum);
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
 				float n = model.calculateProbability(clusteredPoints);
 				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
@@ -130,7 +130,7 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 	return false;
 }
 
-bool HMM::stopRecognition(Yoga yogaPos) {
+bool HMM::stopRecognitionAndIdentify(Yoga yogaPos) {
 	bool recognized = false;
 	switch (yogaPos) {
 		case Yoga1:
