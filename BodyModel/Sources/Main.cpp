@@ -141,8 +141,8 @@ namespace {
 #endif
 	
 	Movement* movement;
+	Yoga pose0;
 	Yoga pose1;
-	Yoga pose2;
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -248,7 +248,7 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
-		if (pose1 == Yoga1 || pose2 == Yoga1) {
+		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			Graphics4::setMatrix(mLocation, plattforms[0]->M);
 			Graphics4::setFloat3(cLocation, vec3(1.0, 0.0, 0.0));
 			plattforms[0]->render(tex);
@@ -259,7 +259,7 @@ namespace {
 			plattforms[0]->render(tex);
 		}
 		
-		if (pose1 == Yoga2 || pose2 == Yoga2) {
+		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			Graphics4::setMatrix(mLocation, plattforms[1]->M);
 			Graphics4::setFloat3(cLocation, vec3(0.0, 1.0, 0.0));
 			plattforms[1]->render(tex);
@@ -270,7 +270,7 @@ namespace {
 			plattforms[1]->render(tex);
 		}
 		
-		if (pose1 == Yoga3 || pose2 == Yoga3) {
+		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			Graphics4::setMatrix(mLocation, plattforms[2]->M);
 			Graphics4::setFloat3(cLocation, vec3(0.0, 0.0, 1.0));
 			plattforms[2]->render(tex);
@@ -300,14 +300,14 @@ namespace {
 		if (speakWithCharacter1 != None) {
 			M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose1 == Yoga1, pose1 == Yoga2, pose1 == Yoga3));
+			Graphics4::setFloat3(cLocation, vec3(pose0 == Yoga0, pose0 == Yoga1, pose0 == Yoga2));
 			textMesh[speakWithCharacter1]->render(tex);
 		}
 		
 		if (speakWithCharacter2 != None) {
 			M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose2 == Yoga1, pose2 == Yoga2, pose2 == Yoga3));
+			Graphics4::setFloat3(cLocation, vec3(pose1 == Yoga0, pose1 == Yoga1, pose1 == Yoga2));
 			textMesh[speakWithCharacter2]->render(tex);
 		}
 		
@@ -455,44 +455,28 @@ namespace {
 						
 						switch (i) {
 							case 0:
-								yogaPose = Yoga1;
+								yogaPose = Yoga0;
+								log(Info, "Stop recognizing the motion Yoga0");
 								break;
 								
 							case 1:
-								yogaPose = Yoga2;
+								yogaPose = Yoga1;
+								log(Info, "Stop recognizing the motion Yoga1");
 								break;
 								
 							case 2:
-								yogaPose = Yoga3;
+								yogaPose = Yoga2;
+								log(Info, "Stop recognizing the motion Yoga2");
 								break;
 								
 							default:
+								log(Info, "Stop recognizing the motion Unknown");
 								break;
 						}
 						
 					}
 				}
 			} else {
-				
-				const char* recognizePose;
-				switch (yogaPose) {
-				case 0:
-					recognizePose = "Yoga1";
-					break;
-
-				case 1:
-					recognizePose = "Yoga2";
-					break;
-
-				case 2:
-					recognizePose = "Yoga3";
-					break;
-
-				default:
-					break;
-				}
-				log(Info, "Stop recognizing the motion %s", recognizePose);
-
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				//bool correct = hmm->stopRecognition();
 				if (correct) {
@@ -791,12 +775,12 @@ namespace {
 	
 	void getRandomPose() {
 		// Get random pose
+		pose0 = Unknown;
 		pose1 = Unknown;
-		pose2 = Unknown;
 		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
-			movement->getRandomMovement(pose1, pose2);
+			movement->getRandomMovement(pose0, pose1);
 		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
-			movement->getRandomMovement(pose1);
+			movement->getRandomMovement(pose0);
 	}
 	
 	void keyDown(KeyCode code) {

@@ -80,7 +80,7 @@ void HMM::startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation)
 	}
 }
 
-bool HMM::stopRecognition(const char* path = hmmPath) {
+bool HMM::stopRecognition(const char* path123) {
 	if (recognition) {
 		// Read clusters for all trackers from file
 		bool trackersPresent[numOfDataPoints];
@@ -89,10 +89,11 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 			try {
 				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-				KMeans kmeans(path, hmmNameWithNum);
+				KMeans kmeans(path123, hmmNameWithNum);
 				kmeanVector.at(ii) = kmeans;
 				trackersPresent[ii] = true;
-			} catch (std::invalid_argument) {
+			}
+			catch (std::invalid_argument) {
 				trackersPresent[ii] = false;
 				Kore::log(Kore::Error, "Can't find tracker file");
 			}
@@ -107,9 +108,10 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 				// Reading HMM
 				char hmmNameWithNum[50];
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
-				HMMModel model(path, hmmNameWithNum);
+				HMMModel model(path123, hmmNameWithNum);
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
-				float n = model.calculateProbability(clusteredPoints);
+				float n = 0;
+				n = model.calculateProbability(clusteredPoints);
 				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() * threshold);
 				Kore::log(Kore::LogLevel::Info, "Probability: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
@@ -123,7 +125,8 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 		if (std::all_of(trackerMovementRecognised.begin() + 1, trackerMovementRecognised.end(), [](bool v) { return v; })) {
 			// All (present) trackers were recognised as correct
 			return true;
-		} else {
+		}
+		else {
 			return false;
 		}
 	}
@@ -133,13 +136,13 @@ bool HMM::stopRecognition(const char* path = hmmPath) {
 bool HMM::stopRecognitionAndIdentify(Yoga yogaPos) {
 	bool recognized = false;
 	switch (yogaPos) {
-		case Yoga1:
+		case Yoga0:
 			recognized = stopRecognition(hmmPath0);
 			break;
-		case Yoga2:
+		case Yoga1:
 			recognized = stopRecognition(hmmPath1);
 			break;
-		case Yoga3:
+		case Yoga2:
 			recognized = stopRecognition(hmmPath2);
 			break;
 		default:

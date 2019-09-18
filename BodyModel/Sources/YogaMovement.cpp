@@ -20,15 +20,15 @@ Yoga Movement::selectYogaPose(int random) {
 	Yoga pose;
 	switch (random) {
 		case 0:
-			pose = Yoga1;
+			pose = Yoga0;
 			break;
 			
 		case 1:
-			pose = Yoga2;
+			pose = Yoga1;
 			break;
 			
 		case 2:
-			pose = Yoga3;
+			pose = Yoga2;
 			break;
 			
 		default:
