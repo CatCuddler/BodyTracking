@@ -351,7 +351,7 @@ namespace {
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
 			if (endEffectorID == hip) {
-				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
+				avatar->setFixedPositionAndOrientation(endEffector[hip]->getBoneIndex(), finalPos, finalRot);
 
 				// Update the sphere collider for the avatar
 				avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
@@ -718,8 +718,8 @@ namespace {
 			}
 			
 			// Update the sphere collider for the avatar
-			avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
-			sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
+			//avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
+			//sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
 			
 			if (!dataAvailable) {
 				currentFile++;
