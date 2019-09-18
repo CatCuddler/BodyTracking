@@ -984,7 +984,8 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
-		avatarCollider = new SphereCollider(vec3(0, 0, 0), 0.3f);
+		const float colliderRadius = 0.2f;
+		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
 		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
 		
 		initTransAndRot();
@@ -1023,16 +1024,16 @@ namespace {
 		}
 		
 		plattforms[0] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
-		plattforms[1] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6);
+		plattforms[1] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
 		plattforms[2] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
 		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
 		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
 		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[1]->M = mat4::Translation(0, 0, 0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[2]->M = mat4::Translation(0, 0, -0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		sphereColliders[0] = new SphereCollider(vec3(0, 0, 0), 0.3f);
-		sphereColliders[1] = new SphereCollider(vec3(0, 0, 1.5f), 0.3f);
-		sphereColliders[2] = new SphereCollider(vec3(0, 0, -1.5f), 0.3f);
+		sphereColliders[0] = new SphereCollider(vec3(0, 0, 0), colliderRadius);
+		sphereColliders[1] = new SphereCollider(vec3(0, 0, 0.8f), colliderRadius);
+		sphereColliders[2] = new SphereCollider(vec3(0, 0, -0.8f), colliderRadius);
 		
 		if (render3DText) {
 			textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
