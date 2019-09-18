@@ -14,7 +14,7 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 
-	float threshold = 2.0f;// 1.5f;
+	float threshold = 1.5f;
 
 	double startX;
 	double startZ;
