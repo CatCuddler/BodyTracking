@@ -252,17 +252,32 @@ namespace {
 			Graphics4::setMatrix(mLocation, plattforms[0]->M);
 			Graphics4::setFloat3(cLocation, vec3(1.0, 0.0, 0.0));
 			plattforms[0]->render(tex);
+
+			// Mirror plattform 0
+			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[0]->M;
+			Graphics4::setMatrix(mLocation, plattformTransMirror);
+			plattforms[0]->render(tex);
 		}
 		
 		if (pose1 == Yoga2 || pose2 == Yoga2) {
 			Graphics4::setMatrix(mLocation, plattforms[1]->M);
 			Graphics4::setFloat3(cLocation, vec3(0.0, 1.0, 0.0));
 			plattforms[1]->render(tex);
+
+			// Mirror plattform 1
+			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[1]->M;
+			Graphics4::setMatrix(mLocation, plattformTransMirror);
+			plattforms[1]->render(tex);
 		}
 		
 		if (pose1 == Yoga3 || pose2 == Yoga3) {
 			Graphics4::setMatrix(mLocation, plattforms[2]->M);
 			Graphics4::setFloat3(cLocation, vec3(0.0, 0.0, 1.0));
+			plattforms[2]->render(tex);
+
+			// Mirror plattform 2
+			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[2]->M;
+			Graphics4::setMatrix(mLocation, plattformTransMirror);
 			plattforms[2]->render(tex);
 		}
 		
@@ -310,12 +325,11 @@ namespace {
 		avatar->animate(tex);
 		
 		// Render collider
-		Graphics4::setMatrix(mLocation, sphereMesh->M);
-		sphereMesh->render(tex);
+		//Graphics4::setMatrix(mLocation, sphereMesh->M);
+		//sphereMesh->render(tex);
 		
 		// Mirror the avatar
 		mat4 initTransMirror = getMirrorMatrix() * initTrans;
-		
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
 	}
