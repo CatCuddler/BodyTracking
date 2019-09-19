@@ -984,7 +984,8 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/avatar_woman.ogex", "avatar/", structure);
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
 		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
