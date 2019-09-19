@@ -121,6 +121,10 @@ namespace {
 	MeshObject* plattforms[] = { nullptr, nullptr, nullptr };
 	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 	
+	vec3 color0(56.0/255.0, 56.0/255.0, 56.0/255.0);
+	vec3 color1(45.0/255.0, 88.0/255.0, 103.0/255.0);
+	vec3 color2(30.0/255.0, 46.0/255.0, 77.0/255.0);
+	
 	Character speakWithCharacter1 = None;
 	Character speakWithCharacter2 = None;
 	
@@ -250,7 +254,7 @@ namespace {
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			Graphics4::setMatrix(mLocation, plattforms[0]->M);
-			Graphics4::setFloat3(cLocation, vec3(1.0, 0.0, 0.0));
+			Graphics4::setFloat3(cLocation, color0);
 			plattforms[0]->render(tex);
 
 			// Mirror plattform 0
@@ -261,7 +265,7 @@ namespace {
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			Graphics4::setMatrix(mLocation, plattforms[1]->M);
-			Graphics4::setFloat3(cLocation, vec3(0.0, 1.0, 0.0));
+			Graphics4::setFloat3(cLocation, color1);
 			plattforms[1]->render(tex);
 
 			// Mirror plattform 1
@@ -272,7 +276,7 @@ namespace {
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			Graphics4::setMatrix(mLocation, plattforms[2]->M);
-			Graphics4::setFloat3(cLocation, vec3(0.0, 0.0, 1.0));
+			Graphics4::setFloat3(cLocation, color2);
 			plattforms[2]->render(tex);
 
 			// Mirror plattform 2
@@ -300,14 +304,22 @@ namespace {
 		if (speakWithCharacter1 != None) {
 			M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose0 == Yoga0, pose0 == Yoga1, pose0 == Yoga2));
+			vec3 color = vec3(0, 0, 0);
+			if (pose0 == Yoga0) color = color0;
+			else if (pose0 == Yoga1) color = color1;
+			else if (pose0 == Yoga2) color = color2;
+			Graphics4::setFloat3(cLocation, color);
 			textMesh[speakWithCharacter1]->render(tex);
 		}
 		
 		if (speakWithCharacter2 != None) {
 			M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose1 == Yoga0, pose1 == Yoga1, pose1 == Yoga2));
+			vec3 color = vec3(0, 0, 0);
+			if (pose1 == Yoga0) color = color0;
+			else if (pose1 == Yoga1) color = color1;
+			else if (pose1 == Yoga2) color = color2;
+			Graphics4::setFloat3(cLocation, color);
 			textMesh[speakWithCharacter2]->render(tex);
 		}
 		
