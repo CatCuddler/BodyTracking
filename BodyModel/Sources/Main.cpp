@@ -1012,11 +1012,12 @@ namespace {
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
-		plattforms[0] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
-		plattforms[1] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
-		plattforms[2] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
+		plattforms[0] = new MeshObject("plattform/plattform0.ogex", "plattform/", structure, 0.6f);
+		plattforms[1] = new MeshObject("plattform/plattform1.ogex", "plattform/", structure, 0.6f);
+		plattforms[2] = new MeshObject("plattform/plattform2.ogex", "plattform/", structure, 0.6f);
 		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
 		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		plattformRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -Kore::pi / 2.0));
 		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[1]->M = mat4::Translation(0, 0, 0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[2]->M = mat4::Translation(0, 0, -0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
