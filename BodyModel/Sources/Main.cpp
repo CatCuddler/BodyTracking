@@ -245,6 +245,17 @@ namespace {
 		
 		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
 	}
+
+	void renderPlattform(int plattformID, vec3 color) {
+		Graphics4::setMatrix(mLocation, plattforms[plattformID]->M);
+		Graphics4::setFloat3(cLocation, color);
+		plattforms[plattformID]->render(tex);
+
+		// Mirror plattform
+		mat4 plattformTransMirror = getMirrorMatrix() * plattforms[plattformID]->M;
+		Graphics4::setMatrix(mLocation, plattformTransMirror);
+		plattforms[plattformID]->render(tex);
+	}
 	
 	void renderPlattforms(mat4 V, mat4 P) {
 		Graphics4::setPipeline(pipeline);
@@ -253,36 +264,15 @@ namespace {
 		Graphics4::setMatrix(pLocation, P);
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
-			Graphics4::setMatrix(mLocation, plattforms[0]->M);
-			Graphics4::setFloat3(cLocation, color0);
-			plattforms[0]->render(tex);
-
-			// Mirror plattform 0
-			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[0]->M;
-			Graphics4::setMatrix(mLocation, plattformTransMirror);
-			plattforms[0]->render(tex);
+			renderPlattform(0, color0);
 		}
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
-			Graphics4::setMatrix(mLocation, plattforms[1]->M);
-			Graphics4::setFloat3(cLocation, color1);
-			plattforms[1]->render(tex);
-
-			// Mirror plattform 1
-			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[1]->M;
-			Graphics4::setMatrix(mLocation, plattformTransMirror);
-			plattforms[1]->render(tex);
+			renderPlattform(1, color1);
 		}
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
-			Graphics4::setMatrix(mLocation, plattforms[2]->M);
-			Graphics4::setFloat3(cLocation, color2);
-			plattforms[2]->render(tex);
-
-			// Mirror plattform 2
-			mat4 plattformTransMirror = getMirrorMatrix() * plattforms[2]->M;
-			Graphics4::setMatrix(mLocation, plattformTransMirror);
-			plattforms[2]->render(tex);
+			renderPlattform(2, color2);
 		}
 		
 		// Reset color
