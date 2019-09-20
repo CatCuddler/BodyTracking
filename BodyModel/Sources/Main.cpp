@@ -489,6 +489,7 @@ namespace {
 		log(LogLevel::Info, storyLineText);
 	}
 	
+	int movWrongCounter = 0;
 	void record() {
 		logRawData = !logRawData;
 		
@@ -555,15 +556,19 @@ namespace {
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				//bool correct = hmm->stopRecognition();
-				if (correct) {
+				if (correct || movWrongCounter > 10) {
 					log(Info, "The movement is correct!");
-					Audio1::play(correctSound);
+					//Audio1::play(correctSound);
 					
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
+
+					movWrongCounter = 0;
 				} else {
 					log(Info, "The movement is wrong");
 					Audio1::play(wrongSound);
+
+					++movWrongCounter;
 				}
 				
 				colliding = false;
