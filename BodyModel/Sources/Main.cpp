@@ -121,6 +121,10 @@ namespace {
 	MeshObject* plattforms[] = { nullptr, nullptr, nullptr };
 	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 	
+	vec3 color0(56.0/255.0, 56.0/255.0, 56.0/255.0);
+	vec3 color1(45.0/255.0, 88.0/255.0, 103.0/255.0);
+	vec3 color2(30.0/255.0, 46.0/255.0, 77.0/255.0);
+	
 	Character speakWithCharacter1 = None;
 	Character speakWithCharacter2 = None;
 	
@@ -250,7 +254,7 @@ namespace {
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			Graphics4::setMatrix(mLocation, plattforms[0]->M);
-			Graphics4::setFloat3(cLocation, vec3(1.0, 0.0, 0.0));
+			Graphics4::setFloat3(cLocation, color0);
 			plattforms[0]->render(tex);
 
 			// Mirror plattform 0
@@ -261,7 +265,7 @@ namespace {
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			Graphics4::setMatrix(mLocation, plattforms[1]->M);
-			Graphics4::setFloat3(cLocation, vec3(0.0, 1.0, 0.0));
+			Graphics4::setFloat3(cLocation, color1);
 			plattforms[1]->render(tex);
 
 			// Mirror plattform 1
@@ -272,7 +276,7 @@ namespace {
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			Graphics4::setMatrix(mLocation, plattforms[2]->M);
-			Graphics4::setFloat3(cLocation, vec3(0.0, 0.0, 1.0));
+			Graphics4::setFloat3(cLocation, color2);
 			plattforms[2]->render(tex);
 
 			// Mirror plattform 2
@@ -300,14 +304,22 @@ namespace {
 		if (speakWithCharacter1 != None) {
 			M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose0 == Yoga0, pose0 == Yoga1, pose0 == Yoga2));
+			vec3 color = vec3(0, 0, 0);
+			if (pose0 == Yoga0) color = color0;
+			else if (pose0 == Yoga1) color = color1;
+			else if (pose0 == Yoga2) color = color2;
+			Graphics4::setFloat3(cLocation, color);
 			textMesh[speakWithCharacter1]->render(tex);
 		}
 		
 		if (speakWithCharacter2 != None) {
 			M = mat4::Translation(2.95f, yPos - 0.2f, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 			Graphics4::setMatrix(mLocation, M);
-			Graphics4::setFloat3(cLocation, vec3(pose1 == Yoga0, pose1 == Yoga1, pose1 == Yoga2));
+			vec3 color = vec3(0, 0, 0);
+			if (pose1 == Yoga0) color = color0;
+			else if (pose1 == Yoga1) color = color1;
+			else if (pose1 == Yoga2) color = color2;
+			Graphics4::setFloat3(cLocation, color);
 			textMesh[speakWithCharacter2]->render(tex);
 		}
 		
@@ -416,6 +428,57 @@ namespace {
 	bool colliding = false;
 	Yoga yogaPose;
 	
+	
+	void updateCharacterText() {
+		if (storyLineTree->getLeftNode() != nullptr)
+			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+		else
+			speakWithCharacter1 = None;
+		if (storyLineTree->getRightNode() != nullptr)
+			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+		else
+			speakWithCharacter2 = None;
+	}
+	
+	void getRandomPose() {
+		// Get random pose
+		pose0 = Unknown;
+		pose1 = Unknown;
+		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
+			movement->getRandomMovement(pose0, pose1);
+		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
+			movement->getRandomMovement(pose0);
+	}
+	void getNextStoryElement(bool left) {
+		if (left && storyLineTree->getLeftNode() != nullptr) {
+			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
+		} else if (!left && storyLineTree->getRightNode() != nullptr) {
+			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
+		} else {
+			storyLineText = storyLineTree->getLastNode()->getData();
+			speakWithCharacter1 = None;
+			speakWithCharacter2 = None;
+			
+			currentAudio = storyLineTree->getLastNode()->getAudio();
+			Audio1::stop(currentAudio);
+			if(currentAudio != nullptr)
+				Audio1::play(currentAudio);
+			
+			return;
+		}
+		
+		storyLineText = storyLineTree->getCurrentNode()->getData();
+		currentAudio = storyLineTree->getCurrentNode()->getAudio();
+		Audio1::stop(currentAudio);
+		if(currentAudio != nullptr)
+			Audio1::play(currentAudio);
+		
+		updateCharacterText();
+		getRandomPose();
+		
+		log(LogLevel::Info, storyLineText);
+	}
+	
 	void record() {
 		logRawData = !logRawData;
 		
@@ -482,6 +545,9 @@ namespace {
 				if (correct) {
 					log(Info, "The movement is correct!");
 					Audio1::play(correctSound);
+					
+					if (pose0 == yogaPose) getNextStoryElement(true);
+					else if (pose1 == yogaPose) getNextStoryElement(false);
 				} else {
 					log(Info, "The movement is wrong");
 					Audio1::play(wrongSound);
@@ -762,27 +828,6 @@ namespace {
 		Graphics4::swapBuffers();
 	}
 	
-	void updateCharacterText() {
-		if (storyLineTree->getLeftNode() != nullptr)
-			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-		else
-			speakWithCharacter1 = None;
-		if (storyLineTree->getRightNode() != nullptr)
-			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-		else
-			speakWithCharacter2 = None;
-	}
-	
-	void getRandomPose() {
-		// Get random pose
-		pose0 = Unknown;
-		pose1 = Unknown;
-		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
-			movement->getRandomMovement(pose0, pose1);
-		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
-			movement->getRandomMovement(pose0);
-	}
-	
 	void keyDown(KeyCode code) {
 		switch (code) {
 			case Kore::KeyW:
@@ -815,52 +860,10 @@ namespace {
 				System::stop();
 				break;
 			case Kore::KeyLeft:
-				if (storyLineTree->getLeftNode() != nullptr) {
-					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
-					storyLineText = storyLineTree->getCurrentNode()->getData();
-					storyLineTree->getCurrentNode()->getID();
-					currentAudio = storyLineTree->getCurrentNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-					
-					updateCharacterText();
-					getRandomPose();
-						
-				} else {
-					storyLineText = storyLineTree->getLastNode()->getData();
-					speakWithCharacter1 = None;
-					speakWithCharacter2 = None;
-					
-					currentAudio = storyLineTree->getLastNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-				}
-				log(LogLevel::Info, storyLineText);
+				getNextStoryElement(true);
 				break;
 			case Kore::KeyRight:
-				if (storyLineTree->getRightNode() != nullptr) {
-					storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
-					storyLineText = storyLineTree->getCurrentNode()->getData();
-					currentAudio = storyLineTree->getCurrentNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-					
-					updateCharacterText();
-					getRandomPose();
-				} else {
-					storyLineText = storyLineTree->getLastNode()->getData();
-					speakWithCharacter1 = None;
-					speakWithCharacter2 = None;
-					
-					currentAudio = storyLineTree->getLastNode()->getAudio();
-					Audio1::stop(currentAudio);
-					if(currentAudio != nullptr)
-						Audio1::play(currentAudio);
-				}
-				log(LogLevel::Info, storyLineText);
+				getNextStoryElement(false);
 				break;
 			default:
 				break;
@@ -981,7 +984,8 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		avatar = new Avatar("avatar/avatar.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/avatar_woman.ogex", "avatar/", structure);
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
 		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
@@ -1021,11 +1025,12 @@ namespace {
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
-		plattforms[0] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
-		plattforms[1] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
-		plattforms[2] = new MeshObject("plattform/plattform.ogex", "plattform/", structure, 0.6f);
+		plattforms[0] = new MeshObject("plattform/plattform0.ogex", "plattform/", structure, 0.6f);
+		plattforms[1] = new MeshObject("plattform/plattform1.ogex", "plattform/", structure, 0.6f);
+		plattforms[2] = new MeshObject("plattform/plattform2.ogex", "plattform/", structure, 0.6f);
 		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
 		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		plattformRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -Kore::pi / 2.0));
 		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[1]->M = mat4::Translation(0, 0, 0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		plattforms[2]->M = mat4::Translation(0, 0, -0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
