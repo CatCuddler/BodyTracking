@@ -563,7 +563,7 @@ namespace {
 					}
 				}
 			} else {
-				bool correct = hmm->stopRecognitionAndIdentify(Yoga1);
+				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				//bool correct = hmm->stopRecognition();
 				if (correct) {
 					log(Info, "The movement is correct!");
