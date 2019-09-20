@@ -439,6 +439,7 @@ namespace {
 	}
 	
 	bool colliding = false;
+	double finishGameIn27sec = -1;
 	Yoga yogaPose;
 	
 	
@@ -470,6 +471,10 @@ namespace {
 			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
 		}
 		
+		if (storyLineTree->getLeftNode() == nullptr && storyLineTree->getRightNode() == nullptr) {
+			finishGameIn27sec = 0;
+		}
+		
 		Audio1::stop(currentAudio);
 		storyLineText = storyLineTree->getCurrentNode()->getData();
 		currentAudio = storyLineTree->getCurrentNode()->getAudio();
@@ -484,36 +489,40 @@ namespace {
 	
 	bool intro = false;
 	void initGame() {
-		storyLineTree = new BinaryTree();
-		storyLineText = storyLineTree->getCurrentNode()->getData();
-		if (storyLineTree->getLeftNode() != nullptr)
-			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-		if (storyLineTree->getRightNode() != nullptr)
-			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-		movement = new Movement();
-		getRandomPose();
-		
-		
-		// Play intro only once
 		if (!intro) {
+			storyLineTree = new BinaryTree();
+			storyLineText = storyLineTree->getCurrentNode()->getData();
+			if (storyLineTree->getLeftNode() != nullptr)
+				speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+			if (storyLineTree->getRightNode() != nullptr)
+				speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+			movement = new Movement();
+			getRandomPose();
+			
+			// Play intro only once
 			currentAudio = storyLineTree->getCurrentNode()->getAudio();
 			if(currentAudio != nullptr)
 				Audio1::play(currentAudio);
-			
+				
 			intro = true;
 		}
 	}
 	
+	bool outro = false;
 	void finishGame() {
-		storyLineText = storyLineTree->getLastNode()->getData();
-		speakWithCharacter1 = None;
-		speakWithCharacter2 = None;
-		
-		Audio1::stop(currentAudio);
-		currentAudio = storyLineTree->getLastNode()->getAudio();
-		if(currentAudio != nullptr)
-			Audio1::play(currentAudio);
-
+		if (!outro) {
+			storyLineText = storyLineTree->getLastNode()->getData();
+			speakWithCharacter1 = None;
+			speakWithCharacter2 = None;
+			
+			// Play outro only once
+			Audio1::stop(currentAudio);
+			currentAudio = storyLineTree->getLastNode()->getAudio();
+			if(currentAudio != nullptr)
+				Audio1::play(currentAudio);
+			
+			outro = true;
+		}
 	}
 	
 	int movWrongCounter = 0;
@@ -868,6 +877,11 @@ namespace {
 		
 		if (calibratedAvatar) renderPlattforms(V, P);
 #endif
+		
+		if (finishGameIn27sec >= 0)
+			finishGameIn27sec += deltaT;
+		if (finishGameIn27sec > 27)
+			finishGame();
 
 		Graphics4::end();
 		Graphics4::swapBuffers();
