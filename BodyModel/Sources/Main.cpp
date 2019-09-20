@@ -414,8 +414,11 @@ namespace {
 		initTransInv = initTrans.Invert();
 	}
 	
+	void initGame();
+
 	void calibrate() {
 		initTransAndRot();
+		initGame();
 		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
@@ -459,27 +462,17 @@ namespace {
 		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
 			movement->getRandomMovement(pose0);
 	}
+	
 	void getNextStoryElement(bool left) {
 		if (left && storyLineTree->getLeftNode() != nullptr) {
 			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
 		} else if (!left && storyLineTree->getRightNode() != nullptr) {
 			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
-		} else {
-			storyLineText = storyLineTree->getLastNode()->getData();
-			speakWithCharacter1 = None;
-			speakWithCharacter2 = None;
-			
-			currentAudio = storyLineTree->getLastNode()->getAudio();
-			Audio1::stop(currentAudio);
-			if(currentAudio != nullptr)
-				Audio1::play(currentAudio);
-			
-			return;
 		}
 		
+		Audio1::stop(currentAudio);
 		storyLineText = storyLineTree->getCurrentNode()->getData();
 		currentAudio = storyLineTree->getCurrentNode()->getAudio();
-		Audio1::stop(currentAudio);
 		if(currentAudio != nullptr)
 			Audio1::play(currentAudio);
 		
@@ -487,6 +480,40 @@ namespace {
 		getRandomPose();
 		
 		log(LogLevel::Info, storyLineText);
+	}
+	
+	bool intro = false;
+	void initGame() {
+		storyLineTree = new BinaryTree();
+		storyLineText = storyLineTree->getCurrentNode()->getData();
+		if (storyLineTree->getLeftNode() != nullptr)
+			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
+		if (storyLineTree->getRightNode() != nullptr)
+			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
+		movement = new Movement();
+		getRandomPose();
+		
+		
+		// Play intro only once
+		if (!intro) {
+			currentAudio = storyLineTree->getCurrentNode()->getAudio();
+			if(currentAudio != nullptr)
+				Audio1::play(currentAudio);
+			
+			intro = true;
+		}
+	}
+	
+	void finishGame() {
+		storyLineText = storyLineTree->getLastNode()->getData();
+		speakWithCharacter1 = None;
+		speakWithCharacter2 = None;
+		
+		Audio1::stop(currentAudio);
+		currentAudio = storyLineTree->getLastNode()->getAudio();
+		if(currentAudio != nullptr)
+			Audio1::play(currentAudio);
+
 	}
 	
 	int movWrongCounter = 0;
@@ -764,9 +791,9 @@ namespace {
 			
 			if (renderRoom) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (render3DText) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (calibratedAvatar && render3DText) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			renderPlattforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (calibratedAvatar) renderPlattforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -783,7 +810,7 @@ namespace {
 		if (!firstPersonMonitor) renderAvatar(V, P);
 		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		
-		if (renderTrackerAndController) renderAllVRDevices();
+		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
@@ -792,9 +819,9 @@ namespace {
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 
-		if (render3DText) render3Dtext(V, P);
+		if (calibratedAvatar && render3DText) render3Dtext(V, P);
 
-		renderPlattforms(V, P);
+		if (calibratedAvatar) renderPlattforms(V, P);
 #else
 		// Read line
 		float scaleFactor;
@@ -831,15 +858,15 @@ namespace {
 		
 		renderAvatar(V, P);
 		
-		if (renderTrackerAndController) renderAllVRDevices();
+		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) renderLivingRoom(V, P);
 		
-		if (render3DText) render3Dtext(V, P);
+		if (calibratedAvatar && render3DText) render3Dtext(V, P);
 		
-		renderPlattforms(V, P);
+		if (calibratedAvatar) renderPlattforms(V, P);
 #endif
 
 		Graphics4::end();
@@ -1086,15 +1113,6 @@ namespace {
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
 #endif
-		
-		storyLineTree = new BinaryTree();
-		storyLineText = storyLineTree->getCurrentNode()->getData();
-		if (storyLineTree->getLeftNode() != nullptr)
-			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
-		if (storyLineTree->getRightNode() != nullptr)
-			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
-		movement = new Movement();
-		getRandomPose();
 	}
 }
 
@@ -1121,11 +1139,6 @@ int kickstart(int argc, char** argv) {
 	correctSound = new Sound("sound/correct.wav");
 	wrongSound = new Sound("sound/wrong.wav");
 	startRecognitionSound = new Sound("sound/start_recognition.wav");
-	
-	currentAudio = storyLineTree->getCurrentNode()->getAudio();
-	//Audio1::stop(currentAudio);
-	if(currentAudio != nullptr)
-		Audio1::play(currentAudio);
 	
 	System::start();
 	
