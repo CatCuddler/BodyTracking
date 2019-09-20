@@ -763,7 +763,7 @@ namespace {
 			
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
-			if (renderTrackerAndController) renderAllVRDevices();
+			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
 			if (renderAxisForEndEffector) renderCSForEndEffector();
 			
