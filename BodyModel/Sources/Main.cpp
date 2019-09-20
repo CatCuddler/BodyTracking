@@ -680,7 +680,7 @@ namespace {
 		
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
-			record();
+			if (calibratedAvatar) record();
 		}
 	}
 	
@@ -871,7 +871,7 @@ namespace {
 				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
 				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
 				
-				record();
+				if (calibratedAvatar) record();
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
