@@ -403,6 +403,26 @@ namespace {
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
+
+	void updateTransAndRot() {
+		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
+		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
+
+		Kore::Quaternion offsetRotation = endEffector[hip]->getOffsetRotation();
+		//vec3 offsetPosition = endEffector[hip]->getOffsetPosition();
+
+		initRot = Kore::Quaternion(0, 0, 0, 1);
+		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		initRot.rotate(Kore::Quaternion(vec3(0, 0, 1), Kore::pi / 2.0));
+		// TODO: rotation doesnt work yet
+		//initRot.rotate(hipRot);
+		//initRot.rotate(offsetRotation); // Add offset
+		initRot.normalize();
+		initRotInv = initRot.invert();
+
+		initTrans = mat4::Translation(hipPos.x(), 0, hipPos.z()) * initRot.matrix().Transpose();
+		initTransInv = initTrans.Invert();
+	}
 	
 	void calibrate() {
 		initTransAndRot();
@@ -508,6 +528,9 @@ namespace {
 				Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
 				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+
+				// Update initial matrices, so that we can recognize movements no metter where the player stands
+				updateTransAndRot();
 				
 				// Check if avatar is colliding with a plattform
 				for (int i = 0; i < 3; ++i) {
@@ -984,8 +1007,8 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/avatar_woman.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_woman.ogex", "avatar/", structure);
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
 		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
