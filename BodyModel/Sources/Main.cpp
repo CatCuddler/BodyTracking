@@ -41,7 +41,7 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	const bool render3DText = true;
-	const bool renderFeedback = false;
+	const bool renderFeedback = true;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -111,7 +111,7 @@ namespace {
 	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	
 	// Null terminated array of 3d text
-	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
 	// Avatar
 	Avatar* avatar;
@@ -322,33 +322,55 @@ namespace {
 	}
 
 	bool hmm_head = true;
-	bool hmm_hip = true;
+	bool hmm_hip = false;
 	bool hmm_left_arm = true;
-	bool hmm_right_arm = true;
+	bool hmm_right_arm = false;
 	bool hmm_left_leg = true;
-	bool hmm_right_leg = true;
+	bool hmm_right_leg = false;
+	
+	void renderHMMFeedback(int feedbackID, bool checkmark) {
+		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
+		//textRot.rotate(Kore::Quaternion(vec3(0, 0, 0), -Kore::pi / 2.0));
+		
+		Kore::mat4 M = Kore::mat4::Identity();
+		const float xPos = 0.8f;
+		const float yPos = 3.0f;
+		const float yOffset = 0.25f;
+		const float zPos = -3.5f;
+		
+		M = mat4::Translation(xPos, yPos - feedbackID * yOffset, zPos) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		feedbackMesh[feedbackID]->render(tex);
+		M = mat4::Translation(xPos + 1.0f, yPos - feedbackID * yOffset, zPos) * textRot.matrix().Transpose() * mat4::Scale(0.3f, 0.3f, 0.3f);
+		Graphics4::setMatrix(mLocation, M);
+		if (checkmark) {
+			vec3 color = vec3(0, 1, 0);	// green
+			Graphics4::setFloat3(cLocation, color);
+			
+			feedbackMesh[CheckMark]->render(tex);
+		} else {
+			vec3 color = vec3(1, 0, 0); // red
+			Graphics4::setFloat3(cLocation, color);
+			
+			feedbackMesh[CrossMark]->render(tex);
+		}
+		
+		// Reset color
+		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+	}
+
 	void renderFeedbackText(mat4 V, mat4 P) {
 		Graphics4::setPipeline(pipeline);
 	
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
-	
-		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
-		textRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
-	
-		Kore::mat4 M = Kore::mat4::Identity();
-		float yPos = 3.5f;
 		
-		
-	
-		M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
-		Graphics4::setMatrix(mLocation, M);
-		//vec3 color = vec3(0, 0, 0);
-		//Graphics4::setFloat3(cLocation, color);
-		feedbackMesh[head]->render(tex);
-	
-		// Reset color
-		//Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+		renderHMMFeedback(Head, hmm_head);
+		renderHMMFeedback(Hip, hmm_hip);
+		renderHMMFeedback(LeftArm, hmm_left_arm);
+		renderHMMFeedback(RightArm, hmm_right_arm);
+		renderHMMFeedback(LeftLeg, hmm_left_leg);
+		renderHMMFeedback(RightLeg, hmm_right_leg);
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -1149,6 +1171,7 @@ namespace {
 			feedbackMesh[CheckMark] = new MeshObject("3dtext/checkmark.ogex", "3dtext/", structure, 1);
 			feedbackMesh[CrossMark] = new MeshObject("3dtext/crossmark.ogex", "3dtext/", structure, 1);
 			feedbackMesh[Head] = new MeshObject("3dtext/head.ogex", "3dtext/", structure, 1);
+			feedbackMesh[Hip] = new MeshObject("3dtext/hip.ogex", "3dtext/", structure, 1);
 			feedbackMesh[LeftArm] = new MeshObject("3dtext/left_arm.ogex", "3dtext/", structure, 1);
 			feedbackMesh[RightArm] = new MeshObject("3dtext/right_arm.ogex", "3dtext/", structure, 1);
 			feedbackMesh[LeftLeg] = new MeshObject("3dtext/left_leg.ogex", "3dtext/", structure, 1);
