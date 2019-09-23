@@ -35,6 +35,13 @@ namespace {
 
 	// Vector of data points logged in real time movement recognition
 	std::vector<std::vector<Point>> recognitionPoints(numOfDataPoints);
+
+	bool hmm_head = false;
+	bool hmm_hip = false;
+	bool hmm_leftArm = false;
+	bool hmm_rightArm = false;
+	bool hmm_leftLeg = false;
+	bool hmm_rightLeg = false;
 }
 
 HMM::HMM(Logger& logger) : logger(logger), recording(false), recognizing(false) {
@@ -115,12 +122,25 @@ bool HMM::stopRecognition(const char* path123) {
 				n = model.calculateProbability(clusteredPoints);
 				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
 				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() * threshold);
-				if (ii == 0) Kore::log(Kore::LogLevel::Info, "Probability for head: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				else if (ii == 1) Kore::log(Kore::LogLevel::Info, "Probability for hip: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				else if (ii == 2) Kore::log(Kore::LogLevel::Info, "Probability for left Hand: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				else if (ii == 3) Kore::log(Kore::LogLevel::Info, "Probability for right Hand: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				else if (ii == 4) Kore::log(Kore::LogLevel::Info, "Probability for left foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				else if (ii == 5) Kore::log(Kore::LogLevel::Info, "Probability for right foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				if (ii == 0) {
+					hmm_head = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for head: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 1) {
+					hmm_hip = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for hip: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 2) {
+					hmm_leftArm = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for left Arm: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 3) {
+					hmm_rightArm = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for right Arm: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 4) {
+					hmm_leftLeg = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for left foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 5) {
+					hmm_rightLeg = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for right foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+				}
 
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
 			}
@@ -314,4 +334,13 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 			else if (std::strcmp(name, rFootTag) == 0)	recognitionPoints.at(5).push_back(point);
 		}
 	}
+}
+
+void HMM::getFeedback(bool &head, bool &hip, bool &leftArm, bool &rightArm, bool &leftLeg, bool &rightLeg) {
+	head = hmm_head;
+	hip = hmm_hip;
+	leftArm = hmm_leftArm;
+	rightArm = hmm_rightArm;
+	leftLeg = hmm_leftLeg;
+	rightLeg = hmm_rightLeg;
 }

@@ -50,4 +50,6 @@ public:
 	bool hmmRecognizing();
 	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
+	void getFeedback(bool &head, bool &hip, bool &leftArm, bool &rightArm, bool &leftLeg, bool &rightLeg);
+	
 };

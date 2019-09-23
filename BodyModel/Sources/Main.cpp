@@ -41,7 +41,7 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	const bool render3DText = true;
-	const bool renderFeedback = true;
+	bool renderFeedback = false;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -607,6 +607,8 @@ namespace {
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
+				renderFeedback = false;
+				
 				Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
 				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
@@ -646,6 +648,10 @@ namespace {
 				}
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
+				
+				renderFeedback = true;
+				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				
 				//bool correct = hmm->stopRecognition();
 				if (correct || movWrongCounter > 10) {
 					log(Info, "The movement is correct!");
