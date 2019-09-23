@@ -8,6 +8,10 @@ enum Yoga {
 	Yoga0, Yoga1, Yoga2, Unknown,
 };
 
+enum Feedback {
+	Head, Hip, LeftArm, RightArm, LeftLeg, RightLeg, CheckMark, CrossMark,
+};
+
 // Yoga0 - hands up
 // Yoga1 - both hands parallel to the floor
 // Yoga2 - hands on the knee

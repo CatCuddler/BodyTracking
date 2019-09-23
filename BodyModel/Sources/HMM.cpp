@@ -7,6 +7,8 @@
 #include <iterator>
 #include <valarray>
 
+
+
 namespace {
 	const char hmmPath[] = "../../HMM_Trainer/Tracking/";
 	const char hmmPath0[] = "../../HMM_Trainer/Tracking/Movement0/";
@@ -33,7 +35,6 @@ namespace {
 
 	// Vector of data points logged in real time movement recognition
 	std::vector<std::vector<Point>> recognitionPoints(numOfDataPoints);
-
 }
 
 HMM::HMM(Logger& logger) : logger(logger), recording(false), recognizing(false) {

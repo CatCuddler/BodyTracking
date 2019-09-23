@@ -41,7 +41,8 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	const bool render3DText = true;
-	
+	const bool renderFeedback = false;
+
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
 	
@@ -109,6 +110,9 @@ namespace {
 	// Null terminated array of 3d text
 	MeshObject* textMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	
+	// Null terminated array of 3d text
+	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+
 	// Avatar
 	Avatar* avatar;
 	SphereCollider* avatarCollider;
@@ -315,7 +319,36 @@ namespace {
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+	}
+
+	bool hmm_head = true;
+	bool hmm_hip = true;
+	bool hmm_left_arm = true;
+	bool hmm_right_arm = true;
+	bool hmm_left_leg = true;
+	bool hmm_right_leg = true;
+	void renderFeedbackText(mat4 V, mat4 P) {
+		Graphics4::setPipeline(pipeline);
+	
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
+	
+		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
+		textRot.rotate(Kore::Quaternion(vec3(0, 1, 0), -Kore::pi / 2.0));
+	
+		Kore::mat4 M = Kore::mat4::Identity();
+		float yPos = 3.5f;
 		
+		
+	
+		M = mat4::Translation(2.95f, yPos, -1.5f) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		//vec3 color = vec3(0, 0, 0);
+		//Graphics4::setFloat3(cLocation, color);
+		feedbackMesh[head]->render(tex);
+	
+		// Reset color
+		//Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -875,6 +908,8 @@ namespace {
 		
 		if (calibratedAvatar && render3DText) render3Dtext(V, P);
 		
+		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
+		
 		if (calibratedAvatar) renderPlattforms(V, P);
 #endif
 		
@@ -1108,6 +1143,16 @@ namespace {
 			textMesh[Dude] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
 			textMesh[Magier] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
 			textMesh[Zirkusdirektor] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
+		}
+		
+		if (renderFeedback) {
+			feedbackMesh[CheckMark] = new MeshObject("3dtext/checkmark.ogex", "3dtext/", structure, 1);
+			feedbackMesh[CrossMark] = new MeshObject("3dtext/crossmark.ogex", "3dtext/", structure, 1);
+			feedbackMesh[Head] = new MeshObject("3dtext/head.ogex", "3dtext/", structure, 1);
+			feedbackMesh[LeftArm] = new MeshObject("3dtext/left_arm.ogex", "3dtext/", structure, 1);
+			feedbackMesh[RightArm] = new MeshObject("3dtext/right_arm.ogex", "3dtext/", structure, 1);
+			feedbackMesh[LeftLeg] = new MeshObject("3dtext/left_leg.ogex", "3dtext/", structure, 1);
+			feedbackMesh[RightLeg] = new MeshObject("3dtext/right_leg.ogex", "3dtext/", structure, 1);
 		}
 		
 		logger = new Logger();
