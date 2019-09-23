@@ -257,6 +257,8 @@ namespace {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
+				//avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
 		}
 	}

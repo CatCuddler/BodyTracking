@@ -15,6 +15,7 @@ public:
 	void animate(Kore::Graphics4::TextureUnit tex);
 	void setDesiredPositionAndOrientation(int boneIndex, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPosition, Kore::Quaternion desRotation);
+	void setFixedOrientation(int boneIndex, Kore::Quaternion desRotation);
 	
 	BoneNode* getBoneWithIndex(int index) const;
 	
