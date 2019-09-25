@@ -1108,12 +1108,12 @@ namespace {
 		loadAvatarShader();
 		// Male avatars
 		//avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
-		avatar = new Avatar("avatar/male_1.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/male_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_2.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
 		
 		// Female avatars
-		//avatar = new Avatar("avatar/avatar_woman.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/avatar_female.ogex", "avatar/", structure);
 		
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
