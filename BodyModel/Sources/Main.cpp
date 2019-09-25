@@ -41,7 +41,7 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 	const bool render3DText = true;
-	bool renderFeedback = false;
+	bool renderFeedback = true;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -863,6 +863,8 @@ namespace {
 
 			if (calibratedAvatar && render3DText) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
+			if (calibratedAvatar && renderFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
+
 			if (calibratedAvatar) renderPlattforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
@@ -890,6 +892,8 @@ namespace {
 		}
 
 		if (calibratedAvatar && render3DText) render3Dtext(V, P);
+
+		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
 
 		if (calibratedAvatar) renderPlattforms(V, P);
 #else
@@ -1189,6 +1193,7 @@ namespace {
 			feedbackMesh[RightArm] = new MeshObject("3dtext/right_arm.ogex", "3dtext/", structure, 1);
 			feedbackMesh[LeftLeg] = new MeshObject("3dtext/left_leg.ogex", "3dtext/", structure, 1);
 			feedbackMesh[RightLeg] = new MeshObject("3dtext/right_leg.ogex", "3dtext/", structure, 1);
+			renderFeedback = false;
 		}
 		
 		logger = new Logger();
