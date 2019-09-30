@@ -755,7 +755,7 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
-		avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
+        avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/avatar_female.ogex", "avatar/", structure);
 		
 		initTransAndRot();
