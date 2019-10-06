@@ -18,8 +18,7 @@ private:
 	std::ofstream hmmAnalysisWriter;
 	
 	// Output file to save data for evaluation
-	std::fstream evaluationDataOutputFile;
-	std::fstream evaluationConfigOutputFile;
+	std::ofstream evaluationDataOutputFile;
 	
 public:
 	Logger();
@@ -29,8 +28,8 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
-	void saveEvaluationData(Avatar *avatar);
+	void startEvaluationLogger(const char* filename);
+	void saveEvaluationData(int nodeID, int pose, int trials, bool head, bool hip, bool left_arm, bool right_arm, bool left_leg, bool right_leg);
 	void endEvaluationLogger();
 	
 	// HMM

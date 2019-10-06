@@ -19,6 +19,7 @@ Logger::~Logger() {
 	logdataWriter.close();
 	hmmWriter.close();
 	hmmAnalysisWriter.close();
+	evaluationDataOutputFile.close();
 }
 
 void Logger::startLogger(const char* filename) {
@@ -90,56 +91,30 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
+void Logger::startEvaluationLogger(const char* filename) {
 	time_t t = time(0);   // Get time now
 	
 	char evaluationDataPath[100];
-	sprintf(evaluationDataPath, "eval/evaluationData_%li.csv", t);
+	sprintf(evaluationDataPath, "eval/%s_%li.csv", filename, t);
 	
-	char evaluationConfigPath[100];
-	sprintf(evaluationConfigPath, "eval/evaluationConfig_%li.csv", t);
+	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);	// Append to the end
 	
-	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app);
-	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxSteps << "\n";
-	evaluationConfigOutputFile.flush();
-	evaluationConfigOutputFile.close();
-	
-	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
-	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
-	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
-	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
-	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
+	// Append header
+	evaluationDataOutputFile << "NodeID Pose Trials Head Hip LeftArm RightArm LeftLeg RightLeg\n";
 	evaluationDataOutputFile.flush();
 	
 	log(Kore::Info, "Start eval-logging!");
 }
 
 void Logger::endEvaluationLogger() {
+	evaluationDataOutputFile.flush();
 	evaluationDataOutputFile.close();
 	
 	log(Kore::Info, "Stop eval-logging!");
 }
 
-void Logger::saveEvaluationData(Avatar *avatar) {
-	float* iterations = avatar->getIterations();
-	float* errorPos = avatar->getErrorPos();
-	float* errorRot = avatar->getErrorRot();
-	float* time = avatar->getTime();
-	float* timeIteration = avatar->getTimeIteration();
-	
-	// Save datas
-	for (int i = 0; i < 3; ++i) {
-		float error = sqrtf(Square(*(errorPos + i)) + Square(*(errorRot + i)));
-		
-		evaluationDataOutputFile << *(iterations + i) << ";";
-		evaluationDataOutputFile << *(errorPos + i) << ";";
-		evaluationDataOutputFile << *(errorRot + i) << ";";
-		evaluationDataOutputFile << error << ";";
-		evaluationDataOutputFile << *(time + i) << ";";
-		evaluationDataOutputFile << *(timeIteration + i) << ";";
-	}
-	evaluationDataOutputFile << avatar->getReached() << ";" << avatar->getStucked() << "\n";
+void Logger::saveEvaluationData(int nodeID, int pose, int trials, bool head, bool hip, bool left_arm, bool right_arm, bool left_leg, bool right_leg) {
+	evaluationDataOutputFile << nodeID << " " << pose << " " << trials << head << " " << hip << " " << left_arm << " " << right_arm << " " << left_leg << " " << right_leg << "\n";
 	evaluationDataOutputFile.flush();
 }
 

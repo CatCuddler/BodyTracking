@@ -151,6 +151,11 @@ namespace {
 	Movement* movement;
 	Yoga pose0;
 	Yoga pose1;
+	Yoga yogaPose;
+	int yogaID;
+	bool colliding = false;
+	double finishGameIn27sec = -1;
+	int trials = 0;
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -493,11 +498,6 @@ namespace {
 		}
 	}
 	
-	bool colliding = false;
-	double finishGameIn27sec = -1;
-	Yoga yogaPose;
-	
-	
 	void updateCharacterText() {
 		if (storyLineTree->getLeftNode() != nullptr)
 			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
@@ -580,7 +580,6 @@ namespace {
 		}
 	}
 	
-	int movWrongCounter = 0;
 	void record() {
 		logRawData = !logRawData;
 		
@@ -626,20 +625,24 @@ namespace {
 						switch (i) {
 							case 0:
 								yogaPose = Yoga0;
+								yogaID = 0;
 								log(Info, "Stop recognizing the motion Yoga0");
 								break;
 								
 							case 1:
 								yogaPose = Yoga1;
+								yogaID = 1;
 								log(Info, "Stop recognizing the motion Yoga1");
 								break;
 								
 							case 2:
 								yogaPose = Yoga2;
+								yogaID = 2;
 								log(Info, "Stop recognizing the motion Yoga2");
 								break;
 								
 							default:
+								yogaID = -1;
 								log(Info, "Stop recognizing the motion Unknown");
 								break;
 						}
@@ -649,23 +652,25 @@ namespace {
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				
+				++trials;
+				
 				renderFeedback = true;
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
+				logger->saveEvaluationData(storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				
 				//bool correct = hmm->stopRecognition();
-				if (correct || movWrongCounter > 10) {
+				if (correct || trials > 10) {
 					log(Info, "The movement is correct!");
 					//Audio1::play(correctSound);
 					
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
 
-					movWrongCounter = 0;
+					trials = 0;
 				} else {
 					log(Info, "The movement is wrong");
 					Audio1::play(wrongSound);
-
-					++movWrongCounter;
 				}
 				
 				colliding = false;
@@ -983,6 +988,7 @@ namespace {
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
+				logger->endEvaluationLogger();
 				System::stop();
 				break;
 			case Kore::KeyLeft:
@@ -1197,6 +1203,7 @@ namespace {
 		}
 		
 		logger = new Logger();
+		logger->startEvaluationLogger("yogaEval");
 		
 		hmm = new HMM(*logger);
 		
