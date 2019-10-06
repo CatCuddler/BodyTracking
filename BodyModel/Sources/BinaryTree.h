@@ -20,11 +20,9 @@ public:
 	~BinaryTree();
 	
 	Node* getCurrentNode() const;
+	bool setCurrentNode(int ID);
 	Node* getLastNode() const;
-	int getCurrentNodeID() const;
 	Node* getLeftNode() const;
 	Node* getRightNode() const;
 	Kore::Sound* getAudio() const;
-	
-	bool setCurrentNode(int ID);
 };

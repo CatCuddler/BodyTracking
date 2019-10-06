@@ -114,7 +114,7 @@ void Logger::endEvaluationLogger() {
 }
 
 void Logger::saveEvaluationData(int nodeID, int pose, int trials, bool head, bool hip, bool left_arm, bool right_arm, bool left_leg, bool right_leg) {
-	evaluationDataOutputFile << nodeID << " " << pose << " " << trials << head << " " << hip << " " << left_arm << " " << right_arm << " " << left_leg << " " << right_leg << "\n";
+	evaluationDataOutputFile << nodeID << " " << pose << " " << trials << " " << head << " " << hip << " " << left_arm << " " << right_arm << " " << left_leg << " " << right_leg << "\n";
 	evaluationDataOutputFile.flush();
 }
 

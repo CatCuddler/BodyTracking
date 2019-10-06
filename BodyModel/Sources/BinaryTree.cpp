@@ -187,7 +187,7 @@ BinaryTree::~BinaryTree() {
 }
 
 void BinaryTree::createNewNode(int index, Character speakWithCharacter, const char* const data, Sound* audio) {
-	nodes[index] = new Node(currentID, speakWithCharacter, data, audio);
+	nodes[index] = new Node(index, speakWithCharacter, data, audio);
 }
 
 Node* BinaryTree::getCurrentNode() const {
@@ -196,10 +196,6 @@ Node* BinaryTree::getCurrentNode() const {
 
 Node* BinaryTree::getLastNode() const {
 	return nodes[numOfNodes];
-}
-
-int BinaryTree::getCurrentNodeID() const {
-	return currentID;
 }
 
 Node* BinaryTree::getLeftNode() const {

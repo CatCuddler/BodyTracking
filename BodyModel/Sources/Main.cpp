@@ -521,9 +521,9 @@ namespace {
 	
 	void getNextStoryElement(bool left) {
 		if (left && storyLineTree->getLeftNode() != nullptr) {
-			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 1);
+			storyLineTree->setCurrentNode(storyLineTree->getLeftNode()->getID());
 		} else if (!left && storyLineTree->getRightNode() != nullptr) {
-			storyLineTree->setCurrentNode(2 * storyLineTree->getCurrentNodeID() + 2);
+			storyLineTree->setCurrentNode(storyLineTree->getRightNode()->getID());
 		}
 		
 		if (storyLineTree->getLeftNode() == nullptr && storyLineTree->getRightNode() == nullptr) {
