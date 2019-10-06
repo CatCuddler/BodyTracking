@@ -8,11 +8,11 @@ private:
 	//Yoga lastMovement;
 	
 	int getRandom();
-	Yoga selectYogaPose(int random);
+	Yoga selectYogaPose(int ID);
 	
 public:
 	Movement();
 	
-	void getRandomMovement(Yoga& pose1);
-	void getRandomMovement(Yoga& pose1, Yoga& pose2);
+	void getRandomMovement(Yoga& pose0, Yoga currentPose);
+	void getRandomMovement(Yoga& pose0, Yoga& pose1, Yoga currentPose);
 };

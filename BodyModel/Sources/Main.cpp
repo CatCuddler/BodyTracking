@@ -151,7 +151,7 @@ namespace {
 	Movement* movement;
 	Yoga pose0;
 	Yoga pose1;
-	Yoga yogaPose;
+	Yoga yogaPose = Yoga0;
 	int yogaID;
 	bool colliding = false;
 	double finishGameIn27sec = -1;
@@ -514,9 +514,9 @@ namespace {
 		pose0 = Unknown;
 		pose1 = Unknown;
 		if (speakWithCharacter1 != None && speakWithCharacter2 != None)
-			movement->getRandomMovement(pose0, pose1);
+			movement->getRandomMovement(pose0, pose1, yogaPose);
 		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
-			movement->getRandomMovement(pose0);
+			movement->getRandomMovement(pose0, yogaPose);
 	}
 	
 	void getNextStoryElement(bool left) {
@@ -992,9 +992,11 @@ namespace {
 				System::stop();
 				break;
 			case Kore::KeyLeft:
+				yogaPose = pose0;
 				getNextStoryElement(true);
 				break;
 			case Kore::KeyRight:
+				yogaPose = pose1;
 				getNextStoryElement(false);
 				break;
 			default:

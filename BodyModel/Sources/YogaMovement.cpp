@@ -16,9 +16,9 @@ int Movement::getRandom() {
 	return value;
 }
 
-Yoga Movement::selectYogaPose(int random) {
+Yoga Movement::selectYogaPose(int ID) {
 	Yoga pose;
-	switch (random) {
+	switch (ID) {
 		case 0:
 			pose = Yoga0;
 			break;
@@ -40,21 +40,22 @@ Yoga Movement::selectYogaPose(int random) {
 }
 
 
-void Movement::getRandomMovement(Yoga& pose1) {
+void Movement::getRandomMovement(Yoga& pose0, Yoga currentPose) {
 	int random = getRandom();
-	pose1 = selectYogaPose(random);
+	pose0 = selectYogaPose(random);
+	while (pose0 == currentPose) {
+		random = getRandom();
+		pose0 = selectYogaPose(random);
+	}
 	log(LogLevel::Info, "random pose %i", random);
 }
 
-void Movement::getRandomMovement(Yoga& pose1, Yoga& pose2) {
-	int random1 = getRandom();
-	pose1 = selectYogaPose(random1);
-	
-	int random2 = getRandom();
-	while (random1 == random2) {
-		random2 = getRandom();
+void Movement::getRandomMovement(Yoga& pose0, Yoga& pose1, Yoga currentPose) {
+	getRandomMovement(pose0, currentPose);
+	getRandomMovement(pose1, pose0);
+	while (pose1 == currentPose) {
+		getRandomMovement(pose1, pose0);
 	}
-	pose2 = selectYogaPose(random2);
 	
-	log(LogLevel::Info, "random pose %i and %i", random1, random2);
+	log(LogLevel::Info, "random pose %i and %i", pose0, pose1);
 }
