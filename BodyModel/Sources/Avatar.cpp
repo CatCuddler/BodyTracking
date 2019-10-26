@@ -69,7 +69,8 @@ void Avatar::animate(TextureUnit tex) {
 		
 		Texture* image = images[j];
 		
-		Graphics4::setTexture(tex, image);
+        if (image != nullptr)
+            Graphics4::setTexture(tex, image);
 		Graphics4::setVertexBuffer(*vertexBuffers[j]);
 		Graphics4::setIndexBuffer(*indexBuffers[j]);
 		Graphics4::drawIndexedVertices();
