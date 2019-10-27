@@ -1198,7 +1198,7 @@ namespace {
         textMesh[Clown3] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
         textMesh[Clown4] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
         textMesh[Assistent] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
-        textMesh[AssistentMagier] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
+        textMesh[AssistentMagier] = new MeshObject("3dtext/AssistentinMagier.ogex", "3dtext/", structure, 1);
         textMesh[Dompteur] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
         textMesh[Dude] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
         textMesh[Magier] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
