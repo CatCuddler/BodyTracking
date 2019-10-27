@@ -121,8 +121,10 @@ namespace {
 	// Virtual environment
 	LivingRoom* livingRoom;
 	
-	// Plattform mesh objects and collider
-	MeshObject* plattforms[] = { nullptr, nullptr, nullptr };
+	// Platform mesh objects and collider
+	MeshObject* platforms[] = { nullptr, nullptr, nullptr };
+    bool showPlatforms = false;
+
 	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 	
 	vec3 color0(56.0/255.0, 56.0/255.0, 56.0/255.0);
@@ -155,6 +157,7 @@ namespace {
 	int yogaID;
 	bool colliding = false;
 	double finishGameIn27sec = -1;
+    double waitForAudio = 0;
 	int trials = 0;
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
@@ -255,33 +258,33 @@ namespace {
 		livingRoom->render(tex_living_room, mLocation_living_room, mLocation_living_room_inverse, diffuse_living_room, specular_living_room, specular_power_living_room, true);
 	}
 
-	void renderPlattform(int plattformID, vec3 color) {
-		Graphics4::setMatrix(mLocation, plattforms[plattformID]->M);
+	void renderPlatform(int platformID, vec3 color) {
+		Graphics4::setMatrix(mLocation, platforms[platformID]->M);
 		Graphics4::setFloat3(cLocation, color);
-		plattforms[plattformID]->render(tex);
+		platforms[platformID]->render(tex);
 
-		// Mirror plattform
-		mat4 plattformTransMirror = getMirrorMatrix() * plattforms[plattformID]->M;
-		Graphics4::setMatrix(mLocation, plattformTransMirror);
-		plattforms[plattformID]->render(tex);
+		// Mirror platform
+		mat4 platformTransMirror = getMirrorMatrix() * platforms[platformID]->M;
+		Graphics4::setMatrix(mLocation, platformTransMirror);
+		platforms[platformID]->render(tex);
 	}
 	
-	void renderPlattforms(mat4 V, mat4 P) {
+	void renderPlatforms(mat4 V, mat4 P) {
 		Graphics4::setPipeline(pipeline);
 		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
-			renderPlattform(0, color0);
+			renderPlatform(0, color0);
 		}
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
-			renderPlattform(1, color1);
+			renderPlatform(1, color1);
 		}
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
-			renderPlattform(2, color2);
+			renderPlatform(2, color2);
 		}
 		
 		// Reset color
@@ -617,12 +620,12 @@ namespace {
 				// Update initial matrices, so that we can recognize movements no metter where the player stands
 				updateTransAndRot();
 				
-				// Check if avatar is colliding with a plattform
+				// Check if avatar is colliding with a platform
 				for (int i = 0; i < 3; ++i) {
 					// Check collision
 					colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
 					if (colliding) {
-						log(LogLevel::Info, "Colliding with plattform %i", i);
+						log(LogLevel::Info, "Colliding with platform %i", i);
 						
 						switch (i) {
 							case 0:
@@ -872,7 +875,7 @@ namespace {
 
 			if (calibratedAvatar && renderFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (calibratedAvatar) renderPlattforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (calibratedAvatar) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -902,7 +905,7 @@ namespace {
 
 		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
 
-		if (calibratedAvatar) renderPlattforms(V, P);
+		if (calibratedAvatar) renderPlatforms(V, P);
 #else
 		// Read line
 		float scaleFactor;
@@ -949,9 +952,16 @@ namespace {
 		
 		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
 		
-		if (calibratedAvatar) renderPlattforms(V, P);
+		if (calibratedAvatar) renderPlatforms(V, P);
 #endif
-		
+        
+        if (waitForAudio < currentAudio->length) {
+            waitForAudio += deltaT;
+            showPlatforms = false;
+        } else {
+            showPlatforms = true;
+        }
+        
 		if (finishGameIn27sec >= 0)
 			finishGameIn27sec += deltaT;
 		if (finishGameIn27sec > 27)
@@ -1135,7 +1145,7 @@ namespace {
 		
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
-		sphereMesh = new MeshObject("plattform/sphere.ogex", "plattform/", structure, avatarCollider->radius);
+		sphereMesh = new MeshObject("platform/sphere.ogex", "platform/", structure, avatarCollider->radius);
 		
 		initTransAndRot();
 		
@@ -1172,15 +1182,15 @@ namespace {
 			livingRoom->Mmirror = mirrorMatrix * mat4::Translation(mirrorOver.x(), mirrorOver.y(), mirrorOver.z()) * livingRoomRot.matrix().Transpose();
 		}
 		
-		plattforms[0] = new MeshObject("plattform/plattform0.ogex", "plattform/", structure, 0.6f);
-		plattforms[1] = new MeshObject("plattform/plattform1.ogex", "plattform/", structure, 0.6f);
-		plattforms[2] = new MeshObject("plattform/plattform2.ogex", "plattform/", structure, 0.6f);
-		Kore::Quaternion plattformRot = Kore::Quaternion(0, 0, 0, 1);
-		plattformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
-		plattformRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -Kore::pi / 2.0));
-		plattforms[0]->M = mat4::Translation(0, 0, 0) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		plattforms[1]->M = mat4::Translation(0, 0, 0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
-		plattforms[2]->M = mat4::Translation(0, 0, -0.8f) * plattformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		platforms[0] = new MeshObject("platform/platform0.ogex", "platform/", structure, 0.6f);
+		platforms[1] = new MeshObject("platform/platform1.ogex", "platform/", structure, 0.6f);
+		platforms[2] = new MeshObject("platform/platform2.ogex", "platform/", structure, 0.6f);
+		Kore::Quaternion platformRot = Kore::Quaternion(0, 0, 0, 1);
+		platformRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
+		platformRot.rotate(Kore::Quaternion(vec3(0, 0, 1), -Kore::pi / 2.0));
+		platforms[0]->M = mat4::Translation(0, 0, 0) * platformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		platforms[1]->M = mat4::Translation(0, 0, 0.8f) * platformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
+		platforms[2]->M = mat4::Translation(0, 0, -0.8f) * platformRot.matrix().Transpose() * mat4::Scale(0.5f, 0.5f, 0.01f);
 		sphereColliders[0] = new SphereCollider(vec3(0, 0, 0), colliderRadius);
 		sphereColliders[1] = new SphereCollider(vec3(0, 0, 0.8f), colliderRadius);
 		sphereColliders[2] = new SphereCollider(vec3(0, 0, -0.8f), colliderRadius);
