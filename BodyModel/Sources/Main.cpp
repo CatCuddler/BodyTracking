@@ -47,8 +47,8 @@ namespace {
 	const int numOfEndEffectors = 8;
 	
 	Logger* logger;
-	
-	HMM* hmm;
+
+    HMM* hmm;
 	
 	double startTime;
 	double lastTime;
@@ -59,9 +59,9 @@ namespace {
 	// Audio cues
 	Sound* startRecordingSound;
 	Sound* stopRecordingSound;
-	Sound* correctSound;
-	Sound* wrongSound;
-	Sound* startRecognitionSound;
+    Sound* correctSound;
+    Sound* wrongSound;
+    Sound* startRecognitionSound;
 	
 	Sound* currentAudio;
 	
@@ -427,7 +427,7 @@ namespace {
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
 			
 			if (endEffectorID == hip) {
-				avatar->setFixedPositionAndOrientation(endEffector[hip]->getBoneIndex(), finalPos, finalRot);
+				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
 
 				// Update the sphere collider for the avatar
 				avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
@@ -435,10 +435,12 @@ namespace {
 
 			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
+				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
-			
-			if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
-			if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+            
+            if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+            if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
 	
@@ -583,10 +585,10 @@ namespace {
 	void record() {
 		logRawData = !logRawData;
 		
-		if (logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		if (logRawData) {
 			Audio1::play(startRecordingSound);
 			logger->startLogger("logData");
-		} else if (!logRawData && !hmm->isRecordingActive() && !hmm->isRecognitionActive()) {
+		} else {
 			Audio1::play(stopRecordingSound);
 			logger->endLogger();
 		}
@@ -1210,8 +1212,8 @@ namespace {
 		
 		logger = new Logger();
 		logger->startEvaluationLogger("yogaEval");
-		
-		hmm = new HMM(*logger);
+        
+        hmm = new HMM(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
 		endEffector[head] = new EndEffector(headBoneIndex);
@@ -1249,9 +1251,6 @@ int kore(int argc, char** argv) {
 	Audio2::init();
 	startRecordingSound = new Sound("sound/start.wav");
 	stopRecordingSound = new Sound("sound/stop.wav");
-	correctSound = new Sound("sound/correct.wav");
-	wrongSound = new Sound("sound/wrong.wav");
-	startRecognitionSound = new Sound("sound/start_recognition.wav");
 	
 	System::start();
 	

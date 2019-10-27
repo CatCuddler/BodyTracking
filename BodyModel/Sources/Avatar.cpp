@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Avatar.h"
+#include "RotationUtility.h"
 
 using namespace Kore;
 using namespace Kore::Graphics4;
@@ -88,6 +89,20 @@ void Avatar::setFixedPositionAndOrientation(int boneIndex, Kore::vec3 desPositio
 	
 	bone->transform = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
 	bone->rotation = desRotation;
+	bone->rotation.normalize();
+	bone->local = bone->transform * bone->rotation.matrix().Transpose();
+}
+
+void Avatar::setFixedOrientation(int boneIndex, Kore::Quaternion desRotation) {
+	BoneNode* bone = getBoneWithIndex(boneIndex);
+	
+	Kore::Quaternion localRot;
+	Kore::RotationUtility::getOrientation(&bone->parent->combined, &localRot);
+	bone->rotation = localRot.invert().rotated(desRotation);
+	
+	//bone->transform = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z());
+	//bone->rotation = desRotation;
+	
 	bone->rotation.normalize();
 	bone->local = bone->transform * bone->rotation.matrix().Transpose();
 }
