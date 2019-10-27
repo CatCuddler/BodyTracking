@@ -40,8 +40,6 @@ namespace {
 	const bool renderRoom = true;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
-	const bool render3DText = true;
-	bool renderFeedback = true;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -113,6 +111,14 @@ namespace {
 	// Null terminated array of 3d text
 	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
+    // Platform mesh objects and collider
+    MeshObject* platforms[] = { nullptr, nullptr, nullptr };
+   
+    bool showStoryElements = false;
+    bool showFeedback = false;
+
+    SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
+
 	// Avatar
 	Avatar* avatar;
 	SphereCollider* avatarCollider;
@@ -120,12 +126,6 @@ namespace {
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
-	
-	// Platform mesh objects and collider
-	MeshObject* platforms[] = { nullptr, nullptr, nullptr };
-    bool showPlatforms = false;
-
-	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 	
 	vec3 color0(56.0/255.0, 56.0/255.0, 56.0/255.0);
 	vec3 color1(45.0/255.0, 88.0/255.0, 103.0/255.0);
@@ -270,7 +270,7 @@ namespace {
 	}
 	
 	void renderPlatforms(mat4 V, mat4 P) {
-		Graphics4::setPipeline(pipeline);
+        Graphics4::setPipeline(pipeline);
 		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
@@ -292,7 +292,7 @@ namespace {
 	}
 	
 	void render3Dtext(mat4 V, mat4 P) {
-		Graphics4::setPipeline(pipeline);
+        Graphics4::setPipeline(pipeline);
 		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
@@ -324,9 +324,6 @@ namespace {
 			Graphics4::setFloat3(cLocation, color);
 			textMesh[speakWithCharacter2]->render(tex);
 		}
-		
-		// Reset color
-		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 	}
 
 	bool hmm_head = true;
@@ -362,9 +359,6 @@ namespace {
 			
 			feedbackMesh[CrossMark]->render(tex);
 		}
-		
-		// Reset color
-		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 	}
 
 	void renderFeedbackText(mat4 V, mat4 P) {
@@ -372,6 +366,7 @@ namespace {
 	
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
+        Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		
 		renderHMMFeedback(Head, hmm_head);
 		renderHMMFeedback(Hip, hmm_hip);
@@ -387,6 +382,7 @@ namespace {
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
+        Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		avatar->animate(tex);
 		
 		// Render collider
@@ -538,8 +534,10 @@ namespace {
 		Audio1::stop(currentAudio);
 		storyLineText = storyLineTree->getCurrentNode()->getData();
 		currentAudio = storyLineTree->getCurrentNode()->getAudio();
-		if(currentAudio != nullptr)
-			Audio1::play(currentAudio);
+        if(currentAudio != nullptr) {
+            Audio1::play(currentAudio);
+            waitForAudio = 0;
+        }
 		
 		updateCharacterText();
 		getRandomPose();
@@ -611,7 +609,7 @@ namespace {
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
-				renderFeedback = false;
+				showFeedback = false;
 				
 				Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
@@ -659,7 +657,7 @@ namespace {
 				
 				++trials;
 				
-				renderFeedback = true;
+				showFeedback = true;
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				logger->saveEvaluationData(storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
@@ -871,11 +869,11 @@ namespace {
 			
 			if (renderRoom) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (calibratedAvatar && render3DText) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (showStoryElements) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (calibratedAvatar && renderFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (renderFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (calibratedAvatar) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
 			VrInterface::endRender(j);
 		}
@@ -901,11 +899,11 @@ namespace {
 			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
 		}
 
-		if (calibratedAvatar && render3DText) render3Dtext(V, P);
+		if (showStoryElements) render3Dtext(V, P);
 
-		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
+		if (renderFeedback) renderFeedbackText(V, P);
 
-		if (calibratedAvatar) renderPlatforms(V, P);
+		if (showStoryElements) renderPlatforms(V, P);
 #else
 		// Read line
 		float scaleFactor;
@@ -948,18 +946,18 @@ namespace {
 		
 		if (renderRoom) renderLivingRoom(V, P);
 		
-		if (calibratedAvatar && render3DText) render3Dtext(V, P);
+		if (showStoryElements) render3Dtext(V, P);
 		
-		if (calibratedAvatar && renderFeedback) renderFeedbackText(V, P);
+		if (showFeedback) renderFeedbackText(V, P);
 		
-		if (calibratedAvatar) renderPlatforms(V, P);
+        if (showStoryElements) renderPlatforms(V, P);
 #endif
         
         if (waitForAudio < currentAudio->length) {
             waitForAudio += deltaT;
-            showPlatforms = false;
+            showStoryElements = false;
         } else {
-            showPlatforms = true;
+            showStoryElements = true;
         }
         
 		if (finishGameIn27sec >= 0)
@@ -1195,30 +1193,25 @@ namespace {
 		sphereColliders[1] = new SphereCollider(vec3(0, 0, 0.8f), colliderRadius);
 		sphereColliders[2] = new SphereCollider(vec3(0, 0, -0.8f), colliderRadius);
 		
-		if (render3DText) {
-			textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
-			textMesh[Clown2] = new MeshObject("3dtext/Clown2.ogex", "3dtext/", structure, 1);
-			textMesh[Clown3] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
-			textMesh[Clown4] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
-			textMesh[Assistent] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
-			textMesh[AssistentMagier] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
-			textMesh[Dompteur] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
-			textMesh[Dude] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
-			textMesh[Magier] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
-			textMesh[Zirkusdirektor] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
-		}
+		textMesh[Clown1] = new MeshObject("3dtext/Clown1.ogex", "3dtext/", structure, 1);
+        textMesh[Clown2] = new MeshObject("3dtext/Clown2.ogex", "3dtext/", structure, 1);
+        textMesh[Clown3] = new MeshObject("3dtext/Clown3.ogex", "3dtext/", structure, 1);
+        textMesh[Clown4] = new MeshObject("3dtext/Clown4.ogex", "3dtext/", structure, 1);
+        textMesh[Assistent] = new MeshObject("3dtext/Assistent.ogex", "3dtext/", structure, 1);
+        textMesh[AssistentMagier] = new MeshObject("3dtext/AssistentMagier.ogex", "3dtext/", structure, 1);
+        textMesh[Dompteur] = new MeshObject("3dtext/Dompteur.ogex", "3dtext/", structure, 1);
+        textMesh[Dude] = new MeshObject("3dtext/Dude.ogex", "3dtext/", structure, 1);
+        textMesh[Magier] = new MeshObject("3dtext/Magier.ogex", "3dtext/", structure, 1);
+        textMesh[Zirkusdirektor] = new MeshObject("3dtext/Zirkusdirektor.ogex", "3dtext/", structure, 1);
 		
-		if (renderFeedback) {
-			feedbackMesh[CheckMark] = new MeshObject("3dtext/checkmark.ogex", "3dtext/", structure, 1);
-			feedbackMesh[CrossMark] = new MeshObject("3dtext/crossmark.ogex", "3dtext/", structure, 1);
-			feedbackMesh[Head] = new MeshObject("3dtext/head.ogex", "3dtext/", structure, 1);
-			feedbackMesh[Hip] = new MeshObject("3dtext/hip.ogex", "3dtext/", structure, 1);
-			feedbackMesh[LeftArm] = new MeshObject("3dtext/left_arm.ogex", "3dtext/", structure, 1);
-			feedbackMesh[RightArm] = new MeshObject("3dtext/right_arm.ogex", "3dtext/", structure, 1);
-			feedbackMesh[LeftLeg] = new MeshObject("3dtext/left_leg.ogex", "3dtext/", structure, 1);
-			feedbackMesh[RightLeg] = new MeshObject("3dtext/right_leg.ogex", "3dtext/", structure, 1);
-			renderFeedback = false;
-		}
+		feedbackMesh[CheckMark] = new MeshObject("3dtext/checkmark.ogex", "3dtext/", structure, 1);
+        feedbackMesh[CrossMark] = new MeshObject("3dtext/crossmark.ogex", "3dtext/", structure, 1);
+        feedbackMesh[Head] = new MeshObject("3dtext/head.ogex", "3dtext/", structure, 1);
+        feedbackMesh[Hip] = new MeshObject("3dtext/hip.ogex", "3dtext/", structure, 1);
+        feedbackMesh[LeftArm] = new MeshObject("3dtext/left_arm.ogex", "3dtext/", structure, 1);
+        feedbackMesh[RightArm] = new MeshObject("3dtext/right_arm.ogex", "3dtext/", structure, 1);
+        feedbackMesh[LeftLeg] = new MeshObject("3dtext/left_leg.ogex", "3dtext/", structure, 1);
+        feedbackMesh[RightLeg] = new MeshObject("3dtext/right_leg.ogex", "3dtext/", structure, 1);
 		
 		logger = new Logger();
 		logger->startEvaluationLogger("yogaEval");
