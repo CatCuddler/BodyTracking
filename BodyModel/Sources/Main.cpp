@@ -955,7 +955,7 @@ namespace {
         } else {
             showStoryElements = true;
             
-            if (intro && speakWithCharacter1 == None && speakWithCharacter2 == None) {
+            if (speakWithCharacter1 == None && speakWithCharacter2 == None) {
                 // Last node
                 finishGame();
             }
