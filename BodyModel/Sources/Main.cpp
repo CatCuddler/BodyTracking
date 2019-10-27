@@ -156,7 +156,6 @@ namespace {
 	Yoga yogaPose = Yoga0;
 	int yogaID;
 	bool colliding = false;
-	double finishGameIn27sec = -1;
     double waitForAudio = 0;
 	int trials = 0;
 	
@@ -504,6 +503,7 @@ namespace {
 			speakWithCharacter1 = storyLineTree->getLeftNode()->speakWith();
 		else
 			speakWithCharacter1 = None;
+        
 		if (storyLineTree->getRightNode() != nullptr)
 			speakWithCharacter2 = storyLineTree->getRightNode()->speakWith();
 		else
@@ -518,31 +518,6 @@ namespace {
 			movement->getRandomMovement(pose0, pose1, yogaPose);
 		else if (speakWithCharacter1 != None && speakWithCharacter2 == None)
 			movement->getRandomMovement(pose0, yogaPose);
-	}
-	
-	void getNextStoryElement(bool left) {
-		if (left && storyLineTree->getLeftNode() != nullptr) {
-			storyLineTree->setCurrentNode(storyLineTree->getLeftNode()->getID());
-		} else if (!left && storyLineTree->getRightNode() != nullptr) {
-			storyLineTree->setCurrentNode(storyLineTree->getRightNode()->getID());
-		}
-		
-		if (storyLineTree->getLeftNode() == nullptr && storyLineTree->getRightNode() == nullptr) {
-			finishGameIn27sec = 0;
-		}
-		
-		Audio1::stop(currentAudio);
-		storyLineText = storyLineTree->getCurrentNode()->getData();
-		currentAudio = storyLineTree->getCurrentNode()->getAudio();
-        if(currentAudio != nullptr) {
-            Audio1::play(currentAudio);
-            waitForAudio = 0;
-        }
-		
-		updateCharacterText();
-		getRandomPose();
-		
-		log(LogLevel::Info, storyLineText);
 	}
 	
 	bool intro = false;
@@ -582,6 +557,27 @@ namespace {
 			outro = true;
 		}
 	}
+
+    void getNextStoryElement(bool left) {
+        if (left && storyLineTree->getLeftNode() != nullptr) {
+            storyLineTree->setCurrentNode(storyLineTree->getLeftNode()->getID());
+        } else if (!left && storyLineTree->getRightNode() != nullptr) {
+            storyLineTree->setCurrentNode(storyLineTree->getRightNode()->getID());
+        }
+    
+        Audio1::stop(currentAudio);
+        storyLineText = storyLineTree->getCurrentNode()->getData();
+        currentAudio = storyLineTree->getCurrentNode()->getAudio();
+        if(currentAudio != nullptr) {
+            Audio1::play(currentAudio);
+            waitForAudio = 0;
+        }
+    
+        updateCharacterText();
+        getRandomPose();
+    
+        log(LogLevel::Info, storyLineText);
+    }
 	
 	void record() {
 		logRawData = !logRawData;
@@ -958,12 +954,12 @@ namespace {
             showStoryElements = false;
         } else {
             showStoryElements = true;
+            
+            if (intro && speakWithCharacter1 == None && speakWithCharacter2 == None) {
+                // Last node
+                finishGame();
+            }
         }
-        
-		if (finishGameIn27sec >= 0)
-			finishGameIn27sec += deltaT;
-		if (finishGameIn27sec > 27)
-			finishGame();
 
 		Graphics4::end();
 		Graphics4::swapBuffers();
