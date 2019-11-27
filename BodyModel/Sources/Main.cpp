@@ -478,7 +478,7 @@ namespace {
 
 	void calibrate() {
 		initTransAndRot();
-		initGame();
+		//initGame();
 		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
@@ -777,6 +777,11 @@ namespace {
 			calibrate();
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
+		}
+
+		// Trackpad => start game
+		if (buttonNr == 32 && value == 1) {
+			if (calibratedAvatar) initGame();
 		}
 		
 		// Trigger button => record data
