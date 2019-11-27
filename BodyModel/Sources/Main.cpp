@@ -57,7 +57,7 @@ namespace {
 	// Audio cues
 	Sound* startRecordingSound;
 	Sound* stopRecordingSound;
-    Sound* correctSound;
+    //Sound* correctSound;
     Sound* wrongSound;
     Sound* startRecognitionSound;
 	
@@ -583,7 +583,7 @@ namespace {
     }
 	
 	void record() {
-		logRawData = !logRawData;
+		/*logRawData = !logRawData;
 		
 		if (logRawData) {
 			Audio1::play(startRecordingSound);
@@ -591,7 +591,7 @@ namespace {
 		} else {
 			Audio1::play(stopRecordingSound);
 			logger->endLogger();
-		}
+		}*/
 		
 		// HMM
 		if(hmm->isRecordingActive()) {
@@ -1260,6 +1260,9 @@ int kore(int argc, char** argv) {
 	Audio2::init();
 	startRecordingSound = new Sound("sound/start.wav");
 	stopRecordingSound = new Sound("sound/stop.wav");
+
+	startRecognitionSound = new Sound("sound/start_recognition.wav");
+	wrongSound = new Sound("sound/wrong.wav");
 	
 	System::start();
 	
