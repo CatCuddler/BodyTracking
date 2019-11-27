@@ -867,7 +867,7 @@ namespace {
 
 			if (showStoryElements) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (renderFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (showFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			
@@ -897,7 +897,7 @@ namespace {
 
 		if (showStoryElements) render3Dtext(V, P);
 
-		if (renderFeedback) renderFeedbackText(V, P);
+		if (showFeedback) renderFeedbackText(V, P);
 
 		if (showStoryElements) renderPlatforms(V, P);
 #else
@@ -948,18 +948,20 @@ namespace {
 		
         if (showStoryElements) renderPlatforms(V, P);
 #endif
-        
-        if (waitForAudio < currentAudio->length) {
-            waitForAudio += deltaT;
-            showStoryElements = false;
-        } else {
-            showStoryElements = true;
-            
-            if (speakWithCharacter1 == None && speakWithCharacter2 == None) {
-                // Last node
-                finishGame();
-            }
-        }
+		if (currentAudio != nullptr) {
+			if (waitForAudio < currentAudio->length) {
+				waitForAudio += deltaT;
+				showStoryElements = false;
+			}
+			else {
+				showStoryElements = true;
+
+				if (speakWithCharacter1 == None && speakWithCharacter2 == None) {
+					// Last node
+					finishGame();
+				}
+			}
+		}
 
 		Graphics4::end();
 		Graphics4::swapBuffers();
