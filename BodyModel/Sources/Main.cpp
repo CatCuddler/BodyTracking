@@ -341,6 +341,9 @@ namespace {
 		const float yPos = 3.0f;
 		const float yOffset = 0.25f;
 		const float zPos = -3.5f;
+
+		vec3 color = vec3(1, 1, 1);	// white
+		Graphics4::setFloat3(cLocation, color);
 		
 		M = mat4::Translation(xPos, yPos - feedbackID * yOffset, zPos) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
 		Graphics4::setMatrix(mLocation, M);
