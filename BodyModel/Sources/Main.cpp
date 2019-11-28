@@ -1015,6 +1015,9 @@ namespace {
 				yogaPose = pose1;
 				getNextStoryElement(false);
 				break;
+			case Kore::KeyReturn:
+				initGame();
+				break;
 			default:
 				break;
 		}
