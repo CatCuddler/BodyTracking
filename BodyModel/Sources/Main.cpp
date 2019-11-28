@@ -135,7 +135,7 @@ namespace {
 	Character speakWithCharacter2 = None;
 	
 	// Variables to mirror the room and the avatar
-	vec3 mirrorOver(6.057f, 0.0f, 0.04f);
+	vec3 mirrorOver(6.05f, 0.001f, 0.04f);
 	
 	mat4 initTrans;
 	mat4 initTransInv;
