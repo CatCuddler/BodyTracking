@@ -476,12 +476,9 @@ namespace {
 		initTrans = mat4::Translation(hipPos.x(), 0, hipPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
-	
-	void initGame();
 
 	void calibrate() {
 		initTransAndRot();
-		//initGame();
 		
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
