@@ -57,9 +57,9 @@ namespace {
 	// Audio cues
 	Sound* startRecordingSound;
 	Sound* stopRecordingSound;
-    //Sound* correctSound;
-    Sound* wrongSound;
-    Sound* startRecognitionSound;
+	//Sound* correctSound;
+	//Sound* wrongSound;
+	//Sound* startRecognitionSound;
 	
 	Sound* currentAudio;
 	
@@ -607,7 +607,7 @@ namespace {
 			if (hmm->recognizing) {
 				showFeedback = false;
 				
-				Audio1::play(startRecognitionSound);
+				//Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
 				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 
@@ -653,9 +653,7 @@ namespace {
 				
 				++trials;
 				
-				showFeedback = true;
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				
 				logger->saveEvaluationData(storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
@@ -663,13 +661,17 @@ namespace {
 					log(Info, "The movement is correct!");
 					//Audio1::play(correctSound);
 					
+					showFeedback = false;
+
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
 
 					trials = 0;
 				} else {
 					log(Info, "The movement is wrong");
-					Audio1::play(wrongSound);
+					//Audio1::play(wrongSound);
+
+					showFeedback = true;
 				}
 				
 				colliding = false;
@@ -1261,8 +1263,9 @@ int kore(int argc, char** argv) {
 	startRecordingSound = new Sound("sound/start.wav");
 	stopRecordingSound = new Sound("sound/stop.wav");
 
-	startRecognitionSound = new Sound("sound/start_recognition.wav");
-	wrongSound = new Sound("sound/wrong.wav");
+	//startRecognitionSound = new Sound("sound/start_recognition.wav");
+	//correctSound = new Sound("sound/correct.wav");
+	//wrongSound = new Sound("sound/wrong.wav");
 	
 	System::start();
 	
