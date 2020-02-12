@@ -18,6 +18,8 @@
 #include "LivingRoom.h"
 #include "Logger.h"
 
+#include "MachineLearningMotionRecognition.h"
+
 #include <algorithm> // std::sort
 
 #ifdef KORE_STEAMVR
@@ -38,12 +40,18 @@ namespace {
 	const bool renderAxisForEndEffector = false;
 	
 	EndEffector** endEffector;
-	const int numOfEndEffectors = 8;
+	const int numOfEndEffectors = 8;// 12;
+
+	// if set to true, only five trackers (hip, left and right forearm, left and right leg) will be required
+	const bool onlyUseFullInverseKinematicTrackerSetup = true;
 	
 	Logger* logger;
+
+	MachineLearningMotionRecognition* motionRecognizer;
 	
 	double startTime;
 	double lastTime;
+
 	
 	// Audio cues
 	Sound* startRecordingSound;
@@ -100,7 +108,10 @@ namespace {
 	Kore::Quaternion initRot;
 	Kore::Quaternion initRotInv;
 	
-	bool calibratedAvatar = false;
+	// safety checks for machine learning motion recognition
+	bool calibratedAvatarScale = false;
+	bool calibratedAvatarControllersAndTrackers = false;
+	bool blockAllGamepadButtons = false;
 	
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
@@ -124,6 +135,12 @@ namespace {
 		
 		return M;
 	}
+
+	// Whether the user has completet all calibration steps, 
+	// namely size calibration and sensor position calibration 
+	bool calibratedAvatarCompletely() {
+		return (calibratedAvatarScale && calibratedAvatarControllersAndTrackers);
+	}
 	
 	void renderControllerAndTracker(int tracker, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 		// World Transformation Matrix
@@ -143,7 +160,7 @@ namespace {
 		}
 		
 		// Render a local coordinate system only if the avatar is not calibrated
-		if (!calibratedAvatar) {
+		if (!calibratedAvatarCompletely()) {
 			renderVRDevice(2, W);
 			renderVRDevice(2, M);
 		}
@@ -235,14 +252,65 @@ namespace {
 		return V;
 	}
 	
+
+	// Convert a 3D vector to a quaternion
+	Kore::Quaternion toQuaternion(vec3 vector3D)
+	{
+		double cosinusYaw = cos(vector3D.z() * 0.5);
+		double sinusYaw = sin(vector3D.z() * 0.5);
+		double cosinusPitch = cos(vector3D.y() * 0.5);
+		double sinusPitch = sin(vector3D.y() * 0.5);
+		double cosinusRoll = cos(vector3D.x() * 0.5);
+		double sinusRoll = sin(vector3D.x() * 0.5);
+
+		Kore::Quaternion quaternion;
+
+		quaternion.w = cosinusYaw * cosinusPitch * cosinusRoll + sinusYaw * sinusPitch * sinusRoll;
+		quaternion.x = cosinusYaw * cosinusPitch * sinusRoll - sinusYaw * sinusPitch * cosinusRoll;
+		quaternion.y = sinusYaw * cosinusPitch * sinusRoll + cosinusYaw * sinusPitch * cosinusRoll;
+		quaternion.z = sinusYaw * cosinusPitch * cosinusRoll - cosinusYaw * sinusPitch * sinusRoll;
+
+		return quaternion;
+	}
+
+	// Convert a quaternion to euler angles
+	vec3 toEulerAngles(const Kore::Quaternion q)
+	{
+		// roll (x-axis rotation)
+		double roll;
+		double sinr_cosp = +2.0 * (q.w * q.x + q.y * q.z);
+		double cosr_cosp = +1.0 - 2.0 * (q.x * q.x + q.y * q.y);
+		roll = atan2(sinr_cosp, cosr_cosp);
+
+		// pitch (y-axis rotation)
+		double pitch;
+		double sinp = +2.0 * (q.w * q.y - q.z * q.x);
+		if (fabs(sinp) >= 1)
+			pitch = copysign(Kore::pi / 2, sinp); // use 90 degrees if out of range
+		else
+			pitch = asin(sinp);
+
+		// yaw (z-axis rotation)
+		double yaw;
+		double siny_cosp = +2.0 * (q.w * q.z + q.x * q.y);
+		double cosy_cosp = +1.0 - 2.0 * (q.y * q.y + q.z * q.z);
+		yaw = atan2(siny_cosp, cosy_cosp);
+
+		return vec3(roll, pitch, yaw);
+	}
+
+
 	void executeMovement(int endEffectorID) {
+
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
 
 		// Save raw data
 		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
-		if (calibratedAvatar) {
+		//if (calibratedAvatar) {
+		
+		if (calibratedAvatarControllersAndTrackers) {
 			// Transform desired position/rotation to the character local coordinate system
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desRotation = initRotInv.rotated(desRotation);
@@ -260,8 +328,62 @@ namespace {
 			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
 				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
+			
+			// Save calibrated data to either train Motion Recognizer or to recognize a movement
+			if (motionRecognizer->isProcessingMovementData()) {
+
+				// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+				// if we do use VR sensors, the actual velocity can be used
+				vec3 rawAngVel;
+				Kore::Quaternion desAngVel;
+				vec3 rawLinVel;
+				vec3 desLinVel;
+				vec3 rawPosition;
+				Kore::Quaternion rawRotation;
+
+				// actual VR hardware present
+				#ifdef KORE_STEAMVR
+
+					VrPoseState sensorState;
+					// retrieve sensor or HMD state (data is the same, retrieval is slightly different)
+					if (endEffectorID == head) {
+						sensorState = VrInterface::getSensorState(0).pose;
+					} else {
+						sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+					}
+
+					// collect data
+					rawLinVel = sensorState.linearVelocity;
+					rawAngVel = sensorState.angularVelocity;
+					desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+					Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+					desAngVel = initRotInv.rotated(rawAngVelQuat);
+					rawPosition = sensorState.vrPose.position;
+					rawRotation = sensorState.vrPose.orientation;
+
+				// no actual VR hardware present
+				#else
+					// these placeholder values are only used for testing with predetermined movement sets, not for recording new data
+					rawAngVel = vec3(1, 2, 3);
+					desAngVel = desRotation;
+					rawLinVel = vec3(7, 8, 9);
+					desLinVel = rawLinVel;
+					rawPosition = desPosition;
+					rawRotation = desRotation;
+				#endif
+
+				// forward data
+				motionRecognizer->processMovementData(
+					endEffector[endEffectorID]->getName(), 
+					rawPosition, desPosition, finalPos, 
+					rawRotation, desRotation, finalRot, 
+					rawAngVel, desAngVel, 
+					rawLinVel, desLinVel, 
+					avatar->scale, lastTime);
+			}
 		}
 	}
+
 	
 	void initTransAndRot() {
 		initRot = Kore::Quaternion(0, 0, 0, 1);
@@ -299,12 +421,14 @@ namespace {
 	void record() {
 		logRawData = !logRawData;
 		
-		if (logRawData) {
-			Audio1::play(startRecordingSound);
-			logger->startLogger("logData");
-		} else {
-			Audio1::play(stopRecordingSound);
-			logger->endLogger();
+		if (!motionRecognizer->isActive()) {
+			if (logRawData) {
+				Audio1::play(startRecordingSound);
+				logger->startLogger("logData");
+			} else {
+				Audio1::play(stopRecordingSound);
+				logger->endLogger();
+			}
 		}
 	}
 
@@ -318,6 +442,8 @@ namespace {
 		
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
+
+		calibratedAvatarScale = true;
 		
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -333,7 +459,14 @@ namespace {
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
 		
-		const int numTrackers = 5;
+		int numTrackers;
+		if (onlyUseFullInverseKinematicTrackerSetup) {
+			numTrackers = 5;
+		}
+		else {
+			numTrackers = 9;
+		}
+
 		int trackerCount = 0;
 		
 		std::vector<EndEffector*> trackers;
@@ -357,6 +490,7 @@ namespace {
 					// Sort trackers regarding the y-Axis (height)
 					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
+<<<<<<< HEAD
 					// Left or Right Leg
 					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
@@ -369,6 +503,54 @@ namespace {
 					std::sort(trackers.begin()+3, trackers.begin()+5, sortByZAxis());
 					initEndEffector(leftForeArm, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
 					initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+=======
+
+					// if requested, use only the 2 leg trackers, the 2 forearm trackers, and the hip tracker
+					if (onlyUseFullInverseKinematicTrackerSetup) {
+
+						// Left or Right Leg
+						// Sort first two trackers regarding the z-Axis (left-right)
+						std::sort(trackers.begin(), trackers.begin() + 2, sortByZAxis());
+						initEndEffector(leftLeg, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+						initEndEffector(rightLeg, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+
+						// Hip
+						initEndEffector(hip, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
+						
+						// Left Fore Arm or Right Fore Arm
+						std::sort(trackers.begin() + 3, trackers.begin() + 5, sortByZAxis());
+						initEndEffector(leftForeArm, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+						initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+
+					}
+					// otherwise, use all 9 trackers
+					else {
+
+						// Left or Right Foot
+						// Sort first two trackers regarding the z-Axis (left-right)
+						std::sort(trackers.begin(), trackers.begin() + 2, sortByZAxis());
+						initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
+						initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
+					
+						// Left or Right Leg
+						std::sort(trackers.begin()+2, trackers.begin()+4, sortByZAxis());
+						initEndEffector(leftLeg, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
+						initEndEffector(rightLeg, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+					
+						// Hip
+						initEndEffector(hip, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+					
+						// Spine
+						initEndEffector(spine, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
+					
+						// Left Fore Arm, Right Fore Arm or Right Arm
+						std::sort(trackers.begin()+6, trackers.begin()+9, sortByZAxis());
+						initEndEffector(leftForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
+						initEndEffector(rightArm, trackers[7]->getDeviceIndex(), trackers[7]->getDesPosition(), trackers[7]->getDesRotation());
+						initEndEffector(rightForeArm, trackers[8]->getDeviceIndex(), trackers[8]->getDesPosition(), trackers[8]->getDesRotation());
+					}
+
+>>>>>>> f7040220b55ddd917d697164d063f1e753366b15
 				}
 				
 				
@@ -392,11 +574,24 @@ namespace {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
-		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
+
+		// disable buttons if Motion Recognizer is currently recording data, to avoid e.g. avatar re-calibration
+		if (motionRecognizer->isRecordingMovementData()) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons are disabled during Movement Data recording");
+			return;
+		}
+
+		// disable buttons if they have been locked by keyboard command
+		if (blockAllGamepadButtons) {
+			Kore::log(Kore::LogLevel::Warning,
+				"Gamepad Buttons have been disabled by keyboard");
+			return;		
+		}
 
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
-			calibratedAvatar = false;
+			calibratedAvatarControllersAndTrackers = false;
 			initTransAndRot();
 			avatar->resetPositionAndRotation();
 			setSize();
@@ -406,7 +601,7 @@ namespace {
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
-			calibratedAvatar = true;
+			calibratedAvatarControllersAndTrackers = true;
 			log(Info, "Calibrate avatar");
 		}
 		
@@ -457,7 +652,9 @@ namespace {
 		if (!controllerButtonsInitialized) initButtons();
 		
 		VrPoseState vrDevice;
+
 		for (int i = 0; i < numOfEndEffectors; ++i) {
+
 			if (endEffector[i]->getDeviceIndex() != -1) {
 
 				if (i == head) {
@@ -472,6 +669,11 @@ namespace {
 					// Get VR device position and rotation
 					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
 					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+					
+					if (calibratedAvatarCompletely() && i == hip) {
+						// Update Local Coordinate System
+						initTransAndRot();
+					}
 				}
 
 				executeMovement(i);
@@ -529,13 +731,19 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
+				
+				if (calibratedAvatarCompletely() && i == hip) {
+					// Update Local Coordinate System
+					initTransAndRot();
+				}
 			}
 			
-			if (!calibratedAvatar) {
+			if (!calibratedAvatarControllersAndTrackers) {
 				avatar->resetPositionAndRotation();
 				avatar->setScale(scaleFactor);
+				calibratedAvatarScale = true;
 				calibrate();
-				calibratedAvatar = true;
+				calibratedAvatarControllersAndTrackers = true;
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -544,7 +752,8 @@ namespace {
 			
 			if (!dataAvailable) {
 				currentFile++;
-				calibratedAvatar = false;
+				calibratedAvatarScale = false;
+				calibratedAvatarControllersAndTrackers = false;
 			}
 		} else {
 			if (eval) {
@@ -604,6 +813,8 @@ namespace {
 		Graphics4::end();
 		Graphics4::swapBuffers();
 	}
+
+
 	
 	void keyDown(KeyCode code) {
 		switch (code) {
@@ -636,8 +847,35 @@ namespace {
 			case KeyQ:
 				System::stop();
 				break;
+#ifdef KORE_STEAMVR
+				// simulate gamepad inputs, so tester can take control 
+				// and avoid wrong inputs from test subjects
+			case Kore::KeyH:
+				gamepadButton(2, 1);	// set avatar size
+				break;
+			case Kore::KeyK:
+				gamepadButton(1, 1);	// calibrate controllers and trackers
+				break;
+			case Kore::KeyB:			// disable gamepad buttons
+				blockAllGamepadButtons = !blockAllGamepadButtons;
+				if (blockAllGamepadButtons) {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been disabled by keyboard");
+				}
+				else {
+					Kore::log(Kore::LogLevel::Info,
+						"Gamepad Buttons have been enabled by keyboard");
+				}
+				break;
+#endif
 			default:
 				break;
+		}
+		
+		// the motion recognizer handles its own input in order to start recording data for specific tasks
+		// uses the numpad number keys, and the space bar (if the class is in use)
+		if (motionRecognizer->isActive()) {
+			motionRecognizer->processKeyDown(code, calibratedAvatarCompletely());
 		}
 	}
 	
@@ -794,8 +1032,11 @@ namespace {
 		}
 		
 		logger = new Logger();
+
+		motionRecognizer = new MachineLearningMotionRecognition(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
+
 		endEffector[head] = new EndEffector(headBoneIndex);
 		endEffector[hip] = new EndEffector(hipBoneIndex);
 		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
