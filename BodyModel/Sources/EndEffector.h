@@ -4,7 +4,7 @@
 #include <Kore/Math/Quaternion.h>
 
 enum EndEffectorIndices {
-	head, hip, leftHand, leftForeArm, rightHand, rightForeArm, leftFoot, rightFoot
+	head, hip, spine, leftHand, leftForeArm, rightHand, rightForeArm, rightArm, leftLeg, leftFoot, rightFoot, rightLeg
 };
 
 enum IKMode {
