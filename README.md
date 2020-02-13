@@ -6,7 +6,7 @@
 
 The Weka machine learning framework and the Weka Helper run within a Java Virtual Machine. Since the body Tracking Framework does not currently feature 64-bit support, live classification requires a 32-bit Java Development Kit. However, Oracle does not provide 32-bit JDKs for Java 9 and upwards. The Body Tracking Framework and Weka Helper have been tested with Zulu 10.3, a 32-bit JDK 10 distribution provided by [Azul](https://www.azul.com/downloads/zulu/).
 
-After installing / unpacking the JDK, add the following environment variables to your system "Path" variable:
+After installing / unpacking the JDK in Body Tracking folder, add the following environment variables to your system "Path" variable:
 
 - (JDK installation directory) / bin
 - (JDK installation directory) / bin / server
@@ -15,13 +15,11 @@ Afterwards, restart your computer.
 
 ### IDE
 
-- Add (JDK installation directory)\include and (JDK installation directory)\include\win32 to the include directories of your compiler
-(for Visual Studio 2017 [15.8.6], right-click on the project in Solution Explorer -> Properties -> Configuration Properties -> C/C++ -> General -> Additional Include Directories)
-- Add (JDK installation directory)\lib\jvm.lib to the linker input files as additional dependencies
-(for Visual Studio 2017 [15.8.6], right-click on the project in Solution Explorer -> Properties -> Configuration Properties -> Linker -> Input -> Additional Dependencies)
-- If you experience errors that standard libraries cannot be found (e.g. "cannot open source file math.h), you may have to manually set the "Windows SDK Version" and "Platform Toolset" for your project. 
-(for Visual Studio 2017 [15.8.6], right-click on the project in Solution Explorer -> Properties -> Configuration Properties -> General, set "Windows SDK Version" to a specific version available on your system, such as 10.0.17763.0, and do the same for "Platform Toolset", for example v141)
+Add to BodyModel/korefile.js:
 
+project.addIncludeDir('../zulu13.29.9-ca-jdk13.0.2-win_i686/include');
+project.addIncludeDir('../zulu13.29.9-ca-jdk13.0.2-win_i686/include/win32');
+project.addLib('../zulu13.29.9-ca-jdk13.0.2-win_i686/lib/jvm');
 
 ## Usage
 
