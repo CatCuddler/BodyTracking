@@ -717,7 +717,7 @@ namespace {
 				
 				if (calibratedAvatarCompletely() && i == hip) {
 					// Update Local Coordinate System
-					initTransAndRot();
+					//initTransAndRot();
 				}
 			}
 			
@@ -1019,18 +1019,19 @@ namespace {
 		motionRecognizer = new MachineLearningMotionRecognition(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
-
 		endEffector[head] = new EndEffector(headBoneIndex);
 		endEffector[hip] = new EndEffector(hipBoneIndex);
-		endEffector[spine] = new EndEffector(spineBoneIndex);
 		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
 		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
 		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
 		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
-		endEffector[rightArm] = new EndEffector(rightArmBoneIndex);
 		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
-		endEffector[leftLeg] = new EndEffector(leftLegBoneIndex);
 		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
+
+		// Additional End Effectors (usually not used for IK)
+		endEffector[spine] = new EndEffector(spineBoneIndex);
+		endEffector[rightArm] = new EndEffector(rightArmBoneIndex);
+		endEffector[leftLeg] = new EndEffector(leftLegBoneIndex);
 		endEffector[rightLeg] = new EndEffector(rightLegBoneIndex);
 		
 #ifdef KORE_STEAMVR
