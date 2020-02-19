@@ -5,9 +5,11 @@
 using namespace Kore;
 using namespace Kore::Graphics4;
 
-Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : MeshObject(meshFile, textureFile, structure, scale) {
+int Avatar::ID = 0;
+
+Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale) : AvatarId(ID++), MeshObject(meshFile, textureFile, structure, scale) {
 	invKin = new InverseKinematics(bones);
-	
+
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
@@ -18,7 +20,7 @@ Avatar::Avatar(const char* meshFile, const char* textureFile, const Kore::Graphi
 	currentHeight = position.z();
 }
 
-void Avatar::animate(TextureUnit tex) {
+void Avatar::animate(Kore::Graphics4::TextureUnit tex) {
 	// Update bones
 	for (int i = 0; i < bones.size(); ++i) invKin->initializeBone(bones[i]);
 	
@@ -153,4 +155,9 @@ float* Avatar::getTimeIteration() const {
 
 float Avatar::getHeight() const {
 	return currentHeight;
+}
+
+int Avatar::getAvatarID() const
+{
+	return AvatarId;
 }

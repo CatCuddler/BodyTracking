@@ -36,13 +36,17 @@ using namespace Kore::Graphics4;
 namespace {
 	const int width = 1024;
 	const int height = 768;
-	
+
 	const bool renderRoom = true;
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 
+	const int sizeOfAvatars = 4;
+
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
+	EndEffector** endEffectorArr[sizeOfAvatars];
+	int calibratedPuppetEndeffectors[sizeOfAvatars];
 	
 	Logger* logger;
 
@@ -74,7 +78,7 @@ namespace {
 	ConstantLocation vLocation;
 	ConstantLocation mLocation;
 	ConstantLocation cLocation;
-	
+
 	// Living room shader
 	VertexStructure structure_living_room;
 	Shader* vertexShader_living_room;
@@ -123,6 +127,8 @@ namespace {
 	Avatar* avatar;
 	SphereCollider* avatarCollider;
 	MeshObject* sphereMesh;
+	// Player Avatar + Puppets
+	Avatar* avatars[sizeOfAvatars] = { nullptr };
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -378,19 +384,19 @@ namespace {
 		renderHMMFeedback(RightLeg, hmm_right_leg);
 	}
 	
-	void renderAvatar(mat4 V, mat4 P) {
+	void renderAvatar(mat4 V, mat4 P, Avatar* avatar) {
 		Graphics4::setPipeline(pipeline);
-		
+
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
 		Graphics4::setMatrix(mLocation, initTrans);
-        Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		avatar->animate(tex);
-		
+
 		// Render collider
 		//Graphics4::setMatrix(mLocation, sphereMesh->M);
 		//sphereMesh->render(tex);
-		
+
 		// Mirror the avatar
 		mat4 initTransMirror = getMirrorMatrix() * initTrans;
 		Graphics4::setMatrix(mLocation, initTransMirror);
@@ -407,42 +413,6 @@ namespace {
 	Kore::mat4 getViewMatrix() {
 		mat4 V = mat4::lookAlong(camForward.xyz(), cameraPos, vec3(0.0f, 1.0f, 0.0f));
 		return V;
-	}
-	
-	void executeMovement(int endEffectorID) {
-		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
-		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
-
-		// Save raw data
-		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
-		
-		if (calibratedAvatar) {
-			// Transform desired position/rotation to the character local coordinate system
-			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			desRotation = initRotInv.rotated(desRotation);
-
-			// Add offset
-			Kore::Quaternion offsetRotation = endEffector[endEffectorID]->getOffsetRotation();
-			vec3 offsetPosition = endEffector[endEffectorID]->getOffsetPosition();
-			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
-			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
-			
-			if (endEffectorID == hip) {
-				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-
-				// Update the sphere collider for the avatar
-				avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
-				sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
-
-			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
-				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
-			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
-				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
-			}
-            
-            if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
-            if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
-		}
 	}
 	
 	void initTransAndRot() {
@@ -477,24 +447,120 @@ namespace {
 		initTransInv = initTrans.Invert();
 	}
 
-	void calibrate() {
-		initTransAndRot();
-		
-		for (int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
-			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
-			
+	void executeMovement(int endEffectorID, Avatar* ava = avatar, bool setPose = false/*init a new yoga pose*/) {
+		int endEffectorUsed = ava->getAvatarID();
+		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
+		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
+
+		// Save raw data when on the player avatar
+		if (logRawData && (endEffectorUsed == 0)) logger->saveData(endEffectorArr[endEffectorUsed][endEffectorID]->getName(), desPosition, desRotation, ava->scale);
+
+		if (calibratedAvatar || (endEffectorUsed != 0)) {
 			// Transform desired position/rotation to the character local coordinate system
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desRotation = initRotInv.rotated(desRotation);
-			
-			// Get actual position/rotation of the character skeleton
-			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
-			vec3 targetPos = bone->getPosition();
-			Kore::Quaternion targetRot = bone->getOrientation();
-			
-			endEffector[i]->setOffsetPosition((mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
-			endEffector[i]->setOffsetRotation((desRotation.invert()).rotated(targetRot));
+
+			// Add offset
+			Kore::Quaternion offsetRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getOffsetRotation();
+			vec3 offsetPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getOffsetPosition();
+			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
+			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
+
+			if (endEffectorID == hip) {
+				ava->setFixedPositionAndOrientation(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex(), finalPos, finalRot);
+
+				if (endEffectorUsed == 0) {
+					// Update the sphere collider for the player avatar
+					avatarCollider->center = vec3(endEffectorArr[endEffectorUsed][hip]->getDesPosition().x(), 0, endEffectorArr[endEffectorUsed][hip]->getDesPosition().z());
+					sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
+				}
+
+			}
+			else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
+				ava->setDesiredPositionAndOrientation(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex(), endEffectorArr[endEffectorUsed][endEffectorID]->getIKMode(), finalPos, finalRot);
+			}
+			else if (endEffectorID == leftHand || endEffectorID == rightHand) {
+				if (!setPose) ava->setFixedOrientation(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex(), finalRot);
+				// using setDesiredPositionAndOrientation will fix the hand positioning problems on loading a yoga positon
+				else ava->setDesiredPositionAndOrientation(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex(), endEffectorArr[endEffectorUsed][endEffectorID]->getIKMode(), finalPos, finalRot);
+			}
+			if (endEffectorUsed == 0) { // only for the player Avatar
+				if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
+				if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
+			}
+		}
+	}
+
+	void runCalibrate(int endEffectorID, Avatar* ava = avatar) {
+		int endEffectorUsed = ava->getAvatarID();
+
+		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
+		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
+
+		// Transform desired position/rotation to the character local coordinate system
+		desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		desRotation = initRotInv.rotated(desRotation);
+
+		// Get actual position/rotation of the character skeleton
+		BoneNode* bone = ava->getBoneWithIndex(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex());
+		vec3 targetPos = bone->getPosition();
+		Kore::Quaternion targetRot = bone->getOrientation();
+
+		endEffectorArr[endEffectorUsed][endEffectorID]->setOffsetPosition((mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * targetRot.matrix().Transpose()).Invert() * mat4::Translation(targetPos.x(), targetPos.y(), targetPos.z()) * vec4(0, 0, 0, 1));
+		endEffectorArr[endEffectorUsed][endEffectorID]->setOffsetRotation((desRotation.invert()).rotated(targetRot));
+	}
+
+	void calibrate() {
+		//initTransAndRot();		// TODO: remove or necessary while in VR Mode?	
+		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; ++endEffectorID) {
+			runCalibrate(endEffectorID);
+		}
+	}
+	
+	void setPose(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/, bool calibrate = false) {
+		int endEffectorUsed = avatar->getAvatarID();
+		float scaleFactor;
+		Kore::vec3 desPosition[numOfEndEffectors];
+		Kore::Quaternion desRotation[numOfEndEffectors];
+
+		Logger* loggerP = new Logger();
+		/*	// if we want to allow loading the end position of any csv animation record file:
+		bool data = true;
+		while (data) {
+			data = loggerP->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+		*/
+		loggerP->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+		if (calibrate) {
+			avatar->setScale(scaleFactor);
+		}
+		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; endEffectorID++) {
+			// adding offset on endEffectorArr[][], so the position changes are saved for future calls
+			endEffectorArr[endEffectorUsed][endEffectorID]->setDesPosition(vec3(desPosition[endEffectorID].x() + offsetX, desPosition[endEffectorID].y(), desPosition[endEffectorID].z() + offsetZ));
+			endEffectorArr[endEffectorUsed][endEffectorID]->setDesRotation(desRotation[endEffectorID]);
+			if (calibrate) {
+				runCalibrate(endEffectorID, avatar);
+			}
+			else {
+				executeMovement(endEffectorID, avatar, true);
+			}
+		}
+		//}
+	}
+
+	void calibratePuppets(char* fileName = "calibratePuppet.csv") {
+		for (int i = 1; i < sizeOfAvatars; i++) {
+			avatars[i]->resetPositionAndRotation();
+			setPose(avatars[i], fileName, 0.0f, 0.0f, true);
+		}
+	}
+
+	void changePuppetPosition(Avatar* avatar, float offsetX /*perpendicular to the mirror*/, float offsetZ/*parallel to mirror*/){
+		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; ++endEffectorID) {
+			// adding offset on endEffectorArr[][], so the position changes are saved for future calls
+			endEffectorArr[avatar->getAvatarID()][endEffectorID]->setDesPosition(vec3(endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().x()+offsetX,
+																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().y(),
+																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().z()+offsetZ));
+			executeMovement(endEffectorID, avatar);
 		}
 	}
 	
@@ -826,7 +892,7 @@ namespace {
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
-		Graphics4::setPipeline(pipeline);
+		//Graphics4::setPipeline(pipeline);				// TODO: not needed, renderavatar does this allready later, bevor its used the first time. - VR-Mode?
 		
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
@@ -918,7 +984,7 @@ namespace {
 			for (int i = 0; i < numOfEndEffectors; ++i) {
 				endEffector[i]->setDesPosition(desPosition[i]);
 				endEffector[i]->setDesRotation(desRotation[i]);
-			}
+			}	
 			
 			if (!calibratedAvatar) {
 				avatar->resetPositionAndRotation();
@@ -936,12 +1002,14 @@ namespace {
 				calibratedAvatar = false;
 			}
 		}
-		
+
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 		
-		renderAvatar(V, P);
+		for (int i = 0; i < sizeOfAvatars; i++) {
+			renderAvatar(V, P, avatars[i]);
+		}
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
@@ -1060,20 +1128,21 @@ namespace {
 	void mouseRelease(int windowId, int button, int x, int y) {
 		rotate = false;
 	}
-	
+
 	void loadAvatarShader() {
+
 		FileReader vs("shader.vert");
 		FileReader fs("shader.frag");
 		vertexShader = new Shader(vs.readAll(), vs.size(), VertexShader);
 		fragmentShader = new Shader(fs.readAll(), fs.size(), FragmentShader);
-		
+
 		// This defines the structure of your Vertex Buffer
 		structure.add("pos", Float3VertexData);
 		structure.add("tex", Float2VertexData);
 		structure.add("nor", Float3VertexData);
-		
+
 		pipeline = new PipelineState();
-		pipeline = new PipelineState();
+		//pipeline = new PipelineState();			// no need to call it twice
 		pipeline->inputLayout[0] = &structure;
 		pipeline->inputLayout[1] = nullptr;
 		pipeline->vertexShader = vertexShader;
@@ -1085,7 +1154,7 @@ namespace {
 		pipeline->alphaBlendSource = Graphics4::SourceAlpha;
 		pipeline->alphaBlendDestination = Graphics4::InverseSourceAlpha;
 		pipeline->compile();
-		
+
 		tex = pipeline->getTextureUnit("tex");
 		Graphics4::setTextureAddressing(tex, Graphics4::U, Repeat);
 		Graphics4::setTextureAddressing(tex, Graphics4::V, Repeat);
@@ -1136,6 +1205,13 @@ namespace {
 	
 	void init() {
 		loadAvatarShader();
+		avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
+		avatars[0] = avatar;
+
+		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		
 		// Male avatars
 		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_1.ogex", "avatar/", structure);
@@ -1143,7 +1219,7 @@ namespace {
 		//avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
 		
 		// Female avatars
-		avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_2.ogex", "avatar/", structure);
         //avatar = new Avatar("avatar/female_3.ogex", "avatar/", structure);
@@ -1226,15 +1302,26 @@ namespace {
         
         hmm = new HMM(*logger);
 		
-		endEffector = new EndEffector*[numOfEndEffectors];
-		endEffector[head] = new EndEffector(headBoneIndex);
-		endEffector[hip] = new EndEffector(hipBoneIndex);
-		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
-		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
-		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
-		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
-		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
-		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
+		for (int i = 0; i < sizeOfAvatars; i++) {
+			endEffectorArr[i] = new EndEffector * [numOfEndEffectors];
+			endEffectorArr[i][head] = new EndEffector(headBoneIndex);
+			endEffectorArr[i][hip] = new EndEffector(hipBoneIndex);
+			endEffectorArr[i][leftHand] = new EndEffector(leftHandBoneIndex);
+			endEffectorArr[i][leftForeArm] = new EndEffector(leftForeArmBoneIndex);
+			endEffectorArr[i][rightHand] = new EndEffector(rightHandBoneIndex);
+			endEffectorArr[i][rightForeArm] = new EndEffector(rightForeArmBoneIndex);
+			endEffectorArr[i][leftFoot] = new EndEffector(leftFootBoneIndex);
+			endEffectorArr[i][rightFoot] = new EndEffector(rightFootBoneIndex);
+		}		
+		endEffector = endEffectorArr[0];
+
+		calibratePuppets();
+		setPose(avatars[1], "yoga1_endpose.csv");
+		setPose(avatars[2], "yoga2_endpose.csv");
+		setPose(avatars[3], "yoga3_endpose.csv", 0.5f, -1.2f);
+		changePuppetPosition(avatars[1], 0.5f, 1.2f);
+		changePuppetPosition(avatars[2], -0.6f, 0.0f);
+		//changePuppetPosition(avatars[3], 0.5f, -1.2f);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
@@ -1242,7 +1329,7 @@ namespace {
 	}
 }
 
-int kore(int argc, char** argv) {
+int kickstart(int argc, char** argv) {
 	System::init("BodyTracking", width, height);
 	
 	init();

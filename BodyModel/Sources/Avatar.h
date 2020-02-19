@@ -8,6 +8,8 @@ class Avatar : public MeshObject {
 private:
 	InverseKinematics* invKin;
 	float currentHeight;
+	static int ID;
+	const int AvatarId;
 	
 public:
 	Avatar(const char* meshFile, const char* textureFile, const Kore::Graphics4::VertexStructure& structure, float scale = 1.0f);
@@ -30,4 +32,6 @@ public:
 	float* getTimeIteration() const;
 	
 	float getHeight() const;
+
+	int getAvatarID() const;
 };
