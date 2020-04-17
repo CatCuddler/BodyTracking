@@ -16,7 +16,7 @@ namespace {
 	const char hmmPath2[] = "../../HMM_Trainer/Tracking/Movement2/";
 	const char hmmName[] = "Yoga_Krieger";
 
-	float threshold = 2.0f;
+	float threshold = 1.5f;
 
 	double startX;
 	double startZ;
@@ -44,7 +44,7 @@ namespace {
 	bool hmm_rightLeg = false;
 }
 
-HMM::HMM(Logger& logger) : logger(logger), recording(false), recognizing(false) {
+HMM::HMM(Logger& logger) : logger(logger) {
 	curentFileNumber = 0;
 }
 
@@ -118,28 +118,27 @@ bool HMM::stopRecognition(const char* path123) {
 				sprintf(hmmNameWithNum, "%s_%i", hmmName, ii);
 				HMMModel model(path123, hmmNameWithNum);
 				// Calculating the probability and comparing with probability threshold as well as applying restfix
-				float n = 0;
-				n = model.calculateProbability(clusteredPoints);
-				//trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() && !std::equal(clusteredPoints.begin() + 1, clusteredPoints.end(), clusteredPoints.begin()));
-				trackerMovementRecognised.at(ii) = (model.calculateProbability(clusteredPoints) > model.getProbabilityThreshold() * threshold);
+				float modelProbability = model.calculateProbability(clusteredPoints);
+				float modelThreshold = model.getProbabilityThreshold() * threshold;
+				trackerMovementRecognised.at(ii) = (modelProbability > modelThreshold);
 				if (ii == 0) {
 					hmm_head = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for head: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+					Kore::log(Kore::LogLevel::Info, "Probability for head: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
 				} else if (ii == 1) {
-					hmm_hip = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for hip: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				} else if (ii == 2) {
 					hmm_leftArm = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for left Arm: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
-				} else if (ii == 3) {
+					Kore::log(Kore::LogLevel::Info, "Probability for left arm: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 2) {
 					hmm_rightArm = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for right Arm: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+					Kore::log(Kore::LogLevel::Info, "Probability for right Arm: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
+				} else if (ii == 3) {
+					hmm_hip = trackerMovementRecognised.at(ii);
+					Kore::log(Kore::LogLevel::Info, "Probability for hip: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
 				} else if (ii == 4) {
 					hmm_leftLeg = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for left foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+					Kore::log(Kore::LogLevel::Info, "Probability for left foot: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
 				} else if (ii == 5) {
 					hmm_rightLeg = trackerMovementRecognised.at(ii);
-					Kore::log(Kore::LogLevel::Info, "Probability for right foot: (%f,%f) --> %s", n, model.getProbabilityThreshold(), trackerMovementRecognised.at(ii) ? "true" : "false");
+					Kore::log(Kore::LogLevel::Info, "Probability for right foot: (%f,%f) --> %s", modelProbability, modelThreshold, trackerMovementRecognised.at(ii) ? "true" : "false");
 				}
 
 				logger.analyseHMM(hmmName, model.calculateProbability(clusteredPoints), false);
@@ -283,57 +282,40 @@ bool HMM::stopRecognitionAndIdentify() {
 	return false;
 }
 
-bool HMM::hmmActive() {
-	if (recording || recognizing) return true;
-	else return false;
-}
-
-bool HMM::hmmRecording() {
-	return recording;
-}
-
-bool HMM::hmmRecognizing() {
-	return recognizing;
-}
-
 void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation) {
-	// Either recording or recognition is active
-	if (recording || recognizing) {
+	curentLineNumber++;
 
-		curentLineNumber++;
+	transitionX = position.x() - startX;
+	transitionY = position.y();
+	transitionZ = position.z() - startZ;
+	if (record) {
+		// Data is recorded
+		logger.saveHMMData(name, lastTime, position.normalize(), rotation);
+	}
 
-		transitionX = position.x() - startX;
-		transitionY = position.y();
-		transitionZ = position.z() - startZ;
-		if (record) {
-			// Data is recorded
-			logger.saveHMMData(name, lastTime, position.normalize(), rotation);
-		}
+	if (recognition) { // data is stored internally for evaluation at the end of recognition
+		double x, y, z, rotw, rotx, roty, rotz;
+		// TODO: do we need to normalize position?
+		x = position.normalize().x();
+		y = position.normalize().y();
+		z = position.normalize().z();
+		rotw = rotation.w;
+		rotx = rotation.x;
+		roty = rotation.y;
+		rotz = rotation.z;
+		//			x = (transitionX * startRotCos - transitionZ * startRotSin);
+		//			y = (transitionY / currentUserHeight) * 1.8;
+		//			z = (transitionZ * startRotCos + transitionX * startRotSin);
 
-		if (recognition) { // data is stored internally for evaluation at the end of recognition
-			double x, y, z, rotw, rotx, roty, rotz;
-			// TODO: do we need to normalize position?
-			x = position.normalize().x();
-			y = position.normalize().y();
-			z = position.normalize().z();
-			rotw = rotation.w;
-			rotx = rotation.x;
-			roty = rotation.y;
-			rotz = rotation.z;
-			//			x = (transitionX * startRotCos - transitionZ * startRotSin);
-			//			y = (transitionY / currentUserHeight) * 1.8;
-			//			z = (transitionZ * startRotCos + transitionX * startRotSin);
-
-			vector<double> values = { x, y, z, rotx, roty, rotz, rotw };
-			Point point = Point(dataPointNumber, values);
-			dataPointNumber++;
-			if (std::strcmp(name, headTag) == 0)		recognitionPoints.at(0).push_back(point);
-			else if (std::strcmp(name, lHandTag) == 0)	recognitionPoints.at(1).push_back(point);
-			else if (std::strcmp(name, rHandTag) == 0)	recognitionPoints.at(2).push_back(point);
-			else if (std::strcmp(name, hipTag) == 0)	recognitionPoints.at(3).push_back(point);
-			else if (std::strcmp(name, lFootTag) == 0)	recognitionPoints.at(4).push_back(point);
-			else if (std::strcmp(name, rFootTag) == 0)	recognitionPoints.at(5).push_back(point);
-		}
+		vector<double> values = { x, y, z, rotx, roty, rotz, rotw };
+		Point point = Point(dataPointNumber, values);
+		dataPointNumber++;
+		if (std::strcmp(name, headTag) == 0)		recognitionPoints.at(0).push_back(point);
+		else if (std::strcmp(name, lHandTag) == 0)	recognitionPoints.at(1).push_back(point);
+		else if (std::strcmp(name, rHandTag) == 0)	recognitionPoints.at(2).push_back(point);
+		else if (std::strcmp(name, hipTag) == 0)	recognitionPoints.at(3).push_back(point);
+		else if (std::strcmp(name, lFootTag) == 0)	recognitionPoints.at(4).push_back(point);
+		else if (std::strcmp(name, rFootTag) == 0)	recognitionPoints.at(5).push_back(point);
 	}
 }
 
