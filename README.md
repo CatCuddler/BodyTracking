@@ -26,7 +26,7 @@ node Kore/make -v vs20xx
 
 ### Open the Project:
 Open VisualStudio or Xcode project in BodyModel/build. <br />
-Change to "Release x86" mode in Visual Studio. <br />
+Change to "Develop x86" (Release doent work) mode in Visual Studio. <br />
 Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose deployment directory.
 
 ### Avatar Calibration
