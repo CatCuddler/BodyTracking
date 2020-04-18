@@ -194,10 +194,10 @@ namespace {
 		}
 		
 		// Render a local coordinate system only if the avatar is not calibrated
-		if (!calibratedAvatar) {
+		/*if (!calibratedAvatar) {
 			renderVRDevice(2, W);
 			renderVRDevice(2, M);
-		}
+		}*/
 	}
 	
 	void renderAllVRDevices() {
@@ -660,7 +660,8 @@ namespace {
 					log(Info, "The movement is correct!");
 					//Audio1::play(correctSound);
 					
-					showFeedback = false;
+					showFeedback = true;
+					hmm_head = hmm_hip = hmm_left_arm = hmm_right_arm = hmm_left_leg = hmm_right_leg = true;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
