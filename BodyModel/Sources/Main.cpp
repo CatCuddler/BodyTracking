@@ -146,9 +146,8 @@ namespace {
 	Logger* loggerTrainer;
 	bool moveTrainer = true;
 	//colored Marker
-	const int trackerAmount = 2;
-	MeshObject* coloredTrackerBaseMesh[trackerAmount];
-	MeshObject* coloredTracker[numOfEndEffectors] = { nullptr };
+	MeshObject* coloredTrackerBaseMesh;
+	vec3 coloredTrackerColors[numOfEndEffectors];
 
 	// Difficulty
 	int difficultyRanks = 3; // the game has x = difficultyRanks it can use
@@ -451,7 +450,13 @@ namespace {
 			Graphics4::setPipeline(pipeline);
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
-			Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+			//Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+			// TODO:	 just for testing
+			//Graphics4::setFloat3(cLocation, vec3(1.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0));		// teal
+			//Graphics4::setFloat3(cLocation, vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0));		// green
+			//Graphics4::setFloat3(cLocation, vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0));			// red
+			Graphics4::setFloat3(cLocation, coloredTrackerColors[i]);
+
 			BoneNode* bone = avatars[6]->getBoneWithIndex(endEffector[i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
@@ -461,12 +466,14 @@ namespace {
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * endEffectorRot.matrix().Transpose();
 			// coloredTracker
 			Graphics4::setMatrix(mLocation, M);
-			coloredTracker[i]->render(tex);
+
+			//coloredTracker[i]->render(tex);
+			coloredTrackerBaseMesh->render(tex);
 
 			// Mirror the coloredTracker
 			mat4 initTransMirror = getMirrorMatrix() * M;
 			Graphics4::setMatrix(mLocation, initTransMirror);
-			coloredTracker[i]->render(tex);
+			coloredTrackerBaseMesh->render(tex);
 		}
 	}
 	
@@ -1357,11 +1364,11 @@ namespace {
 	}
 
 	void loadColoredTracker() {
-		coloredTrackerBaseMesh[0] = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
-		coloredTrackerBaseMesh[1] = new MeshObject("3Dobjects/Sphere_red.ogex", "3Dobjects/", structure, 1);
+		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
 
 		for (int i = 0; i < numOfEndEffectors; i++) {
-			coloredTracker[i] = coloredTrackerBaseMesh[0];
+			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
+			//coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
 		}
 	}
 	
@@ -1499,7 +1506,6 @@ namespace {
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 
 		loadColoredTracker();
-		coloredTracker[2] = coloredTrackerBaseMesh[1];	// TODO: remove, just for testing
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
