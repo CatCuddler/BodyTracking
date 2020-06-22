@@ -41,7 +41,7 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 
-	const int sizeOfAvatars = 4;
+	const int sizeOfAvatars = 7;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -78,6 +78,18 @@ namespace {
 	ConstantLocation vLocation;
 	ConstantLocation mLocation;
 	ConstantLocation cLocation;
+
+	// Avatar alpha shader
+	VertexStructure structure_Alpha;
+	Shader* vertexShader_Alpha;
+	Shader* fragmentShader_Alpha;
+	PipelineState* pipeline_Alpha;
+
+	TextureUnit tex_Alpha;
+	ConstantLocation pLocation_Alpha;
+	ConstantLocation vLocation_Alpha;
+	ConstantLocation mLocation_Alpha;
+	ConstantLocation cLocation_Alpha;
 
 	// Living room shader
 	VertexStructure structure_living_room;
@@ -129,6 +141,18 @@ namespace {
 	MeshObject* sphereMesh;
 	// Player Avatar + Puppets
 	Avatar* avatars[sizeOfAvatars] = { nullptr };
+
+	//TrainerMovement
+	Logger* loggerTrainer;
+	bool moveTrainer = true;
+	//colored Marker
+	const int trackerAmount = 2;
+	MeshObject* coloredTrackerBaseMesh[trackerAmount];
+	MeshObject* coloredTracker[numOfEndEffectors] = { nullptr };
+
+	// Difficulty
+	int difficultyRanks = 3; // the game has x = difficultyRanks it can use
+	int difficulty = 2; // difficulty Rank the game uses at the given moment
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -402,6 +426,49 @@ namespace {
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
 	}
+
+	void renderTransparentAvatar(mat4 V, mat4 P, Avatar* avatar) {
+		Graphics4::setPipeline(pipeline_Alpha);
+
+		Graphics4::setMatrix(vLocation, V);
+		Graphics4::setMatrix(pLocation, P);
+		Graphics4::setMatrix(mLocation, initTrans);
+		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+		avatar->animate(tex);
+
+		// Render collider
+		//Graphics4::setMatrix(mLocation, sphereMesh->M);
+		//sphereMesh->render(tex);
+
+		// Mirror the avatar
+		mat4 initTransMirror = getMirrorMatrix() * initTrans;
+		Graphics4::setMatrix(mLocation, initTransMirror);
+		avatar->animate(tex);
+	}
+
+	void renderColoredTracker(mat4 V, mat4 P) {
+		for (int i = 0; i < numOfEndEffectors; ++i) {
+			Graphics4::setPipeline(pipeline);
+			Graphics4::setMatrix(vLocation, V);
+			Graphics4::setMatrix(pLocation, P);
+			Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
+			BoneNode* bone = avatars[6]->getBoneWithIndex(endEffector[i]->getBoneIndex());
+
+			vec3 endEffectorPos = bone->getPosition();
+			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
+			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
+
+			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * endEffectorRot.matrix().Transpose();
+			// coloredTracker
+			Graphics4::setMatrix(mLocation, M);
+			coloredTracker[i]->render(tex);
+
+			// Mirror the coloredTracker
+			mat4 initTransMirror = getMirrorMatrix() * M;
+			Graphics4::setMatrix(mLocation, initTransMirror);
+			coloredTracker[i]->render(tex);
+		}
+	}
 	
 	Kore::mat4 getProjectionMatrix() {
 		mat4 P = mat4::Perspective(45, (float)width / (float)height, 0.01f, 1000);
@@ -561,6 +628,29 @@ namespace {
 																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().y(),
 																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().z()+offsetZ));
 			executeMovement(endEffectorID, avatar);
+		}
+	}
+
+	void trainerMovement(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/) {
+		if (moveTrainer){
+			float scaleFactor;
+			Kore::vec3 desPosition[numOfEndEffectors];
+			Kore::Quaternion desRotation[numOfEndEffectors];
+			bool dataAvailable = loggerTrainer->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+
+			if (dataAvailable) {
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					endEffectorArr[avatar->getAvatarID()][i]->setDesPosition(desPosition[i]);
+					endEffectorArr[avatar->getAvatarID()][i]->setDesRotation(desRotation[i]);
+				}
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					executeMovement(i, avatar, true);
+				}
+
+				changePuppetPosition(avatar, offsetX, offsetZ);
+				//log(Kore::Info, "xxxxxxxxxxxxxx");
+			}
+			else { moveTrainer = false; }
 		}
 	}
 	
@@ -1003,14 +1093,27 @@ namespace {
 			}
 		}
 
+
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 		
-		for (int i = 0; i < sizeOfAvatars; i++) {
+		// render player avatar
+		renderAvatar(V, P, avatars[0]);
+
+		// render static avatars that show the tasks
+		for (int i = 1; i < 4; i++) {
+		//for (int i = 0; i < sizeOfAvatars; i++) {
 			renderAvatar(V, P, avatars[i]);
 		}
-		
+
+		//renderTransparentAvatar(V, P, avatars[3]);
+
+		//execute automatic avatar movement
+		trainerMovement(avatars[5], "yoga2.csv");
+		trainerMovement(avatars[6], "yoga3.csv");
+
+		//renderColoredTracker();
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
@@ -1022,6 +1125,21 @@ namespace {
 		if (showFeedback) renderFeedbackText(V, P);
 		
         if (showStoryElements) renderPlatforms(V, P);
+
+		
+		switch (difficulty) {
+			case 0:
+				renderAvatar(V, P, avatars[4]);
+				break;
+			case 1:
+				renderAvatar(V, P, avatars[5]);
+				break;
+			case 2:
+				renderColoredTracker(V, P);
+				renderTransparentAvatar(V, P, avatars[6]);
+			default:
+				break;
+		}
 #endif
 		if (currentAudio != nullptr) {
 			if (waitForAudio < currentAudio->length) {
@@ -1164,6 +1282,41 @@ namespace {
 		mLocation = pipeline->getConstantLocation("M");
 		cLocation = pipeline->getConstantLocation("color");
 	}
+
+	void loadAvatarShader_Alpha() {
+
+		FileReader vs("shader_alpha.vert");
+		FileReader fs("shader_alpha.frag");
+		vertexShader_Alpha = new Shader(vs.readAll(), vs.size(), VertexShader);
+		fragmentShader_Alpha = new Shader(fs.readAll(), fs.size(), FragmentShader);
+
+		// This defines the structure of your Vertex Buffer
+		structure_Alpha.add("pos", Float3VertexData);
+		structure_Alpha.add("tex", Float2VertexData);
+		structure_Alpha.add("nor", Float3VertexData);
+
+		pipeline_Alpha = new PipelineState();
+		pipeline_Alpha->inputLayout[0] = &structure_Alpha;
+		pipeline_Alpha->inputLayout[1] = nullptr;
+		pipeline_Alpha->vertexShader = vertexShader_Alpha;
+		pipeline_Alpha->fragmentShader = fragmentShader_Alpha;
+		pipeline_Alpha->depthMode = ZCompareLess;
+		pipeline_Alpha->depthWrite = true;
+		pipeline_Alpha->blendSource = Graphics4::SourceAlpha;
+		pipeline_Alpha->blendDestination = Graphics4::InverseSourceAlpha;
+		pipeline_Alpha->alphaBlendSource = Graphics4::SourceAlpha;
+		pipeline_Alpha->alphaBlendDestination = Graphics4::InverseSourceAlpha;
+		pipeline_Alpha->compile();
+
+		tex_Alpha = pipeline_Alpha->getTextureUnit("tex");
+		Graphics4::setTextureAddressing(tex_Alpha, Graphics4::U, Repeat);
+		Graphics4::setTextureAddressing(tex_Alpha, Graphics4::V, Repeat);
+
+		pLocation_Alpha = pipeline_Alpha->getConstantLocation("P");
+		vLocation_Alpha = pipeline_Alpha->getConstantLocation("V");
+		mLocation_Alpha = pipeline_Alpha->getConstantLocation("M");
+		cLocation_Alpha = pipeline_Alpha->getConstantLocation("color");
+	}
 	
 	void loadLivingRoomShader() {
 		FileReader vs("shader_basic_shading.vert");
@@ -1202,15 +1355,28 @@ namespace {
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 		lightCount_living_room = pipeline_living_room->getConstantLocation("numLights");
 	}
+
+	void loadColoredTracker() {
+		coloredTrackerBaseMesh[0] = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
+		coloredTrackerBaseMesh[1] = new MeshObject("3Dobjects/Sphere_red.ogex", "3Dobjects/", structure, 1);
+
+		for (int i = 0; i < numOfEndEffectors; i++) {
+			coloredTracker[i] = coloredTrackerBaseMesh[0];
+		}
+	}
 	
 	void init() {
 		loadAvatarShader();
+		loadAvatarShader_Alpha();
 		avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
 		avatars[0] = avatar;
 
 		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[4] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[5] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[6] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
 		
 		// Male avatars
 		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
@@ -1315,13 +1481,25 @@ namespace {
 		}		
 		endEffector = endEffectorArr[0];
 
+		loggerTrainer = new Logger();
+
+
 		calibratePuppets();
 		setPose(avatars[1], "yoga1_endpose.csv");
 		setPose(avatars[2], "yoga2_endpose.csv");
-		setPose(avatars[3], "yoga3_endpose.csv", 0.5f, -1.2f);
+		setPose(avatars[3], "yoga3_endpose.csv");
+		setPose(avatars[4], "yoga1_endpose.csv");
+		setPose(avatars[5], "yoga2_endpose.csv");
+		setPose(avatars[6], "yoga3_endpose.csv");
+		//setPose(avatars[3], "yoga3_endpose.csv", 0.5f, -1.2f);
+
 		changePuppetPosition(avatars[1], 0.5f, 1.2f);
 		changePuppetPosition(avatars[2], -0.6f, 0.0f);
-		//changePuppetPosition(avatars[3], 0.5f, -1.2f);
+		changePuppetPosition(avatars[3], 0.5f, -1.2f);
+		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
+
+		loadColoredTracker();
+		coloredTracker[2] = coloredTrackerBaseMesh[1];	// TODO: remove, just for testing
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
