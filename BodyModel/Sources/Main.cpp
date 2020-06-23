@@ -1017,6 +1017,10 @@ namespace {
 				executeMovement(i);
 			}
 		}
+
+		// Move the different Trainer Avatars
+		trainerMovement(avatars[5], "yoga2.csv");
+		trainerMovement(avatars[6], "yoga3.csv");
 		
 		// Render for both eyes
 		SensorState state;
