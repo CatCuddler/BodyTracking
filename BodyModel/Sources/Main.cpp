@@ -1043,14 +1043,14 @@ namespace {
 
 			switch (difficulty) {
 			case 0:
-				renderAvatar(V, P, avatars[4]);
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
 				break;
 			case 1:
-				renderAvatar(V, P, avatars[5]);
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
 				break;
 			case 2:
-				renderColoredTracker(V, P);
-				renderTransparentAvatar(V, P, avatars[6]);
+				renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
 			default:
 				break;
 			}
