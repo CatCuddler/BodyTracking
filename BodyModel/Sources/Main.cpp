@@ -1027,7 +1027,7 @@ namespace {
 			
 			state = VrInterface::getSensorState(j);
 			
-			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
 			
 			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
@@ -1053,8 +1053,8 @@ namespace {
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 
-		if (!firstPersonMonitor) renderAvatar(V, P);
-		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		if (!firstPersonMonitor) renderAvatar(V, P, avatar);
+		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
