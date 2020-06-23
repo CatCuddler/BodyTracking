@@ -1051,6 +1051,7 @@ namespace {
 				case 2:
 					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
 					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+					break;
 				default:
 					break;
 			}
@@ -1087,14 +1088,23 @@ namespace {
 
 		switch (difficulty) {
 			case 0:
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+				if (!firstPersonMonitor) renderAvatar(V, P, avatars[4]);
+				else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
 				break;
 			case 1:
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+				if (!firstPersonMonitor) renderAvatar(V, P, avatars[5]);
+				else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
 				break;
 			case 2:
-				renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
-				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+				if (!firstPersonMonitor) {
+					renderColoredTracker(V, P);
+					renderTransparentAvatar(V, P, avatars[6]);
+				}
+				else {
+					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+				}
+				break;
 			default:
 				break;
 		}
