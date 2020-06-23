@@ -1042,17 +1042,17 @@ namespace {
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
 			switch (difficulty) {
-			case 0:
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
-				break;
-			case 1:
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
-				break;
-			case 2:
-				renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
-				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-			default:
-				break;
+				case 0:
+					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+					break;
+				case 1:
+					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+					break;
+				case 2:
+					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+				default:
+					break;
 			}
 			
 			VrInterface::endRender(j);
@@ -1084,6 +1084,20 @@ namespace {
 		if (showFeedback) renderFeedbackText(V, P);
 
 		if (showStoryElements) renderPlatforms(V, P);
+
+		switch (difficulty) {
+			case 0:
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+				break;
+			case 1:
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+				break;
+			case 2:
+				renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+			default:
+				break;
+		}
 #else
 		// Read line
 		float scaleFactor;
