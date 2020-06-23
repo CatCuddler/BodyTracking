@@ -1219,6 +1219,13 @@ namespace {
 			case Kore::KeyD:
 				D = true;
 				break;
+										// for DEBUG
+			case Kore::KeyH:
+				difficulty++;
+				break;
+			case Kore::KeyG:
+				difficulty--;
+				break;
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
 				VrInterface::resetHmdPose();
