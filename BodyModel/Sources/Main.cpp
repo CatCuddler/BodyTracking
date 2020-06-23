@@ -1040,6 +1040,20 @@ namespace {
 			if (showFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+
+			switch (difficulty) {
+			case 0:
+				renderAvatar(V, P, avatars[4]);
+				break;
+			case 1:
+				renderAvatar(V, P, avatars[5]);
+				break;
+			case 2:
+				renderColoredTracker(V, P);
+				renderTransparentAvatar(V, P, avatars[6]);
+			default:
+				break;
+			}
 			
 			VrInterface::endRender(j);
 		}
