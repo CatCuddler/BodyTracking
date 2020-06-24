@@ -1139,7 +1139,7 @@ namespace {
 			//for (int k = 1; k < 4; k++) {
 			//	trainerMovement(avatars[k + offset], poses[k - 1]);
 			//}
-			trainerMovement(avatars[collisonWith + offset], poses[collisionWith - 1]);
+			trainerMovement(avatars[collisonWith + offset], poses[collisonWith - 1]);
 		}
 		//moveTrainer = true;
 
