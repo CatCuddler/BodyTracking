@@ -431,29 +431,6 @@ namespace {
 		avatar->animate(tex);
 	}
 
-	void renderStaticGuides(mat4 V, mat4 P) {
-		bool collidingGuide = false;
-		if (pose0 == Yoga0 || pose1 == Yoga0) {
-			// Check collision
-			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
-			if (colliding) { renderAvatar(V, P, avatars[1]); }
-		}
-
-		if (pose0 == Yoga1 || pose1 == Yoga1) {
-			//renderAvatar(V, P, avatars[2]);
-			// Check collision
-			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
-			if (colliding) { renderAvatar(V, P, avatars[2]); }
-		}
-
-		if (pose0 == Yoga2 || pose1 == Yoga2) {
-			//renderAvatar(V, P, avatars[3]);
-			// Check collision
-			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
-			if (colliding) { renderAvatar(V, P, avatars[3]); }
-		}
-	}
-
 	void renderTransparentAvatar(mat4 V, mat4 P, Avatar* avatar) {
 		Graphics4::setPipeline(pipeline_Alpha);
 
@@ -473,7 +450,30 @@ namespace {
 		avatar->animate(tex);
 	}
 
-	void renderColoredTracker(mat4 V, mat4 P) {
+	void renderStaticGuides(mat4 V, mat4 P) {
+		bool collidingGuide = false;
+		if (pose0 == Yoga0 || pose1 == Yoga0) {
+			// Check collision
+			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
+			if (colliding ) { renderAvatar(V, P, avatars[1]); }
+		}
+
+		if (pose0 == Yoga1 || pose1 == Yoga1) {
+			//renderAvatar(V, P, avatars[2]);
+			// Check collision
+			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
+			if (colliding) { renderAvatar(V, P, avatars[2]); }
+		}
+
+		if (pose0 == Yoga2 || pose1 == Yoga2) {
+			//renderAvatar(V, P, avatars[3]);
+			// Check collision
+			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
+			if (colliding) { renderAvatar(V, P, avatars[3]); }
+		}
+	}
+
+	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar) {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Graphics4::setPipeline(pipeline);
 			Graphics4::setMatrix(vLocation, V);
@@ -485,7 +485,7 @@ namespace {
 			//Graphics4::setFloat3(cLocation, vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0));			// red
 			Graphics4::setFloat3(cLocation, coloredTrackerColors[i]);
 
-			BoneNode* bone = avatars[6]->getBoneWithIndex(endEffector[i]->getBoneIndex());
+			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
@@ -505,6 +505,36 @@ namespace {
 
 			// Reset color
 			Graphics4::setFloat3(cLocation, vec3(1.0, 1.0, 1.0));
+		}
+	}
+
+	void renderTransparentTrainers(mat4 V, mat4 P) {
+		bool collidingGuide = false;
+		if (pose0 == Yoga0 || pose1 == Yoga0) {
+			// Check collision
+			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				renderColoredTracker(V, P, avatars[4]);
+				renderTransparentAvatar(V, P, avatars[4]);
+			}
+		}
+
+		if (pose0 == Yoga1 || pose1 == Yoga1) {
+			// Check collision
+			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				renderColoredTracker(V, P, avatars[5]);
+				renderTransparentAvatar(V, P, avatars[5]);
+			}
+		}
+
+		if (pose0 == Yoga2 || pose1 == Yoga2) {
+			// Check collision
+			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				renderColoredTracker(V, P, avatars[6]);
+				renderTransparentAvatar(V, P, avatars[6]);
+			}
 		}
 	}
 	
@@ -1064,10 +1094,11 @@ namespace {
 			state = VrInterface::getSensorState(j);
 			
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
-
+			/*
 			if (showStoryElements) {
 				renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			}
+			*/
 			
 			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
@@ -1081,17 +1112,18 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (onTask) {
+			if (showStoryElements) {
 				switch (difficulty) {
 					case 0:
-						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+						renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
 						break;
 					case 1:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
 						break;
 					case 2:
-						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
-						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+						//renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+						//renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+						renderTransparentTrainers(state.pose.vrPose.eye, state.pose.vrPose.projection);
 						break;
 					default:
 						break;
@@ -1147,11 +1179,11 @@ namespace {
 					break;
 				case 2:
 					if (!firstPersonMonitor) {
-						renderColoredTracker(V, P);
+						renderColoredTracker(V, P, avatars[6]);
 						renderTransparentAvatar(V, P, avatars[6]);
 					}
 					else {
-						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
 						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
 					}
 					break;
@@ -1240,7 +1272,7 @@ namespace {
 					renderAvatar(V, P, avatars[5]);
 					break;
 				case 2:
-					renderColoredTracker(V, P);
+					renderColoredTracker(V, P, avatars[6]);
 					renderTransparentAvatar(V, P, avatars[6]);
 				default:
 					break;
@@ -1487,8 +1519,8 @@ namespace {
 		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		avatars[4] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		avatars[5] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatars[4] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
+		avatars[5] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
 		avatars[6] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
 		
 		// Male avatars
