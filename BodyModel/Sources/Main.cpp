@@ -826,8 +826,10 @@ namespace {
     }
 	
 	void startTrainerMovement() {
-		moveTrainer = true;
-		loggerTrainer = new Logger();
+		if (difficulty != 0) {
+			moveTrainer = true;
+			loggerTrainer = new Logger();
+		}
 	}
 
 	void record() {
@@ -859,6 +861,9 @@ namespace {
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
+				//set the Trainer into motion for the yoga Pose selected by the player
+				startTrainerMovement();
+
 				showFeedback = false;
 				
 				//Audio1::play(startRecognitionSound);
@@ -1116,9 +1121,11 @@ namespace {
 		// Move the different Trainer Avatars
 
 		int offset = 0;
-		if (Difficulty == 2) offset = 3;
-		for (int k = 1; k < 4; k++) {
-			trainerMovement(avatars[k+offset], poses[k-1]);
+		if difficukty != 0) {
+			if (difficulty == 2) offset = 3;
+			for (int k = 1; k < 4; k++) {
+				trainerMovement(avatars[k + offset], poses[k - 1]);
+			}
 		}
 		//moveTrainer = true;
 
