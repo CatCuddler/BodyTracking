@@ -144,8 +144,8 @@ namespace {
 
 	//TrainerMovement
 	Logger* loggerTrainer;
-	bool moveTrainer = true;
-	bool onTask = false;
+	bool moveTrainer = false;
+	bool onTask = false; //Todo:
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -718,6 +718,30 @@ namespace {
 			else { moveTrainer = false; }
 		}
 	}
+
+	void movementForSelectedTrainer() {
+		if (moveTrainer) {
+			int offset = 0;
+			if (difficulty == 2) offset = 3;
+			char* filename;
+			switch (yogaPose) {
+			case Yoga0:
+				filename = "yoga2.csv";
+				trainerMovement(avatars[1 + offset], filename);
+				break;
+			case Yoga1:
+				filename = "yoga1.csv";
+				trainerMovement(avatars[2 + offset], filename);
+				break;
+			case Yoga2:
+				filename = "yoga3.csv";
+				trainerMovement(avatars[3 + offset], filename);
+				break;
+			default:
+				break;
+			}
+		}
+	}
 	
 	void updateCharacterText() {
 		if (storyLineTree->getLeftNode() != nullptr)
@@ -800,6 +824,11 @@ namespace {
         log(LogLevel::Info, storyLineText);
     }
 	
+	void startTrainerMovement() {
+		moveTrainer = true;
+		loggerTrainer = new Logger();
+	}
+
 	void record() {
 		/*logRawData = !logRawData;
 		
@@ -823,6 +852,9 @@ namespace {
 				hmm->stopRecording();
 			}
 		} else if(hmm->isRecognitionActive()) {
+			//set the Trainer into motion for the yoga Pose selected by the player
+			//moveTrainer = true;
+			startTrainerMovement();
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
@@ -1081,9 +1113,10 @@ namespace {
 		}
 
 		// Move the different Trainer Avatars
-		trainerMovement(avatars[5], "yoga2.csv");
-		trainerMovement(avatars[6], "yoga3.csv");
-		moveTrainer = true;
+		//trainerMovement(avatars[5], "yoga2.csv");
+		//trainerMovement(avatars[6], "yoga3.csv");
+		//moveTrainer = true;
+
 		
 		// Render for both eyes
 		SensorState state;
@@ -1119,11 +1152,9 @@ namespace {
 						renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
 						break;
 					case 1:
-						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+						renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
 						break;
 					case 2:
-						//renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-						//renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
 						renderTransparentTrainers(state.pose.vrPose.eye, state.pose.vrPose.projection);
 						break;
 					default:
