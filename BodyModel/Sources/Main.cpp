@@ -432,16 +432,25 @@ namespace {
 	}
 
 	void renderStaticGuides(mat4 V, mat4 P) {
+		bool collidingGuide = false;
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
-			renderAvatar(V, P, avatars[1]);
+			// Check collision
+			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
+			if (colliding) { renderAvatar(V, P, avatars[1]); }
 		}
 
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
-			renderAvatar(V, P, avatars[2]);
+			//renderAvatar(V, P, avatars[2]);
+			// Check collision
+			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
+			if (colliding) { renderAvatar(V, P, avatars[2]); }
 		}
 
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
-			renderAvatar(V, P, avatars[3]);
+			//renderAvatar(V, P, avatars[3]);
+			// Check collision
+			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
+			if (colliding) { renderAvatar(V, P, avatars[3]); }
 		}
 	}
 
