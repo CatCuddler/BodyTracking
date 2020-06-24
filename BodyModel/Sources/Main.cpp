@@ -146,6 +146,7 @@ namespace {
 	Logger* loggerTrainer;
 	bool moveTrainer = false;
 	bool onTask = false; //Todo:
+	int collisonWith = 3;
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -188,7 +189,7 @@ namespace {
 	bool colliding = false;
     double waitForAudio = 0;
 	int trials = 0;
-	char* poses[] = { "yoga2.csv",  "yoga1.csv", " yoga3.csv" };
+	char* poses[3] = { "yoga2.csv",  "yoga1.csv", " yoga3.csv" };
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -697,6 +698,17 @@ namespace {
 		}
 	}
 
+	void getCollision() {
+		// Check if avatar is colliding with a platform
+		for (int i = 0; i < 3; ++i) {
+			// Check collision
+			colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				collisonWith = i;
+			}
+		}
+	}
+
 	void trainerMovement(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/) {
 		if (moveTrainer){
 			float scaleFactor;
@@ -829,6 +841,7 @@ namespace {
 		if (difficulty != 0) {
 			moveTrainer = true;
 			loggerTrainer = new Logger();
+			getCollision();
 		}
 	}
 
@@ -857,7 +870,7 @@ namespace {
 		} else if(hmm->isRecognitionActive()) {
 			//set the Trainer into motion for the yoga Pose selected by the player
 			//moveTrainer = true;
-			startTrainerMovement();
+			//startTrainerMovement();
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
@@ -1121,11 +1134,12 @@ namespace {
 		// Move the different Trainer Avatars
 
 		int offset = 0;
-		if  (difficulty != 0) {
+		if  (difficulty != 0 && collisonWith != 3) {
 			if (difficulty == 2) offset = 3;
-			for (int k = 1; k < 4; k++) {
-				trainerMovement(avatars[k + offset], poses[k - 1]);
-			}
+			//for (int k = 1; k < 4; k++) {
+			//	trainerMovement(avatars[k + offset], poses[k - 1]);
+			//}
+			trainerMovement(avatars[collisonWith + offset], poses[collisionWith - 1]);
 		}
 		//moveTrainer = true;
 
@@ -1279,20 +1293,23 @@ namespace {
 			//renderAvatar(V, P, avatars[i]);
 		}
 		
-		renderPlatform(0, color0);
-		renderAvatar(V, P, avatars[1]);
+		//renderPlatform(0, color0);
+		//renderAvatar(V, P, avatars[1]);
 
-		renderPlatform(1, color1);
-		renderAvatar(V, P, avatars[2]);
+		//renderPlatform(1, color1);
+		//renderAvatar(V, P, avatars[2]);
 
-		renderPlatform(2, color2);
-		renderAvatar(V, P, avatars[3]);
+		//renderPlatform(2, color2);
+		//renderAvatar(V, P, avatars[3]);
 
 		renderStaticGuides(V, P);
 
 		//execute automatic avatar movement
-		trainerMovement(avatars[5], "yoga2.csv");
+		moveTrainer = true;
+		//trainerMovement(avatars[5], "yoga2.csv");
 		trainerMovement(avatars[6], "yoga3.csv");
+		renderAvatar(V, P, avatars[5]);
+		renderAvatar(V, P, avatars[6]);
 
 		//renderColoredTracker();
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
@@ -1688,6 +1705,10 @@ namespace {
 		avatars[4]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[5]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
+
+		poses[0] = "yoga2.csv";  
+		poses[1] = "yoga1.csv";
+		poses[2] = "yoga3.csv";
 
 		loadColoredTracker();
 		
