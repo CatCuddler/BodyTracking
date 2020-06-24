@@ -188,6 +188,7 @@ namespace {
 	bool colliding = false;
     double waitForAudio = 0;
 	int trials = 0;
+	char* poses[] = { "yoga2.csv",  "yoga1.csv", " yoga3.csv" };
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -1113,8 +1114,12 @@ namespace {
 		}
 
 		// Move the different Trainer Avatars
-		//trainerMovement(avatars[5], "yoga2.csv");
-		//trainerMovement(avatars[6], "yoga3.csv");
+
+		int offset = 0;
+		if (Difficulty == 2) offset = 3;
+		for (int k = 1; k < 4; k++) {
+			trainerMovement(avatars[k+offset], poses[k-1]);
+		}
 		//moveTrainer = true;
 
 		
