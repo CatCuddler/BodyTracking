@@ -145,6 +145,7 @@ namespace {
 	//TrainerMovement
 	Logger* loggerTrainer;
 	bool moveTrainer = true;
+	bool onTask = true;
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -474,6 +475,9 @@ namespace {
 			mat4 initTransMirror = getMirrorMatrix() * M;
 			Graphics4::setMatrix(mLocation, initTransMirror);
 			coloredTrackerBaseMesh->render(tex);
+
+			// Reset color
+			Graphics4::setFloat3(cLocation, vec3(1.0, 1.0, 1.0));
 		}
 	}
 	
@@ -989,7 +993,7 @@ namespace {
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
-		//Graphics4::setPipeline(pipeline);				// TODO: not needed, renderavatar does this allready later, bevor its used the first time. - VR-Mode?
+		Graphics4::setPipeline(pipeline);				// TODO: not needed, renderavatar does this allready later, bevor its used the first time. - VR-Mode?
 		
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
@@ -1021,6 +1025,7 @@ namespace {
 		// Move the different Trainer Avatars
 		trainerMovement(avatars[5], "yoga2.csv");
 		trainerMovement(avatars[6], "yoga3.csv");
+		moveTrainer = true;
 		
 		// Render for both eyes
 		SensorState state;
@@ -1045,19 +1050,21 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			switch (difficulty) {
-				case 0:
-					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
-					break;
-				case 1:
-					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
-					break;
-				case 2:
-					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
-					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-					break;
-				default:
-					break;
+			if (onTask) {
+				switch (difficulty) {
+					case 0:
+						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+						break;
+					case 1:
+						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+						break;
+					case 2:
+						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+						break;
+					default:
+						break;
+				}
 			}
 			
 			VrInterface::endRender(j);
@@ -1090,27 +1097,29 @@ namespace {
 
 		if (showStoryElements) renderPlatforms(V, P);
 
-		switch (difficulty) {
-			case 0:
-				if (!firstPersonMonitor) renderAvatar(V, P, avatars[4]);
-				else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
-				break;
-			case 1:
-				if (!firstPersonMonitor) renderAvatar(V, P, avatars[5]);
-				else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
-				break;
-			case 2:
-				if (!firstPersonMonitor) {
-					renderColoredTracker(V, P);
-					renderTransparentAvatar(V, P, avatars[6]);
-				}
-				else {
-					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
-					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-				}
-				break;
-			default:
-				break;
+		if (onTask) {
+			switch (difficulty) {
+				case 0:
+					if (!firstPersonMonitor) renderAvatar(V, P, avatars[4]);
+					else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
+					break;
+				case 1:
+					if (!firstPersonMonitor) renderAvatar(V, P, avatars[5]);
+					else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
+					break;
+				case 2:
+					if (!firstPersonMonitor) {
+						renderColoredTracker(V, P);
+						renderTransparentAvatar(V, P, avatars[6]);
+					}
+					else {
+						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection);
+						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
+					}
+					break;
+				default:
+					break;
+			}
 		}
 #else
 		// Read line
