@@ -1055,6 +1055,10 @@ namespace {
 			state = VrInterface::getSensorState(j);
 			
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+
+			if (showStoryElements) {
+				renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			}
 			
 			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
@@ -1099,6 +1103,13 @@ namespace {
 
 		if (!firstPersonMonitor) renderAvatar(V, P, avatar);
 		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+
+		if (!firstPersonMonitor && showStoryElements) {
+			renderStaticGuides(V, P);
+		}
+		else if (showStoryElements) {
+			renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		}
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
