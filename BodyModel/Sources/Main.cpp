@@ -451,25 +451,25 @@ namespace {
 	}
 
 	void renderStaticGuides(mat4 V, mat4 P) {
-		bool collidingGuide = false;
+		//bool collidingGuide = false;
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			// Check collision
-			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
-			if (colliding ) { renderAvatar(V, P, avatars[1]); }
+			//colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
+			if (sphereColliders[0]->IntersectsWith(*avatarCollider) ) { renderAvatar(V, P, avatars[1]); }
 		}
 
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			//renderAvatar(V, P, avatars[2]);
 			// Check collision
-			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
-			if (colliding) { renderAvatar(V, P, avatars[2]); }
+			//colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
+			if (sphereColliders[1]->IntersectsWith(*avatarCollider)) { renderAvatar(V, P, avatars[2]); }
 		}
 
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			//renderAvatar(V, P, avatars[3]);
 			// Check collision
 			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
-			if (colliding) { renderAvatar(V, P, avatars[3]); }
+			if (sphereColliders[2]->IntersectsWith(*avatarCollider)) { renderAvatar(V, P, avatars[3]); }
 		}
 	}
 
@@ -509,11 +509,10 @@ namespace {
 	}
 
 	void renderTransparentTrainers(mat4 V, mat4 P) {
-		bool collidingGuide = false;
+		// pose0 and pose1 need to be checked, else collision would be checked for the inactive poses
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			// Check collision
-			colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
-			if (colliding) {
+			if (sphereColliders[0]->IntersectsWith(*avatarCollider)) {
 				renderColoredTracker(V, P, avatars[4]);
 				renderTransparentAvatar(V, P, avatars[4]);
 			}
@@ -521,8 +520,7 @@ namespace {
 
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			// Check collision
-			colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
-			if (colliding) {
+			if (sphereColliders[1]->IntersectsWith(*avatarCollider)) {
 				renderColoredTracker(V, P, avatars[5]);
 				renderTransparentAvatar(V, P, avatars[5]);
 			}
@@ -530,8 +528,7 @@ namespace {
 
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			// Check collision
-			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
-			if (colliding) {
+			if (sphereColliders[2]->IntersectsWith(*avatarCollider)) {
 				renderColoredTracker(V, P, avatars[6]);
 				renderTransparentAvatar(V, P, avatars[6]);
 			}
@@ -912,7 +909,11 @@ namespace {
 		currentUserHeight = hmdPos.y();
 		
 		float scale = currentUserHeight / currentAvatarHeight;
-		avatar->setScale(scale);
+		//avatar->setScale(scale);
+		for (int i = 0; i < sizeOfAvatars; i++) {
+			if (i < 4) avatars[i]->setScale(scale);
+			else avatars[i]->setScale(scale*0.75f);
+		}
 		
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -1641,6 +1642,8 @@ namespace {
 		//changePuppetPosition(avatars[1], 0.5f, 1.2f);
 		//changePuppetPosition(avatars[2], -0.6f, 0.0f);
 		//changePuppetPosition(avatars[3], 0.5f, -1.2f);
+		avatars[4]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
+		avatars[5]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 
 		loadColoredTracker();
