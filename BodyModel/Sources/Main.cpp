@@ -145,7 +145,7 @@ namespace {
 	//TrainerMovement
 	Logger* loggerTrainer;
 	bool moveTrainer = true;
-	bool onTask = true;
+	bool onTask = false;
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -306,18 +306,22 @@ namespace {
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			renderPlatform(0, color0);
+			//renderAvatar(V, P, avatars[1]);
 		}
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			renderPlatform(1, color1);
+			//renderAvatar(V, P, avatars[2]);
 		}
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			renderPlatform(2, color2);
+			//renderAvatar(V, P, avatars[3]);
 		}
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1.0, 1.0, 1.0));
+		//renderAvatar(V, P, avatars[3]);
 	}
 	
 	void render3Dtext(mat4 V, mat4 P) {
@@ -425,6 +429,20 @@ namespace {
 		mat4 initTransMirror = getMirrorMatrix() * initTrans;
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
+	}
+
+	void renderStaticGuides(mat4 V, mat4 P) {
+		if (pose0 == Yoga0 || pose1 == Yoga0) {
+			renderAvatar(V, P, avatars[1]);
+		}
+
+		if (pose0 == Yoga1 || pose1 == Yoga1) {
+			renderAvatar(V, P, avatars[2]);
+		}
+
+		if (pose0 == Yoga2 || pose1 == Yoga2) {
+			renderAvatar(V, P, avatars[3]);
+		}
 	}
 
 	void renderTransparentAvatar(mat4 V, mat4 P, Avatar* avatar) {
@@ -1158,14 +1176,23 @@ namespace {
 		
 		// render player avatar
 		renderAvatar(V, P, avatars[0]);
-
+		
 		// render static avatars that show the tasks
 		for (int i = 1; i < 4; i++) {
 		//for (int i = 0; i < sizeOfAvatars; i++) {
-			renderAvatar(V, P, avatars[i]);
+			//renderAvatar(V, P, avatars[i]);
 		}
+		
+		renderPlatform(0, color0);
+		renderAvatar(V, P, avatars[1]);
 
-		//renderTransparentAvatar(V, P, avatars[3]);
+		renderPlatform(1, color1);
+		renderAvatar(V, P, avatars[2]);
+
+		renderPlatform(2, color2);
+		renderAvatar(V, P, avatars[3]);
+
+		renderStaticGuides(V, P);
 
 		//execute automatic avatar movement
 		trainerMovement(avatars[5], "yoga2.csv");
@@ -1184,19 +1211,20 @@ namespace {
 		
         if (showStoryElements) renderPlatforms(V, P);
 
-		
-		switch (difficulty) {
-			case 0:
-				renderAvatar(V, P, avatars[4]);
-				break;
-			case 1:
-				renderAvatar(V, P, avatars[5]);
-				break;
-			case 2:
-				renderColoredTracker(V, P);
-				renderTransparentAvatar(V, P, avatars[6]);
-			default:
-				break;
+		if (onTask) {
+			switch (difficulty) {
+				case 0:
+					renderAvatar(V, P, avatars[4]);
+					break;
+				case 1:
+					renderAvatar(V, P, avatars[5]);
+					break;
+				case 2:
+					renderColoredTracker(V, P);
+					renderTransparentAvatar(V, P, avatars[6]);
+				default:
+					break;
+			}
 		}
 #endif
 		if (currentAudio != nullptr) {
@@ -1550,17 +1578,17 @@ namespace {
 
 
 		calibratePuppets();
-		setPose(avatars[1], "yoga1_endpose.csv");
-		setPose(avatars[2], "yoga2_endpose.csv");
-		setPose(avatars[3], "yoga3_endpose.csv");
-		setPose(avatars[4], "yoga1_endpose.csv");
-		setPose(avatars[5], "yoga2_endpose.csv");
+		setPose(avatars[1], "yoga2_endpose.csv", -0.5f);
+		setPose(avatars[2], "yoga1_endpose.csv", 0.0f, 0.7f);
+		setPose(avatars[3], "yoga3_endpose.csv", 0.0f, -0.7f);
+		setPose(avatars[4], "yoga2_endpose.csv");
+		setPose(avatars[5], "yoga1_endpose.csv");
 		setPose(avatars[6], "yoga3_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv", 0.5f, -1.2f);
 
-		changePuppetPosition(avatars[1], 0.5f, 1.2f);
-		changePuppetPosition(avatars[2], -0.6f, 0.0f);
-		changePuppetPosition(avatars[3], 0.5f, -1.2f);
+		//changePuppetPosition(avatars[1], 0.5f, 1.2f);
+		//changePuppetPosition(avatars[2], -0.6f, 0.0f);
+		//changePuppetPosition(avatars[3], 0.5f, -1.2f);
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 
 		loadColoredTracker();
