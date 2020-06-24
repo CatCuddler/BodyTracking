@@ -1121,7 +1121,7 @@ namespace {
 		// Move the different Trainer Avatars
 
 		int offset = 0;
-		if difficukty != 0) {
+		if  (difficulty != 0) {
 			if (difficulty == 2) offset = 3;
 			for (int k = 1; k < 4; k++) {
 				trainerMovement(avatars[k + offset], poses[k - 1]);
