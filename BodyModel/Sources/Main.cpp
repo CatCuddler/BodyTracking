@@ -435,7 +435,7 @@ namespace {
 		//sphereMesh->render(tex);
 
 		// Mirror the avatar
-		mat4 initTransMirror = getMirrorMatrix() * initTrans;
+		mat4 initTransMirror = getMirrorMatrix() * mLoc;
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
 	}
@@ -455,7 +455,7 @@ namespace {
 		//sphereMesh->render(tex);
 
 		// Mirror the avatar
-		mat4 initTransMirror = getMirrorMatrix() * initTrans;
+		mat4 initTransMirror = getMirrorMatrix() * mLoc;
 		Graphics4::setMatrix(mLocation, initTransMirror);
 		avatar->animate(tex);
 	}
@@ -865,19 +865,19 @@ namespace {
 					//renderAvatar(V, P, avatars[1]);
 				}
 			}
-			else if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
+			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
 					collisionLast = i;
 					//renderAvatar(V, P, avatars[1]);
 				}
 			}
-			else if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
+			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 2 && (pose0 == Yoga2 || pose1 == Yoga2)) {
 					collisionLast = i;
 					//renderAvatar(V, P, avatars[1]);
 				}
 			}
-			else collisionLast = 3;
+			//else collisionLast = 3;
 		}
 	}
 
@@ -1207,18 +1207,7 @@ namespace {
 			}
 		}
 
-		// Move the different Trainer Avatars
-		/*
-		int offset = 0;
-		if  (difficulty != 0 && collisonWith != 3) {
-			if (difficulty == 2) offset = 3;
-			//for (int k = 1; k < 4; k++) {
-			//	trainerMovement(avatars[k + offset], poses[k - 1]);
-			//}
-			trainerMovement(avatars[collisonWith + offset], loggerTrainerMovement, poses[collisonWith - 1]);
-		}
-		//moveTrainer = true;
-		*/
+
 		if (difficulty > 0 && moveTrainer == false) {
 			// Wait for 200 Frames in End Position
 			//if (moveTrainer == false) {
@@ -1244,11 +1233,6 @@ namespace {
 			state = VrInterface::getSensorState(j);
 			
 			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
-			/*
-			if (showStoryElements) {
-				renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
-			}
-			*/
 			
 			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
@@ -1268,34 +1252,15 @@ namespace {
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 1:
-						//trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 2:
-						//trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					default:
 						break;
 				}
 			}
-			/*
-			if (showStoryElements) {
-				switch (difficulty) {
-					case 0:
-						renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
-						break;
-					case 1:
-						renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
-						break;
-					case 2:
-						renderTransparentTrainers(state.pose.vrPose.eye, state.pose.vrPose.projection);
-						break;
-					default:
-						break;
-				}
-			}
-			*/
 			
 			VrInterface::endRender(j);
 		}
