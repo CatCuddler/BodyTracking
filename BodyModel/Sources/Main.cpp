@@ -855,6 +855,30 @@ namespace {
 		}
 	}
 
+	void difficultySet() {
+		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
+			setPose(avatars[i], posesStatic[i - 1]);
+			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
+			else avatars[i]->setScale(avatar->scale);
+		}
+		if (difficulty == 2) {
+			avatarPositions[0] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
+			avatarPositions[1] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
+			avatarPositions[2] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
+		}
+		else {
+			avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
+			avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
+			avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
+		}
+		//setPose(avatars[1], "yoga2_endpose.csv");
+		//setPose(avatars[2], "yoga1_endpose.csv");
+		//setPose(avatars[3], "yoga3_endpose.csv");
+
+		waitTimer = 0;
+		moveTrainer = false;
+	}
+
 	void collisionCheck() {
 		int collisionSave = collisionLast;
 		//check collison for all plattforms
@@ -881,30 +905,6 @@ namespace {
 			//else collisionLast = 3;
 		}
 		if (collisionSave != collisionLast) difficultySet();
-	}
-
-	void difficultySet() {
-		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
-			setPose(avatars[i], posesStatic[i - 1]);
-			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
-			else avatars[i]->setScale(avatar->scale);
-		}
-		if (difficulty == 2) {
-			avatarPositions[0] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
-			avatarPositions[1] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
-			avatarPositions[2] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
-		}
-		else {
-			avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
-			avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
-			avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
-		}
-		//setPose(avatars[1], "yoga2_endpose.csv");
-		//setPose(avatars[2], "yoga1_endpose.csv");
-		//setPose(avatars[3], "yoga3_endpose.csv");
-
-		waitTimer = 0;
-		moveTrainer = false;
 	}
 
 	void difficultyIncrease() {
