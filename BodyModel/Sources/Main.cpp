@@ -141,6 +141,7 @@ namespace {
 	MeshObject* sphereMesh;
 	// Player Avatar + Puppets
 	Avatar* avatars[sizeOfAvatars] = { nullptr };
+	mat4 avatarPositions[sizeOfAvatars-1];
 
 	// Difficulty
 	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
@@ -858,11 +859,11 @@ namespace {
 		//check collison for all plattforms
 		for (int i = 0; i < 3; ++i) {
 			// Check collision for one plattform vs the player avatar
-			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) { 
-				if ( i == 0 && (pose0 == Yoga0 || pose1 == Yoga0)) {
+			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
+				if (i == 0 && (pose0 == Yoga0 || pose1 == Yoga0)) {
 					collisionLast = i;
 					//renderAvatar(V, P, avatars[1]);
-				} 
+				}
 			}
 			else if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
@@ -876,6 +877,7 @@ namespace {
 					//renderAvatar(V, P, avatars[1]);
 				}
 			}
+			else collisionLast = 3;
 		}
 	}
 
@@ -884,6 +886,16 @@ namespace {
 			setPose(avatars[i], posesStatic[i - 1]);
 			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
 			else avatars[i]->setScale(avatar->scale);
+		}
+		if (difficulty == 2) {
+			avatarPositions[0] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
+			avatarPositions[1] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
+			avatarPositions[2] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
+		}
+		else {
+			avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
+			avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
+			avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
 		}
 		//setPose(avatars[1], "yoga2_endpose.csv");
 		//setPose(avatars[2], "yoga1_endpose.csv");
@@ -1288,7 +1300,7 @@ namespace {
 		if (showFeedback) renderFeedbackText(V, P);
 
 		if (showStoryElements) renderPlatforms(V, P);
-
+		/*
 		if (onTask) {
 			switch (difficulty) {
 				case 0:
@@ -1312,7 +1324,7 @@ namespace {
 				default:
 					break;
 			}
-		}
+		}*/
 #else
 		// Read line
 		float scaleFactor;
@@ -1357,7 +1369,9 @@ namespace {
 			//renderAvatar(V, P, avatars[i]);
 		}
 		
-		//renderPlatform(0, color0);
+		renderPlatform(0, color0);
+		renderPlatform(1, color1);
+		renderPlatform(2, color2);
 		//renderAvatar(V, P, avatars[1]);
 		/*
 		switch (pose0) {
@@ -1423,26 +1437,48 @@ namespace {
 		}
 
 		//moveTrainer = true;
-		if (onTask) {
+		if (onTask && collisionLast != 3) {
 			switch (difficulty) {
 				case 0:
-					//setPose(avatars[collisionLast + 1], posesStatic[collisionLast]);
-					renderAvatar(V, P, avatars[collisionLast+1]);
+					renderAvatar(V, P, avatars[collisionLast+1], avatarPositions[collisionLast]);
 					break;
 				case 1:
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					renderAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.9f)* initRot.matrix().Transpose());
+					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
 				case 2:
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					renderTransparentAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.9f) * initRot.matrix().Transpose());
-					//trainerMovement(avatars[collisionLast + 1 + 3], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					//renderTransparentAvatar(V, P, avatars[collisionLast + 1 + 3]);
+					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
 				default:
 					break;
 			}
 		}
+		/*	savekeeping
+		if (onTask && collisionLast != 3) {
+			switch (difficulty) {
+				case 0:
+					//setPose(avatars[collisionLast + 1], posesStatic[collisionLast]);
+					///renderAvatar(V, P, avatars[collisionLast + 1]);
+					renderAvatar(V, P, avatars[collisionLast+1], avatarPositions[collisionLast]);
+					break;
+				case 1:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					//renderAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.0f)* initRot.matrix().Transpose());
+					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					break;
+				case 2:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					//renderTransparentAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose());
+					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					////trainerMovement(avatars[collisionLast + 1 + 3], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					////renderTransparentAvatar(V, P, avatars[collisionLast + 1 + 3]);
+					break;
+				default:
+					break;
+			}
+		}
+		*/
 		/*
 		if (onTask) {
 			switch (difficulty) {
@@ -1819,11 +1855,19 @@ namespace {
 		loggerTrainer = new Logger();
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 
+		for (int i = 0; i < sizeOfAvatars - 1; i++) {
+			avatarPositions[i] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
+		}
+
 
 		calibratePuppets();
-		setPose(avatars[1], "yoga2_endpose.csv", -0.5f);
-		setPose(avatars[2], "yoga1_endpose.csv", 0.0f, 0.7f);
-		setPose(avatars[3], "yoga3_endpose.csv", 0.0f, -0.7f);
+		difficultySet();
+		//setPose(avatars[1], "yoga2_endpose.csv");
+		//setPose(avatars[2], "yoga1_endpose.csv");
+		//setPose(avatars[3], "yoga3_endpose.csv");
+		//setPose(avatars[1], "yoga2_endpose.csv", -0.5f);
+		//setPose(avatars[2], "yoga1_endpose.csv", 0.0f, 0.7f);
+		//setPose(avatars[3], "yoga3_endpose.csv", 0.0f, -0.7f);
 		setPose(avatars[4], "yoga2_endpose.csv");
 		setPose(avatars[5], "yoga1_endpose.csv");
 		setPose(avatars[6], "yoga3_endpose.csv");
