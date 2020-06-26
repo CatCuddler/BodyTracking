@@ -856,6 +856,7 @@ namespace {
 	}
 
 	void collisionCheck() {
+		int collisionSave = collisionLast;
 		//check collison for all plattforms
 		for (int i = 0; i < 3; ++i) {
 			// Check collision for one plattform vs the player avatar
@@ -879,6 +880,7 @@ namespace {
 			}
 			//else collisionLast = 3;
 		}
+		if (collisionSave != collisionLast) difficultySet();
 	}
 
 	void difficultySet() {
