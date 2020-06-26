@@ -142,18 +142,21 @@ namespace {
 	// Player Avatar + Puppets
 	Avatar* avatars[sizeOfAvatars] = { nullptr };
 
+	// Difficulty
+	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
+	int difficulty = 0; // difficulty Rank the game uses at the given moment
+
 	//TrainerMovement
 	Logger* loggerTrainer;
+	Logger* loggerTrainerMovement[difficultyRanks];
 	bool moveTrainer = false;
-	bool onTask = false; //Todo:
+	int waitTimer = 0;
+	bool onTask = true; //Todo:
 	int collisonWith = 3;
+	int collisionLast = 1;				//TODO
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
-
-	// Difficulty
-	int difficultyRanks = 3; // the game has x = difficultyRanks it can use
-	int difficulty = 2; // difficulty Rank the game uses at the given moment
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -189,7 +192,8 @@ namespace {
 	bool colliding = false;
     double waitForAudio = 0;
 	int trials = 0;
-	char* poses[3] = { "yoga2.csv",  "yoga1.csv", " yoga3.csv" };
+	char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
+	char* posesStatic[3] = { "yoga2_endpose.csv",  "yoga1_endpose.csv", "yoga3_endpose.csv" };
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -414,12 +418,14 @@ namespace {
 		renderHMMFeedback(RightLeg, hmm_right_leg);
 	}
 	
-	void renderAvatar(mat4 V, mat4 P, Avatar* avatar) {
+	void renderAvatar(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = initTrans) {
 		Graphics4::setPipeline(pipeline);
-
+		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
-		Graphics4::setMatrix(mLocation, initTrans);
+		//Graphics4::setMatrix(mLocation, initTrans);
+		//Graphics4::setMatrix(mLocation, mat4::Translation(0, 0, 0.9f)* initRot.matrix().Transpose());
+		Graphics4::setMatrix(mLocation, mLoc);
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		avatar->animate(tex);
 
@@ -433,14 +439,15 @@ namespace {
 		avatar->animate(tex);
 	}
 
-	void renderTransparentAvatar(mat4 V, mat4 P, Avatar* avatar) {
+	void renderTransparentAvatar(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = initTrans) {
 		Graphics4::setPipeline(pipeline_Alpha);
 
-		Graphics4::setMatrix(vLocation, V);
-		Graphics4::setMatrix(pLocation, P);
-		Graphics4::setMatrix(mLocation, initTrans);
-		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
-		avatar->animate(tex);
+		Graphics4::setMatrix(vLocation_Alpha, V);
+		Graphics4::setMatrix(pLocation_Alpha, P);
+		//Graphics4::setMatrix(mLocation_Alpha, initTrans);
+		Graphics4::setMatrix(mLocation, mLoc);
+		Graphics4::setFloat3(cLocation_Alpha, vec3(1, 1, 1));
+		avatar->animate(tex_Alpha);
 
 		// Render collider
 		//Graphics4::setMatrix(mLocation, sphereMesh->M);
@@ -619,6 +626,7 @@ namespace {
 				else ava->setDesiredPositionAndOrientation(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex(), endEffectorArr[endEffectorUsed][endEffectorID]->getIKMode(), finalPos, finalRot);
 			}
 			if (endEffectorUsed == 0) { // only for the player Avatar
+				//log(Kore::Info, "endEffectorUsed %i", endEffectorUsed);
 				if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
 				if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
 			}
@@ -709,12 +717,13 @@ namespace {
 		}
 	}
 
-	void trainerMovement(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/) {
+	void trainerMovement(Avatar* avatar, Logger* loggerUsed, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/) {
 		if (moveTrainer){
 			float scaleFactor;
 			Kore::vec3 desPosition[numOfEndEffectors];
 			Kore::Quaternion desRotation[numOfEndEffectors];
-			bool dataAvailable = loggerTrainer->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+			//bool dataAvailable = loggerTrainer->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+			bool dataAvailable = loggerUsed->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
 
 			if (dataAvailable) {
 				for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -740,15 +749,15 @@ namespace {
 			switch (yogaPose) {
 			case Yoga0:
 				filename = "yoga2.csv";
-				trainerMovement(avatars[1 + offset], filename);
+				trainerMovement(avatars[1 + offset], loggerTrainer, filename);							//TODO logger
 				break;
 			case Yoga1:
 				filename = "yoga1.csv";
-				trainerMovement(avatars[2 + offset], filename);
+				trainerMovement(avatars[2 + offset], loggerTrainer, filename);
 				break;
 			case Yoga2:
 				filename = "yoga3.csv";
-				trainerMovement(avatars[3 + offset], filename);
+				trainerMovement(avatars[3 + offset], loggerTrainer, filename);
 				break;
 			default:
 				break;
@@ -843,6 +852,61 @@ namespace {
 			loggerTrainer = new Logger();
 			getCollision();
 		}
+	}
+
+	void collisionCheck() {
+		//check collison for all plattforms
+		for (int i = 0; i < 3; ++i) {
+			// Check collision for one plattform vs the player avatar
+			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) { 
+				if ( i == 0 && (pose0 == Yoga0 || pose1 == Yoga0)) {
+					collisionLast = i;
+					//renderAvatar(V, P, avatars[1]);
+				} 
+			}
+			else if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
+				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
+					collisionLast = i;
+					//renderAvatar(V, P, avatars[1]);
+				}
+			}
+			else if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
+				if (i == 2 && (pose0 == Yoga2 || pose1 == Yoga2)) {
+					collisionLast = i;
+					//renderAvatar(V, P, avatars[1]);
+				}
+			}
+		}
+	}
+
+	void difficultySet() {
+		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
+			setPose(avatars[i], posesStatic[i - 1]);
+			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
+			else avatars[i]->setScale(avatar->scale);
+		}
+		//setPose(avatars[1], "yoga2_endpose.csv");
+		//setPose(avatars[2], "yoga1_endpose.csv");
+		//setPose(avatars[3], "yoga3_endpose.csv");
+
+		waitTimer = 0;
+		moveTrainer = false;
+	}
+
+	void difficultyIncrease() {
+		if (difficulty > 0) {
+			difficulty--;
+			difficultySet();
+		}
+		else log(Kore::Info, "Can not increase Difficulty");
+	}
+
+	void difficultyDecrease() {
+		if (difficulty < (difficultyRanks - 1)) {
+			difficulty++;
+			difficultySet();
+		}
+		else log(Kore::Info, "Can not decrease Difficulty");
 	}
 
 	void record() {
@@ -1295,21 +1359,44 @@ namespace {
 		
 		//renderPlatform(0, color0);
 		//renderAvatar(V, P, avatars[1]);
-
+		/*
+		switch (pose0) {
+			case Yoga0:
+				log(Kore::Info, "pose0: Yoga0");
+				break;
+			case Yoga1:
+				log(Kore::Info, "pose0: Yoga1");
+				break;
+			case Yoga2:
+				log(Kore::Info, "pose0: Yoga2");
+				break;
+		}
+		switch (pose1) {
+			case Yoga0:
+				log(Kore::Info, "pose1: Yoga0");
+				break;
+			case Yoga1:
+				log(Kore::Info, "pose1: Yoga1");
+				break;
+			case Yoga2:
+				log(Kore::Info, "pose1: Yoga2");
+				break;
+		}
+		*/
 		//renderPlatform(1, color1);
 		//renderAvatar(V, P, avatars[2]);
 
 		//renderPlatform(2, color2);
 		//renderAvatar(V, P, avatars[3]);
 
-		renderStaticGuides(V, P);
+		//renderStaticGuides(V, P);
 
 		//execute automatic avatar movement
-		moveTrainer = true;
+		//moveTrainer = true;
 		//trainerMovement(avatars[5], "yoga2.csv");
-		trainerMovement(avatars[6], "yoga3.csv");
-		renderAvatar(V, P, avatars[5]);
-		renderAvatar(V, P, avatars[6]);
+		//trainerMovement(avatars[6], "yoga3.csv");
+		//renderAvatar(V, P, avatars[5]);
+		//renderAvatar(V, P, avatars[6]);
 
 		//renderColoredTracker();
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
@@ -1324,6 +1411,39 @@ namespace {
 		
         if (showStoryElements) renderPlatforms(V, P);
 
+		if (difficulty > 0) {
+			// Wait for 200 Frames in End Position
+			if (moveTrainer == false) {
+				if (waitTimer < 200) waitTimer++;
+				else {
+					waitTimer = 0;
+					moveTrainer = true;
+				}
+			}
+		}
+
+		//moveTrainer = true;
+		if (onTask) {
+			switch (difficulty) {
+				case 0:
+					//setPose(avatars[collisionLast + 1], posesStatic[collisionLast]);
+					renderAvatar(V, P, avatars[collisionLast+1]);
+					break;
+				case 1:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.9f)* initRot.matrix().Transpose());
+					break;
+				case 2:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderTransparentAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.9f) * initRot.matrix().Transpose());
+					//trainerMovement(avatars[collisionLast + 1 + 3], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					//renderTransparentAvatar(V, P, avatars[collisionLast + 1 + 3]);
+					break;
+				default:
+					break;
+			}
+		}
+		/*
 		if (onTask) {
 			switch (difficulty) {
 				case 0:
@@ -1338,7 +1458,7 @@ namespace {
 				default:
 					break;
 			}
-		}
+		}*/
 #endif
 		if (currentAudio != nullptr) {
 			if (waitForAudio < currentAudio->length) {
@@ -1375,11 +1495,20 @@ namespace {
 				break;
 										// for DEBUG
 			case Kore::KeyH:
-				difficulty++;
+				//difficulty++;
+				difficultyIncrease();
 				break;
 			case Kore::KeyG:
-				difficulty--;
+				//difficulty--;
+				difficultyDecrease();
 				break;
+			case Kore::KeyU:
+				if (collisionLast < 2) collisionLast++;
+				break;
+			case Kore::KeyZ:
+				if (collisionLast > 0)collisionLast--;
+				break;
+										// end for DEBUG
 			case Kore::KeyR:
 #ifdef KORE_STEAMVR
 				VrInterface::resetHmdPose();
@@ -1688,6 +1817,7 @@ namespace {
 		endEffector = endEffectorArr[0];
 
 		loggerTrainer = new Logger();
+		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 
 
 		calibratePuppets();
@@ -1706,9 +1836,9 @@ namespace {
 		avatars[5]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 
-		poses[0] = "yoga2.csv";  
-		poses[1] = "yoga1.csv";
-		poses[2] = "yoga3.csv";
+		//poses[0] = "yoga2.csv";  
+		//poses[1] = "yoga1.csv";
+		//poses[2] = "yoga3.csv";
 
 		loadColoredTracker();
 		
