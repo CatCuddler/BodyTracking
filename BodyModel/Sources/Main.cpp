@@ -1129,10 +1129,8 @@ namespace {
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
-			for (int i = 1; i < sizeOfAvatars; i++) {
-				if (difficulty != 2) avatars[i]->setScale(avatar->scale);
-				else avatars[i]->setScale(avatar->scale + 0.75f);
-			}
+			collisionLast = 3;
+			moveTrainer = false;
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
 		}
