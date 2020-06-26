@@ -483,7 +483,7 @@ namespace {
 		}
 	}
 
-	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar) {
+	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = initTrans) {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Graphics4::setPipeline(pipeline);
 			Graphics4::setMatrix(vLocation, V);
@@ -502,6 +502,7 @@ namespace {
 			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
 
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * endEffectorRot.matrix().Transpose();
+			M = M * mLoc;
 			// coloredTracker
 			Graphics4::setMatrix(mLocation, M);
 
@@ -1255,6 +1256,7 @@ namespace {
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 2:
+						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projectio, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					default:
@@ -1318,6 +1320,7 @@ namespace {
 				renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			case 2:
+				renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 				renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
