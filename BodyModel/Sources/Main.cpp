@@ -953,9 +953,6 @@ namespace {
 			// Recognizing a movement
 			hmm->recognizing = !hmm->recognizing;
 			if (hmm->recognizing) {
-				//set the Trainer into motion for the yoga Pose selected by the player
-				startTrainerMovement();
-
 				showFeedback = false;
 				
 				//Audio1::play(startRecognitionSound);
@@ -1132,6 +1129,10 @@ namespace {
 		if (buttonNr == 1 && value == 1) {
 			assignControllerAndTracker();
 			calibrate();
+			for (int i = 1; i < sizeOfAvatars; i++) {
+				if (difficulty != 2) avatars[i]->setScale(avatar->scale);
+				else avatars[i]->setScale(avatar->scale + 0.75f);
+			}
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
 		}
@@ -1249,7 +1250,7 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (onTask && collisionLast != 3) {
+			if (onTask && calibratedAvatar && collisionLast != 3) {
 				switch (difficulty) {
 					case 0:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1308,23 +1309,23 @@ namespace {
 			mat4 V2 = V;
 		}
 		else {
-			mat4 P = state.pose.vrPose.projection;
-			mat4 V = state.pose.vrPose.eye;
+			mat4 P2 = state.pose.vrPose.projection;
+			mat4 V2 = state.pose.vrPose.eye;
 		}
 
-		if (onTask && collisionLast != 3) {
+		if (onTask && calibratedAvatar && collisionLast != 3) {
 			switch (difficulty) {
 			case 0:
-				renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			case 1:
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			case 2:
-				renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderColoredTracker(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderTransparentAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			default:
 				break;
@@ -1453,6 +1454,7 @@ namespace {
 					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
 				case 2:
+					renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
