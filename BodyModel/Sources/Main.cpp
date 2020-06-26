@@ -1329,6 +1329,51 @@ namespace {
 		if (showFeedback) renderFeedbackText(V, P);
 
 		if (showStoryElements) renderPlatforms(V, P);
+
+		if (onTask && collisionLast != 3) {
+			switch (difficulty) {
+			case 0:
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			case 1:
+				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			case 2:
+				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			default:
+				break;
+			}
+		}
+		if (!firstPersonMonitor) {
+			mat4 P2 = P;
+			mat4 V2 = V;
+		}
+		else {
+			mat4 P = state.pose.vrPose.projection;
+			mat4 V = state.pose.vrPose.eye;
+		}
+
+		if (onTask && collisionLast != 3) {
+			switch (difficulty) {
+			case 0:
+				renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			case 1:
+				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+				renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			case 2:
+				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+				renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				break;
+			default:
+				break;
+			}
+		}
+
 		/*
 		if (onTask) {
 			switch (difficulty) {
