@@ -856,6 +856,7 @@ namespace {
 	}
 
 	void difficultySet() {
+		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
 			setPose(avatars[i], posesStatic[i - 1]);
 			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
