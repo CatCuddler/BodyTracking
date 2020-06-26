@@ -1208,17 +1208,27 @@ namespace {
 		}
 
 		// Move the different Trainer Avatars
-
+		/*
 		int offset = 0;
 		if  (difficulty != 0 && collisonWith != 3) {
 			if (difficulty == 2) offset = 3;
 			//for (int k = 1; k < 4; k++) {
 			//	trainerMovement(avatars[k + offset], poses[k - 1]);
 			//}
-			trainerMovement(avatars[collisonWith + offset], poses[collisonWith - 1]);
+			trainerMovement(avatars[collisonWith + offset], loggerTrainerMovement, poses[collisonWith - 1]);
 		}
 		//moveTrainer = true;
-
+		*/
+		if (difficulty > 0 && moveTrainer == false) {
+			// Wait for 200 Frames in End Position
+			//if (moveTrainer == false) {
+				if (waitTimer < 200) waitTimer++;
+				else {
+					waitTimer = 0;
+					moveTrainer = true;
+				}
+			//}
+		}
 		
 		// Render for both eyes
 		SensorState state;
@@ -1248,6 +1258,24 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
+			if (onTask && collisionLast != 3) {
+				switch (difficulty) {
+					case 0:
+						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+						break;
+					case 1:
+						trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+						break;
+					case 2:
+						trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+						break;
+					default:
+						break;
+				}
+			}
+			/*
 			if (showStoryElements) {
 				switch (difficulty) {
 					case 0:
@@ -1263,6 +1291,7 @@ namespace {
 						break;
 				}
 			}
+			*/
 			
 			VrInterface::endRender(j);
 		}
