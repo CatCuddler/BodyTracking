@@ -193,6 +193,9 @@ namespace {
 	bool colliding = false;
     double waitForAudio = 0;
 	int trials = 0;
+
+	bool recording = false;
+
 	char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
 	char* posesStatic[3] = { "yoga2_endpose.csv",  "yoga1_endpose.csv", "yoga3_endpose.csv" };
 	
@@ -628,8 +631,7 @@ namespace {
 			}
 			if (endEffectorUsed == 0) { // only for the player Avatar
 				//log(Kore::Info, "endEffectorUsed %i", endEffectorUsed);
-				if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
-				if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffectorArr[endEffectorUsed][endEffectorID]->getName(), finalPos, finalRot);
+				if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 			}
 		}
 	}
@@ -938,8 +940,7 @@ namespace {
 		// HMM
 		if(hmm->isRecordingActive()) {
 			// Recording a movement
-			hmm->recording = !hmm->recording;
-			if (hmm->recording) {
+			if (recording) {
 				Audio1::play(startRecordingSound);
 				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 			} else {
@@ -951,8 +952,7 @@ namespace {
 			//moveTrainer = true;
 			//startTrainerMovement();
 			// Recognizing a movement
-			hmm->recognizing = !hmm->recognizing;
-			if (hmm->recognizing) {
+			if (recording) {
 				showFeedback = false;
 				
 				//Audio1::play(startRecognitionSound);
@@ -1002,7 +1002,7 @@ namespace {
 				++trials;
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
@@ -1016,7 +1016,7 @@ namespace {
 
 					trials = 0;
 				} else {
-					log(Info, "The movement is wrong");
+					log(Info, "The movement is wrong (Trial %i)", trials);
 					//Audio1::play(wrongSound);
 
 					showFeedback = true;
@@ -1142,7 +1142,21 @@ namespace {
 		
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
-			if (calibratedAvatar) record();
+			// Trigger button pressed
+			log(Info, "Trigger button pressed");
+			if (calibratedAvatar && initGame) {
+				recording = true;
+				record();
+			}
+		}
+
+		if (buttonNr == 33 && value == 0) {
+			// Trigger button released
+			log(Info, "Trigger button released");
+			if (calibratedAvatar && initGame) {
+				recording = false;
+				record();
+			}
 		}
 	}
 	
@@ -1161,7 +1175,7 @@ namespace {
 			}
 		}
 
-		assert(count == 2);
+		//assert(count == 2);
 		controllerButtonsInitialized = true;
 	}
 #endif
@@ -1277,8 +1291,8 @@ namespace {
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 
-		if (!firstPersonMonitor) renderAvatar(V, P, avatar);
-		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+		else renderAvatar(V, P, avatar);
 
 		if (!firstPersonMonitor && showStoryElements) {
 			renderStaticGuides(V, P);
@@ -1292,15 +1306,24 @@ namespace {
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) {
-			if (!firstPersonMonitor) renderLivingRoom(V, P);
-			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (firstPersonMonitor) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderLivingRoom(V, P);
 		}
 
-		if (showStoryElements) render3Dtext(V, P);
+		if (showStoryElements) {
+			if (firstPersonMonitor) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else render3Dtext(V, P);
+		}
 
-		if (showFeedback) renderFeedbackText(V, P);
+		if (showFeedback) {
+			if (firstPersonMonitor) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderFeedbackText(V, P);
+		}
 
-		if (showStoryElements) renderPlatforms(V, P);
+		if (showStoryElements) {
+			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderPlatforms(V, P);
+		}
 
 		if (!firstPersonMonitor) {
 			mat4 P2 = P;
@@ -1551,18 +1574,16 @@ namespace {
 				if (collisionLast > 0)collisionLast--;
 				break;
 										// end for DEBUG
-			case Kore::KeyR:
-#ifdef KORE_STEAMVR
-				VrInterface::resetHmdPose();
-#endif
-				break;
 			case KeyL:
 				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
 				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
 				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
 				
-				if (calibratedAvatar) record();
+				if (calibratedAvatar) {
+					recording = true;
+					record();
+				}
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
@@ -1578,8 +1599,24 @@ namespace {
 				getNextStoryElement(false);
 				break;
 			case Kore::KeyReturn:
-				initGame();
+				if (calibratedAvatar) initGame();
 				break;
+#ifdef KORE_STEAMVR
+			case Kore::KeyR:
+				// Set size and reset an avatar to a default T-Pose
+				calibratedAvatar = false;
+				initTransAndRot();
+				avatar->resetPositionAndRotation();
+				setSize();
+				break;
+			case Kore::KeyC:
+				// Calibrate
+				assignControllerAndTracker();
+				calibrate();
+				calibratedAvatar = true;
+				log(Info, "Calibrate avatar");
+				break;
+#endif
 			default:
 				break;
 		}
@@ -1598,6 +1635,12 @@ namespace {
 				break;
 			case Kore::KeyD:
 				D = false;
+				break;
+			case KeyL:
+				if (calibratedAvatar) {
+					recording = false;
+					record();
+				}
 				break;
 			default:
 				break;
