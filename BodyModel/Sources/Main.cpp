@@ -1264,11 +1264,11 @@ namespace {
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 1:
-						trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+						//trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 2:
-						trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+						//trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					default:
@@ -1330,23 +1330,6 @@ namespace {
 
 		if (showStoryElements) renderPlatforms(V, P);
 
-		if (onTask && collisionLast != 3) {
-			switch (difficulty) {
-			case 0:
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-				break;
-			case 1:
-				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-				break;
-			case 2:
-				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-				break;
-			default:
-				break;
-			}
-		}
 		if (!firstPersonMonitor) {
 			mat4 P2 = P;
 			mat4 V2 = V;
@@ -1374,31 +1357,6 @@ namespace {
 			}
 		}
 
-		/*
-		if (onTask) {
-			switch (difficulty) {
-				case 0:
-					if (!firstPersonMonitor) renderAvatar(V, P, avatars[4]);
-					else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[4]);
-					break;
-				case 1:
-					if (!firstPersonMonitor) renderAvatar(V, P, avatars[5]);
-					else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[5]);
-					break;
-				case 2:
-					if (!firstPersonMonitor) {
-						renderColoredTracker(V, P, avatars[6]);
-						renderTransparentAvatar(V, P, avatars[6]);
-					}
-					else {
-						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[6]);
-					}
-					break;
-				default:
-					break;
-			}
-		}*/
 #else
 		// Read line
 		float scaleFactor;
