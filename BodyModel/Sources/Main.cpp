@@ -1229,6 +1229,10 @@ namespace {
 				}
 			//}
 		}
+		//check for collision Player - Plattforms
+		collisionCheck();
+
+
 		
 		// Render for both eyes
 		SensorState state;
