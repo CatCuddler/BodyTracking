@@ -501,7 +501,7 @@ namespace {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
-			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
+			endEffectorPos = initTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
 			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
 
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * mLoc;
