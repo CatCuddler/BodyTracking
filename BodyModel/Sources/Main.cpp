@@ -1325,11 +1325,11 @@ namespace {
 			else renderPlatforms(V, P);
 		}
 
+		
+		mat4 P2 = P;
+		mat4 V2 = V;
+		
 		if (!firstPersonMonitor) {
-			mat4 P2 = P;
-			mat4 V2 = V;
-		}
-		else {
 			mat4 P2 = state.pose.vrPose.projection;
 			mat4 V2 = state.pose.vrPose.eye;
 		}
