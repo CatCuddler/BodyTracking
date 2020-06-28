@@ -158,6 +158,7 @@ namespace {
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
+	float trackerPrecision[numOfEndEffectors];
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -1778,11 +1779,38 @@ namespace {
 
 	void loadColoredTracker() {
 		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
-
+		
 		for (int i = 0; i < numOfEndEffectors; i++) {
 			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
 			//coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
+			coloredTrackerColors[i] = vec3(0.0 / 255.0, 0.0 / 255.0, 247.0 / 255.0);			// blue
+			//coloredTrackerColors[i] = vec3(130.0 / 255.0, 130.0 / 255.0, 0.0 / 255.0);			// yellow test
+
+			trackerPrecision[i] = 1.4f; // TODO: for debug
 		}
+		
+		//trackerPrecision[0] = 1.4f;
+		//trackerPrecision[1] = 1.4f;
+		trackerPrecision[2] = 1.2f;
+		trackerPrecision[3] = 1.3f;
+		trackerPrecision[4] = 1.5f;
+		trackerPrecision[5] = 1.6f;
+		//trackerPrecision[6] = 1.6f;
+		//trackerPrecision[7] = 1.7f;
+		float colorTreshhold = 1.4f;
+		float colorRange = 0.3f;
+		//float colorLowBase = colorTreshhold - colorRange;
+		double r = 0.0;
+		double g = 0.0;
+		
+		for (int i = 0; i < numOfEndEffectors; i++) {
+			r = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
+			g = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
+
+			coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
+		}
+		
+
 	}
 	
 	void init() {
