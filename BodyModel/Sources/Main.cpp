@@ -732,7 +732,7 @@ namespace {
 			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
 		}
 		else {
-			coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// green
+			coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
 		}
 	}
 
@@ -1304,8 +1304,8 @@ namespace {
 		}
 		//check for collision Player - Plattforms
 		collisionCheck();
-
-		updateColors()
+		
+		if (recording) updateColors();
 
 
 		
@@ -1850,7 +1850,7 @@ namespace {
 		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
 		
 		for (int i = 0; i < numOfEndEffectors; i++) {
-			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
+			//coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
 			//coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
 			coloredTrackerColors[i] = vec3(0.0 / 255.0, 0.0 / 255.0, 247.0 / 255.0);			// blue
 			//coloredTrackerColors[i] = vec3(130.0 / 255.0, 130.0 / 255.0, 0.0 / 255.0);			// yellow test
@@ -1871,13 +1871,14 @@ namespace {
 		//float colorLowBase = colorTreshhold - colorRange;
 		double r = 0.0;
 		double g = 0.0;
-		
+		/*
 		for (int i = 0; i < numOfEndEffectors; i++) {
 			g = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
 			r = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
 
 			coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
 		}
+		*/
 		
 
 	}
