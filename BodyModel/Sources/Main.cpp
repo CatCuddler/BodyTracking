@@ -161,6 +161,20 @@ namespace {
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
 	float trackerPrecision[numOfEndEffectors];
+
+	float hmm_head_modelProbability = 1.0f;
+	float hmm_hip_modelProbability = 1.0f;
+	float hmm_leftArm_modelProbability = 1.0f;
+	float hmm_rightArm_modelProbability = 1.0f;
+	float hmm_leftLeg_modelProbability = 1.0f;
+	float hmm_rightLeg_modelProbability = 1.0f;
+
+	float hmm_head_modelThreshold = 1.0f;
+	float hmm_hip_modelThreshold = 1.0f;
+	float hmm_leftArm_modelThreshold = 1.0f;
+	float hmm_rightArm_modelThreshold = 1.0f;
+	float hmm_leftLeg_modelThreshold = 1.0f;
+	float hmm_rightLeg_modelThreshold = 1.0f;
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -499,6 +513,7 @@ namespace {
 			//Graphics4::setFloat3(cLocation, vec3(1.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0));		// teal
 			//Graphics4::setFloat3(cLocation, vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0));		// green
 			//Graphics4::setFloat3(cLocation, vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0));			// red
+
 			Graphics4::setFloat3(cLocation, coloredTrackerColors[i]);
 
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
@@ -711,6 +726,29 @@ namespace {
 			executeMovement(endEffectorID, avatar);
 		}
 	}
+
+	void calculateColor(int i, float modelProbability, float modelThreshold) {
+		if (modelProbability > modelThreshold) {
+			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
+		}
+		else {
+			coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// green
+		}
+	}
+
+	void updateColors() {
+		hmm->getFeedbackModel(hmm_head_modelProbability, hmm_hip_modelProbability, hmm_leftArm_modelProbability, hmm_rightArm_modelProbability, hmm_leftLeg_modelProbability, hmm_rightLeg_modelProbability,
+			hmm_head_modelThreshold, hmm_hip_modelThreshold, hmm_leftArm_modelThreshold, hmm_rightLeg_modelThreshold, hmm_leftLeg_modelThreshold, hmm_rightLeg_modelThreshold);
+
+		calculateColor(0, hmm_head_modelProbability, hmm_head_modelThreshold);
+		calculateColor(0, hmm_hip_modelProbability, hmm_hip_modelThreshold);
+		calculateColor(0, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
+		calculateColor(0, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
+		calculateColor(0, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
+		calculateColor(0, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
+		calculateColor(0, hmm_leftLeg_modelProbability, hmm_leftLeg_modelThreshold);
+		calculateColor(0, hmm_rightLeg_modelProbability, hmm_rightLeg_modelThreshold);
+		}
 
 	void getCollision() {
 		// Check if avatar is colliding with a platform
@@ -1017,19 +1055,24 @@ namespace {
 					showFeedback = false;
 
 					//adjust difficulty if necessary
-					if (trials > difficultyUpper) difficultyIncrease();
-					else if (trials < difficultyLower) difficultyDecrease();
-					
-					switch (hmm->identifiedYogaPose) {
-						case Yoga0:
-							log(Info, "recognizing Yoga0");
-							break;
-						case Yoga1:
-							log(Info, "recognizing Yoga1");
-							break;
-						case Yoga2:
-							log(Info, "recognizing Yoga2");
-							break;
+					if (trials > difficultyUpper) difficultyDecrease();
+					else if (trials < difficultyLower) difficultyIncrease();
+					//only display which yogaPose was identified, if hmm identified a yogaPose as correct
+					if (correct) {
+						switch (hmm->identifiedYogaPose) {
+							case Yoga0:
+								log(Info, "recognizing Yoga0");
+								break;
+							case Yoga1:
+								log(Info, "recognizing Yoga1");
+								break;
+							case Yoga2:
+								log(Info, "recognizing Yoga2");
+								break;
+							default:
+								log(Info, "no pose recognized");
+								break;
+						}
 					}
 
 					//if (hmm->identifiedYogaPose == Yoga0) log(Info, "The movement is Yoga1!");
@@ -1261,6 +1304,8 @@ namespace {
 		}
 		//check for collision Player - Plattforms
 		collisionCheck();
+
+		updateColors()
 
 
 		
@@ -1813,12 +1858,12 @@ namespace {
 			trackerPrecision[i] = 1.4f; // TODO: for debug
 		}
 		
-		//trackerPrecision[0] = 1.4f;
-		//trackerPrecision[1] = 1.4f;
-		trackerPrecision[2] = 1.2f;
-		trackerPrecision[3] = 1.3f;
-		trackerPrecision[4] = 1.5f;
-		trackerPrecision[5] = 1.6f;
+		trackerPrecision[0] = 1.0f;
+		trackerPrecision[1] = 1.0f;
+		trackerPrecision[2] = 1.0f;
+		trackerPrecision[3] = 1.8f;
+		trackerPrecision[4] = 1.8f;
+		trackerPrecision[5] = 1.8f;
 		//trackerPrecision[6] = 1.6f;
 		//trackerPrecision[7] = 1.7f;
 		float colorTreshhold = 1.4f;
@@ -1828,8 +1873,8 @@ namespace {
 		double g = 0.0;
 		
 		for (int i = 0; i < numOfEndEffectors; i++) {
-			r = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
-			g = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
+			g = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
+			r = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
 
 			coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
 		}

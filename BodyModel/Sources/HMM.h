@@ -47,5 +47,7 @@ public:
 	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	
 	void getFeedback(bool &head, bool &hip, bool &leftArm, bool &rightArm, bool &leftLeg, bool &rightLeg);
+
+	void getFeedbackModel(float& head_prob, float& hip_prob, float& leftArm_prob, float& rightArm_prob, float& leftLeg_prob, float& rightLeg_prob, float& head, float& hip, float& leftArm, float& rightArm, float& leftLeg, float& rightLeg);
 	
 };
