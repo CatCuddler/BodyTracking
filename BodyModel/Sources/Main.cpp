@@ -1019,6 +1019,22 @@ namespace {
 					//adjust difficulty if necessary
 					if (trials > difficultyUpper) difficultyIncrease();
 					else if (trials < difficultyLower) difficultyDecrease();
+					
+					switch (hmm->identifiedYogaPose) {
+						case Yoga0:
+							log(Info, "recognizing Yoga0");
+							break;
+						case Yoga1:
+							log(Info, "recognizing Yoga1");
+							break;
+						case Yoga2:
+							log(Info, "recognizing Yoga2");
+							break;
+					}
+
+					//if (hmm->identifiedYogaPose == Yoga0) log(Info, "The movement is Yoga1!");
+					//if (hmm->identifiedYogaPose == Yoga1) log(Info, "The movement is Yoga1!");
+					//if (hmm->identifiedYogaPose == Yoga2) log(Info, "The movement is Yoga1!");
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);

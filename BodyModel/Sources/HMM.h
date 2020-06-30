@@ -31,6 +31,8 @@ private:
 	
 public:
 	HMM(Logger& logger);
+
+	Yoga identifiedYogaPose;
 	
 	bool isRecordingActive();
 	bool isRecognitionActive();

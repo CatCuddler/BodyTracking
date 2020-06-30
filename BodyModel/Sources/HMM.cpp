@@ -255,17 +255,20 @@ bool HMM::stopRecognitionAndIdentify() {
 			log(Kore::Info, "Current movement is recognized as Pose 1.");
 			for (int ii = 0; ii < numOfDataPoints; ii++) {
 				trackerMovementRecognised.at(ii) = (probabilityModel0.at(ii) > probabilityStandardModel0.at(ii));
+				identifiedYogaPose = Yoga0;
 			}
 		}
 		else if (n1 > n0 && n1 > n2) {
 			log(Kore::Info, "Current movement is recognized as Pose 2.");
 			for (int ii = 0; ii < numOfDataPoints; ii++) {
 				trackerMovementRecognised.at(ii) = (probabilityModel1.at(ii) > probabilityStandardModel1.at(ii));
+				identifiedYogaPose = Yoga1;
 			}
 		} else if (n2 > n0 && n2 > n1) {
 			log(Kore::Info, "Current movement is recognized as Pose 3.");
 			for (int ii = 0; ii < numOfDataPoints; ii++) {
 				trackerMovementRecognised.at(ii) = (probabilityModel2.at(ii) > probabilityStandardModel2.at(ii));
+				identifiedYogaPose = Yoga2;
 			}
 		} else {
 			log(Kore::Info, "None movement is recognized");
