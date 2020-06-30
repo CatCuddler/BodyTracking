@@ -162,19 +162,19 @@ namespace {
 	vec3 coloredTrackerColors[numOfEndEffectors];
 	float trackerPrecision[numOfEndEffectors];
 
-	float hmm_head_modelProbability = 1.0f;
-	float hmm_hip_modelProbability = 1.0f;
-	float hmm_leftArm_modelProbability = 1.0f;
-	float hmm_rightArm_modelProbability = 1.0f;
-	float hmm_leftLeg_modelProbability = 1.0f;
-	float hmm_rightLeg_modelProbability = 1.0f;
+	float hmm_head_modelProbability = 2.0f;
+	float hmm_hip_modelProbability = 2.0f;
+	float hmm_leftArm_modelProbability = 2.0f;
+	float hmm_rightArm_modelProbability = 2.0f;
+	float hmm_leftLeg_modelProbability = 2.0f;
+	float hmm_rightLeg_modelProbability = 2.0f;
 
 	float hmm_head_modelThreshold = 1.0f;
-	float hmm_hip_modelThreshold = 1.0f;
-	float hmm_leftArm_modelThreshold = 1.0f;
+	float hmm_hip_modelThreshold = 2.0f;
+	float hmm_leftArm_modelThreshold = 3.0f;
 	float hmm_rightArm_modelThreshold = 1.0f;
-	float hmm_leftLeg_modelThreshold = 1.0f;
-	float hmm_rightLeg_modelThreshold = 1.0f;
+	float hmm_leftLeg_modelThreshold = 2.0f;
+	float hmm_rightLeg_modelThreshold = 3.0f;
 	
 	// Virtual environment
 	LivingRoom* livingRoom;
@@ -734,6 +734,7 @@ namespace {
 		else {
 			coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
 		}
+		log(Info, "modelProb: %f, modelThres: %f", modelProbability, modelThreshold);
 	}
 
 	void updateColors() {
@@ -1041,7 +1042,7 @@ namespace {
 				}
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
-				
+				updateColors();
 				++trials;
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
@@ -1305,7 +1306,7 @@ namespace {
 		//check for collision Player - Plattforms
 		collisionCheck();
 		
-		if (recording) updateColors();
+		//if (recording) updateColors();
 
 
 		
