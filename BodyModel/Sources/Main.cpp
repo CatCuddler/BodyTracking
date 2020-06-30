@@ -23,6 +23,7 @@
 #include "Collision.h"
 
 #include <algorithm> // std::sort
+#include <cmath>		// std::abs
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -169,10 +170,10 @@ namespace {
 	float hmm_leftLeg_modelProbability = 2.0f;
 	float hmm_rightLeg_modelProbability = 2.0f;
 
-	float hmm_head_modelThreshold = 1.0f;
+	float hmm_head_modelThreshold = 1.5f;
 	float hmm_hip_modelThreshold = 2.0f;
 	float hmm_leftArm_modelThreshold = 3.0f;
-	float hmm_rightArm_modelThreshold = 1.0f;
+	float hmm_rightArm_modelThreshold = 1.5f;
 	float hmm_leftLeg_modelThreshold = 2.0f;
 	float hmm_rightLeg_modelThreshold = 3.0f;
 	
@@ -749,11 +750,12 @@ namespace {
 		coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
 		
 		log(Info, "modelProb: %f, modelThres: %f", modelProbability, modelThreshold);
+		//loadColoredTracker();
 	}
 
 	void updateColors() {
 		hmm->getFeedbackModel(hmm_head_modelProbability, hmm_hip_modelProbability, hmm_leftArm_modelProbability, hmm_rightArm_modelProbability, hmm_leftLeg_modelProbability, hmm_rightLeg_modelProbability,
-			hmm_head_modelThreshold, hmm_hip_modelThreshold, hmm_leftArm_modelThreshold, hmm_rightLeg_modelThreshold, hmm_leftLeg_modelThreshold, hmm_rightLeg_modelThreshold);
+			hmm_head_modelThreshold, hmm_hip_modelThreshold, hmm_leftArm_modelThreshold, hmm_rightArm_modelThreshold, hmm_leftLeg_modelThreshold, hmm_rightLeg_modelThreshold);
 
 		calculateColor(0, hmm_head_modelProbability, hmm_head_modelThreshold);
 		calculateColor(1, hmm_hip_modelProbability, hmm_hip_modelThreshold);
@@ -2051,7 +2053,7 @@ namespace {
 		//poses[0] = "yoga2.csv";  
 		//poses[1] = "yoga1.csv";
 		//poses[2] = "yoga3.csv";
-
+		
 		loadColoredTracker();
 		
 #ifdef KORE_STEAMVR
