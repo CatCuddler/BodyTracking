@@ -141,7 +141,7 @@ namespace {
 	MeshObject* sphereMesh;
 	// Player Avatar + Puppets
 	Avatar* avatars[sizeOfAvatars] = { nullptr };
-	mat4 avatarPositions[sizeOfAvatars-1];
+	mat4 avatarPositions[(sizeOfAvatars-1)*2];
 
 	// Difficulty
 	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
@@ -865,6 +865,7 @@ namespace {
 			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
 			else avatars[i]->setScale(avatar->scale);
 		}
+		/*
 		if (difficulty == 2) {
 			avatarPositions[0] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
 			avatarPositions[1] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
@@ -875,6 +876,7 @@ namespace {
 			avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
 			avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
 		}
+		*/
 		//setPose(avatars[1], "yoga2_endpose.csv");
 		//setPose(avatars[2], "yoga1_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv");
@@ -1272,8 +1274,8 @@ namespace {
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 2:
-						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
+						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 						break;
 					default:
 						break;
@@ -1345,9 +1347,9 @@ namespace {
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			case 2:
-				renderColoredTracker(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderColoredTracker(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderTransparentAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+				renderTransparentAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 				break;
 			default:
 				break;
@@ -1476,9 +1478,9 @@ namespace {
 					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
 				case 2:
-					renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 					break;
 				default:
 					break;
@@ -1939,6 +1941,12 @@ namespace {
 
 		calibratePuppets();
 		difficultySet();
+		avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
+		avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
+		avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
+		avatarPositions[3] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
+		avatarPositions[4] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
+		avatarPositions[5] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
 		//setPose(avatars[1], "yoga2_endpose.csv");
 		//setPose(avatars[2], "yoga1_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv");
