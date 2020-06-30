@@ -145,7 +145,7 @@ namespace {
 
 	// Difficulty
 	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
-	int difficulty = 0; // difficulty Rank the game uses at the given moment
+	int difficulty = 2; // difficulty Rank the game uses at the given moment
 	int difficultyUpper = 6;
 	int difficultyLower = 4;
 
@@ -741,13 +741,13 @@ namespace {
 			hmm_head_modelThreshold, hmm_hip_modelThreshold, hmm_leftArm_modelThreshold, hmm_rightLeg_modelThreshold, hmm_leftLeg_modelThreshold, hmm_rightLeg_modelThreshold);
 
 		calculateColor(0, hmm_head_modelProbability, hmm_head_modelThreshold);
-		calculateColor(0, hmm_hip_modelProbability, hmm_hip_modelThreshold);
-		calculateColor(0, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
-		calculateColor(0, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
-		calculateColor(0, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
-		calculateColor(0, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
-		calculateColor(0, hmm_leftLeg_modelProbability, hmm_leftLeg_modelThreshold);
-		calculateColor(0, hmm_rightLeg_modelProbability, hmm_rightLeg_modelThreshold);
+		calculateColor(1, hmm_hip_modelProbability, hmm_hip_modelThreshold);
+		calculateColor(2, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
+		calculateColor(3, hmm_leftArm_modelProbability, hmm_leftArm_modelThreshold);
+		calculateColor(4, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
+		calculateColor(5, hmm_rightArm_modelProbability, hmm_rightArm_modelThreshold);
+		calculateColor(6, hmm_leftLeg_modelProbability, hmm_leftLeg_modelThreshold);
+		calculateColor(7, hmm_rightLeg_modelProbability, hmm_rightLeg_modelThreshold);
 		}
 
 	void getCollision() {
