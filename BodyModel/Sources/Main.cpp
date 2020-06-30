@@ -1017,8 +1017,8 @@ namespace {
 					showFeedback = false;
 
 					//adjust difficulty if necessary
-					if (trials > difficultyUpper) difficultyIncrease;
-					else if (trials < difficultyLower) difficultyDecrease;
+					if (trials > difficultyUpper) difficultyIncrease();
+					else if (trials < difficultyLower) difficultyDecrease();
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
