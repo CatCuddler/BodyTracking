@@ -146,6 +146,8 @@ namespace {
 	// Difficulty
 	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
 	int difficulty = 0; // difficulty Rank the game uses at the given moment
+	int difficultyUpper = 6;
+	int difficultyLower = 4;
 
 	//TrainerMovement
 	Logger* loggerTrainer;
@@ -1013,6 +1015,10 @@ namespace {
 					//Audio1::play(correctSound);
 					
 					showFeedback = false;
+
+					//adjust difficulty if necessary
+					if (trials > difficultyUpper) difficultyIncrease;
+					else if (trials < difficultyLower) difficultyDecrease;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
