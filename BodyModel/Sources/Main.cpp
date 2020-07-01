@@ -196,7 +196,9 @@ namespace {
 	Kore::Quaternion initRotInv;
 
 	mat4 basicTrans;
+	mat4 basicTransInv;
 	Kore::Quaternion basicRot;
+	Kore::Quaternion basicRotInv;
 	
 	bool calibratedAvatar = false;
 	
@@ -448,8 +450,6 @@ namespace {
 		
 		Graphics4::setMatrix(vLocation, V);
 		Graphics4::setMatrix(pLocation, P);
-		//Graphics4::setMatrix(mLocation, initTrans);
-		//Graphics4::setMatrix(mLocation, mat4::Translation(0, 0, 0.9f)* initRot.matrix().Transpose());
 		Graphics4::setMatrix(mLocation, mLoc);
 		Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		avatar->animate(tex);
@@ -469,7 +469,6 @@ namespace {
 
 		Graphics4::setMatrix(vLocation_Alpha, V);
 		Graphics4::setMatrix(pLocation_Alpha, P);
-		//Graphics4::setMatrix(mLocation_Alpha, initTrans);
 		Graphics4::setMatrix(mLocation, mLoc);
 		Graphics4::setFloat3(cLocation_Alpha, vec3(1, 1, 1));
 		avatar->animate(tex_Alpha);
@@ -596,7 +595,9 @@ namespace {
 
 	void initBasics() {
 		basicRot = initRot;
+		basicRotInv = initRotInv;
 		basicTrans = initTrans;
+		basicTransInv = initTransInv;
 	}
 
 	void updateTransAndRot() {
@@ -624,13 +625,22 @@ namespace {
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
 
+		mat4 usedTransInv = initTransInv;
+		Kore::Quaternion usedRotInv = initRotInv;
+		if (endEffectorUsed > 0) {
+			mat4 usedTransInv = basicTransInv;
+			Kore::Quaternion usedRotInv = basicRotInv;
+		}
+
 		// Save raw data when on the player avatar
 		if (logRawData && (endEffectorUsed == 0)) logger->saveData(endEffectorArr[endEffectorUsed][endEffectorID]->getName(), desPosition, desRotation, ava->scale);
 
 		if (calibratedAvatar || (endEffectorUsed != 0)) {
 			// Transform desired position/rotation to the character local coordinate system
-			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			desRotation = initRotInv.rotated(desRotation);
+			desPosition = usedTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			//desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+			desRotation = usedRotInv.rotated(desRotation);
+			//desRotation = initRotInv.rotated(desRotation);
 
 			// Add offset
 			Kore::Quaternion offsetRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getOffsetRotation();
@@ -666,12 +676,21 @@ namespace {
 	void runCalibrate(int endEffectorID, Avatar* ava = avatar) {
 		int endEffectorUsed = ava->getAvatarID();
 
+		mat4 usedTransInv = initTransInv;
+		Kore::Quaternion usedRotInv = initRotInv;
+		if (endEffectorUsed > 0) {
+			mat4 usedTransInv = basicTransInv;
+			Kore::Quaternion usedRotInv = basicRotInv;
+		}
+
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
 
 		// Transform desired position/rotation to the character local coordinate system
-		desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-		desRotation = initRotInv.rotated(desRotation);
+		desPosition = usedTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		//desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
+		desRotation = usedRotInv.rotated(desRotation);
+		//desRotation = initRotInv.rotated(desRotation);
 
 		// Get actual position/rotation of the character skeleton
 		BoneNode* bone = ava->getBoneWithIndex(endEffectorArr[endEffectorUsed][endEffectorID]->getBoneIndex());
