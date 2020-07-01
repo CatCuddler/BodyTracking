@@ -621,6 +621,16 @@ namespace {
 	}
 
 	void executeMovement(int endEffectorID, Avatar* ava = avatar, bool setPose = false/*init a new yoga pose*/) {
+		mat4 saveTrans = initTrans;
+		mat4 saveTransInv = initTransInv;
+		Kore::Quaternion saveRot = initRot;
+		Kore::Quaternion saveRotInv = initRotInv;
+
+		initTrans = basicTrans;
+		initTransInv = basicTransInv;
+		initRot = basicRot;
+		initRotInv = basicRotInv;
+
 		int endEffectorUsed = ava->getAvatarID();
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
@@ -671,6 +681,10 @@ namespace {
 				if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 			}
 		}
+		initTrans = saveTrans;
+		initTransInv = saveTransInv;
+		initRot = saveRot;
+		initRotInv = saveRotInv;
 	}
 
 	void runCalibrate(int endEffectorID, Avatar* ava = avatar) {
@@ -709,6 +723,16 @@ namespace {
 	}
 	
 	void setPose(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/, bool calibrate = false) {
+		mat4 saveTrans = initTrans;
+		mat4 saveTransInv = initTransInv;
+		Kore::Quaternion saveRot = initRot;
+		Kore::Quaternion saveRotInv = initRotInv;
+
+		initTrans = basicTrans;
+		initTransInv = basicTransInv;
+		initRot = basicRot;
+		initRotInv = basicRotInv;
+
 		int endEffectorUsed = avatar->getAvatarID();
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
@@ -735,6 +759,10 @@ namespace {
 				executeMovement(endEffectorID, avatar, true);
 			}
 		}
+		initTrans = saveTrans;
+		initTransInv = saveTransInv;
+		initRot = saveRot;
+		initRotInv = saveRotInv;
 		//}
 	}
 
@@ -1325,7 +1353,7 @@ namespace {
 			if (showFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
-
+			/*
 			mat4 saveTrans = initTrans;
 			mat4 saveTransInv = initTransInv;
 			Kore::Quaternion saveRot = initRot;
@@ -1335,7 +1363,7 @@ namespace {
 			initTransInv = basicTransInv;
 			initRot = basicRot;
 			initRotInv = basicRotInv;
-
+			*/
 
 			if (onTask && calibratedAvatar && collisionLast != 3) {
 				switch (difficulty) {
@@ -1353,12 +1381,12 @@ namespace {
 						break;
 				}
 			}
-			
+			/*
 			initTrans = saveTrans;
 			initTransInv = saveTransInv;
 			initRot = saveRot;
 			initRotInv = saveRotInv;
-
+			*/
 			VrInterface::endRender(j);
 		}
 		
@@ -1404,7 +1432,17 @@ namespace {
 			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			else renderPlatforms(V, P);
 		}
-		
+		/*
+		mat4 saveTrans = initTrans;
+		mat4 saveTransInv = initTransInv;
+		Kore::Quaternion saveRot = initRot;
+		Kore::Quaternion saveRotInv = initRotInv;
+
+		initTrans = basicTrans;
+		initTransInv = basicTransInv;
+		initRot = basicRot;
+		initRotInv = basicRotInv;
+		*/
 		mat4 P2 = P;
 		mat4 V2 = V;
 		
@@ -1431,7 +1469,12 @@ namespace {
 				break;
 			}
 		}
-
+		/*
+		initTrans = saveTrans;
+		initTransInv = saveTransInv;
+		initRot = saveRot;
+		initRotInv = saveRotInv;
+		*/
 #else
 		// Read line
 		float scaleFactor;
