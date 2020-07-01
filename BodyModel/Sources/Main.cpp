@@ -1389,6 +1389,20 @@ namespace {
 			else renderPlatforms(V, P);
 		}
 
+		mat4 saveTrans = initTrans;
+		mat4 saveTransInv = initTransInv;
+		Kore::Quaternion saveRot = initRot;
+		Kore::Quaternion saveRotInv = initRotInv;
+
+		initTrans = basicTrans;
+		initTransInv = basicTransInv;
+		initRot = basicRot;
+		initRotInv = basicRotInv;
+
+		saveTrans = initTrans;
+		saveTransInv = initTransInv;
+		saveRot = initRot;
+		saveRotInv = initRotInv;
 		
 		mat4 P2 = P;
 		mat4 V2 = V;
