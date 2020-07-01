@@ -729,28 +729,14 @@ namespace {
 	}
 
 	void calculateColor(int i, float modelProbability, float modelThreshold) {
-		/*
-		if (modelProbability > modelThreshold) {
-			coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
-		}
-		else {
-			coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
-		}
-		*/
-
 		double r = 0.0;
 		double g = 0.0;
 
 		float colorRange = modelThreshold / 2.0f;
-		//g = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
-		//r = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
 		r = (modelProbability - (modelThreshold - colorRange)) / colorRange * 247.0;
 		g = (colorRange - (modelProbability - modelThreshold)) / colorRange * 247.0;
 
 		coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
-		
-		log(Info, "modelProb: %f, modelThres: %f", modelProbability, modelThreshold);
-		//loadColoredTracker();
 	}
 
 	void updateColors() {

@@ -57,7 +57,7 @@ namespace {
 	float hmm_leftLeg_modelThreshold = 1.0f;
 	float hmm_rightLeg_modelThreshold = 1.0f;
 
-	Yoga identifiedYogaPose = Yoga0;
+	Yoga identifiedYogaPose = Yoga1;
 }
 
 HMM::HMM(Logger& logger) : logger(logger) {
