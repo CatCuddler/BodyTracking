@@ -1077,7 +1077,7 @@ namespace {
 				}
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, hmm->getIdentifiedPose(), trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, identifiedPoseID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
