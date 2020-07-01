@@ -1046,24 +1046,9 @@ namespace {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				updateColors();
 				++trials;
-				int identifiedPoseID = -1;
-				switch (hmm->getIdentifiedPose()) {
-					case Yoga0:
-						identifiedPoseID = 0;
-						break;
-					case Yoga1:
-						identifiedPoseID = 1;
-						break;
-					case Yoga2:
-						identifiedPoseID = 2;
-						break;
-					default:
-						identifiedPoseID = -1;
-						break;
-				}
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, identifiedPoseID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
@@ -1075,23 +1060,6 @@ namespace {
 					//adjust difficulty if necessary
 					if (trials > difficultyUpper) difficultyDecrease();
 					else if (trials < difficultyLower) difficultyIncrease();
-					//only display which yogaPose was identified, if hmm identified a yogaPose as correct
-					if (correct) {
-						switch (hmm->getIdentifiedPose()) {
-							case Yoga0:
-								log(Info, "recognizing Yoga0");
-								break;
-							case Yoga1:
-								log(Info, "recognizing Yoga1");
-								break;
-							case Yoga2:
-								log(Info, "recognizing Yoga2");
-								break;
-							default:
-								log(Info, "no pose recognized");
-								break;
-						}
-					}
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
