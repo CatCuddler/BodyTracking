@@ -194,6 +194,9 @@ namespace {
 	mat4 initTransInv;
 	Kore::Quaternion initRot;
 	Kore::Quaternion initRotInv;
+
+	mat4 basicTrans;
+	Kore::Quaternion basicRot;
 	
 	bool calibratedAvatar = false;
 	
@@ -504,7 +507,7 @@ namespace {
 		}
 	}
 
-	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = initTrans) {
+	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = basicTrans) {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Graphics4::setPipeline(pipeline);
 			Graphics4::setMatrix(vLocation, V);
@@ -520,8 +523,8 @@ namespace {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
-			endEffectorPos = initTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
-			Kore::Quaternion endEffectorRot = initRot.rotated(bone->getOrientation());
+			endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
+			Kore::Quaternion endEffectorRot = basicRot.rotated(bone->getOrientation());
 
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * mLoc;
 			// coloredTracker
@@ -589,6 +592,11 @@ namespace {
 		vec3 initPos = vec4(0, 0, 0, 1);
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
+	}
+
+	void initBasics() {
+		basicRot = initRot;
+		basicTrans = initTrans;
 	}
 
 	void updateTransAndRot() {
@@ -908,21 +916,6 @@ namespace {
 			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
 			else avatars[i]->setScale(avatar->scale);
 		}
-		/*
-		if (difficulty == 2) {
-			avatarPositions[0] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
-			avatarPositions[1] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
-			avatarPositions[2] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
-		}
-		else {
-			avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
-			avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
-			avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
-		}
-		*/
-		//setPose(avatars[1], "yoga2_endpose.csv");
-		//setPose(avatars[2], "yoga1_endpose.csv");
-		//setPose(avatars[3], "yoga3_endpose.csv");
 
 		waitTimer = 0;
 		moveTrainer = false;
@@ -1535,47 +1528,7 @@ namespace {
 					break;
 			}
 		}
-		/*	savekeeping
-		if (onTask && collisionLast != 3) {
-			switch (difficulty) {
-				case 0:
-					//setPose(avatars[collisionLast + 1], posesStatic[collisionLast]);
-					///renderAvatar(V, P, avatars[collisionLast + 1]);
-					renderAvatar(V, P, avatars[collisionLast+1], avatarPositions[collisionLast]);
-					break;
-				case 1:
-					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					//renderAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.0f)* initRot.matrix().Transpose());
-					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-					break;
-				case 2:
-					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					//renderTransparentAvatar(V, P, avatars[collisionLast + 1], mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose());
-					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-					////trainerMovement(avatars[collisionLast + 1 + 3], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-					////renderTransparentAvatar(V, P, avatars[collisionLast + 1 + 3]);
-					break;
-				default:
-					break;
-			}
-		}
-		*/
-		/*
-		if (onTask) {
-			switch (difficulty) {
-				case 0:
-					renderAvatar(V, P, avatars[4]);
-					break;
-				case 1:
-					renderAvatar(V, P, avatars[5]);
-					break;
-				case 2:
-					renderColoredTracker(V, P, avatars[6]);
-					renderTransparentAvatar(V, P, avatars[6]);
-				default:
-					break;
-			}
-		}*/
+
 #endif
 		if (currentAudio != nullptr) {
 			if (waitForAudio < currentAudio->length) {
@@ -1896,6 +1849,7 @@ namespace {
 		sphereMesh = new MeshObject("platform/sphere.ogex", "platform/", structure, avatarCollider->radius);
 		
 		initTransAndRot();
+		initBasics();
 		
 		// Set camera initial position and orientation
 		cameraPos = vec3(2.6, 1.8, 0.0);
