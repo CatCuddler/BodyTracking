@@ -29,7 +29,7 @@ public:
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
 	void startEvaluationLogger(const char* filename);
-	void saveEvaluationData(float lastTime, int nodeID, int pose, int trials, bool head, bool hip, bool left_arm, bool right_arm, bool left_leg, bool right_leg);
+	void saveEvaluationData(float lastTime, int nodeID, int pose, int poseIdentified, int trials, bool head, bool hip, bool left_arm, bool right_arm, bool left_leg, bool right_leg);
 	void endEvaluationLogger();
 	
 	// HMM

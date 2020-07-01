@@ -56,6 +56,8 @@ namespace {
 	float hmm_rightArm_modelThreshold = 1.0f;
 	float hmm_leftLeg_modelThreshold = 1.0f;
 	float hmm_rightLeg_modelThreshold = 1.0f;
+
+	Yoga identifiedYogaPose = Yoga0;
 }
 
 HMM::HMM(Logger& logger) : logger(logger) {
@@ -370,4 +372,9 @@ void HMM::getFeedbackModel(float& head_prob, float& hip_prob, float& leftArm_pro
 	rightArm = hmm_rightArm_modelThreshold;
 	leftLeg = hmm_leftLeg_modelThreshold;
 	rightLeg = hmm_rightLeg_modelThreshold;
+}
+
+Yoga HMM::getIdentifiedPose()
+{
+	return identifiedYogaPose;
 }

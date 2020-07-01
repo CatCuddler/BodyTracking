@@ -31,8 +31,6 @@ private:
 	
 public:
 	HMM(Logger& logger);
-
-	Yoga identifiedYogaPose;
 	
 	bool isRecordingActive();
 	bool isRecognitionActive();
@@ -50,4 +48,5 @@ public:
 
 	void getFeedbackModel(float& head_prob, float& hip_prob, float& leftArm_prob, float& rightArm_prob, float& leftLeg_prob, float& rightLeg_prob, float& head, float& hip, float& leftArm, float& rightArm, float& leftLeg, float& rightLeg);
 	
+	Yoga getIdentifiedPose();
 };
