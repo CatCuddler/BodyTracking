@@ -979,22 +979,18 @@ namespace {
 			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 0 && (pose0 == Yoga0 || pose1 == Yoga0)) {
 					collisionLast = i;
-					//renderAvatar(V, P, avatars[1]);
 				}
 			}
 			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
 					collisionLast = i;
-					//renderAvatar(V, P, avatars[1]);
 				}
 			}
 			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 2 && (pose0 == Yoga2 || pose1 == Yoga2)) {
 					collisionLast = i;
-					//renderAvatar(V, P, avatars[1]);
 				}
 			}
-			//else collisionLast = 3;
 		}
 		if (collisionSave != collisionLast) difficultySet();
 	}
@@ -1356,17 +1352,6 @@ namespace {
 			if (showFeedback) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
-			/*
-			mat4 saveTrans = initTrans;
-			mat4 saveTransInv = initTransInv;
-			Kore::Quaternion saveRot = initRot;
-			Kore::Quaternion saveRotInv = initRotInv;
-
-			initTrans = basicTrans;
-			initTransInv = basicTransInv;
-			initRot = basicRot;
-			initRotInv = basicRotInv;
-			*/
 
 			if (onTask && calibratedAvatar && collisionLast != 3) {
 				switch (difficulty) {
@@ -1384,12 +1369,7 @@ namespace {
 						break;
 				}
 			}
-			/*
-			initTrans = saveTrans;
-			initTransInv = saveTransInv;
-			initRot = saveRot;
-			initRotInv = saveRotInv;
-			*/
+
 			VrInterface::endRender(j);
 		}
 		
@@ -1435,17 +1415,7 @@ namespace {
 			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			else renderPlatforms(V, P);
 		}
-		/*
-		mat4 saveTrans = initTrans;
-		mat4 saveTransInv = initTransInv;
-		Kore::Quaternion saveRot = initRot;
-		Kore::Quaternion saveRotInv = initRotInv;
 
-		initTrans = basicTrans;
-		initTransInv = basicTransInv;
-		initRot = basicRot;
-		initRotInv = basicRotInv;
-		*/
 		mat4 P2 = P;
 		mat4 V2 = V;
 		
@@ -1472,12 +1442,6 @@ namespace {
 				break;
 			}
 		}
-		/*
-		initTrans = saveTrans;
-		initTransInv = saveTransInv;
-		initRot = saveRot;
-		initRotInv = saveRotInv;
-		*/
 #else
 		// Read line
 		float scaleFactor;
@@ -1516,56 +1480,9 @@ namespace {
 		// render player avatar
 		renderAvatar(V, P, avatars[0]);
 		
-		// render static avatars that show the tasks
-		for (int i = 1; i < 4; i++) {
-		//for (int i = 0; i < sizeOfAvatars; i++) {
-			//renderAvatar(V, P, avatars[i]);
-		}
-		
 		renderPlatform(0, color0);
 		renderPlatform(1, color1);
 		renderPlatform(2, color2);
-		//renderAvatar(V, P, avatars[1]);
-		/*
-		switch (pose0) {
-			case Yoga0:
-				log(Kore::Info, "pose0: Yoga0");
-				break;
-			case Yoga1:
-				log(Kore::Info, "pose0: Yoga1");
-				break;
-			case Yoga2:
-				log(Kore::Info, "pose0: Yoga2");
-				break;
-		}
-		switch (pose1) {
-			case Yoga0:
-				log(Kore::Info, "pose1: Yoga0");
-				break;
-			case Yoga1:
-				log(Kore::Info, "pose1: Yoga1");
-				break;
-			case Yoga2:
-				log(Kore::Info, "pose1: Yoga2");
-				break;
-		}
-		*/
-		//renderPlatform(1, color1);
-		//renderAvatar(V, P, avatars[2]);
-
-		//renderPlatform(2, color2);
-		//renderAvatar(V, P, avatars[3]);
-
-		//renderStaticGuides(V, P);
-
-		//execute automatic avatar movement
-		//moveTrainer = true;
-		//trainerMovement(avatars[5], "yoga2.csv");
-		//trainerMovement(avatars[6], "yoga3.csv");
-		//renderAvatar(V, P, avatars[5]);
-		//renderAvatar(V, P, avatars[6]);
-
-		//renderColoredTracker();
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
@@ -1643,22 +1560,20 @@ namespace {
 			case Kore::KeyD:
 				D = true;
 				break;
-										// for DEBUG
+			//manually change difficulty
 			case Kore::KeyH:
-				//difficulty++;
 				difficultyIncrease();
 				break;
 			case Kore::KeyG:
-				//difficulty--;
 				difficultyDecrease();
 				break;
+				//manually change displayed pose in 3D mode
 			case Kore::KeyU:
 				if (collisionLast < 2) collisionLast++;
 				break;
 			case Kore::KeyZ:
 				if (collisionLast > 0)collisionLast--;
 				break;
-										// end for DEBUG
 			case KeyL:
 				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
@@ -2034,24 +1949,13 @@ namespace {
 		//setPose(avatars[1], "yoga2_endpose.csv");
 		//setPose(avatars[2], "yoga1_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv");
-		//setPose(avatars[1], "yoga2_endpose.csv", -0.5f);
-		//setPose(avatars[2], "yoga1_endpose.csv", 0.0f, 0.7f);
-		//setPose(avatars[3], "yoga3_endpose.csv", 0.0f, -0.7f);
 		setPose(avatars[4], "yoga2_endpose.csv");
 		setPose(avatars[5], "yoga1_endpose.csv");
 		setPose(avatars[6], "yoga3_endpose.csv");
-		//setPose(avatars[3], "yoga3_endpose.csv", 0.5f, -1.2f);
 
-		//changePuppetPosition(avatars[1], 0.5f, 1.2f);
-		//changePuppetPosition(avatars[2], -0.6f, 0.0f);
-		//changePuppetPosition(avatars[3], 0.5f, -1.2f);
 		avatars[4]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[5]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
-
-		//poses[0] = "yoga2.csv";  
-		//poses[1] = "yoga1.csv";
-		//poses[2] = "yoga3.csv";
 		
 		loadColoredTracker();
 		
