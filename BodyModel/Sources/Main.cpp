@@ -1052,12 +1052,10 @@ namespace {
 		
 		float scale = currentUserHeight / currentAvatarHeight;
 		//avatar->setScale(scale);
-		/*
 		for (int i = 0; i < sizeOfAvatars; i++) {
 			if (i < 4) avatars[i]->setScale(scale);
 			else avatars[i]->setScale(scale*0.75f);
 		}
-		*/
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
