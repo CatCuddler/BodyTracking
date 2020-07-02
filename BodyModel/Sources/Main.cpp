@@ -483,29 +483,6 @@ namespace {
 		avatar->animate(tex);
 	}
 
-	void renderStaticGuides(mat4 V, mat4 P) {
-		//bool collidingGuide = false;
-		if (pose0 == Yoga0 || pose1 == Yoga0) {
-			// Check collision
-			//colliding = sphereColliders[0]->IntersectsWith(*avatarCollider);
-			if (sphereColliders[0]->IntersectsWith(*avatarCollider) ) { renderAvatar(V, P, avatars[1]); }
-		}
-
-		if (pose0 == Yoga1 || pose1 == Yoga1) {
-			//renderAvatar(V, P, avatars[2]);
-			// Check collision
-			//colliding = sphereColliders[1]->IntersectsWith(*avatarCollider);
-			if (sphereColliders[1]->IntersectsWith(*avatarCollider)) { renderAvatar(V, P, avatars[2]); }
-		}
-
-		if (pose0 == Yoga2 || pose1 == Yoga2) {
-			//renderAvatar(V, P, avatars[3]);
-			// Check collision
-			colliding = sphereColliders[2]->IntersectsWith(*avatarCollider);
-			if (sphereColliders[2]->IntersectsWith(*avatarCollider)) { renderAvatar(V, P, avatars[3]); }
-		}
-	}
-
 	void renderColoredTracker(mat4 V, mat4 P, Avatar* avatar, mat4 mLoc = basicTrans) {
 		for (int i = 0; i < numOfEndEffectors; ++i) {
 			Graphics4::setPipeline(pipeline);
@@ -725,7 +702,7 @@ namespace {
 		}
 	}
 	
-	void setPose(Avatar* avatar, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/, bool calibrate = false) {
+	void setPose(Avatar* avatar, char* fileName, bool calibrate = false) {
 		mat4 saveTrans = initTrans;
 		mat4 saveTransInv = initTransInv;
 		Kore::Quaternion saveRot = initRot;
@@ -752,8 +729,7 @@ namespace {
 			avatar->setScale(scaleFactor);
 		}
 		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; endEffectorID++) {
-			// adding offset on endEffectorArr[][], so the position changes are saved for future calls
-			endEffectorArr[endEffectorUsed][endEffectorID]->setDesPosition(vec3(desPosition[endEffectorID].x() + offsetX, desPosition[endEffectorID].y(), desPosition[endEffectorID].z() + offsetZ));
+			endEffectorArr[endEffectorUsed][endEffectorID]->setDesPosition(vec3(desPosition[endEffectorID].x(), desPosition[endEffectorID].y(), desPosition[endEffectorID].z()));
 			endEffectorArr[endEffectorUsed][endEffectorID]->setDesRotation(desRotation[endEffectorID]);
 			if (calibrate) {
 				runCalibrate(endEffectorID, avatar);
@@ -772,20 +748,10 @@ namespace {
 	void calibratePuppets(char* fileName = "calibratePuppet.csv") {
 		for (int i = 1; i < sizeOfAvatars; i++) {
 			avatars[i]->resetPositionAndRotation();
-			setPose(avatars[i], fileName, 0.0f, 0.0f, true);
+			setPose(avatars[i], fileName, true);
 		}
 	}
-
-	void changePuppetPosition(Avatar* avatar, float offsetX /*perpendicular to the mirror*/, float offsetZ/*parallel to mirror*/){
-		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; ++endEffectorID) {
-			// adding offset on endEffectorArr[][], so the position changes are saved for future calls
-			endEffectorArr[avatar->getAvatarID()][endEffectorID]->setDesPosition(vec3(endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().x()+offsetX,
-																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().y(),
-																						endEffectorArr[avatar->getAvatarID()][endEffectorID]->getDesPosition().z()+offsetZ));
-			executeMovement(endEffectorID, avatar);
-		}
-	}
-
+	
 	void calculateColor(int i, float modelProbability, float modelThreshold) {
 		double r = 0.0;
 		double g = 0.0;
@@ -822,7 +788,7 @@ namespace {
 		}
 	}
 
-	void trainerMovement(Avatar* avatar, Logger* loggerUsed, char* fileName, float offsetX = 0.0f/*perpendicular to the mirror*/, float offsetZ = 0.0f/*parallel to mirror*/) {
+	void trainerMovement(Avatar* avatar, Logger* loggerUsed, char* fileName) {
 		if (moveTrainer){
 			float scaleFactor;
 			Kore::vec3 desPosition[numOfEndEffectors];
@@ -838,9 +804,6 @@ namespace {
 				for (int i = 0; i < numOfEndEffectors; ++i) {
 					executeMovement(i, avatar, true);
 				}
-
-				changePuppetPosition(avatar, offsetX, offsetZ);
-				//log(Kore::Info, "xxxxxxxxxxxxxx");
 			}
 			else { moveTrainer = false; }
 		}
@@ -1384,13 +1347,6 @@ namespace {
 
 		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
 		else renderAvatar(V, P, avatar);
-
-		if (!firstPersonMonitor && showStoryElements) {
-			renderStaticGuides(V, P);
-		}
-		else if (showStoryElements) {
-			renderStaticGuides(state.pose.vrPose.eye, state.pose.vrPose.projection);
-		}
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
