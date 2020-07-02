@@ -725,6 +725,8 @@ namespace {
 	}
 	
 	void setPose(Avatar* avatar, char* fileName, bool calibrate = false) {
+		int endEffectorUsed = avatar->getAvatarID();
+		/*
 		mat4 saveTrans = initTrans;
 		mat4 saveTransInv = initTransInv;
 		Kore::Quaternion saveRot = initRot;
@@ -734,8 +736,9 @@ namespace {
 		initTransInv = basicTransInv;
 		initRot = basicRot;
 		initRotInv = basicRotInv;
+		*/
+		if (endEffectorUsed > 0) changeTransRot();
 
-		int endEffectorUsed = avatar->getAvatarID();
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
@@ -760,10 +763,13 @@ namespace {
 				executeMovement(endEffectorID, avatar, true);
 			}
 		}
+		/*
 		initTrans = saveTrans;
 		initTransInv = saveTransInv;
 		initRot = saveRot;
 		initRotInv = saveRotInv;
+		*/
+		if (endEffectorUsed > 0) changeTransRotUndo();
 		//}
 	}
 
