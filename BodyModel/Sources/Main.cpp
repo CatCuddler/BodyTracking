@@ -617,38 +617,15 @@ namespace {
 
 	void executeMovement(int endEffectorID, Avatar* ava = avatar, bool setPose = false/*init a new yoga pose*/) {
 		int endEffectorUsed = ava->getAvatarID();
-		/*
-		mat4 saveTrans = initTrans;
-		mat4 saveTransInv = initTransInv;
-		Kore::Quaternion saveRot = initRot;
-		Kore::Quaternion saveRotInv = initRotInv;
-
-		if (endEffectorUsed > 0) {
-			initTrans = basicTrans;
-			initTransInv = basicTransInv;
-			initRot = basicRot;
-			initRotInv = basicRotInv;
-		}
-		*/
 		if (endEffectorUsed > 0) changeTransRot();
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
-		/*
-		mat4 usedTransInv = initTransInv;
-		Kore::Quaternion usedRotInv = initRotInv;
-		if (endEffectorUsed > 0) {
-			mat4 usedTransInv = basicTransInv;
-			Kore::Quaternion usedRotInv = basicRotInv;
-		}
-		*/
 		// Save raw data when on the player avatar
 		if (logRawData && (endEffectorUsed == 0)) logger->saveData(endEffectorArr[endEffectorUsed][endEffectorID]->getName(), desPosition, desRotation, ava->scale);
 
 		if (calibratedAvatar || (endEffectorUsed != 0)) {
 			// Transform desired position/rotation to the character local coordinate system
-			//desPosition = usedTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
 			desPosition = initTransInv * vec4(desPosition.x(), desPosition.y(), desPosition.z(), 1);
-			//desRotation = usedRotInv.rotated(desRotation);
 			desRotation = initRotInv.rotated(desRotation);
 
 			// Add offset
@@ -680,12 +657,6 @@ namespace {
 				if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 			}
 		}
-		/*
-		initTrans = saveTrans;
-		initTransInv = saveTransInv;
-		initRot = saveRot;
-		initRotInv = saveRotInv;
-		*/
 		if (endEffectorUsed > 0) changeTransRotUndo();
 	}
 
@@ -718,7 +689,7 @@ namespace {
 	}
 
 	void calibrate() {
-		//initTransAndRot();		// TODO: remove or necessary while in VR Mode?	
+		initTransAndRot();		// TODO: remove or necessary while in VR Mode?	
 		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; ++endEffectorID) {
 			runCalibrate(endEffectorID);
 		}
@@ -726,19 +697,7 @@ namespace {
 	
 	void setPose(Avatar* avatar, char* fileName, bool calibrate = false) {
 		int endEffectorUsed = avatar->getAvatarID();
-		/*
-		mat4 saveTrans = initTrans;
-		mat4 saveTransInv = initTransInv;
-		Kore::Quaternion saveRot = initRot;
-		Kore::Quaternion saveRotInv = initRotInv;
-
-		initTrans = basicTrans;
-		initTransInv = basicTransInv;
-		initRot = basicRot;
-		initRotInv = basicRotInv;
-		*/
 		if (endEffectorUsed > 0) changeTransRot();
-
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
@@ -763,14 +722,7 @@ namespace {
 				executeMovement(endEffectorID, avatar, true);
 			}
 		}
-		/*
-		initTrans = saveTrans;
-		initTransInv = saveTransInv;
-		initRot = saveRot;
-		initRotInv = saveRotInv;
-		*/
 		if (endEffectorUsed > 0) changeTransRotUndo();
-		//}
 	}
 
 	void calibratePuppets(char* fileName = "calibratePuppet.csv") {
