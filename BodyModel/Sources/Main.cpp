@@ -936,6 +936,10 @@ namespace {
 		else log(Kore::Info, "Can not decrease Difficulty");
 	}
 
+	void startTrainer() {
+		difficultySet();
+	}
+
 	void record() {
 		/*logRawData = !logRawData;
 		
@@ -958,13 +962,13 @@ namespace {
 				hmm->stopRecording();
 			}
 		} else if(hmm->isRecognitionActive()) {
-			//set the Trainer into motion for the yoga Pose selected by the player
-
-			//moveTrainer = true;
-
 			// Recognizing a movement
 			if (recording) {
 				showFeedback = false;
+
+				//set the Trainer into motion for the yoga Pose selected by the player
+				//startTrainer();
+				//moveTrainer = true;
 				
 				//Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
@@ -1004,8 +1008,11 @@ namespace {
 								log(Info, "Stop recognizing the motion Unknown");
 								break;
 						}
-						
+						collisionLast = i;
 					}
+				}
+				if (collisionLast >= 0) {
+					startTrainer();
 				}
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
@@ -1278,7 +1285,7 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (onTask && calibratedAvatar && collisionLast != 3) {
+			if (showFeedback && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 				switch (difficulty) {
 					case 0:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1342,7 +1349,7 @@ namespace {
 			mat4 V2 = state.pose.vrPose.eye;
 		}
 
-		if (onTask && calibratedAvatar && collisionLast != 3) {
+		if (showFeedback && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
 			case 0:
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1425,7 +1432,7 @@ namespace {
 		}
 
 		//moveTrainer = true;
-		if (onTask && collisionLast != 3) {
+		if (onTask && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
 				case 0:
 					renderAvatar(V, P, avatars[collisionLast+1], avatarPositions[collisionLast]);
