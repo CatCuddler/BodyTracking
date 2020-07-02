@@ -42,7 +42,7 @@ namespace {
 	const bool renderTrackerAndController = true;
 	const bool renderAxisForEndEffector = false;
 
-	const int sizeOfAvatars = 7;
+	const int sizeOfAvatars = 4;
 
 	EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
@@ -883,18 +883,10 @@ namespace {
     
         log(LogLevel::Info, storyLineText);
     }
-	
-	void startTrainerMovement() {
-		if (difficulty != 0) {
-			moveTrainer = true;
-			loggerTrainer = new Logger();
-			getCollision();
-		}
-	}
 
 	void difficultySet() {
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
-		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
+		for (int i = 1; i < sizeOfAvatars; i++) {
 			setPose(avatars[i], posesStatic[i - 1]);
 			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);
 			else avatars[i]->setScale(avatar->scale);
@@ -967,8 +959,9 @@ namespace {
 			}
 		} else if(hmm->isRecognitionActive()) {
 			//set the Trainer into motion for the yoga Pose selected by the player
+
 			//moveTrainer = true;
-			//startTrainerMovement();
+
 			// Recognizing a movement
 			if (recording) {
 				showFeedback = false;
@@ -1059,11 +1052,12 @@ namespace {
 		
 		float scale = currentUserHeight / currentAvatarHeight;
 		//avatar->setScale(scale);
+		/*
 		for (int i = 0; i < sizeOfAvatars; i++) {
 			if (i < 4) avatars[i]->setScale(scale);
 			else avatars[i]->setScale(scale*0.75f);
 		}
-		
+		*/
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
@@ -1718,9 +1712,6 @@ namespace {
 		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		avatars[4] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
-		avatars[5] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
-		avatars[6] = new Avatar("avatar/male_0.ogex", "avatar/", structure_Alpha);
 		
 		// Male avatars
 		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
@@ -1833,7 +1824,6 @@ namespace {
 			avatarPositions[i] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
 		}
 
-
 		calibratePuppets();
 		difficultySet();
 		avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
@@ -1845,13 +1835,6 @@ namespace {
 		//setPose(avatars[1], "yoga2_endpose.csv");
 		//setPose(avatars[2], "yoga1_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv");
-		setPose(avatars[4], "yoga2_endpose.csv");
-		setPose(avatars[5], "yoga1_endpose.csv");
-		setPose(avatars[6], "yoga3_endpose.csv");
-
-		avatars[4]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
-		avatars[5]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
-		avatars[6]->setScale(0.75f); // TODO: find out whats going wrong that this operation is needed
 		
 		loadColoredTracker();
 		
