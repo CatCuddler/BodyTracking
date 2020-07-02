@@ -1011,7 +1011,7 @@ namespace {
 						collisionLast = i;
 					}
 				}
-				if (collisionLast >= 0) {
+				if (collisionLast >= 0 && difficulty == 2) {
 					startTrainer();
 				}
 			} else {
