@@ -621,17 +621,20 @@ namespace {
 	}
 
 	void executeMovement(int endEffectorID, Avatar* ava = avatar, bool setPose = false/*init a new yoga pose*/) {
+		int endEffectorUsed = ava->getAvatarID();
+
 		mat4 saveTrans = initTrans;
 		mat4 saveTransInv = initTransInv;
 		Kore::Quaternion saveRot = initRot;
 		Kore::Quaternion saveRotInv = initRotInv;
 
-		initTrans = basicTrans;
-		initTransInv = basicTransInv;
-		initRot = basicRot;
-		initRotInv = basicRotInv;
-
-		int endEffectorUsed = ava->getAvatarID();
+		if (endEffectorUsed > 0) {
+			initTrans = basicTrans;
+			initTransInv = basicTransInv;
+			initRot = basicRot;
+			initRotInv = basicRotInv;
+		}
+		
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffectorArr[endEffectorUsed][endEffectorID]->getDesRotation();
 
