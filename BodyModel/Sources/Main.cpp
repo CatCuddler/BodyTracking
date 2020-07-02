@@ -157,7 +157,7 @@ namespace {
 	int waitTimer = 200;
 	bool onTask = true; //Todo:
 	int collisonWith = 3;
-	int collisionLast = 1;				//TODO
+	int collisionLast = -1;				//TODO
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -771,17 +771,6 @@ namespace {
 		calculateColor(7, hmm_rightLeg_modelProbability, hmm_rightLeg_modelThreshold);
 		}
 
-	void getCollision() {
-		// Check if avatar is colliding with a platform
-		for (int i = 0; i < 3; ++i) {
-			// Check collision
-			colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
-			if (colliding) {
-				collisonWith = i;
-			}
-		}
-	}
-
 	void trainerMovement(Avatar* avatar, Logger* loggerUsed, char* fileName) {
 		if (moveTrainer){
 			float scaleFactor;
@@ -885,13 +874,15 @@ namespace {
     }
 
 	void loadTrainer(int i) {
+		loggerTrainerMovement[i] = new Logger();
+
 		setPose(avatars[i + 1], posesStatic[i]);
 		if (difficulty == 2) avatars[i + 1]->setScale(avatar->scale * 0.75f);
 		else avatars[i + 1]->setScale(avatar->scale);
 	}
 
 	void difficultySet() {
-		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
+		//for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 		for (int i = 1; i < sizeOfAvatars; i++) {
 			loadTrainer(i - 1);
 		}
@@ -943,7 +934,7 @@ namespace {
 	void startTrainer(int i) {
 		loadTrainer(i);
 
-		waitTimer = 15;
+		waitTimer = 10;
 		moveTrainer = false;
 	}
 
@@ -1036,6 +1027,8 @@ namespace {
 					//adjust difficulty if necessary
 					if (trials > difficultyUpper) difficultyDecrease();
 					else if (trials < difficultyLower) difficultyIncrease();
+
+					collisionLast = -1;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
@@ -1289,7 +1282,7 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+			if (showStoryElements && calibratedAvatar && collisionLast >= 0) {
 				switch (difficulty) {
 					case 0:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1353,7 +1346,7 @@ namespace {
 			mat4 V2 = state.pose.vrPose.eye;
 		}
 
-		if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+		if (showStoryElements && calibratedAvatar && collisionLast >= 0) {
 			switch (difficulty) {
 			case 0:
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1434,7 +1427,7 @@ namespace {
 				}
 			}
 		}
-
+		
 		//moveTrainer = true;
 		if (onTask && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
