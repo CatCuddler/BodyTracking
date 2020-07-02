@@ -884,12 +884,16 @@ namespace {
         log(LogLevel::Info, storyLineText);
     }
 
+	void loadTrainer(int i) {
+		setPose(avatars[i + 1], posesStatic[i]);
+		if (difficulty == 2) avatars[i + 1]->setScale(avatar->scale * 0.75f);
+		else avatars[i + 1]->setScale(avatar->scale);
+	}
+
 	void difficultySet() {
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 		for (int i = 1; i < sizeOfAvatars; i++) {
-			setPose(avatars[i], posesStatic[i - 1]);
-			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);
-			else avatars[i]->setScale(avatar->scale);
+			loadTrainer(i - 1);
 		}
 
 		waitTimer = 200;
@@ -936,8 +940,11 @@ namespace {
 		else log(Kore::Info, "Can not decrease Difficulty");
 	}
 
-	void startTrainer() {
-		difficultySet();
+	void startTrainer(int i) {
+		loadTrainer(i);
+
+		waitTimer = 15;
+		moveTrainer = false;
 	}
 
 	void record() {
@@ -983,6 +990,7 @@ namespace {
 					colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
 					if (colliding) {
 						log(LogLevel::Info, "Colliding with platform %i", i);
+						startTrainer(collisionLast);
 						
 						switch (i) {
 							case 0:
@@ -1008,11 +1016,7 @@ namespace {
 								log(Info, "Stop recognizing the motion Unknown");
 								break;
 						}
-						collisionLast = i;
 					}
-				}
-				if (collisionLast >= 0 && difficulty == 2) {
-					startTrainer();
 				}
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
@@ -1285,7 +1289,7 @@ namespace {
 
 			if (showStoryElements) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 
-			if (showFeedback && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 				switch (difficulty) {
 					case 0:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
@@ -1349,7 +1353,7 @@ namespace {
 			mat4 V2 = state.pose.vrPose.eye;
 		}
 
-		if (showFeedback && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+		if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
 			case 0:
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
