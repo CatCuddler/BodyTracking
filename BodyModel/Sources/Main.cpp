@@ -154,7 +154,7 @@ namespace {
 	Logger* loggerTrainer;
 	Logger* loggerTrainerMovement[difficultyRanks];
 	bool moveTrainer = false;
-	int waitTimer = 0;
+	int waitTimer = 200;
 	bool onTask = true; //Todo:
 	int collisonWith = 3;
 	int collisionLast = 1;				//TODO
@@ -488,12 +488,6 @@ namespace {
 			Graphics4::setPipeline(pipeline);
 			Graphics4::setMatrix(vLocation, V);
 			Graphics4::setMatrix(pLocation, P);
-			//Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
-			// TODO:	 just for testing
-			//Graphics4::setFloat3(cLocation, vec3(1.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0));		// teal
-			//Graphics4::setFloat3(cLocation, vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0));		// green
-			//Graphics4::setFloat3(cLocation, vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0));			// red
-
 			Graphics4::setFloat3(cLocation, coloredTrackerColors[i]);
 
 			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
@@ -808,30 +802,6 @@ namespace {
 			else { moveTrainer = false; }
 		}
 	}
-
-	void movementForSelectedTrainer() {
-		if (moveTrainer) {
-			int offset = 0;
-			if (difficulty == 2) offset = 3;
-			char* filename;
-			switch (yogaPose) {
-			case Yoga0:
-				filename = "yoga2.csv";
-				trainerMovement(avatars[1 + offset], loggerTrainer, filename);							//TODO logger
-				break;
-			case Yoga1:
-				filename = "yoga1.csv";
-				trainerMovement(avatars[2 + offset], loggerTrainer, filename);
-				break;
-			case Yoga2:
-				filename = "yoga3.csv";
-				trainerMovement(avatars[3 + offset], loggerTrainer, filename);
-				break;
-			default:
-				break;
-			}
-		}
-	}
 	
 	void updateCharacterText() {
 		if (storyLineTree->getLeftNode() != nullptr)
@@ -926,11 +896,11 @@ namespace {
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 		for (int i = 1; i < (sizeOfAvatars - 3); i++) {
 			setPose(avatars[i], posesStatic[i - 1]);
-			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);		// TODO: find out whats going wrong that this operation is needed
+			if (difficulty == 2) avatars[i]->setScale( avatar->scale * 0.75f);
 			else avatars[i]->setScale(avatar->scale);
 		}
 
-		waitTimer = 0;
+		waitTimer = 200;
 		moveTrainer = false;
 	}
 
@@ -1279,9 +1249,9 @@ namespace {
 		if (difficulty > 0 && moveTrainer == false) {
 			// Wait for 200 Frames in End Position
 			//if (moveTrainer == false) {
-				if (waitTimer < 200) waitTimer++;
+				if (waitTimer > 0) waitTimer--;
 				else {
-					waitTimer = 0;
+					waitTimer = 200;
 					moveTrainer = true;
 				}
 			//}
@@ -1454,9 +1424,9 @@ namespace {
 		if (difficulty > 0) {
 			// Wait for 200 Frames in End Position
 			if (moveTrainer == false) {
-				if (waitTimer < 200) waitTimer++;
+				if (waitTimer > 0) waitTimer--;
 				else {
-					waitTimer = 0;
+					waitTimer = 200;
 					moveTrainer = true;
 				}
 			}
@@ -1733,40 +1703,10 @@ namespace {
 	}
 
 	void loadColoredTracker() {
-		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
-		
+		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);		
 		for (int i = 0; i < numOfEndEffectors; i++) {
-			//coloredTrackerColors[i] = vec3(0.0 / 255.0, 247.0 / 255.0, 0.0 / 255.0);			// green
-			//coloredTrackerColors[i] = vec3(247.0 / 255.0, 0.0 / 255.0, 0.0 / 255.0);			// red
 			coloredTrackerColors[i] = vec3(0.0 / 255.0, 0.0 / 255.0, 247.0 / 255.0);			// blue
-			//coloredTrackerColors[i] = vec3(130.0 / 255.0, 130.0 / 255.0, 0.0 / 255.0);			// yellow test
-
-			trackerPrecision[i] = 1.4f; // TODO: for debug
 		}
-		
-		trackerPrecision[0] = 1.0f;
-		trackerPrecision[1] = 1.0f;
-		trackerPrecision[2] = 1.0f;
-		trackerPrecision[3] = 1.8f;
-		trackerPrecision[4] = 1.8f;
-		trackerPrecision[5] = 1.8f;
-		//trackerPrecision[6] = 1.6f;
-		//trackerPrecision[7] = 1.7f;
-		float colorTreshhold = 1.4f;
-		float colorRange = 0.3f;
-		//float colorLowBase = colorTreshhold - colorRange;
-		double r = 0.0;
-		double g = 0.0;
-		/*
-		for (int i = 0; i < numOfEndEffectors; i++) {
-			g = (trackerPrecision[i] - (colorTreshhold - colorRange)) / colorRange * 247.0;
-			r = (colorRange - (trackerPrecision[i] - colorTreshhold)) / colorRange * 247.0;
-
-			coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
-		}
-		*/
-		
-
 	}
 	
 	void init() {
