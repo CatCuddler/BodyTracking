@@ -1012,7 +1012,7 @@ namespace {
 
 				updateColors();
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, difficulty, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
