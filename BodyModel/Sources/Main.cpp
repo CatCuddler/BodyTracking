@@ -140,7 +140,7 @@ namespace {
 	Avatar* avatar;
 	SphereCollider* avatarCollider;
 	MeshObject* sphereMesh;
-	// Player Avatar + Puppets
+	// Player Avatar + Trainer
 	Avatar* avatars[sizeOfAvatars] = { nullptr };
 	mat4 avatarPositions[(sizeOfAvatars-1)*2];
 
@@ -154,10 +154,14 @@ namespace {
 	Logger* loggerTrainer;
 	Logger* loggerTrainerMovement[difficultyRanks];
 	bool moveTrainer = false;
-	int waitTimer = 200;
+	int const maxWaitTimer = 250;
+	int waitTimer = maxWaitTimer;
 	bool onTask = true; //Todo:
 	int collisonWith = 3;
-	int collisionLast = -1;				//TODO
+	int collisionLast = -1;
+	// play Speed Adjustment of Yoga Movements
+	float movementStep = 0.0f;
+	float movementPerStep = 0.8f; // set 1.0f max
 	//colored Marker
 	MeshObject* coloredTrackerBaseMesh;
 	vec3 coloredTrackerColors[numOfEndEffectors];
@@ -762,8 +766,14 @@ namespace {
 			float scaleFactor;
 			Kore::vec3 desPosition[numOfEndEffectors];
 			Kore::Quaternion desRotation[numOfEndEffectors];
-			//bool dataAvailable = loggerTrainer->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
-			bool dataAvailable = loggerUsed->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+			bool dataAvailable;
+			// Speed up the playback of Yogamovement
+			while (movementStep < 1.0f) {
+				dataAvailable = loggerUsed->readData(numOfEndEffectors, fileName, desPosition, desRotation, scaleFactor);
+				if (dataAvailable) movementStep += movementPerStep;
+				else movementStep = 1.0f;
+			}
+			movementStep--;
 
 			if (dataAvailable) {
 				for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -873,7 +883,7 @@ namespace {
 			loadTrainer(i - 1);
 		}
 
-		waitTimer = 200;
+		waitTimer = maxWaitTimer;
 		moveTrainer = false;
 	}
 
@@ -1232,10 +1242,10 @@ namespace {
 
 
 		if (difficulty < 2 && moveTrainer == false) {
-			// Wait for 200 Frames in End Position
+			// Wait for maxWaitTimer Frames in End Position
 			if (waitTimer > 0) waitTimer--;
 			else {
-				waitTimer = 200;
+				waitTimer = maxWaitTimer;
 				moveTrainer = true;
 			}
 		}
@@ -1401,11 +1411,11 @@ namespace {
         if (showStoryElements) renderPlatforms(V, P);
 
 		if (difficulty < 2) {
-			// Wait for 200 Frames in End Position
+			// Wait for maxWaitTimer Frames in End Position
 			if (moveTrainer == false) {
 				if (waitTimer > 0) waitTimer--;
 				else {
-					waitTimer = 200;
+					waitTimer = maxWaitTimer;
 					moveTrainer = true;
 				}
 			}
