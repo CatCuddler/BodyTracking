@@ -44,7 +44,7 @@ namespace {
 
 	const int sizeOfAvatars = 4;
 
-	EndEffector** endEffector;
+	//EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
 	EndEffector** endEffectorArr[sizeOfAvatars];
 	int calibratedPuppetEndeffectors[sizeOfAvatars];
@@ -290,8 +290,8 @@ namespace {
 		}
 #else
 		for(int i = 0; i < numOfEndEffectors; ++i) {
-			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
-			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
+			Kore::vec3 desPosition = endEffectorArr[0][i]->getDesPosition();
+			Kore::Quaternion desRotation = endEffectorArr[0][i]->getDesRotation();
 			
 			if (i == hip || i == leftForeArm || i == rightForeArm || i == leftFoot || i == rightFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
@@ -306,7 +306,7 @@ namespace {
 		Graphics4::setPipeline(pipeline);
 		
 		for(int i = 0; i < numOfEndEffectors; ++i) {
-			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+			BoneNode* bone = avatar->getBoneWithIndex(endEffectorArr[0][i]->getBoneIndex());
 			
 			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
@@ -499,7 +499,7 @@ namespace {
 			Graphics4::setMatrix(pLocation, P);
 			Graphics4::setFloat3(cLocation, coloredTrackerColors[i]);
 
-			BoneNode* bone = avatar->getBoneWithIndex(endEffector[i]->getBoneIndex());
+			BoneNode* bone = avatar->getBoneWithIndex(endEffectorArr[0][i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
@@ -581,11 +581,11 @@ namespace {
 	}
 
 	void updateTransAndRot() {
-		Kore::vec3 hipPos = endEffector[hip]->getDesPosition();
-		Kore::Quaternion hipRot = endEffector[hip]->getDesRotation();
+		Kore::vec3 hipPos = endEffectorArr[0][hip]->getDesPosition();
+		Kore::Quaternion hipRot = endEffectorArr[0][hip]->getDesRotation();
 
-		Kore::Quaternion offsetRotation = endEffector[hip]->getOffsetRotation();
-		//vec3 offsetPosition = endEffector[hip]->getOffsetPosition();
+		Kore::Quaternion offsetRotation = endEffectorArr[0][hip]->getOffsetRotation();
+		//vec3 offsetPosition = endEffectorArr[0][hip]->getOffsetPosition();
 
 		initRot = Kore::Quaternion(0, 0, 0, 1);
 		initRot.rotate(Kore::Quaternion(vec3(1, 0, 0), -Kore::pi / 2.0));
@@ -658,7 +658,7 @@ namespace {
 			}
 			if (endEffectorUsed == 0) { // only for the player Avatar
 				//log(Kore::Info, "endEffectorUsed %i", endEffectorUsed);
-				if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+				if (recording) hmm->recordMovement(lastTime, endEffectorArr[0][endEffectorID]->getName(), finalPos, finalRot);
 			}
 		}
 		if (endEffectorUsed > 0) changeTransRotUndo();
@@ -954,7 +954,7 @@ namespace {
 			// Recording a movement
 			if (recording) {
 				Audio1::play(startRecordingSound);
-				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				hmm->startRecording(endEffectorArr[0][head]->getDesPosition(), endEffectorArr[0][head]->getDesRotation());
 			} else {
 				Audio1::play(stopRecordingSound);
 				hmm->stopRecording();
@@ -966,7 +966,7 @@ namespace {
 				
 				//Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
-				hmm->startRecognition(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
+				hmm->startRecognition(endEffectorArr[0][head]->getDesPosition(), endEffectorArr[0][head]->getDesRotation());
 
 				// Update initial matrices, so that we can recognize movements no metter where the player stands
 				updateTransAndRot();
@@ -1063,11 +1063,11 @@ namespace {
 	}
 	
 	void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
-		endEffector[efID]->setDeviceIndex(deviceID);
-		endEffector[efID]->setDesPosition(pos);
-		endEffector[efID]->setDesRotation(rot);
+		endEffectorArr[0][efID]->setDeviceIndex(deviceID);
+		endEffectorArr[0][efID]->setDesPosition(pos);
+		endEffectorArr[0][efID]->setDesRotation(rot);
 		
-		log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
+		log(Info, "%s, device id: %i", endEffectorArr[0][efID]->getName(), deviceID);
 	}
 	
 	void assignControllerAndTracker() {
@@ -1220,20 +1220,20 @@ namespace {
 		
 		VrPoseState vrDevice;
 		for (int i = 0; i < numOfEndEffectors; ++i) {
-			if (endEffector[i]->getDeviceIndex() != -1) {
+			if (endEffectorArr[0][i]->getDeviceIndex() != -1) {
 
 				if (i == head) {
 					SensorState state = VrInterface::getSensorState(0);
 
 					// Get HMD position and rotation
-					endEffector[i]->setDesPosition(state.pose.vrPose.position);
-					endEffector[i]->setDesRotation(state.pose.vrPose.orientation);
+					endEffectorArr[0][i]->setDesPosition(state.pose.vrPose.position);
+					endEffectorArr[0][i]->setDesRotation(state.pose.vrPose.orientation);
 				} else {
-					vrDevice = VrInterface::getController(endEffector[i]->getDeviceIndex());
+					vrDevice = VrInterface::getController(endEffectorArr[0][i]->getDeviceIndex());
 
 					// Get VR device position and rotation
-					endEffector[i]->setDesPosition(vrDevice.vrPose.position);
-					endEffector[i]->setDesRotation(vrDevice.vrPose.orientation);
+					endEffectorArr[0][i]->setDesPosition(vrDevice.vrPose.position);
+					endEffectorArr[0][i]->setDesRotation(vrDevice.vrPose.orientation);
 				}
 
 				executeMovement(i);
@@ -1366,8 +1366,8 @@ namespace {
 			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
-				endEffector[i]->setDesPosition(desPosition[i]);
-				endEffector[i]->setDesRotation(desRotation[i]);
+				endEffectorArr[0][i]->setDesPosition(desPosition[i]);
+				endEffectorArr[0][i]->setDesRotation(desRotation[i]);
 			}	
 			
 			if (!calibratedAvatar) {
@@ -1803,7 +1803,7 @@ namespace {
 			endEffectorArr[i][leftFoot] = new EndEffector(leftFootBoneIndex);
 			endEffectorArr[i][rightFoot] = new EndEffector(rightFootBoneIndex);
 		}		
-		endEffector = endEffectorArr[0];
+		//endEffector = endEffectorArr[0];
 
 		loggerTrainer = new Logger();
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
