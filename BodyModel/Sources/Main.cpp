@@ -146,7 +146,7 @@ namespace {
 
 	// Difficulty
 	int const difficultyRanks = 3; // the game has x = difficultyRanks it can use
-	int difficulty = 2; // difficulty Rank the game uses at the given moment
+	int difficulty = 0; // difficulty Rank the game uses at the given moment
 	int difficultyUpper = 6;
 	int difficultyLower = 4;
 
@@ -863,7 +863,7 @@ namespace {
 		loggerTrainerMovement[i] = new Logger();
 
 		setPose(avatars[i + 1], posesStatic[i]);
-		if (difficulty == 2) avatars[i + 1]->setScale(avatar->scale * 0.75f);
+		if (difficulty == 0) avatars[i + 1]->setScale(avatar->scale * 0.75f);
 		else avatars[i + 1]->setScale(avatar->scale);
 	}
 
@@ -901,20 +901,24 @@ namespace {
 		if (collisionSave != collisionLast) difficultySet();
 	}
 
-	void difficultyIncrease() {
-		if (difficulty > 0) {
-			difficulty--;
-			difficultySet();
+	void neutralColoredTracker() {
+		for (int i = 0; i < numOfEndEffectors; i++) {
+			coloredTrackerColors[i] = vec3(0.0 / 255.0, 0.0 / 255.0, 247.0 / 255.0);			// blue
 		}
-		else log(Kore::Info, "Can not increase Difficulty");
 	}
 
-	void difficultyDecrease() {
+	void difficultyIncrease() {
 		if (difficulty < (difficultyRanks - 1)) {
 			difficulty++;
 			difficultySet();
 		}
-		else log(Kore::Info, "Can not decrease Difficulty");
+	}
+
+	void difficultyDecrease() {
+		if (difficulty > 0) {
+			difficulty--;
+			difficultySet();
+		}
 	}
 
 	void startTrainer(int i) {
@@ -949,10 +953,6 @@ namespace {
 			// Recognizing a movement
 			if (recording) {
 				showFeedback = false;
-
-				//set the Trainer into motion for the yoga Pose selected by the player
-				//startTrainer();
-				//moveTrainer = true;
 				
 				//Audio1::play(startRecognitionSound);
 				log(Info, "Start recognizing the motion");
@@ -967,6 +967,7 @@ namespace {
 					colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
 					if (colliding) {
 						log(LogLevel::Info, "Colliding with platform %i", i);
+						//set the Trainer into motion for the yoga Pose selected by the player
 						startTrainer(collisionLast);
 						
 						switch (i) {
@@ -997,9 +998,9 @@ namespace {
 				}
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
-				updateColors();
 				++trials;
-				
+
+				updateColors();
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
@@ -1013,6 +1014,8 @@ namespace {
 					//adjust difficulty if necessary
 					if (trials > difficultyUpper) difficultyDecrease();
 					else if (trials < difficultyLower) difficultyIncrease();
+
+					neutralColoredTracker();
 
 					collisionLast = -1;
 
@@ -1228,22 +1231,16 @@ namespace {
 		}
 
 
-		if (difficulty > 0 && moveTrainer == false) {
+		if (difficulty < 2 && moveTrainer == false) {
 			// Wait for 200 Frames in End Position
-			//if (moveTrainer == false) {
-				if (waitTimer > 0) waitTimer--;
-				else {
-					waitTimer = 200;
-					moveTrainer = true;
-				}
-			//}
+			if (waitTimer > 0) waitTimer--;
+			else {
+				waitTimer = 200;
+				moveTrainer = true;
+			}
 		}
 		//check for collision Player - Plattforms
 		collisionCheck();
-		
-		//if (recording) updateColors();
-
-
 		
 		// Render for both eyes
 		SensorState state;
@@ -1270,13 +1267,13 @@ namespace {
 
 			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 				switch (difficulty) {
-					case 0:
+					case 2:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
 					case 1:
 						renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 						break;
-					case 2:
+					case 0:
 						renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 						renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 						break;
@@ -1334,14 +1331,14 @@ namespace {
 
 		if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
-			case 0:
+			case 2:
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
 			case 1:
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 				break;
-			case 2:
+			case 0:
 				renderColoredTracker(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 				renderTransparentAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
@@ -1403,7 +1400,7 @@ namespace {
 		
         if (showStoryElements) renderPlatforms(V, P);
 
-		if (difficulty > 0) {
+		if (difficulty < 2) {
 			// Wait for 200 Frames in End Position
 			if (moveTrainer == false) {
 				if (waitTimer > 0) waitTimer--;
@@ -1417,14 +1414,14 @@ namespace {
 		//moveTrainer = true;
 		if (onTask && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
-				case 0:
+				case 2:
 					renderAvatar(V, P, avatars[collisionLast+1], avatarPositions[collisionLast]);
 					break;
 				case 1:
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
 					break;
-				case 2:
+				case 0:
 					renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
 					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
 					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
@@ -1475,7 +1472,7 @@ namespace {
 			case Kore::KeyG:
 				difficultyDecrease();
 				break;
-				//manually change displayed pose in 3D mode
+			//manually change displayed pose in 3D mode
 			case Kore::KeyU:
 				if (collisionLast < 2) collisionLast++;
 				break;
@@ -1683,13 +1680,6 @@ namespace {
 		lightPosLocation_living_room = pipeline_living_room->getConstantLocation("lightPos");
 		lightCount_living_room = pipeline_living_room->getConstantLocation("numLights");
 	}
-
-	void loadColoredTracker() {
-		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);		
-		for (int i = 0; i < numOfEndEffectors; i++) {
-			coloredTrackerColors[i] = vec3(0.0 / 255.0, 0.0 / 255.0, 247.0 / 255.0);			// blue
-		}
-	}
 	
 	void init() {
 		loadAvatarShader();
@@ -1824,7 +1814,8 @@ namespace {
 		//setPose(avatars[2], "yoga1_endpose.csv");
 		//setPose(avatars[3], "yoga3_endpose.csv");
 		
-		loadColoredTracker();
+		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
+		neutralColoredTracker();
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
