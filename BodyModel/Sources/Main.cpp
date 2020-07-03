@@ -137,7 +137,7 @@ namespace {
     SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 
 	// Avatar
-	Avatar* avatar;
+	//Avatar* avatar;
 	SphereCollider* avatarCollider;
 	MeshObject* sphereMesh;
 	// Player Avatar + Trainer
@@ -306,7 +306,7 @@ namespace {
 		Graphics4::setPipeline(pipeline);
 		
 		for(int i = 0; i < numOfEndEffectors; ++i) {
-			BoneNode* bone = avatar->getBoneWithIndex(endEffectorArr[0][i]->getBoneIndex());
+			BoneNode* bone = avatars[0]->getBoneWithIndex(endEffectorArr[0][i]->getBoneIndex());
 			
 			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = initTrans * vec4(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z(), 1);
@@ -619,7 +619,7 @@ namespace {
 		initRotInv = saveRotInv;
 	}
 
-	void executeMovement(int endEffectorID, Avatar* ava = avatar, bool setPose = false/*init a new yoga pose*/) {
+	void executeMovement(int endEffectorID, Avatar* ava = avatars[0], bool setPose = false/*init a new yoga pose*/) {
 		int endEffectorUsed = ava->getAvatarID();
 		if (endEffectorUsed > 0) changeTransRot();
 		Kore::vec3 desPosition = endEffectorArr[endEffectorUsed][endEffectorID]->getDesPosition();
@@ -664,7 +664,7 @@ namespace {
 		if (endEffectorUsed > 0) changeTransRotUndo();
 	}
 
-	void runCalibrate(int endEffectorID, Avatar* ava = avatar) {
+	void runCalibrate(int endEffectorID, Avatar* ava = avatars[0]) {
 		int endEffectorUsed = ava->getAvatarID();
 
 		mat4 usedTransInv = initTransInv;
@@ -873,8 +873,8 @@ namespace {
 		loggerTrainerMovement[i] = new Logger();
 
 		setPose(avatars[i + 1], posesStatic[i]);
-		if (difficulty == 0) avatars[i + 1]->setScale(avatar->scale * 0.75f);
-		else avatars[i + 1]->setScale(avatar->scale);
+		if (difficulty == 0) avatars[i + 1]->setScale(avatars[0]->scale * 0.75f);
+		else avatars[i + 1]->setScale(avatars[0]->scale);
 	}
 
 	void difficultySet() {
@@ -1261,7 +1261,7 @@ namespace {
 			
 			state = VrInterface::getSensorState(j);
 			
-			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+			renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[0]);
 			
 			if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 			
@@ -1305,7 +1305,7 @@ namespace {
 		mat4 V = getViewMatrix();
 
 		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
-		else renderAvatar(V, P, avatar);
+		else renderAvatar(V, P, avatars[0]);
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
@@ -1371,8 +1371,8 @@ namespace {
 			}	
 			
 			if (!calibratedAvatar) {
-				avatar->resetPositionAndRotation();
-				avatar->setScale(scaleFactor);
+				avatars[0]->resetPositionAndRotation();
+				avatars[0]->setScale(scaleFactor);
 				calibrate();
 				calibratedAvatar = true;
 			}
@@ -1694,8 +1694,8 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		loadAvatarShader_Alpha();
-		avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
-		avatars[0] = avatar;
+		avatars[0] = new Avatar("avatar/male_3.ogex", "avatar/", structure);
+		//avatars[0] = avatar;
 
 		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
