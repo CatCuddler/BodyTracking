@@ -228,7 +228,9 @@ namespace {
 
 	bool recording = false;
 
-	char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
+	//char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
+	char* poses[3] = { "yoga2_task.csv",  "yoga1_task.csv", "yoga3_task.csv" };
+	//char* poses[3] = { "y2.csv",  "yoga1_task.csv", "y3.csv" };
 	char* posesStatic[3] = { "yoga2_endpose.csv",  "yoga1_endpose.csv", "yoga3_endpose.csv" };
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
@@ -701,7 +703,7 @@ namespace {
 	
 	void setPose(Avatar* avatar, char* fileName, bool calibrate = false) {
 		int endEffectorUsed = avatar->getAvatarID();
-		if (endEffectorUsed > 0) changeTransRot();
+		//if (endEffectorUsed > 0) changeTransRot();
 		float scaleFactor;
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
@@ -726,7 +728,7 @@ namespace {
 				executeMovement(endEffectorID, avatar, true);
 			}
 		}
-		if (endEffectorUsed > 0) changeTransRotUndo();
+		//if (endEffectorUsed > 0) changeTransRotUndo();
 	}
 
 	void calibratePuppets(char* fileName = "calibratePuppet.csv") {
@@ -1161,7 +1163,7 @@ namespace {
 		if (buttonNr == 33 && value == 1) {
 			// Trigger button pressed
 			log(Info, "Trigger button pressed");
-			if (calibratedAvatar && initGame) {
+			if (calibratedAvatar && showStoryElements) {
 				recording = true;
 				record();
 			}
@@ -1170,7 +1172,7 @@ namespace {
 		if (buttonNr == 33 && value == 0) {
 			// Trigger button released
 			log(Info, "Trigger button released");
-			if (calibratedAvatar && initGame) {
+			if (calibratedAvatar && showStoryElements) {
 				recording = false;
 				record();
 			}
