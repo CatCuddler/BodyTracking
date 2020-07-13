@@ -154,10 +154,11 @@ namespace {
 	Logger* loggerTrainer;
 	Logger* loggerTrainerMovement[difficultyRanks];
 	bool moveTrainer = false;
+	bool stopCycle = false;
 	int const maxWaitTimer = 250;
 	int waitTimer = maxWaitTimer;
 	bool onTask = true; //Todo:
-	int collisonWith = 3;
+	//int collisonWith = 3;
 	int collisionLast = -1;
 	// play Speed Adjustment of Yoga Movements
 	float movementStep = 0.0f;
@@ -413,6 +414,7 @@ namespace {
 	void renderHMMFeedback(int feedbackID, bool checkmark) {
 		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
 		//textRot.rotate(Kore::Quaternion(vec3(0, 0, 0), -Kore::pi / 2.0));
+		Kore::Quaternion rot90y = Kore::Quaternion(0, 0.7071f, 0, 0.7071f);
 		
 		Kore::mat4 M = Kore::mat4::Identity();
 		const float xPos = 0.8f;
@@ -420,13 +422,26 @@ namespace {
 		const float yOffset = 0.25f;
 		const float zPos = -3.5f;
 
+		const float xPos2 = 9.0f;
+		const float yPos2 = 3.5f;
+		const float yOffset2 = 0.25f;
+		const float zPos2 = -1.5f;
+
 		vec3 color = vec3(1, 1, 1);	// white
 		Graphics4::setFloat3(cLocation, color);
 		
 		M = mat4::Translation(xPos, yPos - feedbackID * yOffset, zPos) * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		//M = mat4::Translation(xPos, yPos - feedbackID * yOffset, zPos) * mat4::Scale(0.2f, 0.2f, 0.2f);
 		Graphics4::setMatrix(mLocation, M);
 		feedbackMesh[feedbackID]->render(tex);
+
+		M = mat4::Translation(xPos2, yPos2 - feedbackID * yOffset2, zPos2) * rot90y.matrix() * textRot.matrix().Transpose() * mat4::Scale(0.2f, 0.2f, 0.2f);
+		//M = mat4::Translation(xPos, yPos - feedbackID * yOffset, zPos) * mat4::Scale(0.2f, 0.2f, 0.2f);
+		Graphics4::setMatrix(mLocation, M);
+		feedbackMesh[feedbackID]->render(tex);
+
 		M = mat4::Translation(xPos + 1.0f, yPos - feedbackID * yOffset, zPos) * textRot.matrix().Transpose() * mat4::Scale(0.3f, 0.3f, 0.3f);
+		//M = mat4::Translation(xPos + 1.0f, yPos - feedbackID * yOffset, zPos) * mat4::Scale(0.3f, 0.3f, 0.3f);
 		Graphics4::setMatrix(mLocation, M);
 		if (checkmark) {
 			vec3 color = vec3(0, 1, 0);	// green
@@ -437,6 +452,23 @@ namespace {
 			vec3 color = vec3(1, 0, 0); // red
 			Graphics4::setFloat3(cLocation, color);
 			
+			feedbackMesh[CrossMark]->render(tex);
+		}
+
+
+		M = mat4::Translation(xPos2, yPos2 - feedbackID * yOffset2, zPos2 + 1.0f) * rot90y.matrix() * textRot.matrix().Transpose() * mat4::Scale(0.3f, 0.3f, 0.3f);
+		//M = mat4::Translation(xPos + 1.0f, yPos - feedbackID * yOffset, zPos) * mat4::Scale(0.3f, 0.3f, 0.3f);
+		Graphics4::setMatrix(mLocation, M);
+		if (checkmark) {
+			vec3 color = vec3(0, 1, 0);	// green
+			Graphics4::setFloat3(cLocation, color);
+
+			feedbackMesh[CheckMark]->render(tex);
+		}
+		else {
+			vec3 color = vec3(1, 0, 0); // red
+			Graphics4::setFloat3(cLocation, color);
+
 			feedbackMesh[CrossMark]->render(tex);
 		}
 	}
@@ -887,6 +919,7 @@ namespace {
 
 		waitTimer = maxWaitTimer;
 		moveTrainer = false;
+		stopCycle = false;
 	}
 
 	void collisionCheck() {
@@ -981,6 +1014,7 @@ namespace {
 						log(LogLevel::Info, "Colliding with platform %i", i);
 						//set the Trainer into motion for the yoga Pose selected by the player
 						startTrainer(collisionLast);
+						if (difficulty == 0) stopCycle = true;
 						
 						switch (i) {
 							case 0:
@@ -1019,6 +1053,7 @@ namespace {
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
 					log(Info, "The movement is correct!");
+					if (trials > 10) log(Info, "more than10 Trials");
 					//Audio1::play(correctSound);
 					
 					showFeedback = false;
@@ -1030,6 +1065,8 @@ namespace {
 					neutralColoredTracker();
 
 					collisionLast = -1;
+
+					stopCycle = false;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);
@@ -1150,6 +1187,7 @@ namespace {
 			calibrate();
 			collisionLast = -1;
 			moveTrainer = false;
+			stopCycle = false;
 			calibratedAvatar = true;
 			log(Info, "Calibrate avatar");
 		}
@@ -1243,7 +1281,7 @@ namespace {
 		}
 
 
-		if (difficulty < 2 && moveTrainer == false) {
+		if (difficulty < 2 && moveTrainer == false && !stopCycle) {
 			// Wait for maxWaitTimer Frames in End Position
 			if (waitTimer > 0) waitTimer--;
 			else {
@@ -1409,10 +1447,11 @@ namespace {
 		if (showStoryElements) render3Dtext(V, P);
 		
 		if (showFeedback) renderFeedbackText(V, P);
+		renderFeedbackText(V, P);
 		
         if (showStoryElements) renderPlatforms(V, P);
 
-		if (difficulty < 2) {
+		if (difficulty < 2 && !stopCycle) {
 			// Wait for maxWaitTimer Frames in End Position
 			if (moveTrainer == false) {
 				if (waitTimer > 0) waitTimer--;
@@ -1423,7 +1462,6 @@ namespace {
 			}
 		}
 		
-		//moveTrainer = true;
 		if (onTask && collisionLast >= 0 && collisionLast < 3) {
 			switch (difficulty) {
 				case 2:
@@ -1696,12 +1734,35 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		loadAvatarShader_Alpha();
-		avatars[0] = new Avatar("avatar/male_3.ogex", "avatar/", structure);
-		//avatars[0] = avatar;
 
+		char* avatarChoice;
+
+		// Male avatars
+		avatarChoice = "avatar/male_0.ogex";
+		//avatarChoice = "avatar/male_1.ogex";
+		//avatarChoice = "avatar/male_2.ogex";
+		//avatarChoice = "avatar/male_3.ogex";
+
+		// Female avatars
+		//avatarChoice = "avatar/female_0.ogex";
+		//avatarChoice = "avatar/female_1.ogex";
+		//avatarChoice = "avatar/female_2.ogex";
+		//avatarChoice = "avatar/female_3.ogex";
+		//avatarChoice = "avatar/female_4.ogex";
+		/*
+		//player Avatar
+		avatars[0] = new Avatar("avatar/male_3.ogex", "avatar/", structure);
+		//Trainer avatars
 		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		*/
+		//player Avatar
+		avatars[0] = new Avatar(avatarChoice, "avatar/", structure);
+		//Trainer avatars
+		avatars[1] = new Avatar(avatarChoice, "avatar/", structure);
+		avatars[2] = new Avatar(avatarChoice, "avatar/", structure);
+		avatars[3] = new Avatar(avatarChoice, "avatar/", structure);
 		
 		// Male avatars
 		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
