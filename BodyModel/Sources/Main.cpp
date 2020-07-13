@@ -1177,7 +1177,7 @@ namespace {
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
 			initTransAndRot();
-			avatar[0]->resetPositionAndRotation();
+			avatars[0]->resetPositionAndRotation();
 			setSize();
 		}
 		
