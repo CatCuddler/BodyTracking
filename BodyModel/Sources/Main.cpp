@@ -1049,7 +1049,6 @@ namespace {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				++trials;
 
-				updateColors();
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, difficulty, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
@@ -1066,7 +1065,6 @@ namespace {
 					else if (trials < difficultyLower) difficultyIncrease();
 
 					neutralColoredTracker();
-					updateColors();
 					collisionLast = -1;
 					stopCycle = false;
 
@@ -1076,6 +1074,7 @@ namespace {
 					trials = 0;
 				} else {
 					log(Info, "The movement is wrong (Trial %i)", trials);
+					updateColors();
 					//Audio1::play(wrongSound);
 
 					showFeedback = true;
