@@ -1086,7 +1086,7 @@ namespace {
 
 #ifdef KORE_STEAMVR
 	void setSize() {
-		float currentAvatarHeight = avatar->getHeight();
+		float currentAvatarHeight = avatars[0]->getHeight();
 		
 		SensorState state = VrInterface::getSensorState(0);
 		vec3 hmdPos = state.pose.vrPose.position; // z -> face, y -> up down
@@ -1177,7 +1177,7 @@ namespace {
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
 			initTransAndRot();
-			avatar->resetPositionAndRotation();
+			avatar[0]->resetPositionAndRotation();
 			setSize();
 		}
 		
@@ -1344,7 +1344,7 @@ namespace {
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 
-		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatar);
+		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[0]);
 		else renderAvatar(V, P, avatars[0]);
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
@@ -1561,7 +1561,7 @@ namespace {
 				// Set size and reset an avatar to a default T-Pose
 				calibratedAvatar = false;
 				initTransAndRot();
-				avatar->resetPositionAndRotation();
+				avatars[0]->resetPositionAndRotation();
 				setSize();
 				break;
 			case Kore::KeyC:
