@@ -13,5 +13,5 @@ in vec3 normal;
 out vec4 FragColor;
 
 void kore() {
-	FragColor = texture(tex, texCoord) * vec4(color.xyz, 0.75);
+	FragColor = texture(tex, texCoord) * vec4(color.xyz, 0.5);
 }

@@ -536,7 +536,8 @@ namespace {
 			BoneNode* bone = avatar->getBoneWithIndex(endEffectorArr[0][i]->getBoneIndex());
 
 			vec3 endEffectorPos = bone->getPosition();
-			endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
+			endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale, endEffectorPos.y()* avatar->scale, endEffectorPos.z()* avatar->scale, 1);
+			//endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
 			Kore::Quaternion endEffectorRot = basicRot.rotated(bone->getOrientation());
 
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * mLoc;
@@ -907,8 +908,9 @@ namespace {
 		loggerTrainerMovement[i] = new Logger();
 
 		setPose(avatars[i + 1], posesStatic[i]);
-		if (difficulty == 0) avatars[i + 1]->setScale(avatars[0]->scale * 0.75f);
-		else avatars[i + 1]->setScale(avatars[0]->scale);
+		//if (difficulty == 0) avatars[i + 1]->setScale(avatars[0]->scale * 0.75f);
+		//else avatars[i + 1]->setScale(avatars[0]->scale);
+		avatars[i + 1]->setScale(avatars[0]->scale);
 	}
 
 	void difficultySet() {
@@ -1095,8 +1097,9 @@ namespace {
 		float scale = currentUserHeight / currentAvatarHeight;
 		//avatar->setScale(scale);
 		for (int i = 0; i < sizeOfAvatars; i++) {
-			if (i < 4) avatars[i]->setScale(scale);
-			else avatars[i]->setScale(scale*0.75f);
+			avatars[i]->setScale(scale);
+			//if (i < 4) avatars[i]->setScale(scale);
+			//else avatars[i]->setScale(scale*0.75f);
 		}
 		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
@@ -1763,19 +1766,6 @@ namespace {
 		avatars[1] = new Avatar(avatarChoice, "avatar/", structure);
 		avatars[2] = new Avatar(avatarChoice, "avatar/", structure);
 		avatars[3] = new Avatar(avatarChoice, "avatar/", structure);
-		
-		// Male avatars
-		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/male_1.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/male_2.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
-		
-		// Female avatars
-		//avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/female_1.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/female_2.ogex", "avatar/", structure);
-        //avatar = new Avatar("avatar/female_3.ogex", "avatar/", structure);
-        //avatar = new Avatar("avatar/female_4.ogex", "avatar/", structure);
 		
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
