@@ -228,6 +228,7 @@ namespace {
 	int trials = 0;
 
 	bool recording = false;
+	bool showCoordinateSystem = false;
 
 	//char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
 	char* poses[3] = { "yoga2_task.csv",  "yoga1_task.csv", "yoga3_task.csv" };
@@ -267,7 +268,7 @@ namespace {
 		}
 		
 		// Render a local coordinate system only if the avatar is not calibrated
-		if (!calibratedAvatar) {
+		if (!calibratedAvatar && showCoordinateSystem) {
 			renderVRDevice(2, W);
 			renderVRDevice(2, M);
 		}
@@ -1065,9 +1066,8 @@ namespace {
 					else if (trials < difficultyLower) difficultyIncrease();
 
 					neutralColoredTracker();
-
+					updateColors();
 					collisionLast = -1;
-
 					stopCycle = false;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
