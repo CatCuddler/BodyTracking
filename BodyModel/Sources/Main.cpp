@@ -1587,7 +1587,7 @@ namespace {
 				calibratedAvatar = true;
 				log(Info, "Calibrate avatar");
 				break;
-			case Kore::KeyC:
+			case Kore::KeyB:
 				if (calibratedAvatar) initGame();
 				break;
 				/*
