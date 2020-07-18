@@ -934,7 +934,14 @@ namespace {
 				if (i == 0 && (pose0 == Yoga0 || pose1 == Yoga0)) {
 					collisionLast = i;
 				}
+				else if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
+					collisionLast = i;
+				}
+				else if (i == 2 && (pose0 == Yoga2 || pose1 == Yoga2)) {
+					collisionLast = i;
+				}
 			}
+			/*
 			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
 				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
 					collisionLast = i;
@@ -945,8 +952,12 @@ namespace {
 					collisionLast = i;
 				}
 			}
+			*/
 		}
-		if (collisionSave != collisionLast) difficultySet();
+		if (collisionSave != collisionLast) {
+			difficultySet();
+			trials = 0;
+		}
 	}
 
 	void neutralColoredTracker() {
@@ -1174,7 +1185,7 @@ namespace {
 	
 	void gamepadButton(int buttonNr, float value) {
 		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
-
+		/* deactivated for Eval
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
@@ -1198,7 +1209,7 @@ namespace {
 		if (buttonNr == 32 && value == 1) {
 			if (calibratedAvatar) initGame();
 		}
-		
+		*/
 		// Trigger button => record data
 		if (buttonNr == 33 && value == 1) {
 			// Trigger button pressed
@@ -1524,7 +1535,7 @@ namespace {
 			case Kore::KeyG:
 				difficultyDecrease();
 				break;
-			//manually change displayed pose in 3D mode
+			//manually change displayed pose
 			case Kore::KeyU:
 				if (collisionLast < 2) collisionLast++;
 				break;
@@ -1570,9 +1581,31 @@ namespace {
 				// Calibrate
 				assignControllerAndTracker();
 				calibrate();
+				collisionLast = -1;
+				moveTrainer = false;
+				stopCycle = false;
 				calibratedAvatar = true;
 				log(Info, "Calibrate avatar");
 				break;
+			case Kore::KeyC:
+				if (calibratedAvatar) initGame();
+				break;
+				/*
+			case Kore::KeyR:
+				// Set size and reset an avatar to a default T-Pose
+				calibratedAvatar = false;
+				initTransAndRot();
+				avatars[0]->resetPositionAndRotation();
+				setSize();
+				break;
+			case Kore::KeyC:
+				// Calibrate
+				assignControllerAndTracker();
+				calibrate();
+				calibratedAvatar = true;
+				log(Info, "Calibrate avatar");
+				break;
+				*/
 #endif
 			default:
 				break;
