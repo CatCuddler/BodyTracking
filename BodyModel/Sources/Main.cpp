@@ -1528,6 +1528,7 @@ namespace {
 			case Kore::KeyD:
 				D = true;
 				break;
+			/*
 			//manually change difficulty
 			case Kore::KeyH:
 				difficultyIncrease();
@@ -1542,6 +1543,7 @@ namespace {
 			case Kore::KeyZ:
 				if (collisionLast > 0)collisionLast--;
 				break;
+			*/
 			case KeyL:
 				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
