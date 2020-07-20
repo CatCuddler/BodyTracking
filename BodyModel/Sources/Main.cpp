@@ -1383,15 +1383,7 @@ namespace {
 			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			else renderPlatforms(V, P);
 		}
-		/*
-		mat4 P2 = P;
-		mat4 V2 = V;
-		
-		if (!firstPersonMonitor) {
-			mat4 P2 = state.pose.vrPose.projection;
-			mat4 V2 = state.pose.vrPose.eye;
-		}
-		*/
+
 		if (firstPersonMonitor) {
 			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
 				switch (difficulty) {
