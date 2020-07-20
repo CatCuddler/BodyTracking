@@ -1383,7 +1383,7 @@ namespace {
 			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
 			else renderPlatforms(V, P);
 		}
-
+		/*
 		mat4 P2 = P;
 		mat4 V2 = V;
 		
@@ -1391,23 +1391,45 @@ namespace {
 			mat4 P2 = state.pose.vrPose.projection;
 			mat4 V2 = state.pose.vrPose.eye;
 		}
-
-		if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
-			switch (difficulty) {
-			case 2:
-				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-				break;
-			case 1:
-				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast]);
-				break;
-			case 0:
-				renderColoredTracker(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
-				trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
-				renderTransparentAvatar(V2, P2, avatars[collisionLast + 1], avatarPositions[collisionLast+3]);
-				break;
-			default:
-				break;
+		*/
+		if (firstPersonMonitor) {
+			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+				switch (difficulty) {
+				case 2:
+					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					break;
+				case 1:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					break;
+				case 0:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderColoredTracker(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast + 3]);
+					renderTransparentAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection, avatars[collisionLast + 1], avatarPositions[collisionLast + 3]);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		else {
+			if (showStoryElements && calibratedAvatar && collisionLast >= 0 && collisionLast < 3) {
+				switch (difficulty) {
+				case 2:
+					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					break;
+				case 1:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast]);
+					break;
+				case 0:
+					trainerMovement(avatars[collisionLast + 1], loggerTrainerMovement[collisionLast], poses[collisionLast]);
+					renderColoredTracker(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast + 3]);
+					renderTransparentAvatar(V, P, avatars[collisionLast + 1], avatarPositions[collisionLast + 3]);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 #else
