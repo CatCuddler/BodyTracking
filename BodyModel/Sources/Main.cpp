@@ -215,7 +215,7 @@ namespace {
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
 	float currentUserHeight;
-	bool firstPersonMonitor = false;
+	bool firstPersonMonitor = true;
 #endif
 	
 	Movement* movement;
