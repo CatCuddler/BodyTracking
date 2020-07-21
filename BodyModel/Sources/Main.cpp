@@ -1214,7 +1214,7 @@ namespace {
 		if (buttonNr == 33 && value == 1) {
 			// Trigger button pressed
 			log(Info, "Trigger button pressed");
-			if (calibratedAvatar && showStoryElements) {
+			if (calibratedAvatar && showStoryElements && !recording) {
 				recording = true;
 				record();
 			}
@@ -1223,7 +1223,7 @@ namespace {
 		if (buttonNr == 33 && value == 0) {
 			// Trigger button released
 			log(Info, "Trigger button released");
-			if (calibratedAvatar && showStoryElements) {
+			if (calibratedAvatar && showStoryElements && recording) {
 				recording = false;
 				record();
 			}
