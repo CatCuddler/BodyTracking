@@ -1303,7 +1303,7 @@ namespace {
 			}
 		}
 		//check for collision Player - Plattforms
-		collisionCheck();
+		if (showStoryElements && calibratedAvatar) collisionCheck();
 		
 		// Render for both eyes
 		SensorState state;
