@@ -777,8 +777,8 @@ namespace {
 		double g = 0.0;
 
 		float colorRange = modelThreshold / 2.0f;
-		r = (modelProbability - (modelThreshold - colorRange)) / colorRange * 247.0;
-		g = (colorRange - (modelProbability - modelThreshold)) / colorRange * 247.0;
+		r = (modelProbability - (modelThreshold - colorRange)) / colorRange * 255.0;
+		g = (colorRange - (modelProbability - modelThreshold)) / colorRange * 255.0;
 
 		coloredTrackerColors[i] = vec3(r / 255.0, g / 255.0, 0.0 / 255.0);
 	}
