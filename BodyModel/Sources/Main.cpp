@@ -55,6 +55,7 @@ namespace {
 	const char* storyLineText;
 	
 	// Audio cues
+	bool recording = false;
 	Sound* startRecordingSound;
 	Sound* stopRecordingSound;
 	//Sound* correctSound;
@@ -111,13 +112,13 @@ namespace {
 	// Null terminated array of 3d text
 	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
-    // Platform mesh objects and collider
-    MeshObject* platforms[] = { nullptr, nullptr, nullptr };
+    	// Platform mesh objects and collider
+    	MeshObject* platforms[] = { nullptr, nullptr, nullptr };
    
-    bool showStoryElements = false;
-    bool showFeedback = false;
+    	bool showStoryElements = false;
+    	bool showFeedback = false;
 
-    SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
+    	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 
 	// Avatar
 	Avatar* avatar;
@@ -156,10 +157,8 @@ namespace {
 	Yoga yogaPose = Yoga0;
 	int yogaID;
 	bool colliding = false;
-    double waitForAudio = 0;
+    	double waitForAudio = 0;
 	int trials = 0;
-
-	bool recording = false;
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
