@@ -260,6 +260,28 @@ namespace {
 			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
 				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
+			
+			// Evaluate IK precision
+			vec3 q = finalPos;
+			vec3 p = avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex())->getPosition();
+			
+			Kore::Quaternion m = finalRot;
+			Kore::Quaternion n = avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex())->getOrientation();
+			
+			// Calculate the distance between two vectors: euclidean distance [mm]
+			float posError = (p - q).getLength() * 1000;
+			
+			// Calculate the difference between two quaternions [degree]
+			Kore::Quaternion quatDiff = m.rotated(n.invert());
+			if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
+			Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
+			Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
+			float rotError = deltaRot.getLength();
+			
+			Kore::log(LogLevel::Info, "Error for %s is posError:%f, rotError:%f", endEffector[endEffectorID]->getName(), posError, rotError);
+			
+			logger->saveEvaluationData(endEffector[endEffectorID]->getName(), posError, rotError);
+			
 		}
 	}
 	
@@ -296,17 +318,19 @@ namespace {
 		}
 	}
 	
-	void record() {
-		logRawData = !logRawData;
-		
-		if (logRawData) {
-			Audio1::play(startRecordingSound);
-			logger->startLogger("logData");
-		} else {
-			Audio1::play(stopRecordingSound);
-			logger->endLogger();
-		}
+void record() {
+	logRawData = !logRawData;
+	
+	if (logRawData) {
+		Audio1::play(startRecordingSound);
+		logger->startLogger("logData");
+		logger->startEvaluationLogger("PrecisionEvaluation");
+	} else {
+		Audio1::play(stopRecordingSound);
+		logger->endLogger();
+		logger->endEvaluationLogger();
 	}
+}
 
 #ifdef KORE_STEAMVR
 	void setSize() {
@@ -558,7 +582,7 @@ namespace {
 				currentFile++;
 				calibratedAvatar = false;
 			}
-		} else {
+		} /*else {
 			if (eval) {
 				if (loop >= 0) {
 					logger->saveEvaluationData(avatar);
@@ -598,7 +622,7 @@ namespace {
 					}
 				}
 			}
-		}
+		}*/
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -619,19 +643,19 @@ namespace {
 	
 	void keyDown(KeyCode code) {
 		switch (code) {
-			case Kore::KeyW:
+			case KeyW:
 				W = true;
 				break;
-			case Kore::KeyA:
+			case KeyA:
 				A = true;
 				break;
-			case Kore::KeyS:
+			case KeyS:
 				S = true;
 				break;
-			case Kore::KeyD:
+			case KeyD:
 				D = true;
 				break;
-			case Kore::KeyR:
+			case KeyR:
 #ifdef KORE_STEAMVR
 				VrInterface::resetHmdPose();
 #endif
@@ -641,8 +665,10 @@ namespace {
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
 				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
 				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
+				
+				record();
 				break;
-			case Kore::KeyEscape:
+			case KeyEscape:
 			case KeyQ:
 				System::stop();
 				break;
@@ -653,17 +679,20 @@ namespace {
 	
 	void keyUp(KeyCode code) {
 		switch (code) {
-			case Kore::KeyW:
+			case KeyW:
 				W = false;
 				break;
-			case Kore::KeyA:
+			case KeyA:
 				A = false;
 				break;
-			case Kore::KeyS:
+			case KeyS:
 				S = false;
 				break;
-			case Kore::KeyD:
+			case KeyD:
 				D = false;
+				break;
+			case KeyL:
+				record();
 				break;
 			default:
 				break;
@@ -821,7 +850,7 @@ namespace {
 	}
 }
 
-int kore(int argc, char** argv) {
+int kickstart(int argc, char** argv) {
 	System::init("BodyTracking", width, height);
 	
 	init();

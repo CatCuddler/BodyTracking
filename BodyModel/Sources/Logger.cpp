@@ -16,7 +16,7 @@ Logger::Logger() {
 
 Logger::~Logger() {
 	logDataReader.close();
-	logdataWriter.close();
+	logDataWriter.close();
 	hmmWriter.close();
 	hmmAnalysisWriter.close();
 }
@@ -27,25 +27,25 @@ void Logger::startLogger(const char* filename) {
 	char logFileName[50];
 	sprintf(logFileName, "%s_%li.csv", filename, t);
 	
-	logdataWriter.open(logFileName, std::ios::app); // Append to the end
+	logDataWriter.open(logFileName, std::ios::app); // Append to the end
 	
 	// Append header
-	logdataWriter << "tag rawPosX rawPosY rawPosZ rawRotX rawRotY rawRotZ rawRotW scale\n";
-	logdataWriter.flush();
+	logDataWriter << "tag rawPosX rawPosY rawPosZ rawRotX rawRotY rawRotZ rawRotW scale\n";
+	logDataWriter.flush();
 	
 	log(Kore::Info, "Start logging");
 }
 
 void Logger::endLogger() {
-	logdataWriter.close();
+	logDataWriter.close();
 	
 	log(Kore::Info, "Stop logging");
 }
 
 void Logger::saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale) {
 	// Save position and rotation
-	logdataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
-	logdataWriter.flush();
+	logDataWriter << tag << " " << rawPos.x() << " " << rawPos.y() << " " << rawPos.z() << " " << rawRot.x << " " << rawRot.y << " " << rawRot.z << " " << rawRot.w << " " << scale << "\n";
+	logDataWriter.flush();
 }
 
 void Logger::startHMMLogger(const char* filename, int num) {
@@ -90,7 +90,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
+/*void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
 	time_t t = time(0);   // Get time now
 	
 	char evaluationDataPath[100];
@@ -141,6 +141,35 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 	}
 	evaluationDataOutputFile << avatar->getReached() << ";" << avatar->getStucked() << "\n";
 	evaluationDataOutputFile.flush();
+}*/
+
+void Logger::startEvaluationLogger(const char* filename) {
+	time_t t = time(0);   // Get time now
+	
+	char logFileName[50];
+	sprintf(logFileName, "%s_%li.csv", filename, t);
+	
+	evaluationDataOutputFile.open(logFileName, std::ios::app); // Append to the end
+	
+	// Append header
+	evaluationDataOutputFile << "tag posError rotError\n";
+	evaluationDataOutputFile.flush();
+	
+	log(Kore::Info, "Start eval logging");
+}
+
+
+void Logger::saveEvaluationData(const char* tag, float posError, float rotError) {
+	// Save position
+	evaluationDataOutputFile << tag << " " << posError << " "  << rotError << "\n";
+	evaluationDataOutputFile.flush();
+}
+
+void Logger::endEvaluationLogger() {
+	evaluationDataOutputFile.flush();
+	evaluationDataOutputFile.close();
+	
+	log(Kore::Info, "Start eval logging");
 }
 
 bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
