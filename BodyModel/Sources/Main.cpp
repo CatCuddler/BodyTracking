@@ -1166,13 +1166,13 @@ namespace {
 	void init() {
 		loadAvatarShader();
 		// Male avatars
-		//avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/male_0.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_2.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
 		
 		// Female avatars
-		avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_2.ogex", "avatar/", structure);
         //avatar = new Avatar("avatar/female_3.ogex", "avatar/", structure);
@@ -1271,7 +1271,7 @@ namespace {
 	}
 }
 
-int kore(int argc, char** argv) {
+int kickstart(int argc, char** argv) {
 	System::init("BodyTracking", width, height);
 	
 	init();
