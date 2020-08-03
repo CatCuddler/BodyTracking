@@ -410,9 +410,21 @@ namespace {
 			log(Info, "Calibrate avatar");
 		}
 		
-		// Trigger button => record data
+		// Track a movement as long as trigger button is pressed
 		if (buttonNr == 33 && value == 1) {
-			record();
+			// Trigger button pressed
+			log(Info, "Trigger button pressed");
+			if (calibratedAvatar) {
+				record();
+			}
+		}
+		
+		if (buttonNr == 33 && value == 0) {
+			// Trigger button released
+			log(Info, "Trigger button released");
+			if (calibratedAvatar) {
+				record();
+			}
 		}
 	}
 	
@@ -629,8 +641,6 @@ namespace {
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
 				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
 				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
-				
-				record();
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
