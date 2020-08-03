@@ -42,13 +42,11 @@ void Kore::RotationUtility::quatToEuler(const Kore::Quaternion* quat, float* rol
 }
 
 float Kore::RotationUtility::getRadians(float degree) {
-	const double halfC = Kore::pi / 180.0f;
-	return degree * halfC;
+	return degree * Kore::pi / 180.0f;
 }
 
 float Kore::RotationUtility::getDegree(float rad) {
-	const double halfC = 180.0f / Kore::pi;
-	return rad * halfC;
+	return rad * 180.0f / Kore::pi;
 }
 
 void Kore::RotationUtility::getOrientation(const Kore::mat4* m, Kore::Quaternion* orientation) {

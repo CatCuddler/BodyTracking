@@ -30,9 +30,6 @@ private:
 	
 	static const int headJointDOFs = 3;
 	Jacobian<headJointDOFs>* jacobianHead = new Jacobian<headJointDOFs>;
-
-	
-	float getRadian(float degree);
 	
 	void updateBone(BoneNode* bone);
 	

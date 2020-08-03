@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "InverseKinematics.h"
+#include "RotationUtility.h"
 
-#include <float.h>
+using namespace Kore;
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
@@ -13,28 +14,28 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	
 	// iterations
 	evalIterations[0] = 0;
-	evalIterations[1] = FLT_MAX;
-	evalIterations[2] = FLT_MIN;
+	evalIterations[1] = maxfloat();
+	evalIterations[2] = minfloat();
 	
 	// pos-error
 	evalErrorPos[0] = 0;
-	evalErrorPos[1] = FLT_MAX;
-	evalErrorPos[2] = FLT_MIN;
+	evalErrorPos[1] = maxfloat();
+	evalErrorPos[2] = minfloat();
 	
 	// rot-error
 	evalErrorRot[0] = 0;
-	evalErrorRot[1] = FLT_MAX;
-	evalErrorRot[2] = FLT_MIN;
+	evalErrorRot[1] = maxfloat();
+	evalErrorRot[2] = minfloat();
 	
 	// time
 	evalTime[0] = 0;
-	evalTime[1] = FLT_MAX;
-	evalTime[2] = FLT_MIN;
+	evalTime[1] = maxfloat();
+	evalTime[2] = minfloat();
 	
 	// time per iteration
 	evalTimeIteration[0] = 0;
-	evalTimeIteration[1] = FLT_MAX;
-	evalTimeIteration[2] = FLT_MIN;
+	evalTimeIteration[1] = maxfloat();
+	evalTimeIteration[2] = minfloat();
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
@@ -212,36 +213,32 @@ void InverseKinematics::clampValue(float minVal, float maxVal, float& value) {
 		value = maxVal;
 }
 
-float InverseKinematics::getRadian(float degree) {
-	return degree * (Kore::pi / 180.0f);
-}
-
 void InverseKinematics::setJointConstraints() {
 	BoneNode* nodeLeft;
 	BoneNode* nodeRight;
 	
-	float tolerance = getRadian(15);
+	float tolerance = RotationUtility::getRadians(15);
 	
 	// Neck
 	nodeLeft = bones[neckBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[xMax] = getRadian(45) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[yMax] = getRadian(45) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(45) - tolerance;		nodeLeft->constrain[zMax] = getRadian(45) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(45) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(45) + tolerance;
+	nodeLeft->constrain[yMin] = -RotationUtility::getRadians(45) - tolerance;		nodeLeft->constrain[yMax] = RotationUtility::getRadians(45) + tolerance;
+	nodeLeft->constrain[zMin] = -RotationUtility::getRadians(45) - tolerance;		nodeLeft->constrain[zMax] = RotationUtility::getRadians(45) + tolerance;
 	
 	// Upper body
 /*	nodeLeft = bones[upperBack - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(30) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[yMax] = getRadian(20) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;*/
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(30) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(30) + tolerance;
+	nodeLeft->constrain[yMin] = -RotationUtility::getRadians(20) - tolerance;		nodeLeft->constrain[yMax] = RotationUtility::getRadians(20) + tolerance;
+	nodeLeft->constrain[zMin] = -RotationUtility::getRadians(20) - tolerance;		nodeLeft->constrain[zMax] = RotationUtility::getRadians(20) + tolerance;*/
 	
 	// Upperarm
 	nodeLeft = bones[leftArmBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(50) - tolerance;		nodeLeft->constrain[xMax] = getRadian(180) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[yMax] = getRadian(90) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(90) - tolerance;		nodeLeft->constrain[zMax] = getRadian(90) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(50) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(180) + tolerance;
+	nodeLeft->constrain[yMin] = -RotationUtility::getRadians(90) - tolerance;		nodeLeft->constrain[yMax] = RotationUtility::getRadians(90) + tolerance;
+	nodeLeft->constrain[zMin] = -RotationUtility::getRadians(90) - tolerance;		nodeLeft->constrain[zMax] = RotationUtility::getRadians(90) + tolerance;
 	
 	nodeRight = bones[rightArmBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
@@ -252,7 +249,7 @@ void InverseKinematics::setJointConstraints() {
 	// Forearm
 	nodeLeft = bones[leftForeArmBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain[xMin] = -getRadian(10) - tolerance;		nodeLeft->constrain[xMax] = getRadian(140) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(10) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(140) + tolerance;
 	
 	nodeRight = bones[rightForeArmBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
@@ -261,8 +258,8 @@ void InverseKinematics::setJointConstraints() {
 	// Hand
 	nodeLeft = bones[leftHandBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 1);
-	nodeLeft->constrain[xMin] = -getRadian(20) - tolerance;		nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(60) - tolerance;		nodeLeft->constrain[zMax] = getRadian(60) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(20) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(30) + tolerance;
+	nodeLeft->constrain[zMin] = -RotationUtility::getRadians(60) - tolerance;		nodeLeft->constrain[zMax] = RotationUtility::getRadians(60) + tolerance;
 	
 	nodeRight = bones[rightHandBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
@@ -272,9 +269,9 @@ void InverseKinematics::setJointConstraints() {
 	// Thigh
 	nodeLeft = bones[leftUpLegBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 1, 1);
-	nodeLeft->constrain[xMin] = -getRadian(110) - tolerance;	nodeLeft->constrain[xMax] = getRadian(30) + tolerance;
-	nodeLeft->constrain[yMin] = -getRadian(60) - tolerance;		nodeLeft->constrain[yMax] = getRadian(40) + tolerance;
-	nodeLeft->constrain[zMin] = -getRadian(50) - tolerance;		nodeLeft->constrain[zMax] = getRadian(20) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(110) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(30) + tolerance;
+	nodeLeft->constrain[yMin] = -RotationUtility::getRadians(60) - tolerance;		nodeLeft->constrain[yMax] = RotationUtility::getRadians(40) + tolerance;
+	nodeLeft->constrain[zMin] = -RotationUtility::getRadians(50) - tolerance;		nodeLeft->constrain[zMax] = RotationUtility::getRadians(20) + tolerance;
 	
 	nodeRight = bones[rightUpLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
@@ -285,7 +282,7 @@ void InverseKinematics::setJointConstraints() {
 	// Calf
 	nodeLeft = bones[leftLegBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain[xMin] = -getRadian(10) - tolerance;		nodeLeft->constrain[xMax] = getRadian(140) + tolerance;
+	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(10) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(140) + tolerance;
 	
 	nodeRight = bones[rightLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
