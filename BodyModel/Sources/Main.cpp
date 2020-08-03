@@ -413,9 +413,6 @@ namespace {
 	void executeMovement(int endEffectorID) {
 		Kore::vec3 desPosition = endEffector[endEffectorID]->getDesPosition();
 		Kore::Quaternion desRotation = endEffector[endEffectorID]->getDesRotation();
-
-		// Save raw data
-		if (logRawData) logger->saveData(endEffector[endEffectorID]->getName(), desPosition, desRotation, avatar->scale);
 		
 		if (calibratedAvatar) {
 			// Transform desired position/rotation to the character local coordinate system
@@ -580,16 +577,6 @@ namespace {
     }
 	
 	void record() {
-		/*logRawData = !logRawData;
-		
-		if (logRawData) {
-			Audio1::play(startRecordingSound);
-			logger->startLogger("logData");
-		} else {
-			Audio1::play(stopRecordingSound);
-			logger->endLogger();
-		}*/
-		
 		// HMM
 		if(hmm->isRecordingActive()) {
 			// Recording a movement

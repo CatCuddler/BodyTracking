@@ -7,8 +7,6 @@ namespace {
 	
 	const float nearNull = 0.0001f;
 	
-	bool logRawData = false;
-	
 	// IK Parameter
 	int ikMode = 0;
 	float lambda[] =		{ 0.35f,	0.05f,		0.2f,		0.03f,		0.2f,		0.018f	};
