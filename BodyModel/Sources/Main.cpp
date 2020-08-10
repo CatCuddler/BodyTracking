@@ -640,6 +640,17 @@ namespace {
     }
 	
 	void record() {
+		// Machine learning with Weka
+		if (motionRecognizer->isActive()) {
+			// Recognizing a movement
+			if (recording) {
+				motionRecognizer->startRecognition();
+			} else {
+				motionRecognizer->getRecognizedActivity();
+				motionRecognizer->stopRecognition();
+			}
+		}
+
 		// HMM
 		if(hmm->isRecordingActive()) {
 			// Recording a movement
@@ -1108,6 +1119,12 @@ namespace {
 			default:
 				break;
 		}
+
+		// the motion recognizer handles its own input in order to start recording data for specific tasks
+		// uses the numpad number keys, and the space bar (if the class is in use)
+		if (motionRecognizer->isActive()) {
+			motionRecognizer->processKeyDown(code, calibratedAvatar);
+		}
 	}
 	
 	void keyUp(KeyCode code) {
@@ -1132,12 +1149,6 @@ namespace {
 				break;
 			default:
 				break;
-		}
-		
-		// the motion recognizer handles its own input in order to start recording data for specific tasks
-		// uses the numpad number keys, and the space bar (if the class is in use)
-		if (motionRecognizer->isActive()) {
-			motionRecognizer->processKeyDown(code, calibratedAvatar);
 		}
 	}
 	

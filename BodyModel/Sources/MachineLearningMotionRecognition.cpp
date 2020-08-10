@@ -85,15 +85,15 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 
 	//==================== prepare loading of Java VM ============================
 
-	JavaVMInitArgs vm_args;                        // Initialization arguments
-	JavaVMOption* options = new JavaVMOption[1];   // JVM invocation options
+	JavaVMInitArgs vm_args;							// Initialization arguments
+	JavaVMOption* options = new JavaVMOption[1];	// JVM invocation options
 	// where to find the java .class or .jar to load
 	// name the folder for single class files, name the jar (including .jar) for classes within a jar
-	options[0].optionString = "-Djava.class.path=../../MachineLearningMotionRecognition/Weka/WekaMotionRecognitionForCpp-1.0-jar-with-dependencies.jar";
-	vm_args.version = JNI_VERSION_1_6;             // minimum Java version
-	vm_args.nOptions = 1;                          // number of options
+	options[0].optionString = "-Djava.class.path=../../MachineLearningMotionRecognition/Weka/WekaMotionRecognitionForCpp.jar";
+	vm_args.version = JNI_VERSION_1_6;				// minimum Java version
+	vm_args.nOptions = 1;							// number of options
 	vm_args.options = options;
-	vm_args.ignoreUnrecognized = false;     // invalid options make the JVM init fail
+	vm_args.ignoreUnrecognized = false;				// invalid options make the JVM init fail
 
 	//================= load and initialize Java VM and JNI interface ===============
 
@@ -268,15 +268,6 @@ void MachineLearningMotionRecognition::stopRecognition() {
 	currentlyRecognizing = false;
 }
 
-void MachineLearningMotionRecognition::toggleRecognition() {
-	if (currentlyRecognizing) {
-		stopRecognition();
-	}
-	else {
-		startRecognition();
-	}
-}
-
 bool MachineLearningMotionRecognition::isProcessingMovementData() {
 	return (currentlyRecording || currentlyRecognizing);
 }
@@ -307,12 +298,14 @@ void MachineLearningMotionRecognition::processMovementData(
 	// when recognizing movements, forward the data to the (Java-based) Weka Helper
 	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
-
-			if (tag == "head" || tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "lFoot" || tag == "rFoot" ) {
+			
+			if (tag == "head" || tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "lFoot" || tag == "rFoot") {
 				java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
 					java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
-					(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),
-					(jdouble)rawRot.x, (jdouble)rawRot.y, (jdouble)rawRot.z, (jdouble)rawRot.w,
+					//(jdouble)rawPos.x(), (jdouble)rawPos.y(), (jdouble)rawPos.z(),
+					//(jdouble)rawRot.x, (jdouble)rawRot.y, (jdouble)rawRot.z, (jdouble)rawRot.w,
+					(jdouble)finalPos.x(), (jdouble)finalPos.y(), (jdouble)finalPos.z(),
+					(jdouble)finalRot.x, (jdouble)finalRot.y, (jdouble)finalRot.z, (jdouble)finalRot.w,
 					(jdouble)rawAngVel.x(), (jdouble)rawAngVel.y(), (jdouble)rawAngVel.z(),
 					(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
 					(jdouble)1, (jdouble)time);
@@ -385,16 +378,6 @@ void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool f
 		case Kore::KeyNumpad0:
 			taskNextToRecord = task_00;
 			startRecording(fullyCalibratedAvatar);
-		default:
-			break;
-		}
-	}
-	// when recognizing movements, start or stop forwarding data to the Weka Helper
-	else if (operatingMode == RecognizeMovements) {
-		switch (code) {
-		case Kore::KeySpace:
-			toggleRecognition();
-			break;
 		default:
 			break;
 		}

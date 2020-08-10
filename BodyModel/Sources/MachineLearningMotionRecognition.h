@@ -52,13 +52,6 @@ private:
 	// Stop recording incoming movement data
 	void stopRecording();
 
-	// Start to use incoming movement data for motion recognition
-	void startRecognition();
-	// Stop using incoming movement data for motion recognition
-	void stopRecognition();
-	// Switch between using incoming movement data for motion recognition, or not
-	void toggleRecognition();
-
 	// Whether incoming movement data is currently
 	// being recorded
 	bool isCurrentlyRecording();
@@ -92,6 +85,11 @@ public:
 	// Whether movement data is currently being recorded
 	// Only returns true if data is actually being recorded, not if it has only been requested
 	bool isRecordingMovementData();
+
+	// Start to use incoming movement data for motion recognition
+	void startRecognition();
+	// Stop using incoming movement data for motion recognition
+	void stopRecognition();
 
 	// Forward sensor readings for local handling
 	// E.g., recording or recognizing the data
