@@ -48,6 +48,7 @@ namespace {
 	const int numOfEndEffectors = 8;
 	
 	Logger* logger;
+	const bool evaluate = false;
 
 	MachineLearningMotionRecognition* motionRecognizer;
     HMM* hmm;
@@ -701,7 +702,8 @@ namespace {
 				++trials;
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				if (evaluate)
+					logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
@@ -1072,7 +1074,8 @@ namespace {
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
-				logger->endEvaluationLogger();
+				if (evaluate)
+					logger->endEvaluationLogger();
 				System::stop();
 				break;
 			case Kore::KeyLeft:
@@ -1319,7 +1322,7 @@ namespace {
         feedbackMesh[RightLeg] = new MeshObject("3dtext/right_leg.ogex", "3dtext/", structure, 1);
 		
 		logger = new Logger();
-		logger->startEvaluationLogger("yogaEval");
+		if (evaluate) logger->startEvaluationLogger("yogaEval");
         
 		motionRecognizer = new MachineLearningMotionRecognition(*logger);
         hmm = new HMM(*logger);

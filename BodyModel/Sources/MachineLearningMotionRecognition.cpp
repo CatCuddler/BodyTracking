@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include <string>
 #include <iostream>
 #include <jni.h>
 #include <windows.h>
@@ -31,7 +32,7 @@ namespace {
 	Kore::Sound* stopRecordingSound;
 	Kore::Sound* wrongSound;
 
-	string lastRecognizedActivity;
+	const char* lastRecognizedActivity;
 
 	// Weka access through the Java Native Interface JNI
 	JavaVM *java_VirtualMachine;				// Pointer to the JVM (Java Virtual Machine)
@@ -323,10 +324,7 @@ void MachineLearningMotionRecognition::processMovementData(
 const char* MachineLearningMotionRecognition::getRecognizedActivity() {
 	if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
-
-			if (tag == "head" || tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "lFoot" || tag == "rFoot" ) {
-				java_JNI->CallVoidMethod(java_WekaObject, java_recognize);
-			}
+			java_JNI->CallVoidMethod(java_WekaObject, java_recognize);
 		}
 	}
 	return lastRecognizedActivity;
