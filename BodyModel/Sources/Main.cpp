@@ -17,10 +17,13 @@
 #include "Avatar.h"
 #include "LivingRoom.h"
 #include "Logger.h"
-#include "HMM.h"
 #include "YogaMovement.h"
 #include "BinaryTree.h"
 #include "Collision.h"
+
+// Motion recognition
+#include "MachineLearningMotionRecognition.h"
+#include "HMM.h"
 
 #include <algorithm> // std::sort
 
@@ -46,6 +49,7 @@ namespace {
 	
 	Logger* logger;
 
+	MachineLearningMotionRecognition* motionRecognizer;
     HMM* hmm;
 	
 	double startTime;
@@ -438,7 +442,65 @@ namespace {
 				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
 			
-			if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+			if (recording) {
+				if (hmm->isRecordingActive() || hmm->isRecognitionActive())
+					hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+				
+				// Save calibrated data to either train Motion Recognizer or to recognize a movement
+				if (motionRecognizer->isProcessingMovementData()) {
+
+					// if we are not using actual VR sensors, we cannot retrieve the velocity values and have to use defaults
+					// if we do use VR sensors, the actual velocity can be used
+					vec3 rawAngVel;
+					Kore::Quaternion desAngVel;
+					vec3 rawLinVel;
+					vec3 desLinVel;
+					vec3 rawPosition;
+					Kore::Quaternion rawRotation;
+
+					// actual VR hardware present
+					#ifdef KORE_STEAMVR
+
+						VrPoseState sensorState;
+						// retrieve sensor or HMD state (data is the same, retrieval is slightly different)
+						if (endEffectorID == head) {
+							sensorState = VrInterface::getSensorState(0).pose;
+						} else {
+							sensorState = VrInterface::getController(endEffector[endEffectorID]->getDeviceIndex());
+						}
+
+						// collect data
+						rawLinVel = sensorState.linearVelocity;
+						rawAngVel = sensorState.angularVelocity;
+						desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
+						Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+						desAngVel = initRotInv.rotated(rawAngVelQuat);
+						rawPosition = sensorState.vrPose.position;
+						rawRotation = sensorState.vrPose.orientation;
+
+					// no actual VR hardware present
+					#else
+						// these placeholder values are only used for testing with predetermined movement sets, not for recording new data
+						rawAngVel = vec3(1, 2, 3);
+						desAngVel = desRotation;
+						rawLinVel = vec3(7, 8, 9);
+						desLinVel = rawLinVel;
+						rawPosition = desPosition;
+						rawRotation = desRotation;
+					#endif
+
+					// forward data
+					motionRecognizer->processMovementData(
+						endEffector[endEffectorID]->getName(),
+						rawPosition, desPosition, finalPos,
+						rawRotation, desRotation, finalRot,
+						rawAngVel, desAngVel,
+						rawLinVel, desLinVel,
+						avatar->scale, lastTime);
+				}
+			}
+			
+			
 		}
 	}
 	
@@ -1068,6 +1130,12 @@ namespace {
 			default:
 				break;
 		}
+		
+		// the motion recognizer handles its own input in order to start recording data for specific tasks
+		// uses the numpad number keys, and the space bar (if the class is in use)
+		if (motionRecognizer->isActive()) {
+			motionRecognizer->processKeyDown(code, calibratedAvatar);
+		}
 	}
 	
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
@@ -1253,6 +1321,7 @@ namespace {
 		logger = new Logger();
 		logger->startEvaluationLogger("yogaEval");
         
+		motionRecognizer = new MachineLearningMotionRecognition(*logger);
         hmm = new HMM(*logger);
 		
 		endEffector = new EndEffector*[numOfEndEffectors];
