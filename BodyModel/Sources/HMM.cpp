@@ -18,13 +18,6 @@ namespace {
 
 	float threshold = 1.5f;
 
-	double startX;
-	double startZ;
-	double startRotCos;
-	double startRotSin;
-	double transitionX;
-	double transitionY;
-	double transitionZ;
 	float currentUserHeight;
 
 	int curentFileNumber = 0;
@@ -284,10 +277,7 @@ bool HMM::stopRecognitionAndIdentify() {
 
 void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation) {
 	curentLineNumber++;
-
-	transitionX = position.x() - startX;
-	transitionY = position.y();
-	transitionZ = position.z() - startZ;
+	
 	if (record) {
 		// Data is recorded
 		logger.saveHMMData(name, lastTime, position.normalize(), rotation);
@@ -303,9 +293,6 @@ void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, 
 		rotx = rotation.x;
 		roty = rotation.y;
 		rotz = rotation.z;
-		//			x = (transitionX * startRotCos - transitionZ * startRotSin);
-		//			y = (transitionY / currentUserHeight) * 1.8;
-		//			z = (transitionZ * startRotCos + transitionX * startRotSin);
 
 		vector<double> values = { x, y, z, rotx, roty, rotz, rotw };
 		Point point = Point(dataPointNumber, values);

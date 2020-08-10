@@ -21,7 +21,7 @@ class HMM {
 private:
 	// Either record or recognition can be true
 	const bool record = false;
-	const bool recognition = true;
+	const bool recognition = false;
 	
 	Logger& logger;
 	
