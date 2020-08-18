@@ -101,5 +101,5 @@ public:
 	float scale, double time);
 	
 	const char* getRecognizedActivity();
-
+	void getFeedback(bool &head, bool &hip, bool &leftArm, bool &rightArm, bool &leftLeg, bool &rightLeg);
 };

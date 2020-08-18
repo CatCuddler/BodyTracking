@@ -331,12 +331,13 @@ namespace {
 		}
 	}
 
-	bool hmm_head = true;
-	bool hmm_hip = false;
-	bool hmm_left_arm = true;
-	bool hmm_right_arm = false;
-	bool hmm_left_leg = true;
-	bool hmm_right_leg = false;
+	// Feedback for each sensor
+	bool fb_head = true;
+	bool fb_hip = false;
+	bool fb_left_arm = true;
+	bool fb_right_arm = false;
+	bool fb_left_leg = true;
+	bool fb_right_leg = false;
 	
 	void renderHMMFeedback(int feedbackID, bool checkmark) {
 		Kore::Quaternion textRot = Kore::Quaternion(0, 0, 0, 1);
@@ -376,12 +377,12 @@ namespace {
 		Graphics4::setMatrix(pLocation, P);
         Graphics4::setFloat3(cLocation, vec3(1, 1, 1));
 		
-		renderHMMFeedback(Head, hmm_head);
-		renderHMMFeedback(Hip, hmm_hip);
-		renderHMMFeedback(LeftArm, hmm_left_arm);
-		renderHMMFeedback(RightArm, hmm_right_arm);
-		renderHMMFeedback(LeftLeg, hmm_left_leg);
-		renderHMMFeedback(RightLeg, hmm_right_leg);
+		renderHMMFeedback(Head, fb_head);
+		renderHMMFeedback(Hip, fb_hip);
+		renderHMMFeedback(LeftArm, fb_left_arm);
+		renderHMMFeedback(RightArm, fb_right_arm);
+		renderHMMFeedback(LeftLeg, fb_left_leg);
+		renderHMMFeedback(RightLeg, fb_right_leg);
 	}
 	
 	void renderAvatar(mat4 V, mat4 P) {
@@ -638,16 +639,66 @@ namespace {
     
         log(LogLevel::Info, storyLineText);
     }
+
+	void getDesiredPose() {
+		for (int i = 0; i < 3; ++i) {
+			// Check collision
+			colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
+			if (colliding) {
+				log(LogLevel::Info, "Colliding with platform %i", i);
+				
+				switch (i) {
+					case 0:
+						yogaPose = Yoga0;
+						yogaID = 0;
+						log(Info, "Stop recognizing the motion Yoga0");
+						break;
+						
+					case 1:
+						yogaPose = Yoga1;
+						yogaID = 1;
+						log(Info, "Stop recognizing the motion Yoga1");
+						break;
+						
+					case 2:
+						yogaPose = Yoga2;
+						yogaID = 2;
+						log(Info, "Stop recognizing the motion Yoga2");
+						break;
+						
+					default:
+						yogaID = -1;
+						log(Info, "Stop recognizing the motion Unknown");
+						break;
+				}
+				
+			}
+		}
+	}
 	
 	void record() {
 		// Machine learning with Weka
 		if (motionRecognizer->isActive()) {
-			// Recognizing a movement
+			// Recognizing a movement (TODO: recording for Weka)
 			if (recording) {
+				showFeedback = false;
+				
+				log(Info, "Start recognizing the motion with Weka");
 				motionRecognizer->startRecognition();
+				
+				// Update initial matrices, so that we can recognize movements no metter where the player stands
+				updateTransAndRot();
+				
+				// Check if avatar is colliding with a platform
+				getDesiredPose();
 			} else {
-				motionRecognizer->getRecognizedActivity();
+				const char* recognizedPose = motionRecognizer->getRecognizedActivity();
 				motionRecognizer->stopRecognition();
+				
+				++trials;
+				
+				// TODO
+				motionRecognizer->getFeedback(fb_head, fb_hip, fb_left_arm, fb_right_arm, fb_left_leg, fb_right_leg);
 			}
 		}
 
@@ -674,47 +725,15 @@ namespace {
 				updateTransAndRot();
 				
 				// Check if avatar is colliding with a platform
-				for (int i = 0; i < 3; ++i) {
-					// Check collision
-					colliding = sphereColliders[i]->IntersectsWith(*avatarCollider);
-					if (colliding) {
-						log(LogLevel::Info, "Colliding with platform %i", i);
-						
-						switch (i) {
-							case 0:
-								yogaPose = Yoga0;
-								yogaID = 0;
-								log(Info, "Stop recognizing the motion Yoga0");
-								break;
-								
-							case 1:
-								yogaPose = Yoga1;
-								yogaID = 1;
-								log(Info, "Stop recognizing the motion Yoga1");
-								break;
-								
-							case 2:
-								yogaPose = Yoga2;
-								yogaID = 2;
-								log(Info, "Stop recognizing the motion Yoga2");
-								break;
-								
-							default:
-								yogaID = -1;
-								log(Info, "Stop recognizing the motion Unknown");
-								break;
-						}
-						
-					}
-				}
+				getDesiredPose();
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
 				
 				++trials;
 				
-				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				hmm->getFeedback(fb_head, fb_hip, fb_left_arm, fb_right_arm, fb_left_leg, fb_right_leg);
 				if (evaluate)
-					logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+					logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, fb_head, fb_hip, fb_left_arm, fb_right_arm, fb_left_leg, fb_right_leg);
 
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
@@ -722,7 +741,7 @@ namespace {
 					//Audio1::play(correctSound);
 					
 					showFeedback = true;
-					hmm_head = hmm_hip = hmm_left_arm = hmm_right_arm = hmm_left_leg = hmm_right_leg = true;
+					fb_head = fb_hip = fb_left_arm = fb_right_arm = fb_left_leg = fb_right_leg = true;
 
 					if (pose0 == yogaPose) getNextStoryElement(true);
 					else if (pose1 == yogaPose) getNextStoryElement(false);

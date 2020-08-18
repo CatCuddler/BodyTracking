@@ -3,9 +3,6 @@
 
 #include <Kore/Log.h>
 
-#include <Kore/Audio1/Audio.h>
-#include <Kore/Audio1/Sound.h>
-
 #include <algorithm>
 
 #include <string>
@@ -29,12 +26,14 @@ namespace {
 	bool currentlyRecording = false;
 	bool currentlyRecognizing = false;
 
-	// Audio cues
-	Kore::Sound* startRecordingSound;
-	Kore::Sound* stopRecordingSound;
-	Kore::Sound* wrongSound;
-
 	const char* lastRecognizedActivity = "Unknown";
+
+	bool weka_head = false;
+	bool weka_hip = false;
+	bool weka_leftArm = false;
+	bool weka_rightArm = false;
+	bool weka_leftLeg = false;
+	bool weka_rightLeg = false;
 
 	// Weka access through the Java Native Interface JNI
 #ifdef KORE_STEAMVR
@@ -43,16 +42,12 @@ namespace {
 	jobject java_WekaObject;					// The Java object we want to communicate with
 	jmethodID java_addDataPointToClassifier;	// The Java function we want to call
 	jmethodID java_recognize;					// The Java function we want to call
+	jmethodID java_getFeedback;					// The Java function we want to call
 #endif
 }
 
 
 MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logger) : logger(logger) {
-
-	// Sound initiation
-	startRecordingSound = new Kore::Sound("sound/start.wav");
-	stopRecordingSound = new Kore::Sound("sound/stop.wav");
-	wrongSound = new Kore::Sound("sound/wrong.wav");
 
 	// log debugging information
 	if (operatingMode == RecordMovements) {
@@ -188,6 +183,11 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 				if (java_recognize == nullptr) {
 					Kore::log(Kore::LogLevel::Error, "JNI ERROR: No recognizeLastMovement method");
 				}
+				
+				java_getFeedback = java_JNI->GetMethodID(java_WekaClass, "getFeedbackForEachSensor", "()V");
+				if (java_recognize == nullptr) {
+					Kore::log(Kore::LogLevel::Error, "JNI ERROR: No getFeedbackForEachSensor method");
+				}
 			}
 		}
 	}
@@ -212,14 +212,12 @@ void MachineLearningMotionRecognition::startRecording(bool fullyCalibratedAvatar
 	if (!fullyCalibratedAvatar) {
 		Kore::log(Kore::LogLevel::Warning,
 			"Unable to start !!! \n   Recording cannot start until Avatar is fully calibrated");
-		Kore::Audio1::play(wrongSound);
 	}
 	// do not start a new recording, if a previous recording is still in progress
 	else if (currentlyRecording) {
 		Kore::log(Kore::LogLevel::Warning,
 			"Recording already in progress !!! \n   %s can not be recorded \n   You did not stop recording for %s !!!",
 			taskNextToRecord.c_str(), taskCurrentlyRecording.c_str());
-		Kore::Audio1::play(wrongSound);
 	}
 	// otherwise, go for it
 	else {
@@ -237,7 +235,6 @@ void MachineLearningMotionRecognition::startRecording(bool fullyCalibratedAvatar
 		// log start of new recording, and notify user via sound
 		Kore::log(Kore::LogLevel::Info, "started recording ID %i:   %s   (%s)",
 			sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
-		Kore::Audio1::play(startRecordingSound);
 	}
 
 }
@@ -254,7 +251,6 @@ void MachineLearningMotionRecognition::stopRecording() {
 		// log end of recording, and notify user via sound
 		Kore::log(Kore::LogLevel::Info, "recording ID %i stopped:   %s   (%s)",
 			sessionID, taskCurrentlyRecording.c_str(), currentTestSubjectID.c_str());
-		Kore::Audio1::play(stopRecordingSound);
 	}
 	// if user tried to stop a recording that was not actually in progress,
 	// let them know that they made a mistake via log and sound
@@ -263,17 +259,14 @@ void MachineLearningMotionRecognition::stopRecording() {
 		Kore::log(Kore::LogLevel::Warning,
 			"You tried to stop recording while no recording was in progress !!! \n   Last recording was %s",
 			taskCurrentlyRecording.c_str());
-		Kore::Audio1::play(wrongSound);
 	}
 }
 
 void MachineLearningMotionRecognition::startRecognition() {
-	Kore::log(Kore::Info, "Motion Recognition started");
 	currentlyRecognizing = true;
 }
 
 void MachineLearningMotionRecognition::stopRecognition() {
-	Kore::log(Kore::Info, "Motion Recognition stopped");
 	currentlyRecognizing = false;
 }
 
@@ -334,6 +327,24 @@ const char* MachineLearningMotionRecognition::getRecognizedActivity() {
 	}
 	#endif
 	return lastRecognizedActivity;
+}
+
+void MachineLearningMotionRecognition::getFeedback(bool &head, bool &hip, bool &leftArm, bool &rightArm, bool &leftLeg, bool &rightLeg) {
+	
+	#ifdef KORE_STEAMVR
+	if (operatingMode == RecognizeMovements) {
+		if (currentlyRecognizing) {
+			java_JNI->CallVoidMethod(java_WekaObject, java_getFeedback);
+		}
+	}
+	#endif
+	
+	head = weka_head;
+	hip = weka_hip;
+	leftArm = weka_leftArm;
+	rightArm = weka_rightArm;
+	leftLeg = weka_leftLeg;
+	rightLeg = weka_rightLeg;
 }
 
 bool MachineLearningMotionRecognition::isActive() {
