@@ -117,13 +117,13 @@ namespace {
 	// Null terminated array of 3d text
 	MeshObject* feedbackMesh[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
-    	// Platform mesh objects and collider
-    	MeshObject* platforms[] = { nullptr, nullptr, nullptr };
+	// Platform mesh objects and collider
+	MeshObject* platforms[] = { nullptr, nullptr, nullptr };
    
-    	bool showStoryElements = false;
-    	bool showFeedback = false;
+	bool showStoryElements = false;
+	bool showFeedback = false;
 
-    	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
+	SphereCollider* sphereColliders[] = { nullptr, nullptr, nullptr };
 
 	// Avatar
 	Avatar* avatar;

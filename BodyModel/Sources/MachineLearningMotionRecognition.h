@@ -8,9 +8,8 @@
 #pragma once
 
 #include "Logger.h"
+
 #include <Kore/Input/Keyboard.h>
-#include <iostream>
-#include <jni.h>
 
 class MachineLearningMotionRecognition {
 
@@ -94,12 +93,12 @@ public:
 	// Forward sensor readings for local handling
 	// E.g., recording or recognizing the data
 	void processMovementData(
-		const char* tag,
-		Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
-		Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
-		Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
-		Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
-		float scale, double time);
+	const char* tag,
+	Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+	Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+	Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+	Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+	float scale, double time);
 	
 	const char* getRecognizedActivity();
 

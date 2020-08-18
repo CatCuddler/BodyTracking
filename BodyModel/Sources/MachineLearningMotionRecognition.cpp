@@ -2,7 +2,6 @@
 #include "MachineLearningMotionRecognition.h"
 
 #include <Kore/Log.h>
-#include <Kore/Input/Keyboard.h>
 
 #include <Kore/Audio1/Audio.h>
 #include <Kore/Audio1/Sound.h>
@@ -11,8 +10,11 @@
 
 #include <string>
 #include <iostream>
+
+#ifdef KORE_STEAMVR
 #include <jni.h>
 #include <windows.h>
+#endif
 
 namespace {
 
@@ -32,14 +34,16 @@ namespace {
 	Kore::Sound* stopRecordingSound;
 	Kore::Sound* wrongSound;
 
-	const char* lastRecognizedActivity;
+	const char* lastRecognizedActivity = "Unknown";
 
 	// Weka access through the Java Native Interface JNI
+#ifdef KORE_STEAMVR
 	JavaVM *java_VirtualMachine;				// Pointer to the JVM (Java Virtual Machine)
 	JNIEnv *java_JNI;							// Pointer to native interface
 	jobject java_WekaObject;					// The Java object we want to communicate with
 	jmethodID java_addDataPointToClassifier;	// The Java function we want to call
 	jmethodID java_recognize;					// The Java function we want to call
+#endif
 }
 
 
@@ -60,7 +64,7 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	}
 }
 
-
+#ifdef KORE_STEAMVR
 // Called from the Java environment, to inform us of the Weka exercise prediction
 void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult) {
 
@@ -73,9 +77,12 @@ void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult
 	//release the string to	avoid memory leak
 	(*env).ReleaseStringUTFChars(jStringResult, charResult);
 }
+#endif
 
 
 void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
+
+	#ifdef KORE_STEAMVR
 
 	// type signature reference for method construction:
 	// https://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276
@@ -184,6 +191,8 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 			}
 		}
 	}
+	
+	#endif
 }
 
 
@@ -299,6 +308,7 @@ void MachineLearningMotionRecognition::processMovementData(
 	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
 			
+			#ifdef KORE_STEAMVR
 			if (tag == "head" || tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "lFoot" || tag == "rFoot") {
 				java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
 					java_JNI->NewStringUTF(tag), java_JNI->NewStringUTF(currentTestSubjectID.c_str()), java_JNI->NewStringUTF("unknown"),
@@ -310,16 +320,19 @@ void MachineLearningMotionRecognition::processMovementData(
 					(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
 					(jdouble)1, (jdouble)time);
 			}
+			#endif
 		}
 	}
 }
 
 const char* MachineLearningMotionRecognition::getRecognizedActivity() {
+	#ifdef KORE_STEAMVR
 	if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
 			java_JNI->CallVoidMethod(java_WekaObject, java_recognize);
 		}
 	}
+	#endif
 	return lastRecognizedActivity;
 }
 
@@ -328,8 +341,7 @@ bool MachineLearningMotionRecognition::isActive() {
 }
 
 
-void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool fullyCalibratedAvatar)
-{
+void MachineLearningMotionRecognition::processKeyDown(Kore::KeyCode code, bool fullyCalibratedAvatar) {
 
 	// when recording, start or stop recordings
 	if (operatingMode == RecordMovements) {
