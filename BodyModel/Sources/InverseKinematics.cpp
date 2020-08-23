@@ -13,29 +13,29 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	evalStucked = 0;
 	
 	// iterations
-	evalIterations[0] = 0;
+	evalIterations[0] = 0.0f;
 	evalIterations[1] = maxfloat();
-	evalIterations[2] = minfloat();
+	evalIterations[2] = 0.0f;
 	
 	// pos-error
 	evalErrorPos[0] = 0;
 	evalErrorPos[1] = maxfloat();
-	evalErrorPos[2] = minfloat();
+	evalErrorPos[2] = 0.0f;
 	
 	// rot-error
 	evalErrorRot[0] = 0;
 	evalErrorRot[1] = maxfloat();
-	evalErrorRot[2] = minfloat();
+	evalErrorRot[2] = 0.0f;
 	
 	// time
 	evalTime[0] = 0;
 	evalTime[1] = maxfloat();
-	evalTime[2] = minfloat();
+	evalTime[2] = 0.0f;
 	
 	// time per iteration
 	evalTimeIteration[0] = 0;
 	evalTimeIteration[1] = maxfloat();
-	evalTimeIteration[2] = minfloat();
+	evalTimeIteration[2] = 0.0f;
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
