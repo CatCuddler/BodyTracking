@@ -17,11 +17,11 @@ Afterwards, restart your computer.
 
 Add to BodyModel/korefile.js:
 
-project.addIncludeDir('../zulu13.29.9-ca-jdk13.0.2-win_i686/include');
+- project.addIncludeDir('../zulu/include');
+- project.addIncludeDir('../zulu/include/win32');
+- project.addLib('../zulu/lib/jvm');
 
-project.addIncludeDir('../zulu13.29.9-ca-jdk13.0.2-win_i686/include/win32');
-
-project.addLib('../zulu13.29.9-ca-jdk13.0.2-win_i686/lib/jvm');
+where zulu is the JDK installation directory.
 
 ## Usage
 
