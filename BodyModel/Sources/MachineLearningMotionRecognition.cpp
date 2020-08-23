@@ -10,10 +10,11 @@
 #include <algorithm>
 
 #include <iostream>
+
+#ifdef KORE_STEAMVR
 #include <jni.h>
 #include <windows.h>
-
-
+#endif
 
 namespace {
 
@@ -45,10 +46,12 @@ namespace {
 	Kore::Sound* walkingSound;
 
 	// Weka access through the Java Native Interface JNI
+#ifdef KORE_STEAMVR
 	JavaVM *java_VirtualMachine;				// Pointer to the JVM (Java Virtual Machine)
 	JNIEnv *java_JNI;							// Pointer to native interface
 	jobject java_WekaObject;					// The Java object we want to communicate with
 	jmethodID java_addDataPointToClassifier;	// The Java function we want to call
+#endif
 }
 
 
@@ -80,7 +83,7 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	}
 }
 
-
+#ifdef KORE_STEAMVR
 // Called from the Java environment, to inform us of the Weka exercise prediction
 void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult) {
 
@@ -122,12 +125,13 @@ void outputClassifierResultFromWeka(JNIEnv*env, jobject o, jstring jStringResult
 
 	//release the string to	avoid memory leak
 	(*env).ReleaseStringUTFChars(jStringResult, charResult);
-
 }
-
+#endif
 
 void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 
+	#ifdef KORE_STEAMVR
+	
 	// type signature reference for method construction:
 	// https://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276
 	// JNI setup example:
@@ -231,6 +235,8 @@ void MachineLearningMotionRecognition::initializeJavaNativeInterface() {
 			}
 		}
 	}
+	
+	#endif
 }
 
 
@@ -355,6 +361,7 @@ void MachineLearningMotionRecognition::processMovementData(
 	else if (operatingMode == RecognizeMovements) {
 		if (currentlyRecognizing) {
 
+			#ifdef KORE_STEAMVR
 			if (tag == "rForeArm" || tag == "lLeg" || tag == "lForeArm" || tag == "rLeg"
 				|| tag == "hip" || tag == "lHand" || tag == "rHand" || tag == "head") {
 				java_JNI->CallVoidMethod(java_WekaObject, java_addDataPointToClassifier,
@@ -365,6 +372,7 @@ void MachineLearningMotionRecognition::processMovementData(
 					(jdouble)rawLinVel.x(), (jdouble)rawLinVel.y(), (jdouble)rawLinVel.z(),
 					(jdouble)1, (jdouble)time);
 			}
+			#endif
 		}
 	}
 }

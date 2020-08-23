@@ -738,46 +738,6 @@ namespace {
 				calibratedAvatarScale = false;
 				calibratedAvatarControllersAndTrackers = false;
 			}
-		} else {
-			if (eval) {
-				if (loop >= 0) {
-					logger->saveEvaluationData(avatar);
-					// log(Kore::Info, "%i more iterations!", loop);
-					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, evalValue[ikMode]);
-					loop--;
-					
-					if (loop < 0) {
-						logger->endEvaluationLogger();
-						
-						if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
-							exit(0);
-						else {
-							if (evalSteps <= 1) {
-								evalValue[ikMode] = evalInitValue[ikMode];
-								evalSteps = evalStepsInit;
-								ikMode++;
-								endEffector[head]->setIKMode((IKMode)ikMode);
-								endEffector[leftHand]->setIKMode((IKMode)ikMode);
-								endEffector[rightHand]->setIKMode((IKMode)ikMode);
-								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
-								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-								endEffector[hip]->setIKMode((IKMode)ikMode);
-							} else {
-								evalValue[ikMode] += evalStep;
-								evalSteps--;
-							}
-							
-							if (ikMode > evalMaxIk) {
-								ikMode = evalMinIk;
-								currentFile++;
-							}
-							
-							loop = 0;
-							logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxSteps[ikMode]);
-						}
-					}
-				}
-			}
 		}
 		
 		// Get projection and view matrix
@@ -1040,7 +1000,7 @@ namespace {
 	}
 }
 
-int kore(int argc, char** argv) {
+int kickstart(int argc, char** argv) {
 	System::init("BodyTracking", width, height);
 	
 	init();

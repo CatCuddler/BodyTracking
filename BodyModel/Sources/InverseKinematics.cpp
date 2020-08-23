@@ -1,40 +1,10 @@
 #include "pch.h"
 #include "InverseKinematics.h"
-
-#include <float.h>
+#include "RotationUtility.h"
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
-	
-	totalNum = 0;
-	evalReached = 0;
-	evalStucked = 0;
-	
-	// iterations
-	evalIterations[0] = 0;
-	evalIterations[1] = FLT_MAX;
-	evalIterations[2] = FLT_MIN;
-	
-	// pos-error
-	evalErrorPos[0] = 0;
-	evalErrorPos[1] = FLT_MAX;
-	evalErrorPos[2] = FLT_MIN;
-	
-	// rot-error
-	evalErrorRot[0] = 0;
-	evalErrorRot[1] = FLT_MAX;
-	evalErrorRot[2] = FLT_MIN;
-	
-	// time
-	evalTime[0] = 0;
-	evalTime[1] = FLT_MAX;
-	evalTime[2] = FLT_MIN;
-	
-	// time per iteration
-	evalTimeIteration[0] = 0;
-	evalTimeIteration[1] = FLT_MAX;
-	evalTimeIteration[2] = FLT_MIN;
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
@@ -42,19 +12,10 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	float errorPos = -1.0f;
 	float errorRot = -1.0f;
 	bool stucked = false;
-#ifdef KORE_MACOS
-	struct timespec start, end;
-	struct timespec start2, end2;
-	
-	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-#endif
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
 	while ((errorPos < 0 || errorPos > errorMaxPos[ikMode] || errorRot < 0 || errorRot > errorMaxRot[ikMode]) && i < (int) maxSteps[ikMode] && !stucked) {
-#ifdef KORE_MACOS
-		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
-#endif
 		
 		prevDeltaTheta = deltaTheta;
 		
@@ -91,49 +52,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		for (int i = 0; i < bones.size(); ++i)
 			updateBone(bones[i]);
 		
-#ifdef KORE_MACOS
-		if (eval && i == 0) {
-			// time per iteration
-			clock_gettime(CLOCK_MONOTONIC_RAW, &end2);
-			float time = (end2.tv_sec - start2.tv_sec) * 1000000 + (end2.tv_nsec - start2.tv_nsec) / 1000;
-			evalTimeIteration[0] += time;
-			evalTimeIteration[1] = time < evalTimeIteration[1] ? time : evalTimeIteration[1];
-			evalTimeIteration[2] = time > evalTimeIteration[2] ? time : evalTimeIteration[2];
-		}
-#endif // KORE_MACOS
-		
 		i++;
-	}
-	
-	if (eval) {
-		totalNum += 1;
-		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
-		evalStucked += stucked ? 1 : 0;
-		
-		// iterations
-		evalIterations[0] += i;
-		evalIterations[1] = i < evalIterations[1] ? (float) i : evalIterations[1];
-		evalIterations[2] = i > evalIterations[2] ? (float) i : evalIterations[2];
-		
-		// pos-error
-		evalErrorPos[0] += errorPos > 0 ? errorPos : 0;
-		evalErrorPos[1] = errorPos < evalErrorPos[1] ? errorPos : evalErrorPos[1];
-		evalErrorPos[2] = errorPos > evalErrorPos[2] ? errorPos : evalErrorPos[2];
-		
-		// rot-error
-		evalErrorRot[0] += errorRot > 0 ? errorRot : 0;
-		evalErrorRot[1] = errorRot < evalErrorRot[1] ? errorRot : evalErrorRot[1];
-		evalErrorRot[2] = errorRot > evalErrorRot[2] ? errorRot : evalErrorRot[2];
-		
-#ifdef KORE_MACOS
-		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-		
-		// time
-		float time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-		evalTime[0] += time;
-		evalTime[1] = time < evalTime[1] ? time : evalTime[1];
-		evalTime[2] = time > evalTime[2] ? time : evalTime[2];
-#endif
 	}
 }
 
@@ -290,42 +209,4 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight = bones[rightLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
-}
-
-float InverseKinematics::getReached() {
-	return totalNum != 0 ? (float) evalReached / (float) totalNum : -1;
-}
-
-float InverseKinematics::getStucked() {
-	return totalNum != 0 ? (float) evalStucked / (float) totalNum : -1;
-}
-
-float* InverseKinematics::getIterations() {
-	evalIterations[0] = totalNum != 0 ? (float) evalIterations[0] / (float) totalNum : -1;
-	
-	return evalIterations;
-}
-
-float* InverseKinematics::getErrorPos() {
-	evalErrorPos[0] = totalNum != 0 ? evalErrorPos[0] / (float) totalNum : -1;
-	
-	return evalErrorPos;
-}
-
-float* InverseKinematics::getErrorRot() {
-	evalErrorRot[0] = totalNum != 0 ? evalErrorRot[0] / (float) totalNum : -1;
-	
-	return evalErrorRot;
-}
-
-float* InverseKinematics::getTime() {
-	evalTime[0] = totalNum != 0 ? evalTime[0] / (float) totalNum : -1;
-	
-	return evalTime;
-}
-
-float* InverseKinematics::getTimeIteration() {
-	evalTimeIteration[0] = totalNum != 0 ? evalTimeIteration[0] / (float) totalNum : -1;
-	
-	return evalTimeIteration;
 }
