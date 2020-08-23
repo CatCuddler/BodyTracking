@@ -11,14 +11,6 @@ public:
 	void inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
-	float getReached();
-	float getStucked();
-	float* getIterations();
-	float* getErrorPos();
-	float* getErrorRot();
-	float* getTime();
-	float* getTimeIteration();
-	
 private:
 	std::vector<BoneNode*> bones;
 	
@@ -47,7 +39,4 @@ private:
 	void applyChanges(std::vector<float> deltaTheta, BoneNode* targetBone);
 	void applyJointConstraints(BoneNode* targetBone);
 	void clampValue(float minVal, float maxVal, float& value);
-	
-	int totalNum = 0, evalReached = 0, evalStucked = 0;
-	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];
 };

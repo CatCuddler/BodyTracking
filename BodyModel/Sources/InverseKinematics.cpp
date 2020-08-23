@@ -1,40 +1,11 @@
 #include "pch.h"
 #include "InverseKinematics.h"
 
-#include <float.h>
+using namespace Kore;
 
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
-	
-	totalNum = 0;
-	evalReached = 0;
-	evalStucked = 0;
-	
-	// iterations
-	evalIterations[0] = 0;
-	evalIterations[1] = FLT_MAX;
-	evalIterations[2] = FLT_MIN;
-	
-	// pos-error
-	evalErrorPos[0] = 0;
-	evalErrorPos[1] = FLT_MAX;
-	evalErrorPos[2] = FLT_MIN;
-	
-	// rot-error
-	evalErrorRot[0] = 0;
-	evalErrorRot[1] = FLT_MAX;
-	evalErrorRot[2] = FLT_MIN;
-	
-	// time
-	evalTime[0] = 0;
-	evalTime[1] = FLT_MAX;
-	evalTime[2] = FLT_MIN;
-	
-	// time per iteration
-	evalTimeIteration[0] = 0;
-	evalTimeIteration[1] = FLT_MAX;
-	evalTimeIteration[2] = FLT_MIN;
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
@@ -239,42 +210,4 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight = bones[rightLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
-}
-
-float InverseKinematics::getReached() {
-	return totalNum != 0 ? (float) evalReached / (float) totalNum : -1;
-}
-
-float InverseKinematics::getStucked() {
-	return totalNum != 0 ? (float) evalStucked / (float) totalNum : -1;
-}
-
-float* InverseKinematics::getIterations() {
-	evalIterations[0] = totalNum != 0 ? (float) evalIterations[0] / (float) totalNum : -1;
-	
-	return evalIterations;
-}
-
-float* InverseKinematics::getErrorPos() {
-	evalErrorPos[0] = totalNum != 0 ? evalErrorPos[0] / (float) totalNum : -1;
-	
-	return evalErrorPos;
-}
-
-float* InverseKinematics::getErrorRot() {
-	evalErrorRot[0] = totalNum != 0 ? evalErrorRot[0] / (float) totalNum : -1;
-	
-	return evalErrorRot;
-}
-
-float* InverseKinematics::getTime() {
-	evalTime[0] = totalNum != 0 ? evalTime[0] / (float) totalNum : -1;
-	
-	return evalTime;
-}
-
-float* InverseKinematics::getTimeIteration() {
-	evalTimeIteration[0] = totalNum != 0 ? evalTimeIteration[0] / (float) totalNum : -1;
-	
-	return evalTimeIteration;
 }

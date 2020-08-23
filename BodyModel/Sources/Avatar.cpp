@@ -123,34 +123,6 @@ void Avatar::resetPositionAndRotation() {
 	}
 }
 
-float Avatar::getReached() const {
-	return invKin->getReached();
-}
-
-float Avatar::getStucked() const {
-	return invKin->getStucked();
-}
-
-float* Avatar::getIterations() const {
-	return invKin->getIterations();
-}
-
-float* Avatar::getErrorPos() const {
-	return invKin->getErrorPos();
-}
-
-float* Avatar::getErrorRot() const {
-	return invKin->getErrorRot();
-}
-
-float* Avatar::getTime() const {
-	return invKin->getTime();
-}
-
-float* Avatar::getTimeIteration() const {
-	return invKin->getTimeIteration();
-}
-
 float Avatar::getHeight() const {
 	return currentHeight;
 }
