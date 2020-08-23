@@ -9,26 +9,26 @@ Furthermore, branches yoga and motion_recognition implement full-body motion rec
 - VisualStudio 2019 or Xcode
 
 ## Clone the project:
-git clone --recursive git@github.com:CatCuddler/BodyTracking.git <br />
+- git clone --recursive git@github.com:CatCuddler/BodyTracking.git <br />
 
 ### Compile:
-cd BodyTracking/BodyModel/Kore <br />
-node Kore/make --vr steamvr <br />
+- cd BodyTracking/BodyModel/Kore <br />
+- node Kore/make --vr steamvr <br />
 or <br />
-node Kore/make
+- node Kore/make
 
 #### Only for Mac Users:
-Currently Metal does not work. Use Opengl. <br />
-node Kore/make -g opengl
+Currently Metal does not work. Use Opengl: <br />
+- node Kore/make -g opengl
 
 #### Only for Windows Users:
 If you dont use Visual Studio 2019, you can specify the used version: <br />
-node Kore/make -v vs20xx
+- node Kore/make -v vs20xx
 
 ### Open the Project:
-Open VisualStudio or Xcode project in BodyModel/build. <br />
-Change to "Develop x86" mode in Visual Studio (Release doent work). <br />
-Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose Deployment directory.
+- Open VisualStudio or Xcode project in BodyModel/build. <br />
+- Change to "Develop x86" mode in Visual Studio (Release doent work). <br />
+- Change working directory in Xcode: Edit Scheme -> Use custom working directory -> choose Deployment directory.
 
 ### Avatar Calibration
 1. Strap one Vive Tracker on your left foot and another one on your right foot (above ankles)
@@ -40,6 +40,7 @@ Change working directory in Xcode: Edit Scheme -> Use custom working directory -
 7. Go to where the avatar stands and put your feet and hands in the same position.
 8. Press the "menu button" to calibrate the avatar.
 
+## Videos:
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/x4SS8_-XY38/0.jpg)](https://youtu.be/x4SS8_-XY38)
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/J2bgYozfsDw/0.jpg)](https://youtu.be/J2bgYozfsDw)
