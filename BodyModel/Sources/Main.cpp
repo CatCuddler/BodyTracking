@@ -475,7 +475,8 @@ namespace {
 						rawLinVel = sensorState.linearVelocity;
 						rawAngVel = sensorState.angularVelocity;
 						desLinVel = initTransInv * vec4(rawLinVel.x(), rawLinVel.y(), rawLinVel.z(), 1);
-						Kore::Quaternion rawAngVelQuat = toQuaternion(rawAngVel);
+						Kore::Quaternion rawAngVelQuat;
+						RotationUtility::eulerToQuat(rawAngVel.x(), rawAngVel.y(), rawAngVel.z(), &rawAngVelQuat);
 						desAngVel = initRotInv.rotated(rawAngVelQuat);
 						rawPosition = sensorState.vrPose.position;
 						rawRotation = sensorState.vrPose.orientation;
