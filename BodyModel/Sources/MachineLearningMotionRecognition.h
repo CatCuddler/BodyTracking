@@ -59,11 +59,6 @@ private:
 	// used for motion recognition
 	bool isCurrentlyRecognizing();
 
-	// Create a Java Virtual Machine,
-	// and load and initialize the Java class we need to interact with
-	void initializeJavaNativeInterface();
-
-
 public:
 
 	// Create and initialize
