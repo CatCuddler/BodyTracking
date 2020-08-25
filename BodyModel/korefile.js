@@ -12,9 +12,9 @@ project.addFile('../HMM_Trainer/Sources/Markov.h');
 
 if (platform === Platform.Windows) {
 	// Needed for motion recognition with Weka
-	project.addIncludeDir('../zulu14.29.23-ca-jdk14.0.2-win_x64/include');
-	project.addIncludeDir('../zulu14.29.23-ca-jdk14.0.2-win_x64/include/win32');
-	project.addLib('../zulu14.29.23-ca-jdk14.0.2-win_x64/lib/jvm');
+	project.addIncludeDir('../zulu14.29.23-ca-jdk14.0.2-win_i686/include');
+	project.addIncludeDir('../zulu14.29.23-ca-jdk14.0.2-win_i686/include/win32');
+	project.addLib('../zulu14.29.23-ca-jdk14.0.2-win_i686/lib/jvm');
 }	
 
 resolve(project);
