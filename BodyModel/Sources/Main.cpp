@@ -44,6 +44,12 @@ namespace {
 
 	const int sizeOfAvatars = 4;
 
+	//set 1 to get some data for calculating the binary classifier
+	int tester = 0;
+	//the Yogapose thats data should be tested (1 or 2 or 3)
+	int poseNR = 3;
+
+
 	//EndEffector** endEffector;
 	const int numOfEndEffectors = 8;
 	EndEffector** endEffectorArr[sizeOfAvatars];
@@ -230,9 +236,7 @@ namespace {
 	bool recording = false;
 	bool showCoordinateSystem = false;
 
-	//char* poses[3] = { "yoga2.csv",  "yoga1.csv", "yoga3.csv" };
 	char* poses[3] = { "yoga2_task.csv",  "yoga1_task.csv", "yoga3_task.csv" };
-	//char* poses[3] = { "y2.csv",  "yoga1_task.csv", "y3.csv" };
 	char* posesStatic[3] = { "yoga2_endpose.csv",  "yoga1_endpose.csv", "yoga3_endpose.csv" };
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
@@ -352,22 +356,18 @@ namespace {
 		
 		if (pose0 == Yoga0 || pose1 == Yoga0) {
 			renderPlatform(0, color0);
-			//renderAvatar(V, P, avatars[1]);
 		}
 		
 		if (pose0 == Yoga1 || pose1 == Yoga1) {
 			renderPlatform(1, color1);
-			//renderAvatar(V, P, avatars[2]);
 		}
 		
 		if (pose0 == Yoga2 || pose1 == Yoga2) {
 			renderPlatform(2, color2);
-			//renderAvatar(V, P, avatars[3]);
 		}
 		
 		// Reset color
 		Graphics4::setFloat3(cLocation, vec3(1.0, 1.0, 1.0));
-		//renderAvatar(V, P, avatars[3]);
 	}
 	
 	void render3Dtext(mat4 V, mat4 P) {
@@ -538,7 +538,6 @@ namespace {
 
 			vec3 endEffectorPos = bone->getPosition();
 			endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale, endEffectorPos.y()* avatar->scale, endEffectorPos.z()* avatar->scale, 1);
-			//endEffectorPos = basicTrans * vec4(endEffectorPos.x()*avatar->scale*1.33f, endEffectorPos.y()* avatar->scale*1.33f, endEffectorPos.z()* avatar->scale*1.33f, 1);
 			Kore::Quaternion endEffectorRot = basicRot.rotated(bone->getOrientation());
 
 			Kore::mat4 M = mat4::Translation(endEffectorPos.x(), endEffectorPos.y(), endEffectorPos.z()) * mLoc;
@@ -729,7 +728,7 @@ namespace {
 	}
 
 	void calibrate() {
-		initTransAndRot();		// TODO: remove or necessary while in VR Mode?	
+		initTransAndRot();
 		for (int endEffectorID = 0; endEffectorID < numOfEndEffectors; ++endEffectorID) {
 			runCalibrate(endEffectorID);
 		}
@@ -762,7 +761,6 @@ namespace {
 				executeMovement(endEffectorID, avatar, true);
 			}
 		}
-		//if (endEffectorUsed > 0) changeTransRotUndo();
 	}
 
 	void calibratePuppets(char* fileName = "calibratePuppet.csv") {
@@ -909,13 +907,10 @@ namespace {
 		loggerTrainerMovement[i] = new Logger();
 
 		setPose(avatars[i + 1], posesStatic[i]);
-		//if (difficulty == 0) avatars[i + 1]->setScale(avatars[0]->scale * 0.75f);
-		//else avatars[i + 1]->setScale(avatars[0]->scale);
 		avatars[i + 1]->setScale(avatars[0]->scale);
 	}
 
 	void difficultySet() {
-		//for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
 		for (int i = 1; i < sizeOfAvatars; i++) {
 			loadTrainer(i - 1);
 		}
@@ -941,18 +936,6 @@ namespace {
 					collisionLast = i;
 				}
 			}
-			/*
-			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
-				if (i == 1 && (pose0 == Yoga1 || pose1 == Yoga1)) {
-					collisionLast = i;
-				}
-			}
-			if (sphereColliders[i]->IntersectsWith(*avatarCollider)) {
-				if (i == 2 && (pose0 == Yoga2 || pose1 == Yoga2)) {
-					collisionLast = i;
-				}
-			}
-			*/
 		}
 		if (collisionSave != collisionLast) {
 			difficultySet();
@@ -985,6 +968,84 @@ namespace {
 
 		waitTimer = 0;
 		moveTrainer = true;
+	}
+
+	void getkoeffizient() {
+		if (tester == 1) {
+			log(Info, "Start recognizing the motion");
+
+			int intPoseNone = 0;
+			int intPose0 = 0;
+			int intPose1 = 0;
+			int intPose2 = 0;
+
+
+			for (int filenumberHmm = 0; filenumberHmm < 100; filenumberHmm++) {
+				//log(Info, "%i", filenumberHmm);
+				char evaluationDataPath[100];
+				sprintf(evaluationDataPath, "YogaTrainingData/pose%i/Yoga_Krieger_%i.csv", poseNR, filenumberHmm);
+				//log(Info, evaluationDataPath);
+				bool startIT = true;
+
+				bool dataAvailableHMM = true;
+				Logger* loggerHMM = new Logger();
+				hmm = new HMM(*loggerHMM);
+
+				while (dataAvailableHMM) {
+					double timeHMM;
+					Kore::vec3 desPositionHMM[1];
+					Kore::Quaternion desRotationHMM[1];
+					string tag;
+					dataAvailableHMM = loggerHMM->readDataHMM(evaluationDataPath, timeHMM, desPositionHMM, desRotationHMM, tag);
+					if (dataAvailableHMM) {
+						char* cstr = new char[tag.length() + 1];
+						strcpy(cstr, tag.c_str());
+						Kore::Quaternion finalRot = desRotationHMM[0];
+						vec3 finalPos = desPositionHMM[0];
+
+						if (startIT) {
+							hmm->startRecognition(finalPos, finalRot);
+							startIT = false;
+						}
+
+						hmm->recordMovement(lastTime, cstr, finalPos, finalRot);
+
+						/*
+						log(Info, cstr);
+						log(Info, "x: %f", desPositionHMM->x());
+						log(Info, "y: %f", desPositionHMM->y());
+						log(Info, "z: %f", desPositionHMM->z());
+						log(Info, "time: %f", timeHMM);
+						*/
+						delete[] cstr;
+						tag.clear();
+					}
+				}
+
+				int correct = hmm->stopRecognitionAndIdentifyInt();
+				if (correct == 0) {
+					intPose0++;
+				}
+				else if (correct == 1) {
+					intPose1++;
+				}
+				else if (correct == 2) {
+					intPose2++;
+				}
+				else {
+					intPoseNone++;
+				}
+			}
+			//Results
+			log(Info, "____________________________");
+			log(Info, "Movements recognized as:");
+			log(Info, "PoseNone: %i", intPoseNone);
+			log(Info, "Pose0: %i", intPose0);
+			log(Info, "Pose1: %i", intPose1);
+			log(Info, "Pose2: %i", intPose2);
+			log(Info, "____________________________");
+		}
+		tester = 0;
 	}
 
 	void record() {
@@ -1264,7 +1325,7 @@ namespace {
 		
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, Graphics1::Color::Black, 1.0f, 0);
-		Graphics4::setPipeline(pipeline);				// TODO: not needed, renderavatar does this allready later, bevor its used the first time. - VR-Mode?
+		Graphics4::setPipeline(pipeline);	
 		
 #ifdef KORE_STEAMVR
 		VrInterface::begin();
@@ -1454,6 +1515,7 @@ namespace {
 			}
 		}
 
+		getkoeffizient();
 
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();
@@ -1462,9 +1524,6 @@ namespace {
 		// render player avatar
 		renderAvatar(V, P, avatars[0]);
 		
-		renderPlatform(0, color0);
-		renderPlatform(1, color1);
-		renderPlatform(2, color2);
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
@@ -1474,7 +1533,6 @@ namespace {
 		if (showStoryElements) render3Dtext(V, P);
 		
 		if (showFeedback) renderFeedbackText(V, P);
-		renderFeedbackText(V, P);
 		
         if (showStoryElements) renderPlatforms(V, P);
 
@@ -1795,19 +1853,13 @@ namespace {
 		//avatarChoice = "avatar/male_3.ogex";
 
 		// Female avatars
-		//avatarChoice = "avatar/female_0.ogex";
 		//avatarChoice = "avatar/female_1.ogex";
 		//avatarChoice = "avatar/female_2.ogex";
 		//avatarChoice = "avatar/female_3.ogex";
-		//avatarChoice = "avatar/female_4.ogex";
-		/*
-		//player Avatar
-		avatars[0] = new Avatar("avatar/male_3.ogex", "avatar/", structure);
-		//Trainer avatars
-		avatars[1] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		avatars[2] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		avatars[3] = new Avatar("avatar/male_0.ogex", "avatar/", structure);
-		*/
+
+		//avatarChoice = "avatar/female_0.ogex";		//bugged, do not use
+		//avatarChoice = "avatar/female_4.ogex";		//bugged, do not use
+		
 		//player Avatar
 		avatars[0] = new Avatar(avatarChoice, "avatar/", structure);
 		//Trainer avatars
@@ -1903,8 +1955,7 @@ namespace {
 			endEffectorArr[i][rightForeArm] = new EndEffector(rightForeArmBoneIndex);
 			endEffectorArr[i][leftFoot] = new EndEffector(leftFootBoneIndex);
 			endEffectorArr[i][rightFoot] = new EndEffector(rightFootBoneIndex);
-		}		
-		//endEffector = endEffectorArr[0];
+		}
 
 		loggerTrainer = new Logger();
 		for (int i = 0; i < difficultyRanks; i++) { loggerTrainerMovement[i] = new Logger(); }
@@ -1921,9 +1972,6 @@ namespace {
 		avatarPositions[3] = mat4::Translation(0, 0, 0.0f) * initRot.matrix().Transpose();
 		avatarPositions[4] = mat4::Translation(0, 0, 0.8f) * initRot.matrix().Transpose();
 		avatarPositions[5] = mat4::Translation(0, 0, -0.8f) * initRot.matrix().Transpose();
-		//setPose(avatars[1], "yoga2_endpose.csv");
-		//setPose(avatars[2], "yoga1_endpose.csv");
-		//setPose(avatars[3], "yoga3_endpose.csv");
 		
 		coloredTrackerBaseMesh = new MeshObject("3Dobjects/Sphere_green.ogex", "3Dobjects/", structure, 1);
 		neutralColoredTracker();

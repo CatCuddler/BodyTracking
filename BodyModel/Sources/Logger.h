@@ -39,4 +39,5 @@ public:
 	void analyseHMM(const char* filename, double probability, bool newLine);
 	
 	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
+	bool readDataHMM(const char* filename, double& timeHMM, Kore::vec3* rawPos, Kore::Quaternion* rawRot, string& tagIn);
 };

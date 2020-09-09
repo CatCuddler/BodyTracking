@@ -41,6 +41,7 @@ public:
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	bool stopRecognitionAndIdentify(Yoga yogaPos);
 	bool stopRecognitionAndIdentify();
+	int stopRecognitionAndIdentifyInt();
 	
 	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	

@@ -151,3 +151,38 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 	
 	return true;
 }
+
+bool Logger::readDataHMM(const char* filename, double& timeHMM, Kore::vec3* rawPos, Kore::Quaternion* rawRot, string& tagIn)
+{
+	string tag;
+	float posX, posY, posZ;
+	float rotX, rotY, rotZ, rotW;
+
+	if (!logDataReader.is_open()) {
+
+		if (ifstream(filename)) {
+			logDataReader.open(filename);
+			log(Kore::Info, "Read data from %s", filename);
+
+			// Skip header
+			logDataReader >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag >> tag;
+		}
+		else {
+			log(Kore::Info, "Could not find file %s", filename);
+		}
+	}
+
+	// Read lines
+	//for (int i = 0; i < 6; ++i) {
+		//logDataReader >> tag >> timeHMM >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
+	logDataReader >> tagIn >> timeHMM >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
+
+	rawPos[0] = Kore::vec3(posX, posY, posZ);
+	rawRot[0] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
+
+	if (logDataReader.eof()) {
+		logDataReader.close();
+		return false;
+	}
+	//}
+}
