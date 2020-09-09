@@ -910,7 +910,7 @@ namespace {
 		avatars[i + 1]->setScale(avatars[0]->scale);
 	}
 
-	void difficultySet() {
+	void difficultySetChanges() {
 		for (int i = 1; i < sizeOfAvatars; i++) {
 			loadTrainer(i - 1);
 		}
@@ -938,7 +938,7 @@ namespace {
 			}
 		}
 		if (collisionSave != collisionLast) {
-			difficultySet();
+			difficultySetChanges();
 			trials = 0;
 		}
 	}
@@ -952,14 +952,14 @@ namespace {
 	void difficultyIncrease() {
 		if (difficulty < (difficultyRanks - 1)) {
 			difficulty++;
-			difficultySet();
+			difficultySetChanges();
 		}
 	}
 
 	void difficultyDecrease() {
 		if (difficulty > 0) {
 			difficulty--;
-			difficultySet();
+			difficultySetChanges();
 		}
 	}
 
@@ -1965,7 +1965,7 @@ namespace {
 		}
 
 		calibratePuppets();
-		difficultySet();
+		difficultySetChanges();
 		avatarPositions[0] = mat4::Translation(0.5f, 0, 0.4f) * initRot.matrix().Transpose();
 		avatarPositions[1] = mat4::Translation(0.5f, 0, 1.2f) * initRot.matrix().Transpose();
 		avatarPositions[2] = mat4::Translation(0.5f, 0, -0.4f) * initRot.matrix().Transpose();
