@@ -327,7 +327,6 @@ void record() {
 	} else {
 		Audio1::play(stopRecordingSound);
 		logger->endLogger();
-		logger->endEvaluationLogger();
 	}
 }
 
@@ -580,53 +579,46 @@ void record() {
 			if (!dataAvailable) {
 				
 				if (eval) {
-					if (loop >= 0) {
-						
-						log(Kore::Info, "%s \t IK: %i \t lambda: %f", files[currentFile], ikMode, evalValue[ikMode]);
-						float* iterations = avatar->getIterations();
-						float* errorPos = avatar->getErrorPos();
-						float* errorRot = avatar->getErrorRot();
-						float* time = avatar->getTime();
-						float* timeIteration = avatar->getTimeIteration();
-						bool reached = avatar->getReached();
-						bool stucked = avatar->getStucked();
-						logger->saveEvaluationData(iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
-						
-						loop--;
-						
-						if (loop < 0) {
-							logger->endEvaluationLogger();
-							
-							if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
-								exit(0);
-							else {
-								if (evalSteps <= 1) {
-									evalValue[ikMode] = evalInitValue[ikMode];
-									evalSteps = evalStepsInit;
-									ikMode++;
-									endEffector[head]->setIKMode((IKMode)ikMode);
-									endEffector[leftHand]->setIKMode((IKMode)ikMode);
-									endEffector[rightHand]->setIKMode((IKMode)ikMode);
-									endEffector[leftFoot]->setIKMode((IKMode)ikMode);
-									endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-									endEffector[hip]->setIKMode((IKMode)ikMode);
-								} else {
-									evalValue[ikMode] += evalStep;
-									evalSteps--;
-								}
-								
-								if (ikMode > evalMaxIk) {
-									ikMode = evalMinIk;
-									currentFile++;
-									calibratedAvatar = false;
-								}
-								
-								loop = 0;
-								calibratedAvatar = false;
-								logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
-							}
+					
+					log(Kore::Info, "%s \t IK: %i \t lambda: %f \t errorMaxPos: %f \t errorMaxRot: %f \t maxIterations: %f", files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
+					
+					float* iterations = avatar->getIterations();
+					float* errorPos = avatar->getErrorPos();
+					float* errorRot = avatar->getErrorRot();
+					float* time = avatar->getTime();
+					float* timeIteration = avatar->getTimeIteration();
+					bool reached = avatar->getReached();
+					bool stucked = avatar->getStucked();
+					logger->saveEvaluationData(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
+					
+					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
+						exit(0);
+					else {
+						if (evalSteps <= 1) {
+							evalValue[ikMode] = evalInitValue[ikMode];
+							evalSteps = evalStepsInit;
+							ikMode++;
+							endEffector[head]->setIKMode((IKMode)ikMode);
+							endEffector[leftHand]->setIKMode((IKMode)ikMode);
+							endEffector[rightHand]->setIKMode((IKMode)ikMode);
+							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
+							endEffector[hip]->setIKMode((IKMode)ikMode);
+						} else {
+							evalValue[ikMode] += evalStep;
+							evalSteps--;
 						}
+						
+						if (ikMode > evalMaxIk) {
+							ikMode = evalMinIk;
+							currentFile++;
+							
+							logger->endEvaluationLogger();
+						}
+						
+						calibratedAvatar = false;
 					}
+					
 				} else {
 					currentFile++;
 					calibratedAvatar = false;

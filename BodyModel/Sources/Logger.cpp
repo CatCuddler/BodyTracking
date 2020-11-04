@@ -90,42 +90,27 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations) {
-	time_t t = time(0);   // Get time now
+void Logger::saveEvaluationData(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
 	
 	// Save settings
-	char evaluationConfigPath[100];
-	sprintf(evaluationConfigPath, "eval/evaluationConfig_%s_%li.csv", filename, t);
+	char evaluationDataPath[100];
+	sprintf(evaluationDataPath, "eval/evaluationData_IK_%i_%s", ikMode, filename);
 	
-	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app); // Append to the end
-	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Iterations Max\n";	// Append header
-	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxIterations << "\n";
-	evaluationConfigOutputFile.flush();
-	evaluationConfigOutputFile.close();
+	if (!evaluationDataOutputFile.is_open()) {
+		evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
+		
+		// Append to the end
+		evaluationDataOutputFile << "IK Mode;File;Lambda;Error Max Pos;Error Max Rot;Iterations Max;";
+		evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
+		evaluationDataOutputFile << "Iterations (Min);Error Pos (Min);Error Rot (Min);Error (Min);Time [us] (Min);Time/Iteration [us] (Min);";
+		evaluationDataOutputFile << "Iterations (Max);Error Pos (Max);Error Rot (Max);Error (Max);Time [us] (Max);Time/Iteration [us] (Max);";
+		evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
+	}
+	
+	// Save settings
+	evaluationDataOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxIterations << ";";
 	
 	// Save results
-	char evaluationDataPath[100];
-	sprintf(evaluationDataPath, "eval/evaluationData_%s_%li.csv", filename, t);
-	
-	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app); // Append to the end
-	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";	// Append header
-	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
-	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
-	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
-	evaluationDataOutputFile.flush();
-	
-	log(Kore::Info, "Start eval-logging!");
-}
-
-void Logger::endEvaluationLogger() {
-	evaluationDataOutputFile.flush();
-	evaluationDataOutputFile.close();
-	
-	log(Kore::Info, "Stop eval-logging!");
-}
-
-void Logger::saveEvaluationData(const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
-	// Save datas
 	for (int i = 0; i < 3; ++i) {
 		float error = Kore::sqrt(Kore::sqrt(*(errorPos + i)) + Kore::sqrt(*(errorRot + i)));
 		
@@ -137,14 +122,16 @@ void Logger::saveEvaluationData(const float* iterations, const float* errorPos, 
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}
 	evaluationDataOutputFile << reached << ";" << stucked << "\n";
+	
 	evaluationDataOutputFile.flush();
 }
 
-/*void Logger::saveEvaluationData(const char* tag, float posError, float rotError) {
-	// Save position
-	evaluationDataOutputFile << tag << " " << posError << " "  << rotError << "\n";
+void Logger::endEvaluationLogger() {
 	evaluationDataOutputFile.flush();
-}*/
+	evaluationDataOutputFile.close();
+	
+	log(Kore::Info, "Stop eval-logging!");
+}
 
 bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
 	std::string tag;

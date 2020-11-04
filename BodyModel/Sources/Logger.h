@@ -17,7 +17,6 @@ private:
 	
 	// Output file to save data for evaluation
 	std::fstream evaluationDataOutputFile;
-	std::fstream evaluationConfigOutputFile;
 	
 public:
 	Logger();
@@ -27,8 +26,7 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations);
-	void saveEvaluationData(const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked);
+	void saveEvaluationData(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked);
 	void endEvaluationLogger();
 	
 	// HMM
