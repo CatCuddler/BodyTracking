@@ -90,23 +90,25 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-/*void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps) {
+void Logger::startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations) {
 	time_t t = time(0);   // Get time now
 	
-	char evaluationDataPath[100];
-	sprintf(evaluationDataPath, "eval/evaluationData_%li.csv", t);
-	
+	// Save settings
 	char evaluationConfigPath[100];
-	sprintf(evaluationConfigPath, "eval/evaluationConfig_%li.csv", t);
+	sprintf(evaluationConfigPath, "eval/evaluationConfig_%s_%li.csv", filename, t);
 	
-	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app);
-	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Steps Max\n";
-	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxSteps << "\n";
+	evaluationConfigOutputFile.open(evaluationConfigPath, std::ios::app); // Append to the end
+	evaluationConfigOutputFile << "IK Mode;File;Lambda;Error Pos Max;Error Rot Max;Iterations Max\n";	// Append header
+	evaluationConfigOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxIterations << "\n";
 	evaluationConfigOutputFile.flush();
 	evaluationConfigOutputFile.close();
 	
-	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
-	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";
+	// Save results
+	char evaluationDataPath[100];
+	sprintf(evaluationDataPath, "eval/evaluationData_%s_%li.csv", filename, t);
+	
+	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app); // Append to the end
+	evaluationDataOutputFile << "Iterations;Error Pos;Error Rot;Error;Time [us];Time/Iteration [us];";	// Append header
 	evaluationDataOutputFile << "Iterations Min;Error Pos Min;Error Rot Min;Error Min;Time [us] Min;Time/Iteration [us] Min;";
 	evaluationDataOutputFile << "Iterations Max;Error Pos Max;Error Rot Max;Error Max;Time [us] Max;Time/Iteration [us] Max;";
 	evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
@@ -116,21 +118,16 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 }
 
 void Logger::endEvaluationLogger() {
+	evaluationDataOutputFile.flush();
 	evaluationDataOutputFile.close();
 	
 	log(Kore::Info, "Stop eval-logging!");
 }
 
-void Logger::saveEvaluationData(Avatar *avatar) {
-	float* iterations = avatar->getIterations();
-	float* errorPos = avatar->getErrorPos();
-	float* errorRot = avatar->getErrorRot();
-	float* time = avatar->getTime();
-	float* timeIteration = avatar->getTimeIteration();
-	
+void Logger::saveEvaluationData(const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
 	// Save datas
 	for (int i = 0; i < 3; ++i) {
-		float error = sqrtf(Square(*(errorPos + i)) + Square(*(errorRot + i)));
+		float error = Kore::sqrt(Kore::sqrt(*(errorPos + i)) + Kore::sqrt(*(errorRot + i)));
 		
 		evaluationDataOutputFile << *(iterations + i) << ";";
 		evaluationDataOutputFile << *(errorPos + i) << ";";
@@ -139,47 +136,24 @@ void Logger::saveEvaluationData(Avatar *avatar) {
 		evaluationDataOutputFile << *(time + i) << ";";
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}
-	evaluationDataOutputFile << avatar->getReached() << ";" << avatar->getStucked() << "\n";
+	evaluationDataOutputFile << reached << ";" << stucked << "\n";
 	evaluationDataOutputFile.flush();
-}*/
-
-void Logger::startEvaluationLogger(const char* filename) {
-	time_t t = time(0);   // Get time now
-	
-	char logFileName[50];
-	sprintf(logFileName, "%s_%li.csv", filename, t);
-	
-	evaluationDataOutputFile.open(logFileName, std::ios::app); // Append to the end
-	
-	// Append header
-	evaluationDataOutputFile << "tag posError rotError\n";
-	evaluationDataOutputFile.flush();
-	
-	log(Kore::Info, "Start eval logging");
 }
 
-
-void Logger::saveEvaluationData(const char* tag, float posError, float rotError) {
+/*void Logger::saveEvaluationData(const char* tag, float posError, float rotError) {
 	// Save position
 	evaluationDataOutputFile << tag << " " << posError << " "  << rotError << "\n";
 	evaluationDataOutputFile.flush();
-}
-
-void Logger::endEvaluationLogger() {
-	evaluationDataOutputFile.flush();
-	evaluationDataOutputFile.close();
-	
-	log(Kore::Info, "Start eval logging");
-}
+}*/
 
 bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
-	string tag;
+	std::string tag;
 	float posX, posY, posZ;
 	float rotX, rotY, rotZ, rotW;
 	
 	if(!logDataReader.is_open()) {
 		
-		if (ifstream(filename)) {
+		if (std::ifstream(filename)) {
 			logDataReader.open(filename);
 			log(Kore::Info, "Read data from %s", filename);
 			

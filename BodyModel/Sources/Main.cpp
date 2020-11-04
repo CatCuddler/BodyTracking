@@ -262,7 +262,7 @@ namespace {
 			}
 			
 			// Evaluate IK precision
-			vec3 q = finalPos;
+			/*vec3 q = finalPos;
 			vec3 p = avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex())->getPosition();
 			
 			Kore::Quaternion m = finalRot;
@@ -280,7 +280,7 @@ namespace {
 			
 			Kore::log(LogLevel::Info, "Error for %s is posError:%f, rotError:%f", endEffector[endEffectorID]->getName(), posError, rotError);
 			
-			logger->saveEvaluationData(endEffector[endEffectorID]->getName(), posError, rotError);
+			logger->saveEvaluationData(endEffector[endEffectorID]->getName(), posError, rotError);*/
 			
 		}
 	}
@@ -324,7 +324,6 @@ void record() {
 	if (logRawData) {
 		Audio1::play(startRecordingSound);
 		logger->startLogger("logData");
-		logger->startEvaluationLogger("PrecisionEvaluation");
 	} else {
 		Audio1::play(stopRecordingSound);
 		logger->endLogger();
@@ -579,50 +578,61 @@ void record() {
 			}
 			
 			if (!dataAvailable) {
-				currentFile++;
-				calibratedAvatar = false;
-			}
-		} /*else {
-			if (eval) {
-				if (loop >= 0) {
-					logger->saveEvaluationData(avatar);
-					// log(Kore::Info, "%i more iterations!", loop);
-					log(Kore::Info, "%s\t%i\t%f", files[currentFile], ikMode, evalValue[ikMode]);
-					loop--;
-					
-					if (loop < 0) {
-						logger->endEvaluationLogger();
+				
+				if (eval) {
+					if (loop >= 0) {
 						
-						if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
-							exit(0);
-						else {
-							if (evalSteps <= 1) {
-								evalValue[ikMode] = evalInitValue[ikMode];
-								evalSteps = evalStepsInit;
-								ikMode++;
-								endEffector[head]->setIKMode((IKMode)ikMode);
-								endEffector[leftHand]->setIKMode((IKMode)ikMode);
-								endEffector[rightHand]->setIKMode((IKMode)ikMode);
-								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
-								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-								endEffector[hip]->setIKMode((IKMode)ikMode);
-							} else {
-								evalValue[ikMode] += evalStep;
-								evalSteps--;
-							}
+						log(Kore::Info, "%s \t IK: %i \t lambda: %f", files[currentFile], ikMode, evalValue[ikMode]);
+						float* iterations = avatar->getIterations();
+						float* errorPos = avatar->getErrorPos();
+						float* errorRot = avatar->getErrorRot();
+						float* time = avatar->getTime();
+						float* timeIteration = avatar->getTimeIteration();
+						bool reached = avatar->getReached();
+						bool stucked = avatar->getStucked();
+						logger->saveEvaluationData(iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
+						
+						loop--;
+						
+						if (loop < 0) {
+							logger->endEvaluationLogger();
 							
-							if (ikMode > evalMaxIk) {
-								ikMode = evalMinIk;
-								currentFile++;
+							if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
+								exit(0);
+							else {
+								if (evalSteps <= 1) {
+									evalValue[ikMode] = evalInitValue[ikMode];
+									evalSteps = evalStepsInit;
+									ikMode++;
+									endEffector[head]->setIKMode((IKMode)ikMode);
+									endEffector[leftHand]->setIKMode((IKMode)ikMode);
+									endEffector[rightHand]->setIKMode((IKMode)ikMode);
+									endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+									endEffector[rightFoot]->setIKMode((IKMode)ikMode);
+									endEffector[hip]->setIKMode((IKMode)ikMode);
+								} else {
+									evalValue[ikMode] += evalStep;
+									evalSteps--;
+								}
+								
+								if (ikMode > evalMaxIk) {
+									ikMode = evalMinIk;
+									currentFile++;
+									calibratedAvatar = false;
+								}
+								
+								loop = 0;
+								calibratedAvatar = false;
+								logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
 							}
-							
-							loop = 0;
-							logger->startEvaluationLogger(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxSteps[ikMode]);
 						}
 					}
+				} else {
+					currentFile++;
+					calibratedAvatar = false;
 				}
 			}
-		}*/
+		}
 		
 		// Get projection and view matrix
 		mat4 P = getProjectionMatrix();

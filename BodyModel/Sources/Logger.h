@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Avatar.h"
-
 #include <Kore/Math/Quaternion.h>
 
 #include <fstream>
@@ -19,7 +17,7 @@ private:
 	
 	// Output file to save data for evaluation
 	std::fstream evaluationDataOutputFile;
-	//std::fstream evaluationConfigOutputFile;
+	std::fstream evaluationConfigOutputFile;
 	
 public:
 	Logger();
@@ -29,12 +27,8 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	/*void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
-	void saveEvaluationData(Avatar *avatar);
-	void endEvaluationLogger();*/
-	
-	void startEvaluationLogger(const char* filename);
-	void saveEvaluationData(const char* tag, float posError, float rotError);
+	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations);
+	void saveEvaluationData(const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked);
 	void endEvaluationLogger();
 	
 	// HMM
