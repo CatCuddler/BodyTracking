@@ -2,6 +2,8 @@
 #include "BussIK/MatrixRmn.h"
 #include "EndEffector.h"
 
+#include <Kore/Log.h>
+
 struct BoneNode;
 
 extern int ikMode;
@@ -77,7 +79,14 @@ private:
 		mat_nxm jacobianTranspose = jacobian.Transpose();
 		vec_n theta = jacobianTranspose * deltaP;
 		
-		return lambda[0] * theta;
+		float a = deltaP.dot(jacobian * jacobianTranspose * deltaP);
+		float b = (jacobian * jacobianTranspose * deltaP).dot(jacobian * jacobianTranspose * deltaP);
+		float alpha = a/b;
+		
+		//Kore::log(Kore::LogLevel::Info, "alpha %f", alpha);
+		
+		//return lambda[0] * theta;
+		return alpha * theta;
 	}
 	
 	vec_n calcDeltaThetaByPseudoInverse(mat_mxn jacobian, vec_m deltaP) {
