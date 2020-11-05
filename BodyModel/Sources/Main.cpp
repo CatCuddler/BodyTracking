@@ -30,7 +30,7 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
-int ikMode = DLS;
+int ikMode = 0;
 float lambda[6] 		= { 0.05f,		1.0f,		0.0f,		0.01f,		0.0f,		0.002f };
 float errorMaxPos[6] 	= { 0.01f,		0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
 float errorMaxRot[6] 	= { 0.01f,		0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
@@ -605,16 +605,17 @@ void record() {
 							lambda[ikMode] = evalInitValue[ikMode];
 							
 							endEffector[head]->setIKMode((IKMode)ikMode);
+							endEffector[hip]->setIKMode((IKMode)ikMode);
 							endEffector[leftHand]->setIKMode((IKMode)ikMode);
+							endEffector[leftForeArm]->setIKMode((IKMode)ikMode);
 							endEffector[rightHand]->setIKMode((IKMode)ikMode);
+							endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
 							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
 							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-							endEffector[hip]->setIKMode((IKMode)ikMode);
 							
 							logger->endEvaluationLogger();
 						} else {
 							lambda[ikMode] += evalStep[ikMode];
-							//log(Kore::Info, "Change lambda: %f", lambda[ikMode]);
 						}
 						
 						if (ikMode > evalMaxIk) {
