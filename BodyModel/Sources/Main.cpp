@@ -30,10 +30,11 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
-float lambda[6] =			{ 0.05f,	1.0f,		0.0f,		0.01f,		0.0f,		0.002f };
-float errorMaxPos[6] =		{ 0.01f,	0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
-float errorMaxRot[6] =		{ 0.01f,	0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
-float maxIterations[6] =	{ 10.0f,	100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
+int ikMode = DLS;
+float lambda[6] 		= { 0.05f,		1.0f,		0.0f,		0.01f,		0.0f,		0.002f };
+float errorMaxPos[6] 	= { 0.01f,		0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
+float errorMaxRot[6] 	= { 0.01f,		0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
+float maxIterations[6] 	= { 10.0f,		100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
 
 namespace {
 	const int width = 1024;
@@ -586,9 +587,6 @@ void record() {
 			if (!dataAvailable) {
 				
 				if (eval) {
-					
-					log(Kore::Info, "%s \t IK: %i \t lambda: %f \t errorMaxPos: %f \t errorMaxRot: %f \t maxIterations: %f", files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
-					
 					float* iterations = avatar->getIterations();
 					float* errorPos = avatar->getErrorPos();
 					float* errorRot = avatar->getErrorRot();
@@ -596,7 +594,7 @@ void record() {
 					float* timeIteration = avatar->getTimeIteration();
 					bool reached = avatar->getReached();
 					bool stucked = avatar->getStucked();
-					logger->saveEvaluationData(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
+					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
 					
 					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk)
 						exit(0);

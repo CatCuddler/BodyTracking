@@ -26,7 +26,7 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void saveEvaluationData(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked);
+	void saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked);
 	void endEvaluationLogger();
 	
 	// HMM

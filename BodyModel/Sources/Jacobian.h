@@ -1,4 +1,3 @@
-#include "Settings.h"
 #include "MeshObject.h"
 #include "BussIK/MatrixRmn.h"
 #include "EndEffector.h"

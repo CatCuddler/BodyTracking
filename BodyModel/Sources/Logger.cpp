@@ -7,6 +7,12 @@
 #include <string>
 #include <ctime>
 
+extern int ikMode;
+extern float lambda[];
+extern float errorMaxPos[];
+extern float errorMaxRot[];
+extern float maxIterations[];
+
 namespace {
 	bool initHmmAnalysisData = false;
 }
@@ -90,7 +96,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::saveEvaluationData(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxIterations, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
+void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
 	
 	// Save settings
 	char evaluationDataPath[100];
@@ -108,7 +114,8 @@ void Logger::saveEvaluationData(const char* filename, int ikMode, float lambda, 
 	}
 	
 	// Save settings
-	evaluationDataOutputFile << ikMode << ";" << filename << ";" << lambda << ";" << errorMaxPos << ";" << errorMaxRot << ";" << maxIterations << ";";
+	log(Kore::Info, "%s \t IK: %i \t lambda: %f \t errorMaxPos: %f \t errorMaxRot: %f \t maxIterations: %f", filename, ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
+	evaluationDataOutputFile << ikMode << ";" << filename << ";" << lambda[ikMode] << ";" << errorMaxPos[ikMode] << ";" << errorMaxRot[ikMode] << ";" << maxIterations[ikMode] << ";";
 	
 	// Save results
 	for (int i = 0; i < 3; ++i) {
