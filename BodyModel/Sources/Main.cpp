@@ -177,7 +177,7 @@ namespace {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			if (i == hip || i == leftForeArm || i == rightForeArm || i == leftFoot || i == rightFoot) {
+			if (i == hip || (!simpleIK && i == leftForeArm) || (!simpleIK && i == rightForeArm) || i == leftFoot || i == rightFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
 				renderControllerAndTracker(false, desPosition, desRotation);
@@ -260,10 +260,19 @@ namespace {
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
+			} else if (endEffectorID == head) {
+				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftForeArm || endEffectorID == rightForeArm) {
+				if (!simpleIK)
+					avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
-				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
+				if (simpleIK) {
+					avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+				} else {
+					avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
+				}
 			}
 			
 			// Evaluate IK precision

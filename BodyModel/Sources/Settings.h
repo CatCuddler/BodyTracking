@@ -13,6 +13,8 @@ namespace {
 	
 	bool logRawData = false;
 
+	const bool simpleIK = false; // Simple IK uses only 6 end-effectors (ignoring forearms)
+
 	// Optimized IK Parameter
 	//										JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4	SDLS = 5
 	const float optimalLambda[6]		= { 0.35f,		0.05f,		0.2f,		0.03f,		0.2f,		0.018f	};
