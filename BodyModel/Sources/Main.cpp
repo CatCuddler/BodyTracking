@@ -574,6 +574,9 @@ void record() {
 				avatar->setScale(scaleFactor);
 				calibrate();
 				calibratedAvatar = true;
+				
+				if (eval)
+					avatar->resetVariables();
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) {

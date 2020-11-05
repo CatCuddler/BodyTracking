@@ -122,6 +122,10 @@ void Avatar::resetPositionAndRotation() {
 	}
 }
 
+void Avatar::resetVariables() {
+	invKin->setEvalVariables();
+}
+
 float Avatar::getReached() const {
 	return invKin->getReached();
 }

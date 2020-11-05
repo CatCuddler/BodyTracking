@@ -11,6 +11,7 @@ public:
 	void inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
+	void setEvalVariables();
 	float getReached();
 	float getStucked();
 	float* getIterations();

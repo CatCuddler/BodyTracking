@@ -21,6 +21,7 @@ public:
 	
 	void resetPositionAndRotation();
 	
+	void resetVariables();
 	float getReached() const;
 	float getStucked() const;
 	float* getIterations() const;

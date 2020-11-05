@@ -12,34 +12,7 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();
 	
-	totalNum = 0;
-	evalReached = 0;
-	evalStucked = 0;
-	
-	// iterations
-	evalIterations[0] = 0.0f;
-	evalIterations[1] = maxfloat();
-	evalIterations[2] = 0.0f;
-	
-	// pos-error
-	evalErrorPos[0] = 0;
-	evalErrorPos[1] = maxfloat();
-	evalErrorPos[2] = 0.0f;
-	
-	// rot-error
-	evalErrorRot[0] = 0;
-	evalErrorRot[1] = maxfloat();
-	evalErrorRot[2] = 0.0f;
-	
-	// time
-	evalTime[0] = 0;
-	evalTime[1] = maxfloat();
-	evalTime[2] = 0.0f;
-	
-	// time per iteration
-	evalTimeIteration[0] = 0;
-	evalTimeIteration[1] = maxfloat();
-	evalTimeIteration[2] = 0.0f;
+	setEvalVariables();
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
@@ -291,6 +264,37 @@ void InverseKinematics::setJointConstraints() {
 	nodeRight = bones[rightLegBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
 	nodeRight->constrain[xMin] = nodeLeft->constrain[xMin];		nodeRight->constrain[xMax] = nodeLeft->constrain[xMax];
+}
+
+void InverseKinematics::setEvalVariables() {
+	totalNum = 0;
+	evalReached = 0;
+	evalStucked = 0;
+	
+	// iterations
+	evalIterations[0] = 0.0f;
+	evalIterations[1] = maxfloat();
+	evalIterations[2] = 0.0f;
+	
+	// pos-error
+	evalErrorPos[0] = 0;
+	evalErrorPos[1] = maxfloat();
+	evalErrorPos[2] = 0.0f;
+	
+	// rot-error
+	evalErrorRot[0] = 0;
+	evalErrorRot[1] = maxfloat();
+	evalErrorRot[2] = 0.0f;
+	
+	// time
+	evalTime[0] = 0;
+	evalTime[1] = maxfloat();
+	evalTime[2] = 0.0f;
+	
+	// time per iteration
+	evalTimeIteration[0] = 0;
+	evalTimeIteration[1] = maxfloat();
+	evalTimeIteration[2] = 0.0f;
 }
 
 float InverseKinematics::getReached() {
