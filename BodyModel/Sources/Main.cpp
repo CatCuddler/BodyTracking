@@ -18,7 +18,7 @@
 #include "LivingRoom.h"
 #include "Logger.h"
 
-#include <algorithm> // std::sort
+#include <algorithm> // std::sort, std::copy
 
 #ifdef KORE_STEAMVR
 #include <Kore/Vr/VrInterface.h>
@@ -28,6 +28,12 @@
 
 using namespace Kore;
 using namespace Kore::Graphics4;
+
+// Dynamic IK parameters
+float lambda[6] =			{ 0.05f,	1.0f,		0.0f,		0.01f,		0.0f,		0.002f };
+float errorMaxPos[6] =		{ 0.01f,	0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
+float errorMaxRot[6] =		{ 0.01f,	0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
+float maxIterations[6] =	{ 10.0f,	100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
 
 namespace {
 	const int width = 1024;
@@ -106,8 +112,6 @@ namespace {
 	bool controllerButtonsInitialized = false;
 	float currentUserHeight;
 	bool firstPersonMonitor = false;
-#else
-	int loop = 0;
 #endif
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
@@ -591,29 +595,30 @@ void record() {
 					bool stucked = avatar->getStucked();
 					logger->saveEvaluationData(files[currentFile], ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
 					
-					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk && evalSteps <= 1)
+					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk)
 						exit(0);
 					else {
-						if (evalSteps <= 1) {
-							evalValue[ikMode] = evalInitValue[ikMode];
-							evalSteps = evalStepsInit;
+						if (lambda[ikMode] >= evalMaxValue[ikMode]) {
 							ikMode++;
+							
+							lambda[ikMode] = evalInitValue[ikMode];
+							
 							endEffector[head]->setIKMode((IKMode)ikMode);
 							endEffector[leftHand]->setIKMode((IKMode)ikMode);
 							endEffector[rightHand]->setIKMode((IKMode)ikMode);
 							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
 							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
 							endEffector[hip]->setIKMode((IKMode)ikMode);
+							
+							logger->endEvaluationLogger();
 						} else {
-							evalValue[ikMode] += evalStep;
-							evalSteps--;
+							lambda[ikMode] += evalStep[ikMode];
+							//log(Kore::Info, "Change lambda: %f", lambda[ikMode]);
 						}
 						
 						if (ikMode > evalMaxIk) {
 							ikMode = evalMinIk;
 							currentFile++;
-							
-							logger->endEvaluationLogger();
 						}
 						
 						calibratedAvatar = false;
@@ -836,15 +841,22 @@ void record() {
 		
 		logger = new Logger();
 		
+		if(!eval) {
+			std::copy(optimalLambda, optimalLambda + 6, lambda);
+			std::copy(optimalErrorMaxPos, optimalErrorMaxPos + 6, errorMaxPos);
+			std::copy(optimalErrorMaxRot, optimalErrorMaxRot + 6, errorMaxRot);
+			std::copy(optimalMaxIterations, optimalMaxIterations + 6, maxIterations);
+		}
+		
 		endEffector = new EndEffector*[numOfEndEffectors];
-		endEffector[head] = new EndEffector(headBoneIndex);
-		endEffector[hip] = new EndEffector(hipBoneIndex);
-		endEffector[leftHand] = new EndEffector(leftHandBoneIndex);
-		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex);
-		endEffector[rightHand] = new EndEffector(rightHandBoneIndex);
-		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex);
-		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex);
-		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex);
+		endEffector[head] = new EndEffector(headBoneIndex, (IKMode)ikMode);
+		endEffector[hip] = new EndEffector(hipBoneIndex, (IKMode)ikMode);
+		endEffector[leftHand] = new EndEffector(leftHandBoneIndex, (IKMode)ikMode);
+		endEffector[leftForeArm] = new EndEffector(leftForeArmBoneIndex, (IKMode)ikMode);
+		endEffector[rightHand] = new EndEffector(rightHandBoneIndex, (IKMode)ikMode);
+		endEffector[rightForeArm] = new EndEffector(rightForeArmBoneIndex, (IKMode)ikMode);
+		endEffector[leftFoot] = new EndEffector(leftFootBoneIndex, (IKMode)ikMode);
+		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex, (IKMode)ikMode);
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove

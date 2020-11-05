@@ -1,14 +1,12 @@
 #pragma once
 
+#include "Settings.h"
+
 #include <Kore/Math/Vector.h>
 #include <Kore/Math/Quaternion.h>
 
 enum EndEffectorIndices {
 	head, hip, leftHand, leftForeArm, rightHand, rightForeArm, leftFoot, rightFoot
-};
-
-enum IKMode {
-	JT = 0, JPI = 1, DLS = 2, SVD = 3, SVD_DLS = 4, SDLS = 5
 };
 
 // Head
@@ -51,7 +49,7 @@ const char* const rFootTag = "rFoot";
 
 class EndEffector {
 public:
-	EndEffector(int boneIndex, IKMode ikMode = DLS);
+	EndEffector(int boneIndex, IKMode ikMode);
 	
 	Kore::vec3 getDesPosition() const;
 	void setDesPosition(Kore::vec3 pos);

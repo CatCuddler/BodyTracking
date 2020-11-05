@@ -4,6 +4,10 @@
 
 using namespace Kore;
 
+extern float errorMaxPos[];
+extern float errorMaxRot[];
+extern float maxIterations[];
+
 InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	bones = boneVec;
 	setJointConstraints();

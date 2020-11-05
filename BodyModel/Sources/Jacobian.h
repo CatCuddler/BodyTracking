@@ -5,6 +5,9 @@
 
 struct BoneNode;
 
+extern int ikMode;
+extern float lambda[];
+
 template<int nJointDOFs = 6> class Jacobian {
 	
 public:
@@ -77,15 +80,18 @@ private:
 		
 		return lambda[0] * theta;
 	}
+	
 	vec_n calcDeltaThetaByPseudoInverse(mat_mxn jacobian, vec_m deltaP) {
 		mat_nxm pseudoInverse = calcPseudoInverse(jacobian);
 		vec_n theta = pseudoInverse * deltaP;
 		
 		return lambda[1] * theta;
 	}
+	
 	vec_n calcDeltaThetaByDLS(mat_mxn jacobian, vec_m deltaP) {
 		return calcPseudoInverse(jacobian, lambda[2]) * deltaP;
 	}
+	
 	vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
@@ -100,6 +106,7 @@ private:
 		
 		return pseudoInverse * deltaP;
 	}
+	
 	vec_n calcDeltaThetaByDLSwithSVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
@@ -116,6 +123,7 @@ private:
 		
 		return dls * deltaP;
 	}
+	
 	vec_n calcDeltaThetaBySDLS(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
