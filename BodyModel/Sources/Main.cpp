@@ -30,8 +30,9 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
-int ikMode = 0;
-float lambda[6] 		= { 0.05f,		1.0f,		0.0f,		0.01f,		0.0f,		0.002f };
+int ikMode = 2;
+//							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4	SDLS = 5
+float lambda[6] 		= { 0.05f,		1.0f,		0.0f,		0.01f,		0.0f,		0.002f	};
 float errorMaxPos[6] 	= { 0.01f,		0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
 float errorMaxRot[6] 	= { 0.01f,		0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
 float maxIterations[6] 	= { 10.0f,		100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
@@ -574,9 +575,11 @@ void record() {
 		if (currentFile < numFiles) {
 			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
 			
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				endEffector[i]->setDesPosition(desPosition[i]);
-				endEffector[i]->setDesRotation(desRotation[i]);
+			if (dataAvailable) {
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					endEffector[i]->setDesPosition(desPosition[i]);
+					endEffector[i]->setDesRotation(desRotation[i]);
+				}
 			}
 			
 			if (!calibratedAvatar) {
@@ -596,6 +599,8 @@ void record() {
 			if (!dataAvailable) {
 				
 				if (eval) {
+					
+					log(LogLevel::Info, "try to save log data2");
 					float* iterations = avatar->getIterations();
 					float* errorPos = avatar->getErrorPos();
 					float* errorRot = avatar->getErrorRot();
@@ -605,10 +610,12 @@ void record() {
 					bool stucked = avatar->getStucked();
 					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
 					
-					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk)
+					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk) {
 						exit(0);
-					else {
+					} else {
 						if (lambda[ikMode] >= evalMaxValue[ikMode]) {
+							logger->endEvaluationLogger();
+							
 							ikMode++;
 							
 							lambda[ikMode] = evalInitValue[ikMode];
@@ -621,8 +628,6 @@ void record() {
 							endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
 							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
 							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-							
-							logger->endEvaluationLogger();
 						} else {
 							lambda[ikMode] += evalStep[ikMode];
 						}
