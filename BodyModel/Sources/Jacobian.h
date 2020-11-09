@@ -16,9 +16,8 @@ public:
 		
 		std::vector<float> deltaTheta;
 		vec_n vec;
-		Kore::vec3 p_aktuell = endEffektor->getPosition(); // Get current rotation and position of the end-effector
-		vec_m deltaP = calcDeltaP(endEffektor, p_aktuell, pos_soll, rot_soll);
-		mat_mxn jacobian = calcJacobian(endEffektor, p_aktuell);
+		vec_m deltaP = calcDeltaP(endEffektor, pos_soll, rot_soll);
+		mat_mxn jacobian = calcJacobian(endEffektor);
 		
 		// set error
 		errorPos = Kore::vec3(deltaP[0], deltaP[1], deltaP[2]).getLength();
@@ -103,11 +102,9 @@ private:
 	vec_n calcDeltaThetaBySVD(mat_mxn jacobian, vec_m deltaP) {
 		calcSVD(jacobian);
 		
-		float max = MaxAbs(d);
-		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			if (fabs(d[i]) > lambda[3] * max) // modification to stabilize SVD
+			//if (fabs(d[i]) > lambda[3] * MaxAbs(d)) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
@@ -120,13 +117,13 @@ private:
 		
 		mat_nxm dls;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i) {
-			if (fabs(d[i]) > nearNull) {
+			//if (fabs(d[i]) > nearNull) {
 				float l = d[i] / (Square(d[i]) + Square(lambda[4]));
 				
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						dls[n][m] += l * V[n][i] * U[m][i];
-			}
+			//}
 		}
 		
 		return dls * deltaP;
@@ -175,11 +172,13 @@ private:
 	
 	// ---------------------------------------------------------
 	
-	vec_m calcDeltaP(BoneNode* endEffektor, Kore::vec3 p_aktuell, Kore::vec3 pos_soll, Kore::Quaternion rot_soll) {
+	vec_m calcDeltaP(BoneNode* endEffektor, Kore::vec3 pos_desired, Kore::Quaternion rot_desired) {
 		vec_m deltaP;
 		
+		Kore::vec3 pos_current = endEffektor->getPosition(); // Get current rotation and position of the end-effector
+		
 		// Calculate difference between desired position and actual position of the end effector
-		Kore::vec3 deltaPos = pos_soll - p_aktuell;
+		Kore::vec3 deltaPos = pos_desired - pos_current;
 		
 		deltaP[0] = deltaPos.x();
 		deltaP[1] = deltaPos.y();
@@ -187,13 +186,12 @@ private:
 		
 		// Calculate difference between desired rotation and actual rotation
 		if (nDOFs == 6) {
-			Kore::Quaternion rot_aktuell;
-			Kore::RotationUtility::getOrientation(&endEffektor->combined, &rot_aktuell);
+			Kore::Quaternion rot_current = endEffektor->getOrientation(); // Get current rotation and position of the end-effector
 			
-			Kore::Quaternion rot_soll_temp = rot_soll;
+			Kore::Quaternion rot_soll_temp = rot_desired;
 			rot_soll_temp.normalize();
 			
-			Kore::Quaternion deltaRot_quat = rot_soll_temp.rotated(rot_aktuell.invert());
+			Kore::Quaternion deltaRot_quat = rot_soll_temp.rotated(rot_current.invert());
 			if (deltaRot_quat.w < 0) deltaRot_quat = deltaRot_quat.scaled(-1);
 			
 			Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
@@ -207,26 +205,28 @@ private:
 		return deltaP;
 	}
 	
-	mat_mxn calcJacobian(BoneNode* endEffektor, Kore::vec3 p_aktuell) {
+	mat_mxn calcJacobian(BoneNode* endEffektor) {
 		Jacobian::mat_mxn jacobianMatrix;
 		BoneNode* bone = endEffektor;
+		
+		Kore::vec3 pos_current = endEffektor->getPosition(); // Get current rotation and position of the end-effector
 		
 		int joint = 0;
 		while (bone->initialized && joint < nJointDOFs) {
 			Kore::vec3 axes = bone->axes;
 			
 			if (axes.x() == 1.0 && joint < nJointDOFs) {
-				vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(1, 0, 0));
+				vec_m column = calcJacobianColumn(bone, pos_current, Kore::vec3(1, 0, 0));
 				for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
 				joint += 1;
 			}
 			if (axes.y() == 1.0 && joint < nJointDOFs) {
-				vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(0, 1, 0));
+				vec_m column = calcJacobianColumn(bone, pos_current, Kore::vec3(0, 1, 0));
 				for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
 				joint += 1;
 			}
 			if (axes.z() == 1.0 && joint < nJointDOFs) {
-				vec_m column = calcJacobianColumn(bone, p_aktuell, Kore::vec3(0, 0, 1));
+				vec_m column = calcJacobianColumn(bone, pos_current, Kore::vec3(0, 0, 1));
 				for (int i = 0; i < nDOFs; ++i) jacobianMatrix[i][joint] = column[i];
 				joint += 1;
 			}
