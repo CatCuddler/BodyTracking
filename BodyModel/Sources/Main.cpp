@@ -31,11 +31,11 @@ using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
 int ikMode = 2;
-//							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4	SDLS = 5
-float lambda[6] 		= { 0.05f,		1.0f,		0.0f,		0.01f,		0.0f,		0.002f	};
-float errorMaxPos[6] 	= { 0.01f,		0.1f,		0.001f,		0.01f,		0.001f,		0.01f	};
-float errorMaxRot[6] 	= { 0.01f,		0.1f,		0.01f,		0.01f,		0.01f,		0.01f	};
-float maxIterations[6] 	= { 10.0f,		100.0f,		20.0f,		10.0f,		20.0f,		60.0f	};
+//							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
+float lambda[6] 		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi/120.0f	};
+float errorMaxPos[6] 	= { 0.001f,		0.001f,		0.001f,		0.001f,		0.001f,			0.001f	};
+float errorMaxRot[6] 	= { 0.001f,		0.001f,		0.001f,		0.001f,		0.001f,			0.001f	};
+float maxIterations[6] 	= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f	};
 
 namespace {
 	const int width = 1024;
@@ -484,6 +484,7 @@ void record() {
 		controllerButtonsInitialized = true;
 	}
 #endif
+
 	void update() {
 		float t = (float)(System::time() - startTime);
 		double deltaT = t - lastTime;
@@ -617,8 +618,10 @@ void record() {
 							logger->endEvaluationLogger();
 							
 							ikMode++;
-							
-							lambda[ikMode] = evalInitValue[ikMode];
+							if (ikMode > evalMaxIk) {
+								ikMode = evalMinIk;
+								currentFile++;
+							}
 							
 							endEffector[head]->setIKMode((IKMode)ikMode);
 							endEffector[hip]->setIKMode((IKMode)ikMode);
@@ -630,11 +633,6 @@ void record() {
 							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
 						} else {
 							lambda[ikMode] += evalStep[ikMode];
-						}
-						
-						if (ikMode > evalMaxIk) {
-							ikMode = evalMinIk;
-							currentFile++;
 						}
 						
 						calibratedAvatar = false;
