@@ -16,14 +16,22 @@ public:
 	float getStucked();
 	float* getIterations();
 	float* getErrorPos();
+	float* getErrorPosLeftHand();
+	float* getErrorPosRightHand();
+	float* getErrorPosLeftFoot();
+	float* getErrorPosRightFoot();
 	float* getErrorRot();
+	float* getErrorRotLeftHand();
+	float* getErrorRotRightHand();
+	float* getErrorRotLeftFoot();
+	float* getErrorRotRightFoot();
 	float* getTime();
 	float* getTimeIteration();
 	
 private:
 	std::vector<BoneNode*> bones;
 	
-	static const int handJointDOFs = 6;
+	static const int handJointDOFs = 6;//7;
 	Jacobian<handJointDOFs>* jacobianHand = new Jacobian<handJointDOFs>;
 	
 	static const int footJointDOFs = 4;
@@ -46,6 +54,17 @@ private:
 	void applyJointConstraints(BoneNode* targetBone);
 	void clampValue(float minVal, float maxVal, float& value);
 	
+	float calcAvg(const float* vec) const;
+	float calcStd(const float* vec) const;
+	float calcMin(const float* vec) const;
+	float calcMax(const float* vec) const;
+	
 	int totalNum = 0, evalReached = 0, evalStucked = 0;
-	float evalIterations[3], evalErrorPos[3], evalErrorRot[3], evalTime[3], evalTimeIteration[3];
+	
+	const int frames = 10000;
+	float* evalIterations;
+	float* evalErrorPos;
+	float* evalErrorRot;
+	float* evalTime;
+	float* evalTimeIteration;
 };
