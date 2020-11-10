@@ -107,10 +107,10 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		
 		// Append to the end
 		evaluationDataOutputFile << "IK Mode;File;Lambda;Error Max Pos;Error Max Rot;Iterations Max;";
-		evaluationDataOutputFile << "Iterations (Mean);	Error Pos (Mean);	Error Rot (Mean);	Error (Mean);	Time [us] (Mean);	Time/Iteration [us] (Mean);";
-		evaluationDataOutputFile << "Iterations (Std);	Error Pos (Std);	Error Rot (Std);	Error (Std);	Time [us] (Std);	Time/Iteration [us] (Std);";
-		evaluationDataOutputFile << "Iterations (Min);	Error Pos (Min);	Error Rot (Min);	Error (Min);	Time [us] (Min);	Time/Iteration [us] (Min);";
-		evaluationDataOutputFile << "Iterations (Max);	Error Pos (Max);	Error Rot (Max);	Error (Max);	Time [us] (Max);	Time/Iteration [us] (Max);";
+		evaluationDataOutputFile << "Iterations (Mean);	Error Pos (Mean);	Error Rot (Mean);	Error (RMSD);	Time [us] (Mean);	Time/Iteration [us] (Mean);";
+		evaluationDataOutputFile << "Iterations (Std);	Error Pos (Std);	Error Rot (Std);	Error (RMSD);	Time [us] (Std);	Time/Iteration [us] (Std);";
+		evaluationDataOutputFile << "Iterations (Min);	Error Pos (Min);	Error Rot (Min);	Error (RMSD);	Time [us] (Min);	Time/Iteration [us] (Min);";
+		evaluationDataOutputFile << "Iterations (Max);	Error Pos (Max);	Error Rot (Max);	Error (RMSD);	Time [us] (Max);	Time/Iteration [us] (Max);";
 		evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
 	}
 	
