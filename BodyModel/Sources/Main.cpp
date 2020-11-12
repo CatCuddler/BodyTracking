@@ -33,8 +33,8 @@ using namespace Kore::Graphics4;
 int ikMode = 2;
 //							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
 float lambda[6] 		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi/120.0f	};
-float errorMaxPos[6] 	= { 0.001f,		0.001f,		0.001f,		0.001f,		0.001f,			0.001f	};
-float errorMaxRot[6] 	= { 0.001f,		0.001f,		0.001f,		0.001f,		0.001f,			0.001f	};
+float errorMaxPos[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
+float errorMaxRot[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
 float maxIterations[6] 	= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f	};
 
 namespace {
@@ -258,6 +258,9 @@ namespace {
 			vec3 offsetPosition = endEffector[endEffectorID]->getOffsetPosition();
 			Kore::Quaternion finalRot = desRotation.rotated(offsetRotation);
 			vec3 finalPos = mat4::Translation(desPosition.x(), desPosition.y(), desPosition.z()) * finalRot.matrix().Transpose() * mat4::Translation(offsetPosition.x(), offsetPosition.y(), offsetPosition.z()) * vec4(0, 0, 0, 1);
+
+			endEffector[endEffectorID]->setFinalPosition(finalPos);
+			endEffector[endEffectorID]->setFinalRotation(finalRot);
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
@@ -277,25 +280,7 @@ namespace {
 			}
 			
 			// Evaluate IK precision
-			/*vec3 q = finalPos;
-			vec3 p = avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex())->getPosition();
-			
-			Kore::Quaternion m = finalRot;
-			Kore::Quaternion n = avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex())->getOrientation();
-			
-			// Calculate the distance between two vectors: euclidean distance [mm]
-			float posError = (p - q).getLength() * 1000;
-			
-			// Calculate the difference between two quaternions [degree]
-			Kore::Quaternion quatDiff = m.rotated(n.invert());
-			if (quatDiff.w < 0) quatDiff = quatDiff.scaled(-1);
-			Kore::vec3 deltaRot = Kore::vec3(0, 0, 0);
-			Kore::RotationUtility::quatToEuler(&quatDiff, &deltaRot.x(), &deltaRot.y(), &deltaRot.z());
-			float rotError = deltaRot.getLength();
-			
-			Kore::log(LogLevel::Info, "Error for %s is posError:%f, rotError:%f", endEffector[endEffectorID]->getName(), posError, rotError);
-			
-			logger->saveEvaluationData(endEffector[endEffectorID]->getName(), posError, rotError);*/
+			endEffector[endEffectorID]->getError(avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex()));
 			
 		}
 	}
@@ -589,8 +574,18 @@ void record() {
 				calibrate();
 				calibratedAvatar = true;
 				
-				if (eval)
+				if (eval) {
 					avatar->resetVariables();
+					
+					endEffector[head]->resetEvalVariables();
+					endEffector[hip]->resetEvalVariables();
+					endEffector[leftHand]->resetEvalVariables();
+					endEffector[leftForeArm]->resetEvalVariables();
+					endEffector[rightHand]->resetEvalVariables();
+					endEffector[rightForeArm]->resetEvalVariables();
+					endEffector[leftFoot]->resetEvalVariables();
+					endEffector[rightFoot]->resetEvalVariables();
+				}
 			}
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
@@ -601,7 +596,6 @@ void record() {
 				
 				if (eval) {
 					
-					log(LogLevel::Info, "try to save log data2");
 					float* iterations = avatar->getIterations();
 					float* errorPos = avatar->getErrorPos();
 					float* errorRot = avatar->getErrorRot();
@@ -609,13 +603,50 @@ void record() {
 					float* timeIteration = avatar->getTimeIteration();
 					bool reached = avatar->getReached();
 					bool stucked = avatar->getStucked();
-					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked);
+					
+					float errorPosHead = endEffector[head]->getErrorPos();
+					float errorPosHip = endEffector[hip]->getErrorPos();
+					float errorPosLeftHand = endEffector[leftHand]->getErrorPos();
+					float errorPosLeftForeArm = endEffector[leftForeArm]->getErrorPos();
+					float errorPosRightHand = endEffector[rightHand]->getErrorPos();
+					float errorPosRightForeArm = endEffector[rightForeArm]->getErrorPos();
+					float errorPosLeftFoot = endEffector[leftFoot]->getErrorPos();
+					float errorPosRightFoot = endEffector[rightFoot]->getErrorPos();
+					
+					float errorRotHead = endEffector[head]->getErrorRot();
+					float errorRotHip = endEffector[hip]->getErrorRot();
+					float errorRotLeftHand = endEffector[leftHand]->getErrorRot();
+					float errorRotLeftForeArm = endEffector[leftForeArm]->getErrorRot();
+					float errorRotRightHand = endEffector[rightHand]->getErrorRot();
+					float errorRotRightForeArm = endEffector[rightForeArm]->getErrorRot();
+					float errorRotLeftFoot = endEffector[leftFoot]->getErrorRot();
+					float errorRotRightFoot = endEffector[rightFoot]->getErrorRot();
+					
+					float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot) / 8.0f;
+					float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot) / 8.0f;
+					
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorPosHead, errorRotHead);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorPosHip, errorRotHip);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorPosLeftHand, errorRotLeftHand);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorPosLeftForeArm, errorRotLeftForeArm);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorPosRightHand, errorRotRightHand);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorPosRightForeArm, errorRotRightForeArm);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorPosLeftFoot, errorRotLeftFoot);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorPosRightFoot, errorRotRightFoot);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorPosRightFoot, errorRotRightFoot);
+					log(LogLevel::Info, "Overall Error Pos = %f, Rot = %f", overallPosError, overallRotError);
+					
+					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked,
+											   errorPosHead, errorPosHip, errorPosLeftHand, errorPosLeftForeArm, errorPosRightHand, errorPosRightForeArm, errorPosLeftFoot, errorPosRightFoot,
+											   errorRotHead, errorRotHip, errorRotLeftHand, errorRotLeftForeArm, errorRotRightHand, errorRotRightForeArm, errorRotLeftFoot, errorRotRightFoot);
 					
 					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk) {
 						exit(0);
 					} else {
 						if (lambda[ikMode] >= evalMaxValue[ikMode]) {
 							logger->endEvaluationLogger();
+							
+							lambda[ikMode] = evalInitValue[ikMode];
 							
 							ikMode++;
 							if (ikMode > evalMaxIk) {

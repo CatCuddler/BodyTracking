@@ -15,10 +15,18 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 	setEvalVariables();
 }
 
+InverseKinematics::~InverseKinematics() {
+	delete[] evalIterations;
+	delete[] evalTime;
+	delete[] evalTimeIteration;
+	delete[] evalErrorPos;
+	delete[] evalErrorRot;
+}
+
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
 	std::vector<float> deltaTheta, prevDeltaTheta;
-	float errorPos = -1.0f;
-	float errorRot = -1.0f;
+	float errorPos = maxfloat();
+	float errorRot = maxfloat();
 	bool stucked = false;
 #ifdef KORE_MACOS
 	struct timespec start, end;
@@ -29,7 +37,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while ((errorPos < 0 || errorPos > errorMaxPos[ikMode] || errorRot < 0 || errorRot > errorMaxRot[ikMode]) && i < (int) maxIterations[ikMode] && !stucked) {
+	while ((errorPos > errorMaxPos[ikMode] || errorRot > errorMaxRot[ikMode]) && i < (int) maxIterations[ikMode] && !stucked) {
 #ifdef KORE_MACOS
 		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
 #endif
@@ -82,6 +90,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		i++;
 	}
 	
+	//log(LogLevel::Info, "pos error %f (%i) rot error %f (%i) it %i (%i) stucked %i", errorPos, errorPos <= errorMaxPos[ikMode], errorRot, errorRot <= errorMaxRot[ikMode], i, i >= (int) maxIterations[ikMode], stucked);
+	
 	if (eval) {
 		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
 		evalStucked += stucked ? 1 : 0;
@@ -90,9 +100,11 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		evalIterations[totalNum] = (float) i;
 		
 		// pos-error
+		errorPos = errorPos * 1000.0f; // [mm]
 		evalErrorPos[totalNum] = errorPos > 0 ? errorPos : 0;
 		
 		// rot-error
+		errorRot = errorRot * 180.0f / Kore::pi; // [deg]
 		evalErrorRot[totalNum] = errorRot > 0 ? errorRot : 0;
 		
 #ifdef KORE_MACOS
@@ -104,7 +116,6 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 #endif
 		
 		totalNum++;
-		assert(totalNum < frames);
 	}
 }
 
@@ -268,10 +279,10 @@ void InverseKinematics::setEvalVariables() {
 	evalStucked = 0;
 	
 	evalIterations = new float[frames]();
-	evalErrorPos = new float[frames]();
-	evalErrorRot = new float[frames]();
 	evalTime = new float[frames]();
 	evalTimeIteration = new float[frames]();
+	evalErrorPos = new float[frames]();
+	evalErrorRot = new float[frames]();
 }
 
 float InverseKinematics::calcAvg(const float* vec) const {
@@ -318,52 +329,32 @@ float InverseKinematics::getStucked() {
 	return totalNum != 0 ? (float) evalStucked / (float) totalNum : -1;
 }
 
-float* InverseKinematics::getIterations() {
-	float *it = new float[4];
-	it[0] = calcAvg(evalIterations);
-	it[1] = calcStd(evalIterations);
-	it[2] = calcMin(evalIterations);
-	it[3] = calcMax(evalIterations);
+float* InverseKinematics::getAvdStdMinMax(const float* vec) const {
+	float *error = new float[4];
+	error[0] = calcAvg(vec);
+	error[1] = calcStd(vec);
+	error[2] = calcMin(vec);
+	error[3] = calcMax(vec);
 	
-	return it;
+	return error;
+}
+
+float* InverseKinematics::getIterations() {
+	return getAvdStdMinMax(evalIterations);
 }
 
 float* InverseKinematics::getErrorPos() {
-	float *error = new float[4];
-	error[0] = calcAvg(evalErrorPos);
-	error[1] = calcStd(evalErrorPos);
-	error[2] = calcMin(evalErrorPos);
-	error[3] = calcMax(evalErrorPos);
-	
-	return error;
+	return getAvdStdMinMax(evalErrorPos);
 }
 
 float* InverseKinematics::getErrorRot() {
-	float *error = new float[4];
-	error[0] = calcAvg(evalErrorRot);
-	error[1] = calcStd(evalErrorRot);
-	error[2] = calcMin(evalErrorRot);
-	error[3] = calcMax(evalErrorRot);
-	
-	return error;
+	return getAvdStdMinMax(evalErrorRot);
 }
 
 float* InverseKinematics::getTime() {
-	float *time = new float[4];
-	time[0] = calcAvg(evalTime);
-	time[1] = calcStd(evalTime);
-	time[2] = calcMin(evalTime);
-	time[3] = calcMax(evalTime);
-	
-	return time;
+	return getAvdStdMinMax(evalTime);
 }
 
 float* InverseKinematics::getTimeIteration() {
-	float *timeIt = new float[4];
-	timeIt[0] = calcAvg(evalTimeIteration);
-	timeIt[1] = calcStd(evalTimeIteration);
-	timeIt[2] = calcMin(evalTimeIteration);
-	timeIt[3] = calcMax(evalTimeIteration);
-	
-	return timeIt;
+	return getAvdStdMinMax(evalTimeIteration);
 }

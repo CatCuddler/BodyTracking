@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Settings.h"
+#include "MeshObject.h"
 
 #include <Kore/Math/Vector.h>
 #include <Kore/Math/Quaternion.h>
@@ -46,10 +47,13 @@ const char* const lForeArm = "lForeArm";
 const char* const rForeArm = "rForeArm";
 const char* const lFootTag = "lFoot";
 const char* const rFootTag = "rFoot";
+const char* const lKneeTag = "lKnee";
+const char* const rKneeTag = "rKnee";
 
 class EndEffector {
 public:
 	EndEffector(int boneIndex, IKMode ikMode);
+	~EndEffector();
 	
 	Kore::vec3 getDesPosition() const;
 	void setDesPosition(Kore::vec3 pos);
@@ -62,6 +66,17 @@ public:
 	
 	Kore::Quaternion getOffsetRotation() const;
 	void setOffsetRotation(Kore::Quaternion offsetRotation);
+	
+	Kore::vec3 getFinalPosition() const;
+	void setFinalPosition(Kore::vec3 offsetPosition);
+	
+	Kore::Quaternion getFinalRotation() const;
+	void setFinalRotation(Kore::Quaternion offsetRotation);
+	
+	void getError(BoneNode* targetBone);
+	void resetEvalVariables();
+	float getErrorPos();
+	float getErrorRot();
 	
 	int getDeviceIndex() const;
 	void setDeviceIndex(int index);
@@ -79,6 +94,20 @@ private:
 	
 	Kore::vec3 offsetPosition;
 	Kore::Quaternion offsetRotation;
+	
+	Kore::vec3 finalPosition;
+	Kore::Quaternion finalRotation;
+	
+	const int frames = 1000;
+	int size = 0;
+	float* evalErrorPos;
+	float* evalErrorRot;
+	
+	float* getAvdStdMinMax(const float* vec) const;
+	float calcAvg(const float* vec) const;
+	float calcStd(const float* vec) const;
+	float calcMin(const float* vec) const;
+	float calcMax(const float* vec) const;
 	
 	int boneIndex;		// As defined in .ogex node (e.g. nodeX ==> boneIndex = X)
 	const char* name;	// Name of the end-effector (e.g. lHand)

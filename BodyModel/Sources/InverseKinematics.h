@@ -8,6 +8,7 @@ class InverseKinematics {
 	
 public:
 	InverseKinematics(std::vector<BoneNode*> bones);
+	~InverseKinematics();
 	void inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation);
 	void initializeBone(BoneNode* bone);
 	
@@ -16,15 +17,7 @@ public:
 	float getStucked();
 	float* getIterations();
 	float* getErrorPos();
-	float* getErrorPosLeftHand();
-	float* getErrorPosRightHand();
-	float* getErrorPosLeftFoot();
-	float* getErrorPosRightFoot();
 	float* getErrorRot();
-	float* getErrorRotLeftHand();
-	float* getErrorRotRightHand();
-	float* getErrorRotLeftFoot();
-	float* getErrorRotRightFoot();
 	float* getTime();
 	float* getTimeIteration();
 	
@@ -54,6 +47,7 @@ private:
 	void applyJointConstraints(BoneNode* targetBone);
 	void clampValue(float minVal, float maxVal, float& value);
 	
+	float* getAvdStdMinMax(const float* vec) const;
 	float calcAvg(const float* vec) const;
 	float calcStd(const float* vec) const;
 	float calcMin(const float* vec) const;
@@ -63,8 +57,8 @@ private:
 	
 	const int frames = 10000;
 	float* evalIterations;
-	float* evalErrorPos;
-	float* evalErrorRot;
 	float* evalTime;
 	float* evalTimeIteration;
+	float* evalErrorPos;
+	float* evalErrorRot;
 };

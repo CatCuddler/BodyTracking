@@ -96,7 +96,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked) {
+void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked, float errorPosHead, float errorPosHip, float errorPosLeftHand, float errorPosLeftForeArm, float errorPosRightHand, float errorPosRightForeArm, float errorPosLeftFoot, float errorPosRightFoot, float errorRotHead, float errorRotHip, float errorRotLeftHand, float errorRotLeftForeArm, float errorRotRightHand, float errorRotRightForeArm, float errorRotLeftFoot, float errorRotRightFoot) {
 	
 	// Save settings
 	char evaluationDataPath[100];
@@ -106,12 +106,13 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
 		
 		// Append to the end
-		evaluationDataOutputFile << "IK Mode;File;Lambda;Error Max Pos;Error Max Rot;Iterations Max;";
+		evaluationDataOutputFile << "IK Mode; File; Lambda; Error Max Pos; Error Max Rot; Iterations Max;";
 		evaluationDataOutputFile << "Iterations (Mean);	Error Pos (Mean);	Error Rot (Mean);	Error (RMSD);	Time [us] (Mean);	Time/Iteration [us] (Mean);";
 		evaluationDataOutputFile << "Iterations (Std);	Error Pos (Std);	Error Rot (Std);	Error (RMSD);	Time [us] (Std);	Time/Iteration [us] (Std);";
 		evaluationDataOutputFile << "Iterations (Min);	Error Pos (Min);	Error Rot (Min);	Error (RMSD);	Time [us] (Min);	Time/Iteration [us] (Min);";
 		evaluationDataOutputFile << "Iterations (Max);	Error Pos (Max);	Error Rot (Max);	Error (RMSD);	Time [us] (Max);	Time/Iteration [us] (Max);";
-		evaluationDataOutputFile << "Reached [%];Stucked [%]\n";
+		evaluationDataOutputFile << "Reached [%]; Stucked [%];";
+		evaluationDataOutputFile << "errorPosHead; errorPosHip; errorPosLeftHand; errorPosLeftForeArm; errorPosRightHand; errorPosRightForeArm; errorPosLeftFoot; errorPosRightFoot; errorRotHead; errorRotHip; errorRotLeftHand; errorRotLeftForeArm; errorRotRightHand; errorRotRightForeArm; errorRotLeftFoot; errorRotRightFoot\n";
 	}
 	
 	// Save settings
@@ -129,7 +130,10 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		evaluationDataOutputFile << *(time + i) << ";";
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}
-	evaluationDataOutputFile << reached << ";" << stucked << "\n";
+	evaluationDataOutputFile << reached << ";" << stucked << ";";
+	
+	evaluationDataOutputFile << errorPosHead << ";" << errorPosHip << ";" << errorPosLeftHand << ";" << errorPosLeftForeArm << ";" << errorPosRightHand << ";" <<  errorPosRightForeArm << ";" << errorPosLeftFoot << ";" << errorPosRightFoot << ";" <<
+	errorRotHead << ";" << errorRotHip << ";" << errorRotLeftHand << ";" << errorRotLeftForeArm << ";" << errorRotRightHand << ";" << errorRotRightForeArm << ";" <<  errorRotLeftFoot << ";" << errorRotRightFoot << "\n";
 	
 	evaluationDataOutputFile.flush();
 }
