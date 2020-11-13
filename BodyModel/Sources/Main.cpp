@@ -610,6 +610,8 @@ void record() {
 					endEffector[rightForeArm]->resetEvalVariables();
 					endEffector[leftFoot]->resetEvalVariables();
 					endEffector[rightFoot]->resetEvalVariables();
+					endEffector[leftKnee]->resetEvalVariables();
+					endEffector[rightKnee]->resetEvalVariables();
 				}
 			}
 			
@@ -629,26 +631,30 @@ void record() {
 					bool reached = avatar->getReached();
 					bool stucked = avatar->getStucked();
 					
-					float errorPosHead = endEffector[head]->getErrorPos();
-					float errorPosHip = endEffector[hip]->getErrorPos();
-					float errorPosLeftHand = endEffector[leftHand]->getErrorPos();
-					float errorPosLeftForeArm = endEffector[leftForeArm]->getErrorPos();
-					float errorPosRightHand = endEffector[rightHand]->getErrorPos();
-					float errorPosRightForeArm = endEffector[rightForeArm]->getErrorPos();
-					float errorPosLeftFoot = endEffector[leftFoot]->getErrorPos();
-					float errorPosRightFoot = endEffector[rightFoot]->getErrorPos();
+					float errorPosHead, errorRotHead;
+					endEffector[head]->getErrorPosAndRot(errorPosHead, errorRotHead);
+					float errorPosHip, errorRotHip;
+					endEffector[hip]->getErrorPosAndRot(errorPosHip, errorRotHip);
+					float errorPosLeftHand, errorRotLeftHand;
+					endEffector[leftHand]->getErrorPosAndRot(errorPosLeftHand, errorRotLeftHand);
+					float errorPosLeftForeArm, errorRotLeftForeArm;
+					endEffector[leftForeArm]->getErrorPosAndRot(errorPosLeftForeArm, errorRotLeftForeArm);
+					float errorPosRightHand, errorRotRightHand;
+					endEffector[rightHand]->getErrorPosAndRot(errorPosRightHand, errorRotRightHand);
+					float errorPosRightForeArm, errorRotRightForeArm;
+					endEffector[rightForeArm]->getErrorPosAndRot(errorPosRightForeArm, errorRotRightForeArm);
+					float errorPosLeftFoot, errorRotLeftFoot;
+					endEffector[leftFoot]->getErrorPosAndRot(errorPosLeftFoot, errorRotLeftFoot);
+					float errorPosRightFoot, errorRotRightFoot;
+					endEffector[rightFoot]->getErrorPosAndRot(errorPosRightFoot, errorRotRightFoot);
+					float errorPosLeftKnee, errorRotLeftKnee;
+					endEffector[leftKnee]->getErrorPosAndRot(errorPosLeftKnee, errorRotLeftKnee);
+					float errorPosRightKnee, errorRotRightKnee;
+					endEffector[rightKnee]->getErrorPosAndRot(errorPosRightKnee, errorRotRightKnee);
 					
-					float errorRotHead = endEffector[head]->getErrorRot();
-					float errorRotHip = endEffector[hip]->getErrorRot();
-					float errorRotLeftHand = endEffector[leftHand]->getErrorRot();
-					float errorRotLeftForeArm = endEffector[leftForeArm]->getErrorRot();
-					float errorRotRightHand = endEffector[rightHand]->getErrorRot();
-					float errorRotRightForeArm = endEffector[rightForeArm]->getErrorRot();
-					float errorRotLeftFoot = endEffector[leftFoot]->getErrorRot();
-					float errorRotRightFoot = endEffector[rightFoot]->getErrorRot();
 					
-					float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot) / 8.0f;
-					float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot) / 8.0f;
+					float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot + errorPosLeftKnee + errorPosRightKnee) / numOfEndEffectors;
+					float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot + errorRotLeftKnee + errorRotRightKnee) / numOfEndEffectors;
 					
 					log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorPosHead, errorRotHead);
 					log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorPosHip, errorRotHip);
@@ -658,12 +664,13 @@ void record() {
 					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorPosRightForeArm, errorRotRightForeArm);
 					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorPosLeftFoot, errorRotLeftFoot);
 					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorPosRightFoot, errorRotRightFoot);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorPosRightFoot, errorRotRightFoot);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorPosRightKnee, errorRotRightKnee);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorPosLeftKnee, errorRotLeftKnee);
 					log(LogLevel::Info, "Overall Error Pos = %f, Rot = %f", overallPosError, overallRotError);
 					
 					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked,
-											   errorPosHead, errorPosHip, errorPosLeftHand, errorPosLeftForeArm, errorPosRightHand, errorPosRightForeArm, errorPosLeftFoot, errorPosRightFoot,
-											   errorRotHead, errorRotHip, errorRotLeftHand, errorRotLeftForeArm, errorRotRightHand, errorRotRightForeArm, errorRotLeftFoot, errorRotRightFoot);
+											   errorPosHead, errorPosHip, errorPosLeftHand, errorPosLeftForeArm, errorPosRightHand, errorPosRightForeArm, errorPosLeftFoot, errorPosRightFoot, errorPosRightKnee, errorPosLeftKnee,
+											   errorRotHead, errorRotHip, errorRotLeftHand, errorRotLeftForeArm, errorRotRightHand, errorRotRightForeArm, errorRotLeftFoot, errorRotRightFoot, errorRotRightKnee, errorRotLeftKnee);
 					
 					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk) {
 						exit(0);

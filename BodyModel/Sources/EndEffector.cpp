@@ -119,6 +119,11 @@ float EndEffector::getErrorRot() {
 	return calcAvg(evalErrorRot);
 }
 
+void EndEffector::getErrorPosAndRot(float& pos, float& rot) {
+	pos = calcAvg(evalErrorPos);
+	rot = calcAvg(evalErrorRot);
+}
+
 int EndEffector::getDeviceIndex() const {
 	return deviceID;
 }

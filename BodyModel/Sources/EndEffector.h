@@ -77,6 +77,7 @@ public:
 	void resetEvalVariables();
 	float getErrorPos();
 	float getErrorRot();
+	void getErrorPosAndRot(float& pos, float& rot);
 	
 	int getDeviceIndex() const;
 	void setDeviceIndex(int index);
