@@ -368,7 +368,7 @@ void record() {
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-				EndEffector* tracker = new EndEffector(-1);
+				EndEffector* tracker = new EndEffector(-1, (IKMode)ikMode);
 				tracker->setDeviceIndex(i);
 				tracker->setDesPosition(devicePos);
 				tracker->setDesRotation(deviceRot);

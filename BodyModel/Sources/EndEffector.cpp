@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "EndEffector.h"
 
+#include <assert.h>
+
 #include <Kore/Log.h>
 
 #include <string>
