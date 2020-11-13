@@ -145,7 +145,7 @@ void Logger::endEvaluationLogger() {
 	log(Kore::Info, "Stop eval-logging!");
 }
 
-bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale) {
+bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, EndEffectorIndices indices[], float& scale) {
 	std::string tag;
 	float posX, posY, posZ;
 	float rotX, rotY, rotZ, rotW;
@@ -167,8 +167,21 @@ bool Logger::readData(const int numOfEndEffectors, const char* filename, Kore::v
 	for (int i = 0; i < numOfEndEffectors; ++i) {
 		logDataReader >> tag >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW >> scale;
 		
+		EndEffectorIndices endEffectorIndex = unknown;
+		if(std::strcmp(tag.c_str(), headTag) == 0)			endEffectorIndex = head;
+		else if(std::strcmp(tag.c_str(), hipTag) == 0)		endEffectorIndex = hip;
+		else if(std::strcmp(tag.c_str(), lHandTag) == 0)	endEffectorIndex = leftHand;
+		else if(std::strcmp(tag.c_str(), rHandTag) == 0)	endEffectorIndex = rightHand;
+		else if (std::strcmp(tag.c_str(), lForeArm) == 0)	endEffectorIndex = leftForeArm;
+		else if (std::strcmp(tag.c_str(), rForeArm) == 0)	endEffectorIndex = rightForeArm;
+		else if (std::strcmp(tag.c_str(), lFootTag) == 0)	endEffectorIndex = leftFoot;
+		else if (std::strcmp(tag.c_str(), rFootTag) == 0)	endEffectorIndex = rightFoot;
+		else if (std::strcmp(tag.c_str(), lKneeTag) == 0)	endEffectorIndex = leftKnee;
+		else if (std::strcmp(tag.c_str(), rKneeTag) == 0)	endEffectorIndex = rightKnee;
+		
 		rawPos[i] = Kore::vec3(posX, posY, posZ);
 		rawRot[i] = Kore::Quaternion(rotX, rotY, rotZ, rotW);
+		indices[i] = endEffectorIndex;
 		
 		if (logDataReader.eof()) {
 			logDataReader.close();
