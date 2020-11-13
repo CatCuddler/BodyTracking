@@ -119,6 +119,14 @@ float EndEffector::getErrorRot() {
 	return calcAvg(evalErrorRot);
 }
 
+float EndEffector::getRMSE() {
+	float sum = 0.0f;
+	for (int i = 0; i < size; i++) {
+		sum += Kore::pow(evalErrorPos[i] + evalErrorRot[i], 2);
+	}
+	return Kore::sqrt(sum / size);
+}
+
 void EndEffector::getErrorPosAndRot(float& pos, float& rot) {
 	pos = calcAvg(evalErrorPos);
 	rot = calcAvg(evalErrorRot);
