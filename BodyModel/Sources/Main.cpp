@@ -280,7 +280,7 @@ namespace {
 			}
 			
 			// Evaluate IK precision
-			endEffector[endEffectorID]->getError(avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex()));
+			if (eval) endEffector[endEffectorID]->getError(avatar->getBoneWithIndex(endEffector[endEffectorID]->getBoneIndex()));
 			
 		}
 	}
@@ -355,7 +355,7 @@ void record() {
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
 		
-		const int numTrackers = 5;
+		const int numTrackers = 7;
 		int trackerCount = 0;
 		
 		std::vector<EndEffector*> trackers;
@@ -368,7 +368,7 @@ void record() {
 			Kore::Quaternion deviceRot = vrDevice.vrPose.orientation;
 
 			if (vrDevice.trackedDevice == TrackedDevice::ViveTracker) {
-				EndEffector* tracker = new EndEffector(-1);
+				EndEffector* tracker = new EndEffector(-1, (IKMode)ikMode);
 				tracker->setDeviceIndex(i);
 				tracker->setDesPosition(devicePos);
 				tracker->setDesRotation(deviceRot);
@@ -379,7 +379,7 @@ void record() {
 					// Sort trackers regarding the y-Axis (height)
 					std::sort(trackers.begin(), trackers.end(), sortByYAxis());
 					
-					if (eval) {
+					if (numTrackers == 7) {
 						// Left or Right Foot
 						std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 						initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
@@ -398,7 +398,6 @@ void record() {
 						initEndEffector(leftForeArm, trackers[5]->getDeviceIndex(), trackers[5]->getDesPosition(), trackers[5]->getDesRotation());
 						initEndEffector(rightForeArm, trackers[6]->getDeviceIndex(), trackers[6]->getDesPosition(), trackers[6]->getDesRotation());
 					} else {
-						
 						// Left or Right Leg
 						std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 						initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
