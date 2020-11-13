@@ -104,7 +104,7 @@ private:
 		
 		mat_nxm pseudoInverse;
 		for (int i = 0; i < Min(nDOFs, nJointDOFs); ++i)
-			//if (fabs(d[i]) > lambda[3] * MaxAbs(d)) // modification to stabilize SVD
+			if (fabs(d[i]) > lambda[3] * MaxAbs(d)) // modification to stabilize SVD
 				for (int n = 0; n < nJointDOFs; ++n)
 					for (int m = 0; m < nDOFs; ++m)
 						pseudoInverse[n][m] += (1 / d[i]) * V[n][i] * U[m][i];
