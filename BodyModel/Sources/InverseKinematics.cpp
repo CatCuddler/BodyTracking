@@ -2,6 +2,8 @@
 #include "InverseKinematics.h"
 #include "RotationUtility.h"
 
+#include <Kore/System.h>
+
 using namespace Kore;
 
 extern float errorMaxPos[];
@@ -28,19 +30,21 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	float errorPos = maxfloat();
 	float errorRot = maxfloat();
 	bool stucked = false;
-#ifdef KORE_MACOS
-	struct timespec start, end;
-	struct timespec start2, end2;
 	
-	if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-#endif
+	double startTime;
+	double startTime_perIteration;
+	
+	if (eval) {
+		startTime = System::time();
+	}
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
 	while ((errorPos > errorMaxPos[ikMode] || errorRot > errorMaxRot[ikMode]) && i < (int) maxIterations[ikMode] && !stucked) {
-#ifdef KORE_MACOS
-		if (eval) clock_gettime(CLOCK_MONOTONIC_RAW, &start2);
-#endif
+		
+		if (eval) {
+			startTime_perIteration = System::time();
+		}
 		
 		prevDeltaTheta = deltaTheta;
 		
@@ -76,19 +80,14 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		for (int i = 0; i < bones.size(); ++i)
 			updateBone(bones[i]);
 		
-#ifdef KORE_MACOS
 		if (eval && i == 0) {
 			// time per iteration
-			clock_gettime(CLOCK_MONOTONIC_RAW, &end2);
-			float time = (end2.tv_sec - start2.tv_sec) * 1000000 + (end2.tv_nsec - start2.tv_nsec) / 1000;
-			evalTimeIteration[totalNum] = time;
+			float timeEnd = (float)(System::time() - startTime_perIteration) * 1000000;
+			evalTimeIteration[totalNum] = timeEnd;
 		}
-#endif // KORE_MACOS
 		
 		i++;
 	}
-	
-	//log(LogLevel::Info, "pos error %f (%i) rot error %f (%i) it %i (%i) stucked %i", errorPos, errorPos <= errorMaxPos[ikMode], errorRot, errorRot <= errorMaxRot[ikMode], i, i >= (int) maxIterations[ikMode], stucked);
 	
 	if (eval) {
 		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
@@ -105,13 +104,9 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		errorRot = errorRot * 180.0f / Kore::pi; // [deg]
 		evalErrorRot[totalNum] = errorRot > 0 ? errorRot : 0;
 		
-#ifdef KORE_MACOS
-		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-		
 		// time
-		float time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-		evalTime[totalNum] = time;
-#endif
+		float timeEnd = (float)(System::time() - startTime) * 1000000;
+		evalTime[totalNum] = timeEnd;
 		
 		totalNum++;
 	}
