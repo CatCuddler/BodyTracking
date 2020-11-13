@@ -100,7 +100,7 @@ private:
 	Kore::vec3 finalPosition;
 	Kore::Quaternion finalRotation;
 	
-	const int frames = 1000;
+	const int frames = 10000;
 	int size = 0;
 	float* evalErrorPos;
 	float* evalErrorRot;
