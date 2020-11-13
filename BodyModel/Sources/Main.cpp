@@ -627,8 +627,8 @@ void record() {
 					float* errorRot = avatar->getErrorRot();
 					float* time = avatar->getTime();
 					float* timeIteration = avatar->getTimeIteration();
-					bool reached = avatar->getReached();
-					bool stucked = avatar->getStucked();
+					float reached = avatar->getReached();
+					float stucked = avatar->getStucked();
 					
 					float errorPosHead, errorRotHead;
 					endEffector[head]->getErrorPosAndRot(errorPosHead, errorRotHead);
