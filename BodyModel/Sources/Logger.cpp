@@ -96,7 +96,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, bool reached, bool stucked, float errorPosHead, float errorPosHip, float errorPosLeftHand, float errorPosLeftForeArm, float errorPosRightHand, float errorPosRightForeArm, float errorPosLeftFoot, float errorPosRightFoot, float errorPosLeftKnee, float errorPosRightKnee, float errorRotHead, float errorRotHip, float errorRotLeftHand, float errorRotLeftForeArm, float errorRotRightHand, float errorRotRightForeArm, float errorRotLeftFoot, float errorRotRightFoot, float errorRotLeftKnee, float errorRotRightKnee) {
+void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, float reached, float stucked, float errorPosHead, float errorPosHip, float errorPosLeftHand, float errorPosLeftForeArm, float errorPosRightHand, float errorPosRightForeArm, float errorPosLeftFoot, float errorPosRightFoot, float errorPosLeftKnee, float errorPosRightKnee, float errorRotHead, float errorRotHip, float errorRotLeftHand, float errorRotLeftForeArm, float errorRotRightHand, float errorRotRightForeArm, float errorRotLeftFoot, float errorRotRightFoot, float errorRotLeftKnee, float errorRotRightKnee) {
 	
 	// Save settings
 	char evaluationDataPath[100];
@@ -112,6 +112,7 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		evaluationDataOutputFile << "Iterations (Min);Error Pos (Min);Error Rot (Min);Time [us] (Min);Time/Iteration [us] (Min);";
 		evaluationDataOutputFile << "Iterations (Max);Error Pos (Max);Error Rot (Max);Time [us] (Max);Time/Iteration [us] (Max);";
 		evaluationDataOutputFile << "Reached [%];Stucked [%];";
+		evaluationDataOutputFile << "Overall Pos Error;Overall Rot Error;";
 		evaluationDataOutputFile << "errorPosHead;errorPosHip;errorPosLeftHand;errorPosLeftForeArm;errorPosRightHand;errorPosRightForeArm;errorPosLeftFoot;errorPosRightFoot;errorPosLeftKnee;errorPosLeftKnee;";
 		evaluationDataOutputFile << "errorRotHead;errorRotHip;errorRotLeftHand;errorRotLeftForeArm;errorRotRightHand;errorRotRightForeArm;errorRotLeftFoot;errorRotRightFoot;errorRotLeftKnee;errorRotLeftKnee\n";
 	}
@@ -129,6 +130,10 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		evaluationDataOutputFile << *(timeIteration + i) << ";";
 	}
 	evaluationDataOutputFile << reached << ";" << stucked << ";";
+
+	float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot + errorPosLeftKnee + errorPosRightKnee) / 10;
+	float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot + errorRotLeftKnee + errorRotRightKnee) / 10;
+	evaluationDataOutputFile << overallPosError << ";" << overallRotError << ";";
 	
 	evaluationDataOutputFile << errorPosHead << ";" << errorPosHip << ";" << errorPosLeftHand << ";" << errorPosLeftForeArm << ";" << errorPosRightHand << ";" <<  errorPosRightForeArm << ";" << errorPosLeftFoot << ";" << errorPosRightFoot << ";" << errorPosLeftKnee << ";" << errorPosRightKnee << ";";
 	evaluationDataOutputFile << errorRotHead << ";" << errorRotHip << ";" << errorRotLeftHand << ";" << errorRotLeftForeArm << ";" << errorRotRightHand << ";" << errorRotRightForeArm << ";" << errorRotLeftFoot << ";" << errorRotRightFoot << ";" << errorRotLeftKnee << ";" << errorRotRightKnee << "\n";

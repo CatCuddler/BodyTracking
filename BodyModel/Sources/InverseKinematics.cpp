@@ -314,11 +314,13 @@ float InverseKinematics::calcMax(const float* vec) const {
 }
 
 float InverseKinematics::getReached() {
-	return totalNum != 0 ? (float) evalReached / (float) totalNum : -1;
+	float temp = ((float)evalReached / (float)totalNum) * 100.0f;
+	return totalNum != 0 ? temp : -1;
 }
 
 float InverseKinematics::getStucked() {
-	return totalNum != 0 ? (float) evalStucked / (float) totalNum : -1;
+	float temp = ((float)evalStucked / (float)totalNum) * 100.0f;
+	return totalNum != 0 ? temp : -1;
 }
 
 float* InverseKinematics::getAvdStdMinMax(const float* vec) const {
