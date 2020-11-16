@@ -293,7 +293,6 @@ namespace {
 		initRotInv = initRot.invert();
 		
 		// Mode character in the middle of both feet
-		Kore::vec3 initPos = vec4(0, 0, 0, 1);
 		Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
 		Kore::vec3 posRightFoot = endEffector[rightFoot]->getDesPosition();
 		Kore::vec3 initPos = (posRightFoot + posLeftFoot) / 2.0f;
