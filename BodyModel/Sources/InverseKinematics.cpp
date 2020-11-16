@@ -109,6 +109,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		evalTime[totalNum] = timeEnd;
 		
 		totalNum++;
+		assert(totalNum < frames);
 	}
 }
 

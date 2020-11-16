@@ -55,7 +55,7 @@ private:
 	
 	int totalNum = 0, evalReached = 0, evalStucked = 0;
 	
-	const int frames = 10000;
+	const int frames = 20000;
 	float* evalIterations;
 	float* evalTime;
 	float* evalTimeIteration;
