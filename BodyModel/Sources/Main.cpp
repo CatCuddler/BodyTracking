@@ -292,7 +292,14 @@ namespace {
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		
-		vec3 initPos = vec4(0, 0, 0, 1);
+		// Mode character in the middle of both feet
+		Kore::vec3 initPos = vec4(0, 0, 0, 1);
+		Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
+		Kore::vec3 posRightFoot = endEffector[rightFoot]->getDesPosition();
+		Kore::vec3 initPos = (posRightFoot + posLeftFoot) / 2.0f;
+		initPos.y() = 0.0f;
+
+		log(Kore::LogLevel::Info, "%f %f %f", initPos.x(), initPos.y(), initPos.z());
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
@@ -671,7 +678,7 @@ void record() {
 											   errorPosHead, errorPosHip, errorPosLeftHand, errorPosLeftForeArm, errorPosRightHand, errorPosRightForeArm, errorPosLeftFoot, errorPosRightFoot, errorPosRightKnee, errorPosLeftKnee,
 											   errorRotHead, errorRotHip, errorRotLeftHand, errorRotLeftForeArm, errorRotRightHand, errorRotRightForeArm, errorRotLeftFoot, errorRotRightFoot, errorRotRightKnee, errorRotLeftKnee);
 					
-					if (currentFile >= evalFilesInGroup - 1 && ikMode >= evalMaxIk) {
+					if (currentFile > numFiles && ikMode >= evalMaxIk) {
 						exit(0);
 					} else {
 						if (lambda[ikMode] >= evalMaxValue[ikMode]) {
@@ -880,8 +887,6 @@ void record() {
         avatar = new Avatar("avatar/avatar_male.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/avatar_female.ogex", "avatar/", structure);
 		
-		initTransAndRot();
-		
 		// Set camera initial position and orientation
 		cameraPos = vec3(2.6, 1.8, 0.0);
 		Kore::Quaternion q1(vec3(0.0f, 1.0f, 0.0f), Kore::pi / 2.0f);
@@ -935,6 +940,7 @@ void record() {
 		endEffector[rightFoot] = new EndEffector(rightFootBoneIndex, (IKMode)ikMode);
 		endEffector[leftKnee] = new EndEffector(leftLegBoneIndex, (IKMode)ikMode);
 		endEffector[rightKnee] = new EndEffector(rightLegBoneIndex, (IKMode)ikMode);
+		initTransAndRot();
 		
 #ifdef KORE_STEAMVR
 		VrInterface::init(nullptr, nullptr, nullptr); // TODO: Remove
