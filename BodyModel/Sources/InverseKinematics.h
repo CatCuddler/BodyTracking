@@ -24,7 +24,9 @@ public:
 private:
 	std::vector<BoneNode*> bones;
 	
-	static const int handJointDOFs = 7;
+	static const int handJointSimpleIKDOFs = 7;
+	Jacobian<handJointSimpleIKDOFs>* jacobianSimpleIKHand = new Jacobian<handJointSimpleIKDOFs>;
+	static const int handJointDOFs = 4;
 	Jacobian<handJointDOFs>* jacobianHand = new Jacobian<handJointDOFs>;
 	
 	static const int footJointDOFs = 4;
