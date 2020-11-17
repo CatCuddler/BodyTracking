@@ -59,8 +59,8 @@ private:
 	
 	const int frames = 20000;
 	float* evalIterations;
-	float* evalTime;
 	float* evalTimeIteration;
+	float* evalTime;
 	float* evalErrorPos;
 	float* evalErrorRot;
 };

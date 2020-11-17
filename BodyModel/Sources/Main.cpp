@@ -630,8 +630,8 @@ void record() {
 					float* iterations = avatar->getIterations();
 					//float* errorPos = avatar->getErrorPos();
 					//float* errorRot = avatar->getErrorRot();
-					float* time = avatar->getTime();
 					float* timeIteration = avatar->getTimeIteration();
+					float* time = avatar->getTime();
 					float reached = avatar->getReached();
 					float stucked = avatar->getStucked();
 					

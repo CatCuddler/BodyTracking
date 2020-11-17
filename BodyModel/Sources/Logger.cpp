@@ -110,6 +110,8 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, f
 		evaluationDataOutputFile << "MeanIterations;StdIterations;";
 		evaluationDataOutputFile << "MeanPosError[mm];StdPosError[mm];";
 		evaluationDataOutputFile << "MeanRotError[deg];StdRotError[deg];";
+		evaluationDataOutputFile << "MeanTimePerIteration[ms];StdTimePerIteration[ms];";
+		evaluationDataOutputFile << "MeanTime[ms];StdTime[ms];";
 		evaluationDataOutputFile << "Reached[%];Stucked[%];";
 		evaluationDataOutputFile << "MeanHeadPosError;StdHeadPosError;MeanHeadRotError;StdHeadRotError;";
 		evaluationDataOutputFile << "MeanHipPosError;StdHipPosError;MeanHipRotError;StdHipRotError;";
@@ -133,6 +135,10 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, f
 	// Save mean and std for pos and rot error
 	evaluationDataOutputFile << meanErrorPos << ";" << stdErrorPos << ";";
 	evaluationDataOutputFile << meanErrorRot << ";" << stdErrorRot << ";";
+	
+	// Save time
+	evaluationDataOutputFile << timeIteration[0] << ";" << timeIteration[1] << ";";
+	evaluationDataOutputFile << time[0] << ";" << time[1] << ";";
 
 	// Reached & stucked
 	evaluationDataOutputFile << reached << ";" << stucked << ";";

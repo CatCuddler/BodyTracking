@@ -19,8 +19,8 @@ InverseKinematics::InverseKinematics(std::vector<BoneNode*> boneVec) {
 
 InverseKinematics::~InverseKinematics() {
 	delete[] evalIterations;
-	delete[] evalTime;
 	delete[] evalTimeIteration;
+	delete[] evalTime;
 	delete[] evalErrorPos;
 	delete[] evalErrorRot;
 }
