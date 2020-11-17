@@ -79,6 +79,7 @@ public:
 	float getErrorRot();
 	float getRMSE();
 	void getErrorPosAndRot(float& pos, float& rot);
+	float* getAvdStdPosRot() const;
 	
 	int getDeviceIndex() const;
 	void setDeviceIndex(int index);
@@ -105,7 +106,6 @@ private:
 	float* evalErrorPos;
 	float* evalErrorRot;
 	
-	float* getAvdStdMinMax(const float* vec) const;
 	float calcAvg(const float* vec) const;
 	float calcStd(const float* vec) const;
 	float calcMin(const float* vec) const;

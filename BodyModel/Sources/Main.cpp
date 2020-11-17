@@ -298,7 +298,6 @@ namespace {
 		Kore::vec3 initPos = (posRightFoot + posLeftFoot) / 2.0f;
 		initPos.y() = 0.0f;
 
-		log(Kore::LogLevel::Info, "%f %f %f", initPos.x(), initPos.y(), initPos.z());
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
 	}
@@ -629,53 +628,50 @@ void record() {
 				if (eval) {
 					
 					float* iterations = avatar->getIterations();
-					float* errorPos = avatar->getErrorPos();
-					float* errorRot = avatar->getErrorRot();
+					//float* errorPos = avatar->getErrorPos();
+					//float* errorRot = avatar->getErrorRot();
 					float* time = avatar->getTime();
 					float* timeIteration = avatar->getTimeIteration();
 					float reached = avatar->getReached();
 					float stucked = avatar->getStucked();
 					
-					float errorPosHead, errorRotHead;
-					endEffector[head]->getErrorPosAndRot(errorPosHead, errorRotHead);
-					float errorPosHip, errorRotHip;
-					endEffector[hip]->getErrorPosAndRot(errorPosHip, errorRotHip);
-					float errorPosLeftHand, errorRotLeftHand;
-					endEffector[leftHand]->getErrorPosAndRot(errorPosLeftHand, errorRotLeftHand);
-					float errorPosLeftForeArm, errorRotLeftForeArm;
-					endEffector[leftForeArm]->getErrorPosAndRot(errorPosLeftForeArm, errorRotLeftForeArm);
-					float errorPosRightHand, errorRotRightHand;
-					endEffector[rightHand]->getErrorPosAndRot(errorPosRightHand, errorRotRightHand);
-					float errorPosRightForeArm, errorRotRightForeArm;
-					endEffector[rightForeArm]->getErrorPosAndRot(errorPosRightForeArm, errorRotRightForeArm);
-					float errorPosLeftFoot, errorRotLeftFoot;
-					endEffector[leftFoot]->getErrorPosAndRot(errorPosLeftFoot, errorRotLeftFoot);
-					float errorPosRightFoot, errorRotRightFoot;
-					endEffector[rightFoot]->getErrorPosAndRot(errorPosRightFoot, errorRotRightFoot);
-					float errorPosLeftKnee, errorRotLeftKnee;
-					endEffector[leftKnee]->getErrorPosAndRot(errorPosLeftKnee, errorRotLeftKnee);
-					float errorPosRightKnee, errorRotRightKnee;
-					endEffector[rightKnee]->getErrorPosAndRot(errorPosRightKnee, errorRotRightKnee);
+					float* errorHead = endEffector[head]->getAvdStdPosRot();
+					float* errorHip = endEffector[hip]->getAvdStdPosRot();
+					float* errorLeftHand = endEffector[leftHand]->getAvdStdPosRot();
+					float* errorRightHand = endEffector[rightHand]->getAvdStdPosRot();
+					float* errorLeftForeArm = endEffector[leftForeArm]->getAvdStdPosRot();
+					float* errorRightForeArm = endEffector[rightForeArm]->getAvdStdPosRot();
+					float* errorLeftFoot = endEffector[leftFoot]->getAvdStdPosRot();
+					float* errorRightFoot = endEffector[rightFoot]->getAvdStdPosRot();
+					float* errorLeftKnee = endEffector[leftKnee]->getAvdStdPosRot();
+					float* errorRightKnee = endEffector[rightKnee]->getAvdStdPosRot();
 					
 					
-					float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot + errorPosLeftKnee + errorPosRightKnee) / numOfEndEffectors;
-					float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot + errorRotLeftKnee + errorRotRightKnee) / numOfEndEffectors;
+					float overallPosError = (errorHead[0] + errorHip[0] + errorLeftHand[0] + errorLeftForeArm[0] + errorRightHand[0] + errorRightForeArm[0] + errorLeftFoot[0] + errorRightFoot[0] + errorLeftKnee[0] + errorRightKnee[0]) / numOfEndEffectors;
+					float overallRotError = (errorHead[2] + errorHip[2] + errorLeftHand[2] + errorLeftForeArm[2] + errorRightHand[2] + errorRightForeArm[2] + errorLeftFoot[2] + errorRightFoot[2] + errorLeftKnee[2] + errorRightKnee[2]) / numOfEndEffectors;
+
+					float standardDeviationPos = 0.0f;
+					float standardDeviationRot = 0.0f;
+					for (int i = 0; i < numOfEndEffectors; i++) {
+						standardDeviationPos += Kore::pow(endEffector[i]->getAvdStdPosRot()[0] - overallPosError, 2);
+						standardDeviationRot += Kore::pow(endEffector[i]->getAvdStdPosRot()[3] - overallRotError, 2);
+					}
+					standardDeviationPos = Kore::sqrt(standardDeviationPos / numOfEndEffectors);
+					standardDeviationRot = Kore::sqrt(standardDeviationRot / numOfEndEffectors);
 					
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorPosHead, errorRotHead);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorPosHip, errorRotHip);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorPosLeftHand, errorRotLeftHand);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorPosLeftForeArm, errorRotLeftForeArm);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorPosRightHand, errorRotRightHand);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorPosRightForeArm, errorRotRightForeArm);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorPosLeftFoot, errorRotLeftFoot);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorPosRightFoot, errorRotRightFoot);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorPosRightKnee, errorRotRightKnee);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorPosLeftKnee, errorRotLeftKnee);
-					log(LogLevel::Info, "Overall Error Pos = %f, Rot = %f", overallPosError, overallRotError);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorHead[0], errorHead[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorHip[0], errorHip[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorLeftHand[0], errorLeftHand[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorLeftForeArm[0], errorLeftForeArm[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorRightHand[0], errorRightHand[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorRightForeArm[0], errorRightForeArm[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorLeftFoot[0], errorLeftFoot[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorRightFoot[0], errorRightFoot[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorLeftKnee[0], errorLeftKnee[2]);
+					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorRightKnee[0], errorRightKnee[2]);
+					log(LogLevel::Info, "Overall Error Pos = %f +- %f, Rot = %f +- %f", overallPosError, standardDeviationPos, overallRotError, standardDeviationRot);
 					
-					logger->saveEvaluationData(files[currentFile], iterations, errorPos, errorRot, time, timeIteration, reached, stucked,
-											   errorPosHead, errorPosHip, errorPosLeftHand, errorPosLeftForeArm, errorPosRightHand, errorPosRightForeArm, errorPosLeftFoot, errorPosRightFoot, errorPosRightKnee, errorPosLeftKnee,
-											   errorRotHead, errorRotHip, errorRotLeftHand, errorRotLeftForeArm, errorRotRightHand, errorRotRightForeArm, errorRotLeftFoot, errorRotRightFoot, errorRotRightKnee, errorRotLeftKnee);
+					logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
 					
 					if (currentFile > numFiles && ikMode >= evalMaxIk) {
 						exit(0);

@@ -103,12 +103,12 @@ float EndEffector::calcMax(const float* vec) const {
 	return max;
 }
 
-float* EndEffector::getAvdStdMinMax(const float* vec) const {
+float* EndEffector::getAvdStdPosRot() const {
 	float *error = new float[4];
-	error[0] = calcAvg(vec);
-	error[1] = calcStd(vec);
-	error[2] = calcMin(vec);
-	error[3] = calcMax(vec);
+	error[0] = calcAvg(evalErrorPos);
+	error[1] = calcStd(evalErrorPos);
+	error[2] = calcAvg(evalErrorRot);
+	error[3] = calcStd(evalErrorRot);
 	
 	return error;
 }

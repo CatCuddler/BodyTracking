@@ -28,7 +28,7 @@ public:
 	void endLogger();
 	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	void saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, float reached, float stucked, float errorPosHead, float errorPosHip, float errorPosLeftHand, float errorPosLeftForeArm, float errorPosRightHand, float errorPosRightForeArm, float errorPosLeftFoot, float errorPosRightFoot, float errorPosLeftKnee, float errorPosRightKnee, float errorRotHead, float errorRotHip, float errorRotLeftHand, float errorRotLeftForeArm, float errorRotRightHand, float errorRotRightForeArm, float errorRotLeftFoot, float errorRotRightFoot, float errorRotLeftKnee, float errorRotRightKnee);
+	void saveEvaluationData(const char* filename, const float* iterations, float meanErrorPos, float stdErrorPos, float meanErrorRot, float stdErrorRot, const float* time, const float* timeIteration, float reached, float stucked, const float* errorHead, const float* errorHip, const float* errorLeftHand, const float* errorLeftForeArm, const float* errorRightHand, const float* errorRightForeArm, const float* errorLeftFoot, const float* errorRightFoot, const float* errorLeftKnee, const float* errorRightKnee);
 	void endEvaluationLogger();
 	
 	// HMM

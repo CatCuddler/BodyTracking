@@ -96,7 +96,7 @@ void Logger::analyseHMM(const char* hmmName, double probability, bool newLine) {
 	hmmAnalysisWriter.flush();
 }
 
-void Logger::saveEvaluationData(const char* filename, const float* iterations, const float* errorPos, const float* errorRot, const float* time, const float* timeIteration, float reached, float stucked, float errorPosHead, float errorPosHip, float errorPosLeftHand, float errorPosLeftForeArm, float errorPosRightHand, float errorPosRightForeArm, float errorPosLeftFoot, float errorPosRightFoot, float errorPosLeftKnee, float errorPosRightKnee, float errorRotHead, float errorRotHip, float errorRotLeftHand, float errorRotLeftForeArm, float errorRotRightHand, float errorRotRightForeArm, float errorRotLeftFoot, float errorRotRightFoot, float errorRotLeftKnee, float errorRotRightKnee) {
+void Logger::saveEvaluationData(const char* filename, const float* iterations, float meanErrorPos, float stdErrorPos, float meanErrorRot, float stdErrorRot, const float* time, const float* timeIteration, float reached, float stucked, const float* errorHead, const float* errorHip, const float* errorLeftHand, const float* errorLeftForeArm, const float* errorRightHand, const float* errorRightForeArm, const float* errorLeftFoot, const float* errorRightFoot, const float* errorLeftKnee, const float* errorRightKnee) {
 	
 	// Save settings
 	char evaluationDataPath[100];
@@ -106,37 +106,48 @@ void Logger::saveEvaluationData(const char* filename, const float* iterations, c
 		evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);
 		
 		// Append to the end
-		evaluationDataOutputFile << "IK Mode;File;Lambda;Error Max Pos;Error Max Rot;Iterations Max;";
-		evaluationDataOutputFile << "Iterations (Mean);Error Pos (Mean);Error Rot (Mean);Time [us] (Mean);Time/Iteration [us] (Mean);";
-		evaluationDataOutputFile << "Iterations (Std);Error Pos (Std);Error Rot (Std);Time [us] (Std);Time/Iteration [us] (Std);";
-		evaluationDataOutputFile << "Iterations (Min);Error Pos (Min);Error Rot (Min);Time [us] (Min);Time/Iteration [us] (Min);";
-		evaluationDataOutputFile << "Iterations (Max);Error Pos (Max);Error Rot (Max);Time [us] (Max);Time/Iteration [us] (Max);";
-		evaluationDataOutputFile << "Reached [%];Stucked [%];";
-		evaluationDataOutputFile << "Overall Pos Error;Overall Rot Error;";
-		evaluationDataOutputFile << "errorPosHead;errorPosHip;errorPosLeftHand;errorPosLeftForeArm;errorPosRightHand;errorPosRightForeArm;errorPosLeftFoot;errorPosRightFoot;errorPosLeftKnee;errorPosLeftKnee;";
-		evaluationDataOutputFile << "errorRotHead;errorRotHip;errorRotLeftHand;errorRotLeftForeArm;errorRotRightHand;errorRotRightForeArm;errorRotLeftFoot;errorRotRightFoot;errorRotLeftKnee;errorRotLeftKnee\n";
+		evaluationDataOutputFile << "IKMode;File;Lambda;ErrorMaxPos;ErrorMaxRot;IterationsMax;";
+		evaluationDataOutputFile << "MeanIterations;StdIterations;";
+		evaluationDataOutputFile << "MeanPosError[mm];StdPosError[mm];";
+		evaluationDataOutputFile << "MeanRotError[deg];StdRotError[deg];";
+		evaluationDataOutputFile << "Reached[%];Stucked[%];";
+		evaluationDataOutputFile << "MeanHeadPosError;StdHeadPosError;MeanHeadRotError;StdHeadRotError;";
+		evaluationDataOutputFile << "MeanHipPosError;StdHipPosError;MeanHipRotError;StdHipRotError;";
+		evaluationDataOutputFile << "MeanLeftHandPosError;StdLeftHandPosError;MeanLeftHandRotError;StdLeftHandRotError;";
+		evaluationDataOutputFile << "MeanLeftForeArmPosError;StdLeftForeArmPosError;MeanLeftForeArmRotError;StdLeftForeArmRotError;";
+		evaluationDataOutputFile << "MeanRightHandPosError;StdRightHandPosError;MeanRightHandRotError;StdRightHandRotError;";
+		evaluationDataOutputFile << "MeanRightForeArmPosError;StdRightForeArmPosError;MeanRightForeArmRotError;StdRightForeArmRotError;";
+		evaluationDataOutputFile << "MeanLeftFootPosError;StdLeftFootPosError;MeanLeftFootRotError;StdLeftFootRotError;";
+		evaluationDataOutputFile << "MeanRightFootPosError;StdRightFootPosError;MeanRightFootRotError;StdRightFootRotError;";
+		evaluationDataOutputFile << "MeanLeftKneePosError;StdLeftKneePosError;MeanLeftKneeRotError;StdLeftKneeRotError;";
+		evaluationDataOutputFile << "MeanRightKneePosError;StdRightKneePosError;MeanRightKneeRotError;StdRightKneeRotError\n";
 	}
 	
 	// Save settings
 	log(Kore::Info, "%s \t IK: %i \t lambda: %f \t errorMaxPos: %f \t errorMaxRot: %f \t maxIterations: %f", filename, ikMode, lambda[ikMode], errorMaxPos[ikMode], errorMaxRot[ikMode], maxIterations[ikMode]);
 	evaluationDataOutputFile << ikMode << ";" << filename << ";" << lambda[ikMode] << ";" << errorMaxPos[ikMode] << ";" << errorMaxRot[ikMode] << ";" << maxIterations[ikMode] << ";";
-	
-	// Save results
-	for (int i = 0; i < 4; ++i) {
-		evaluationDataOutputFile << *(iterations + i) << ";";
-		evaluationDataOutputFile << *(errorPos + i) << ";";
-		evaluationDataOutputFile << *(errorRot + i) << ";";
-		evaluationDataOutputFile << *(time + i) << ";";
-		evaluationDataOutputFile << *(timeIteration + i) << ";";
-	}
-	evaluationDataOutputFile << reached << ";" << stucked << ";";
 
-	float overallPosError = (errorPosHead + errorPosHip + errorPosLeftHand + errorPosLeftForeArm + errorPosRightHand + errorPosRightForeArm + errorPosLeftFoot + errorPosRightFoot + errorPosLeftKnee + errorPosRightKnee) / 10;
-	float overallRotError = (errorRotHead + errorRotHip + errorRotLeftHand + errorRotLeftForeArm + errorRotRightHand + errorRotRightForeArm + errorRotLeftFoot + errorRotRightFoot + errorRotLeftKnee + errorRotRightKnee) / 10;
-	evaluationDataOutputFile << overallPosError << ";" << overallRotError << ";";
+	// Save mean and std for iterations
+	evaluationDataOutputFile << iterations[0] << ";" << iterations[1] << ";";
+
+	// Save mean and std for pos and rot error
+	evaluationDataOutputFile << meanErrorPos << ";" << stdErrorPos << ";";
+	evaluationDataOutputFile << meanErrorRot << ";" << stdErrorRot << ";";
+
+	// Reached & stucked
+	evaluationDataOutputFile << reached << ";" << stucked << ";";
 	
-	evaluationDataOutputFile << errorPosHead << ";" << errorPosHip << ";" << errorPosLeftHand << ";" << errorPosLeftForeArm << ";" << errorPosRightHand << ";" <<  errorPosRightForeArm << ";" << errorPosLeftFoot << ";" << errorPosRightFoot << ";" << errorPosLeftKnee << ";" << errorPosRightKnee << ";";
-	evaluationDataOutputFile << errorRotHead << ";" << errorRotHip << ";" << errorRotLeftHand << ";" << errorRotLeftForeArm << ";" << errorRotRightHand << ";" << errorRotRightForeArm << ";" << errorRotLeftFoot << ";" << errorRotRightFoot << ";" << errorRotLeftKnee << ";" << errorRotRightKnee << "\n";
+	// Save results for each individual bone
+	evaluationDataOutputFile << errorHead[0] << ";" << errorHead[1] << ";" << errorHead[2] << ";" << errorHead[3] << ";";
+	evaluationDataOutputFile << errorHip[0] << ";" << errorHip[1] << ";" << errorHip[2] << ";" << errorHip[3] << ";";
+	evaluationDataOutputFile << errorLeftHand[0] << ";" << errorLeftHand[1] << ";" << errorLeftHand[2] << ";" << errorLeftHand[3] << ";";
+	evaluationDataOutputFile << errorLeftForeArm[0] << ";" << errorLeftForeArm[1] << ";" << errorLeftForeArm[2] << ";" << errorLeftForeArm[3] << ";";
+	evaluationDataOutputFile << errorRightHand[0] << ";" << errorRightHand[1] << ";" << errorRightHand[2] << ";" << errorRightHand[3] << ";";
+	evaluationDataOutputFile << errorRightForeArm[0] << ";" << errorRightForeArm[1] << ";" << errorRightForeArm[2] << ";" << errorRightForeArm[3] << ";";
+	evaluationDataOutputFile << errorLeftFoot[0] << ";" << errorLeftFoot[1] << ";" << errorLeftFoot[2] << ";" << errorLeftFoot[3] << ";";
+	evaluationDataOutputFile << errorRightFoot[0] << ";" << errorRightFoot[1] << ";" << errorRightFoot[2] << ";" << errorRightFoot[3] << ";";
+	evaluationDataOutputFile << errorLeftKnee[0] << ";" << errorLeftKnee[1] << ";" << errorLeftKnee[2] << ";" << errorLeftKnee[3] << ";";
+	evaluationDataOutputFile << errorRightKnee[0] << ";" << errorRightKnee[1] << ";" << errorRightKnee[2] << ";" << errorRightKnee[3] << "\n";
 	
 	evaluationDataOutputFile.flush();
 }
