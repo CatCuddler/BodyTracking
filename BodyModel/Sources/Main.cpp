@@ -26,6 +26,9 @@
 #include <Kore/Input/Gamepad.h>
 #endif
 
+#define EPSILON 0.0001   // Define your own tolerance
+#define FLOAT_EQ(x,v) (((v - EPSILON) < x) && (x <( v + EPSILON)))
+
 using namespace Kore;
 using namespace Kore::Graphics4;
 
@@ -676,7 +679,8 @@ void record() {
 					if (currentFile > numFiles && ikMode >= evalMaxIk) {
 						exit(0);
 					} else {
-						if (lambda[ikMode] >= evalMaxValue[ikMode]) {
+						//if (lambda[ikMode] >= evalMaxValue[ikMode]) {
+						if (FLOAT_EQ(lambda[ikMode], evalMaxValue[ikMode])) {
 							logger->endEvaluationLogger();
 							
 							lambda[ikMode] = evalInitValue[ikMode];
