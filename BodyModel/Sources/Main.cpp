@@ -295,11 +295,12 @@ namespace {
 		initRot.normalize();
 		initRotInv = initRot.invert();
 		
-		// Mode character in the middle of both feet
-		Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
+		// Move character in the middle of both feet
+		Kore::vec3 initPos = Kore::vec3(0, 0, 0);
+		/*Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
 		Kore::vec3 posRightFoot = endEffector[rightFoot]->getDesPosition();
-		Kore::vec3 initPos = (posRightFoot + posLeftFoot) / 2.0f;
-		initPos.y() = 0.0f;
+		initPos = (posRightFoot + posLeftFoot) / 2.0f;
+		initPos.y() = 0.0f;*/
 
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
