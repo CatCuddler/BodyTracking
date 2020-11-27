@@ -26,7 +26,9 @@ InverseKinematics::~InverseKinematics() {
 }
 
 void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, Kore::vec3 desPosition, Kore::Quaternion desRotation) {
-	std::vector<float> deltaTheta, prevDeltaTheta;
+	std::vector<float> deltaTheta;
+	float previousPosition;
+	float previousRotation;
 	float errorPos = maxfloat();
 	float errorRot = maxfloat();
 	bool stucked = false;
@@ -46,7 +48,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 			startTime_perIteration = System::time();
 		}
 		
-		prevDeltaTheta = deltaTheta;
+		previousPosition = errorPos;
+		previousRotation = errorRot;
 		
 		// todo: better!
 		if (simpleIK && (targetBone->nodeIndex == leftHandBoneIndex || targetBone->nodeIndex == rightHandBoneIndex)) {
@@ -69,13 +72,12 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		
 		// check if ik stucked (runned in extrema)
 		if (i) {
-			float sum = 0;
-			int j = 0;
-			while (!stucked && j < prevDeltaTheta.size()) {
-				sum += fabs(prevDeltaTheta[j] - deltaTheta[j]);
-				j++;
+			if (fabs(previousPosition - errorPos) < nearNull) {
+				stucked = true;
 			}
-			stucked = sum < nearNull;
+			if (fabs(previousRotation - errorRot) < nearNull) {
+				stucked = true;
+			}
 		}
 		
 		applyChanges(deltaTheta, targetBone);
