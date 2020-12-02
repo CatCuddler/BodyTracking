@@ -87,8 +87,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		
 		if (eval && i == 0) {
 			// time per iteration
-			float timeEnd = (float)(System::time() - startTime_perIteration); // [ms]
-			evalTimeIteration[totalNum] = timeEnd;
+			float timeEnd = (float)(System::time() - startTime_perIteration) * 1000.0f; // [ms]
+			evalTimeIteration[totalNum] = evalTimeIteration[totalNum] + timeEnd;
 		}
 		
 		i++;
@@ -110,7 +110,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		evalErrorRot[totalNum] = errorRot > 0 ? errorRot : 0;
 		
 		// time
-		float timeEnd = (float)(System::time() - startTime); // [ms]
+		evalTimeIteration[totalNum] = evalTimeIteration[totalNum] / i;
+		float timeEnd = (float)(System::time() - startTime) * 1000.0f; // [ms]
 		evalTime[totalNum] = timeEnd;
 		
 		totalNum++;
