@@ -2,18 +2,21 @@
 
 #include <Kore/Math/Core.h>
 
+//extern float lambda[];
+//extern float maxIterations[];
+
 enum IKMode {
 	JT = 0, JPI = 1, DLS = 2, SVD = 3, SVD_DLS = 4, SDLS = 5
 };
 
 namespace {
 	const int numFiles = 7;
-    const char* files[numFiles] = {"walking.csv", "lunges.csv", "squats.csv", "kicks.csv", "yoga1.csv", "yoga2.csv", "yoga3.csv"};
+	const char* files[numFiles] = {"walking.csv", "lunges.csv", "squats.csv", "kicks.csv", "yoga1.csv", "yoga2.csv", "yoga3.csv"};
 	//const int numFiles = 16;
 	//const char* files[numFiles] = { "sitting.csv", "standing.csv", "walking.csv", "shoulder_forward_flexion.csv", "shoulder_abduction.csv", "shoulder_horizontal_abduction.csv",  "rotation_with_arm_at_side.csv", "rotation_with_arm_in_abduction.csv", "elbow_flexion.csv", "hand_pronation.csv", "knee_flexion.csv", "hip_flexion.csv", "punching.csv", "kicking.csv", "squats.csv", "lunges.csv" };
 	int currentFile = 0;
 	
-	const float nearNull = 0.00001f;
+	const float nearNull = 0.000001f;
 	
 	bool logRawData = false;
 
@@ -28,9 +31,6 @@ namespace {
     
     // Evaluation values
     const bool eval = false;
-	const float evalInitValue[6] 		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi/120.0f	};
-	const float evalStep[6] 			= { 0.0f,		0.0f,		0.05f,		0.0f,		0.05f,			Kore::pi/120.0f	};
-	const float evalMaxValue[6] 		= { 1.0f,		1.0f,		1.5f,		1.0f,		1.5f,			Kore::pi/4.0f 	};
 	const int evalMinIk = 0;
 	const int evalMaxIk = 5;
 }

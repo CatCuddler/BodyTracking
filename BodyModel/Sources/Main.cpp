@@ -35,10 +35,24 @@ using namespace Kore::Graphics4;
 // Dynamic IK parameters
 int ikMode = 2;
 //							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
-float lambda[6] 		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi/120.0f	};
+// Uncomment this to evaluate lambda
+float lambda[6] 			= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
+float evalInitValue[6]		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
+float* evalValue			= lambda;
+const float evalStep[6]		= { 0.0f,		0.0f,		0.05f,		0.0f,		0.05f,			Kore::pi / 120.0f };
+const float evalMaxValue[6] = { 1.0f,		1.0f,		1.5f,		1.0f,		1.5f,			Kore::pi / 4.0f };
+float maxIterations[6]		= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f };
+
+// Uncomment this to evaluate iterations
+/*float lambda[6] 			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			0.18326f };
+float maxIterations[6] 		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
+float evalInitValue[6]		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
+float* evalValue			= maxIterations;
+const float evalMaxValue[6] = { 100.0f,		100.0f,		100.0f,		100.0f,		100.0f,			100.0f 	};
+const float evalStep[6] 	= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f	};*/
+
 float errorMaxPos[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
 float errorMaxRot[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
-float maxIterations[6] 	= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f	};
 
 namespace {
 	const int width = 1024;
@@ -53,8 +67,10 @@ namespace {
 	
 	Logger* logger;
 	
+	const double fpsLimit = 1.0f / 120.0f;
 	double startTime;
 	double lastTime;
+	double lastFrameTime = 0.0f;
 	
 	// Audio cues
 	Sound* startRecordingSound;
@@ -297,10 +313,10 @@ namespace {
 		
 		// Move character in the middle of both feet
 		Kore::vec3 initPos = Kore::vec3(0, 0, 0);
-		/*Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
+		Kore::vec3 posLeftFoot = endEffector[leftFoot]->getDesPosition();
 		Kore::vec3 posRightFoot = endEffector[rightFoot]->getDesPosition();
-		initPos = (posRightFoot + posLeftFoot) / 2.0f;
-		initPos.y() = 0.0f;*/
+		//initPos = (posRightFoot + posLeftFoot) / 2.0f;
+		initPos.y() = 0.0f;
 
 		initTrans = mat4::Translation(initPos.x(), initPos.y(), initPos.z()) * initRot.matrix().Transpose();
 		initTransInv = initTrans.Invert();
@@ -586,132 +602,138 @@ void record() {
 		}
 #else
 		// Read line
-		float scaleFactor;
-		EndEffectorIndices indices[numOfEndEffectors];
-		Kore::vec3 desPosition[numOfEndEffectors];
-		Kore::Quaternion desRotation[numOfEndEffectors];
-		if (currentFile < numFiles) {
-			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, indices, scaleFactor);
-			
-			if (dataAvailable) {
-				for (int i = 0; i < numOfEndEffectors; ++i) {
-					EndEffectorIndices index = indices[i];
-					endEffector[index]->setDesPosition(desPosition[i]);
-					endEffector[index]->setDesRotation(desRotation[i]);
-				}
-			}
-			
-			if (!calibratedAvatar) {
-				avatar->resetPositionAndRotation();
-				avatar->setScale(scaleFactor);
-				calibrate();
-				calibratedAvatar = true;
-				
-				if (eval) {
-					avatar->resetVariables();
-					
-					endEffector[head]->resetEvalVariables();
-					endEffector[hip]->resetEvalVariables();
-					endEffector[leftHand]->resetEvalVariables();
-					endEffector[leftForeArm]->resetEvalVariables();
-					endEffector[rightHand]->resetEvalVariables();
-					endEffector[rightForeArm]->resetEvalVariables();
-					endEffector[leftFoot]->resetEvalVariables();
-					endEffector[rightFoot]->resetEvalVariables();
-					endEffector[leftKnee]->resetEvalVariables();
-					endEffector[rightKnee]->resetEvalVariables();
-				}
-			}
-			
-			for (int i = 0; i < numOfEndEffectors; ++i) {
-				executeMovement(i);
-			}
-			
-			if (!dataAvailable) {
-				
-				if (eval) {
-					
-					float* iterations = avatar->getIterations();
-					//float* errorPos = avatar->getErrorPos();
-					//float* errorRot = avatar->getErrorRot();
-					float* timeIteration = avatar->getTimeIteration();
-					float* time = avatar->getTime();
-					float reached = avatar->getReached();
-					float stucked = avatar->getStucked();
-					
-					float* errorHead = endEffector[head]->getAvdStdPosRot();
-					float* errorHip = endEffector[hip]->getAvdStdPosRot();
-					float* errorLeftHand = endEffector[leftHand]->getAvdStdPosRot();
-					float* errorRightHand = endEffector[rightHand]->getAvdStdPosRot();
-					float* errorLeftForeArm = endEffector[leftForeArm]->getAvdStdPosRot();
-					float* errorRightForeArm = endEffector[rightForeArm]->getAvdStdPosRot();
-					float* errorLeftFoot = endEffector[leftFoot]->getAvdStdPosRot();
-					float* errorRightFoot = endEffector[rightFoot]->getAvdStdPosRot();
-					float* errorLeftKnee = endEffector[leftKnee]->getAvdStdPosRot();
-					float* errorRightKnee = endEffector[rightKnee]->getAvdStdPosRot();
-					
-					
-					float overallPosError = (errorHead[0] + errorHip[0] + errorLeftHand[0] + errorLeftForeArm[0] + errorRightHand[0] + errorRightForeArm[0] + errorLeftFoot[0] + errorRightFoot[0] + errorLeftKnee[0] + errorRightKnee[0]) / numOfEndEffectors;
-					float overallRotError = (errorHead[2] + errorHip[2] + errorLeftHand[2] + errorLeftForeArm[2] + errorRightHand[2] + errorRightForeArm[2] + errorLeftFoot[2] + errorRightFoot[2] + errorLeftKnee[2] + errorRightKnee[2]) / numOfEndEffectors;
+		if ((t - lastFrameTime) >= fpsLimit) {
+			float scaleFactor;
+			EndEffectorIndices indices[numOfEndEffectors];
+			Kore::vec3 desPosition[numOfEndEffectors];
+			Kore::Quaternion desRotation[numOfEndEffectors];
+			if (currentFile < numFiles) {
+				bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, indices, scaleFactor);
 
-					float standardDeviationPos = 0.0f;
-					float standardDeviationRot = 0.0f;
-					for (int i = 0; i < numOfEndEffectors; i++) {
-						standardDeviationPos += Kore::pow(endEffector[i]->getAvdStdPosRot()[0] - overallPosError, 2);
-						standardDeviationRot += Kore::pow(endEffector[i]->getAvdStdPosRot()[3] - overallRotError, 2);
+				if (dataAvailable) {
+					for (int i = 0; i < numOfEndEffectors; ++i) {
+						EndEffectorIndices index = indices[i];
+						endEffector[index]->setDesPosition(desPosition[i]);
+						endEffector[index]->setDesRotation(desRotation[i]);
 					}
-					standardDeviationPos = Kore::sqrt(standardDeviationPos / numOfEndEffectors);
-					standardDeviationRot = Kore::sqrt(standardDeviationRot / numOfEndEffectors);
-					
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorHead[0], errorHead[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorHip[0], errorHip[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorLeftHand[0], errorLeftHand[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorLeftForeArm[0], errorLeftForeArm[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorRightHand[0], errorRightHand[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorRightForeArm[0], errorRightForeArm[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorLeftFoot[0], errorLeftFoot[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorRightFoot[0], errorRightFoot[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorLeftKnee[0], errorLeftKnee[2]);
-					log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorRightKnee[0], errorRightKnee[2]);
-					log(LogLevel::Info, "Overall Error Pos = %f +- %f, Rot = %f +- %f", overallPosError, standardDeviationPos, overallRotError, standardDeviationRot);
-					
-					logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
-					
-					if (currentFile > numFiles && ikMode >= evalMaxIk) {
-						exit(0);
-					} else {
-						//if (lambda[ikMode] >= evalMaxValue[ikMode]) {
-						if (FLOAT_EQ(lambda[ikMode], evalMaxValue[ikMode])) {
-							logger->endEvaluationLogger();
-							
-							lambda[ikMode] = evalInitValue[ikMode];
-							
-							ikMode++;
-							if (ikMode > evalMaxIk) {
-								ikMode = evalMinIk;
-								currentFile++;
-							}
-							
-							endEffector[head]->setIKMode((IKMode)ikMode);
-							endEffector[hip]->setIKMode((IKMode)ikMode);
-							endEffector[leftHand]->setIKMode((IKMode)ikMode);
-							endEffector[leftForeArm]->setIKMode((IKMode)ikMode);
-							endEffector[rightHand]->setIKMode((IKMode)ikMode);
-							endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
-							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
-							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-						} else {
-							lambda[ikMode] += evalStep[ikMode];
+				}
+
+				if (!calibratedAvatar) {
+					avatar->resetPositionAndRotation();
+					avatar->setScale(scaleFactor);
+					calibrate();
+					calibratedAvatar = true;
+
+					if (eval) {
+						avatar->resetVariables();
+
+						endEffector[head]->resetEvalVariables();
+						endEffector[hip]->resetEvalVariables();
+						endEffector[leftHand]->resetEvalVariables();
+						endEffector[leftForeArm]->resetEvalVariables();
+						endEffector[rightHand]->resetEvalVariables();
+						endEffector[rightForeArm]->resetEvalVariables();
+						endEffector[leftFoot]->resetEvalVariables();
+						endEffector[rightFoot]->resetEvalVariables();
+						endEffector[leftKnee]->resetEvalVariables();
+						endEffector[rightKnee]->resetEvalVariables();
+					}
+				}
+
+				for (int i = 0; i < numOfEndEffectors; ++i) {
+					executeMovement(i);
+				}
+
+				if (!dataAvailable) {
+
+					if (eval) {
+
+						float* iterations = avatar->getIterations();
+						//float* errorPos = avatar->getErrorPos();
+						//float* errorRot = avatar->getErrorRot();
+						float* timeIteration = avatar->getTimeIteration();
+						float* time = avatar->getTime();
+						float reached = avatar->getReached();
+						float stucked = avatar->getStucked();
+
+						float* errorHead = endEffector[head]->getAvdStdPosRot();
+						float* errorHip = endEffector[hip]->getAvdStdPosRot();
+						float* errorLeftHand = endEffector[leftHand]->getAvdStdPosRot();
+						float* errorRightHand = endEffector[rightHand]->getAvdStdPosRot();
+						float* errorLeftForeArm = endEffector[leftForeArm]->getAvdStdPosRot();
+						float* errorRightForeArm = endEffector[rightForeArm]->getAvdStdPosRot();
+						float* errorLeftFoot = endEffector[leftFoot]->getAvdStdPosRot();
+						float* errorRightFoot = endEffector[rightFoot]->getAvdStdPosRot();
+						float* errorLeftKnee = endEffector[leftKnee]->getAvdStdPosRot();
+						float* errorRightKnee = endEffector[rightKnee]->getAvdStdPosRot();
+
+
+						float overallPosError = (errorHead[0] + errorHip[0] + errorLeftHand[0] + errorLeftForeArm[0] + errorRightHand[0] + errorRightForeArm[0] + errorLeftFoot[0] + errorRightFoot[0] + errorLeftKnee[0] + errorRightKnee[0]) / numOfEndEffectors;
+						float overallRotError = (errorHead[2] + errorHip[2] + errorLeftHand[2] + errorLeftForeArm[2] + errorRightHand[2] + errorRightForeArm[2] + errorLeftFoot[2] + errorRightFoot[2] + errorLeftKnee[2] + errorRightKnee[2]) / numOfEndEffectors;
+
+						float standardDeviationPos = 0.0f;
+						float standardDeviationRot = 0.0f;
+						for (int i = 0; i < numOfEndEffectors; i++) {
+							standardDeviationPos += Kore::pow(endEffector[i]->getAvdStdPosRot()[0] - overallPosError, 2);
+							standardDeviationRot += Kore::pow(endEffector[i]->getAvdStdPosRot()[3] - overallRotError, 2);
 						}
-						
+						standardDeviationPos = Kore::sqrt(standardDeviationPos / numOfEndEffectors);
+						standardDeviationRot = Kore::sqrt(standardDeviationRot / numOfEndEffectors);
+
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorHead[0], errorHead[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorHip[0], errorHip[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorLeftHand[0], errorLeftHand[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorLeftForeArm[0], errorLeftForeArm[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorRightHand[0], errorRightHand[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorRightForeArm[0], errorRightForeArm[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorLeftFoot[0], errorLeftFoot[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorRightFoot[0], errorRightFoot[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorLeftKnee[0], errorLeftKnee[2]);
+						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorRightKnee[0], errorRightKnee[2]);
+						log(LogLevel::Info, "Overall Error Pos = %f +- %f, Rot = %f +- %f", overallPosError, standardDeviationPos, overallRotError, standardDeviationRot);
+
+						logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
+
+						if (currentFile > numFiles && ikMode >= evalMaxIk) {
+							exit(0);
+						}
+						else {
+							if (FLOAT_EQ(evalValue[ikMode], evalMaxValue[ikMode])) {
+								//if (evalValue[ikMode] >= evalMaxValue[ikMode]) {
+								logger->endEvaluationLogger();
+
+								evalValue[ikMode] = evalInitValue[ikMode];
+
+								ikMode++;
+								if (ikMode > evalMaxIk) {
+									ikMode = evalMinIk;
+									currentFile++;
+								}
+
+								endEffector[head]->setIKMode((IKMode)ikMode);
+								endEffector[hip]->setIKMode((IKMode)ikMode);
+								endEffector[leftHand]->setIKMode((IKMode)ikMode);
+								endEffector[leftForeArm]->setIKMode((IKMode)ikMode);
+								endEffector[rightHand]->setIKMode((IKMode)ikMode);
+								endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
+								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
+							}
+							else {
+								evalValue[ikMode] += evalStep[ikMode];
+							}
+
+							calibratedAvatar = false;
+						}
+
+					}
+					else {
+						currentFile++;
 						calibratedAvatar = false;
 					}
-					
-				} else {
-					currentFile++;
-					calibratedAvatar = false;
 				}
 			}
+			lastFrameTime = t;
 		}
 		
 		// Get projection and view matrix
