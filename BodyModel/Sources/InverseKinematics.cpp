@@ -229,7 +229,7 @@ void InverseKinematics::setJointConstraints() {
 	// Forearm
 	nodeLeft = bones[leftForeArmBoneIndex - 1];
 	nodeLeft->axes = Kore::vec3(1, 0, 0);
-	nodeLeft->constrain[xMin] = -RotationUtility::getRadians(10) - tolerance;		nodeLeft->constrain[xMax] = RotationUtility::getRadians(140) + tolerance;
+	nodeLeft->constrain[xMin] = 0;								nodeLeft->constrain[xMax] = RotationUtility::getRadians(140) + tolerance;
 	
 	nodeRight = bones[rightForeArmBoneIndex - 1];
 	nodeRight->axes = nodeLeft->axes;
