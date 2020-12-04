@@ -227,7 +227,7 @@ namespace {
 			Kore::vec3 desPosition = endEffector[i]->getDesPosition();
 			Kore::Quaternion desRotation = endEffector[i]->getDesRotation();
 			
-			if (i == hip || i == leftForeArm || i == rightForeArm || i == leftFoot || i == rightFoot) {
+			if (i == hip || (!simpleIK && i == leftForeArm) || (!simpleIK && i == rightForeArm) || i == leftFoot || i == rightFoot) {
 				renderControllerAndTracker(true, desPosition, desRotation);
 			} else if (i == rightHand || i == leftHand) {
 				renderControllerAndTracker(false, desPosition, desRotation);
@@ -433,15 +433,19 @@ namespace {
 			
 			if (endEffectorID == hip) {
 				avatar->setFixedPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), finalPos, finalRot);
-
-				// Update the sphere collider for the avatar
-				avatarCollider->center = vec3(endEffector[hip]->getDesPosition().x(), 0, endEffector[hip]->getDesPosition().z());
-				sphereMesh->M = mat4::Translation(avatarCollider->center.x(), avatarCollider->center.y(), avatarCollider->center.z());
-
-			} else if (endEffectorID == head || endEffectorID == leftForeArm || endEffectorID == rightForeArm || endEffectorID == leftFoot || endEffectorID == rightFoot) {
+			} else if (endEffectorID == head) {
+				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftForeArm || endEffectorID == rightForeArm) {
+				if (!simpleIK)
+					avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+			} else if (endEffectorID == leftFoot || endEffectorID == rightFoot) {
 				avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
 			} else if (endEffectorID == leftHand || endEffectorID == rightHand) {
-				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
+				if (simpleIK) {
+					avatar->setDesiredPositionAndOrientation(endEffector[endEffectorID]->getBoneIndex(), endEffector[endEffectorID]->getIKMode(), finalPos, finalRot);
+				} else {
+					avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
+				}
 			}
 			
 			if (recording) {
@@ -785,7 +789,6 @@ namespace {
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
 		
-		const int numTrackers = 5;
 		int trackerCount = 0;
 		
 		std::vector<EndEffector*> trackers;
@@ -813,14 +816,16 @@ namespace {
 					std::sort(trackers.begin(), trackers.begin()+2, sortByZAxis());
 					initEndEffector(leftFoot, trackers[0]->getDeviceIndex(), trackers[0]->getDesPosition(), trackers[0]->getDesRotation());
 					initEndEffector(rightFoot, trackers[1]->getDeviceIndex(), trackers[1]->getDesPosition(), trackers[1]->getDesRotation());
-					
+						
 					// Hip
 					initEndEffector(hip, trackers[2]->getDeviceIndex(), trackers[2]->getDesPosition(), trackers[2]->getDesRotation());
-					
+						
 					// Left or Right Forearm
-					std::sort(trackers.begin()+3, trackers.begin()+5, sortByZAxis());
-					initEndEffector(leftForeArm, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
-					initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+					if (!simpleIK) {
+						std::sort(trackers.begin()+3, trackers.begin()+5, sortByZAxis());
+						initEndEffector(leftForeArm, trackers[3]->getDeviceIndex(), trackers[3]->getDesPosition(), trackers[3]->getDesRotation());
+						initEndEffector(rightForeArm, trackers[4]->getDeviceIndex(), trackers[4]->getDesPosition(), trackers[4]->getDesRotation());
+					}
 				}
 				
 				
@@ -1047,7 +1052,7 @@ namespace {
 		
 		renderAvatar(V, P);
 		
-		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
+		if (renderTrackerAndController /*&& !calibratedAvatar*/) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		

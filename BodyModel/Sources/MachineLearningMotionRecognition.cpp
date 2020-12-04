@@ -185,7 +185,9 @@ MachineLearningMotionRecognition::MachineLearningMotionRecognition(Logger& logge
 	}
 	else if (operatingMode == RecognizeMovements) {
 		Kore::log(Kore::LogLevel::Info, "Motion Recognition ready to recognize incoming movements");
+#ifdef KORE_STEAMVR
 		initializeJavaNativeInterface();
+#endif
 	}
 }
 
