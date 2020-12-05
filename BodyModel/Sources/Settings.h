@@ -24,7 +24,7 @@ namespace {
 
 	// Optimized IK Parameter
 	//										JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
-	const float optimalLambda[6]		= { 0.35f,		0.05f,		0.2f,		0.03f,		0.2f,			0.018f	};
+	const float optimalLambda[6]		= { 0.35f,		0.05f,		0.25f,		0.03f,		0.25f,			7.0f / 120.0f * Kore::pi };
 	const float optimalErrorMaxPos[6]	= { 0.01f,		0.1f,		0.001f,		0.01f,		0.001f,			0.01f	};
 	const float optimalErrorMaxRot[6] 	= { 0.01f,		0.1f,		0.01f,		0.01f,		0.01f,			0.01f	};
 	const float optimalMaxIterations[6] = { 10.0f,		100.0f,		20.0f,		10.0f,		20.0f,			60.0f	};
