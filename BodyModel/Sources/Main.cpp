@@ -44,15 +44,22 @@ const float evalMaxValue[6] = { 1.0f,		1.0f,		1.5f,		1.0f,		1.5f,			Kore::pi / 4
 float maxIterations[6]		= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f };
 
 // Uncomment this to evaluate iterations
-/*float lambda[6] 			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			0.18326f };
+/*float lambda[6] 			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
 float maxIterations[6] 		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
 float evalInitValue[6]		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
 float* evalValue			= maxIterations;
 const float evalMaxValue[6] = { 100.0f,		100.0f,		100.0f,		100.0f,		100.0f,			100.0f 	};
 const float evalStep[6] 	= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f	};*/
 
-float errorMaxPos[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
-float errorMaxRot[6] 	= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
+// Uncomment this to evaluate accuracy
+/*float lambda[6]				= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+float evalInitValue[6]		= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+float* evalValue			= lambda;
+const float evalStep[6]		= { 0.0f,		0.0f,		0.0f,		0.0f,		0.0f,			0.0f };
+const float evalMaxValue[6] = { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+float maxIterations[6]		= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f };*/
+float errorMaxPos[6] 		= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
+float errorMaxRot[6] 		= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
 
 namespace {
 	const int width = 1024;
@@ -67,7 +74,7 @@ namespace {
 	
 	Logger* logger;
 	
-	const double fpsLimit = 1.0f / 120.0f;
+	const double fpsLimit = 1.0f / 90.0f;
 	double startTime;
 	double lastTime;
 	double lastFrameTime = 0.0f;
@@ -694,8 +701,8 @@ void record() {
 
 						logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
 
-						if (currentFile > numFiles && ikMode >= evalMaxIk) {
-							exit(0);
+						if (currentFile >= numFiles && ikMode >= evalMaxIk) {
+							System::stop();
 						}
 						else {
 							if (FLOAT_EQ(evalValue[ikMode], evalMaxValue[ikMode])) {
