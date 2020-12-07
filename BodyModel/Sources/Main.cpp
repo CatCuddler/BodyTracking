@@ -74,7 +74,7 @@ namespace {
 	
 	Logger* logger;
 	
-	const double fpsLimit = 1.0f / 200.0f;
+	const double fpsLimit = 1.0f / 90.0f;
 	double startTime;
 	double lastTime;
 	double lastFrameTime = 0.0f;
