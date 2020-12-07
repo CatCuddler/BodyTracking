@@ -74,7 +74,7 @@ namespace {
 	
 	Logger* logger;
 	
-	const double fpsLimit = 1.0f / 90.0f;
+	const double fpsLimit = 1.0f / 200.0f;
 	double startTime;
 	double lastTime;
 	double lastFrameTime = 0.0f;
@@ -701,37 +701,32 @@ void record() {
 
 						logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
 
-						if (currentFile >= numFiles && ikMode >= evalMaxIk) {
-							System::stop();
+						if (FLOAT_EQ(evalValue[ikMode], evalMaxValue[ikMode])) {
+							//if (evalValue[ikMode] >= evalMaxValue[ikMode]) {
+							logger->endEvaluationLogger();
+
+							evalValue[ikMode] = evalInitValue[ikMode];
+
+							ikMode++;
+							if (ikMode > evalMaxIk) {
+								ikMode = evalMinIk;
+								currentFile++;
+							}
+
+							endEffector[head]->setIKMode((IKMode)ikMode);
+							endEffector[hip]->setIKMode((IKMode)ikMode);
+							endEffector[leftHand]->setIKMode((IKMode)ikMode);
+							endEffector[leftForeArm]->setIKMode((IKMode)ikMode);
+							endEffector[rightHand]->setIKMode((IKMode)ikMode);
+							endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
+							endEffector[leftFoot]->setIKMode((IKMode)ikMode);
+							endEffector[rightFoot]->setIKMode((IKMode)ikMode);
 						}
 						else {
-							if (FLOAT_EQ(evalValue[ikMode], evalMaxValue[ikMode])) {
-								//if (evalValue[ikMode] >= evalMaxValue[ikMode]) {
-								logger->endEvaluationLogger();
-
-								evalValue[ikMode] = evalInitValue[ikMode];
-
-								ikMode++;
-								if (ikMode > evalMaxIk) {
-									ikMode = evalMinIk;
-									currentFile++;
-								}
-
-								endEffector[head]->setIKMode((IKMode)ikMode);
-								endEffector[hip]->setIKMode((IKMode)ikMode);
-								endEffector[leftHand]->setIKMode((IKMode)ikMode);
-								endEffector[leftForeArm]->setIKMode((IKMode)ikMode);
-								endEffector[rightHand]->setIKMode((IKMode)ikMode);
-								endEffector[rightForeArm]->setIKMode((IKMode)ikMode);
-								endEffector[leftFoot]->setIKMode((IKMode)ikMode);
-								endEffector[rightFoot]->setIKMode((IKMode)ikMode);
-							}
-							else {
-								evalValue[ikMode] += evalStep[ikMode];
-							}
-
-							calibratedAvatar = false;
+							evalValue[ikMode] += evalStep[ikMode];
 						}
+
+						calibratedAvatar = false;
 
 					}
 					else {
@@ -739,6 +734,9 @@ void record() {
 						calibratedAvatar = false;
 					}
 				}
+			}
+			else {
+				System::stop();
 			}
 			lastFrameTime = t;
 		}
