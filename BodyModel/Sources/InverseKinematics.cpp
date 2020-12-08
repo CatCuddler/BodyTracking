@@ -72,10 +72,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		
 		// check if ik stucked (runned in extrema)
 		if (i) {
-			if (fabs(previousPosition - errorPos) < nearNull) {
-				stucked = true;
-			}
-			if (fabs(previousRotation - errorRot) < nearNull) {
+			if ((fabs(previousPosition - errorPos) < nearNull) || (fabs(previousRotation - errorRot) < nearNull)) {
 				stucked = true;
 			}
 		}
