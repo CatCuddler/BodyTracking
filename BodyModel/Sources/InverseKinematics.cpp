@@ -31,7 +31,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	float previousRotation;
 	float errorPos = maxfloat();
 	float errorRot = maxfloat();
-	bool stucked = false;
+	bool stuckedPos = false;
+	bool stuckedRot = false;
 	
 	double startTime;
 	double startTime_perIteration;
@@ -42,7 +43,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	
 	int i = 0;
 	// while position not reached and maxStep not reached and not stucked
-	while ((errorPos > errorMaxPos[ikMode] || errorRot > errorMaxRot[ikMode]) && i < (int) maxIterations[ikMode] && !stucked) {
+	while ((errorPos > errorMaxPos[ikMode] || errorRot > errorMaxRot[ikMode]) && i < (int) maxIterations[ikMode] && !stuckedPos && !stuckedRot) {
 		
 		if (eval) {
 			startTime_perIteration = System::time();
@@ -72,9 +73,8 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 		
 		// check if ik stucked (runned in extrema)
 		if (i) {
-			if ((fabs(previousPosition - errorPos) < nearNull) || (fabs(previousRotation - errorRot) < nearNull)) {
-				stucked = true;
-			}
+			if (fabs(previousPosition - errorPos) < nearNull) stuckedPos = true;
+			if (fabs(previousRotation - errorRot) < nearNull) stuckedRot = true;
 		}
 		
 		applyChanges(deltaTheta, targetBone);
@@ -93,7 +93,7 @@ void InverseKinematics::inverseKinematics(BoneNode* targetBone, IKMode ikMode, K
 	
 	if (eval) {
 		evalReached += (errorPos < errorMaxPos[ikMode] && errorRot < errorMaxRot[ikMode]) ? 1 : 0;
-		evalStucked += stucked ? 1 : 0;
+		evalStucked += (stuckedPos || stuckedRot);
 		
 		// iterations
 		evalIterations[totalNum] = (float) i;
