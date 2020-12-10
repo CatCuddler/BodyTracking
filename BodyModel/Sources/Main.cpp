@@ -33,7 +33,7 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
-int ikMode = 2;
+int ikMode = 0;
 //							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
 // Uncomment this to evaluate lambda
 float lambda[6] 			= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
@@ -373,7 +373,7 @@ void record() {
 		float scale = currentUserHeight / currentAvatarHeight;
 		avatar->setScale(scale);
 		
-		log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
+		Kore::log(Info, "current avatar height %f, current user height %f ==> scale %f", currentAvatarHeight, currentUserHeight, scale);
 	}
 	
 	void initEndEffector(int efID, int deviceID, vec3 pos, Kore::Quaternion rot) {
@@ -381,13 +381,12 @@ void record() {
 		endEffector[efID]->setDesPosition(pos);
 		endEffector[efID]->setDesRotation(rot);
 		
-		log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
+		Kore::log(Info, "%s, device id: %i", endEffector[efID]->getName(), deviceID);
 	}
 	
 	void assignControllerAndTracker() {
 		VrPoseState vrDevice;
-		
-		const int numTrackers = 7;
+
 		int trackerCount = 0;
 		
 		std::vector<EndEffector*> trackers;
@@ -468,7 +467,7 @@ void record() {
 	}
 	
 	void gamepadButton(int buttonNr, float value) {
-		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
+		//Kore::log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
 
 		// Grip button => set size and reset an avatar to a default T-Pose
 		if (buttonNr == 2 && value == 1) {
@@ -483,13 +482,13 @@ void record() {
 			assignControllerAndTracker();
 			calibrate();
 			calibratedAvatar = true;
-			log(Info, "Calibrate avatar");
+			Kore::log(Info, "Calibrate avatar");
 		}
 		
 		// Track a movement as long as trigger button is pressed
 		if (buttonNr == 33 && value == 1) {
 			// Trigger button pressed
-			log(Info, "Trigger button pressed");
+			Kore::log(Info, "Trigger button pressed");
 			if (calibratedAvatar) {
 				record();
 			}
@@ -497,7 +496,7 @@ void record() {
 		
 		if (buttonNr == 33 && value == 0) {
 			// Trigger button released
-			log(Info, "Trigger button released");
+			Kore::log(Info, "Trigger button released");
 			if (calibratedAvatar) {
 				record();
 			}
@@ -515,7 +514,7 @@ void record() {
 			if (controller.trackedDevice == TrackedDevice::Controller) {
 				Gamepad::get(i)->Button = gamepadButton;
 				++count;
-				log(Info, "Add gamepad controller %i", count);
+				Kore::log(Info, "Add gamepad controller %i", count);
 			}
 		}
 
@@ -687,17 +686,17 @@ void record() {
 						standardDeviationPos = Kore::sqrt(standardDeviationPos / numOfEndEffectors);
 						standardDeviationRot = Kore::sqrt(standardDeviationRot / numOfEndEffectors);
 
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorHead[0], errorHead[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorHip[0], errorHip[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorLeftHand[0], errorLeftHand[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorLeftForeArm[0], errorLeftForeArm[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorRightHand[0], errorRightHand[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorRightForeArm[0], errorRightForeArm[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorLeftFoot[0], errorLeftFoot[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorRightFoot[0], errorRightFoot[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorLeftKnee[0], errorLeftKnee[2]);
-						log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorRightKnee[0], errorRightKnee[2]);
-						log(LogLevel::Info, "Overall Error Pos = %f +- %f, Rot = %f +- %f", overallPosError, standardDeviationPos, overallRotError, standardDeviationRot);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[head]->getName(), errorHead[0], errorHead[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[hip]->getName(), errorHip[0], errorHip[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftHand]->getName(), errorLeftHand[0], errorLeftHand[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftForeArm]->getName(), errorLeftForeArm[0], errorLeftForeArm[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightHand]->getName(), errorRightHand[0], errorRightHand[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightForeArm]->getName(), errorRightForeArm[0], errorRightForeArm[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftFoot]->getName(), errorLeftFoot[0], errorLeftFoot[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightFoot]->getName(), errorRightFoot[0], errorRightFoot[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[leftKnee]->getName(), errorLeftKnee[0], errorLeftKnee[2]);
+						Kore::log(LogLevel::Info, "Error %s = %f, %f", endEffector[rightKnee]->getName(), errorRightKnee[0], errorRightKnee[2]);
+						Kore::log(LogLevel::Info, "Overall Error Pos = %f +- %f, Rot = %f +- %f", overallPosError, standardDeviationPos, overallRotError, standardDeviationRot);
 
 						logger->saveEvaluationData(files[currentFile], iterations, overallPosError, standardDeviationPos, overallRotError, standardDeviationRot, time, timeIteration, reached, stucked, errorHead, errorHip, errorLeftHand, errorLeftForeArm, errorRightHand, errorRightForeArm, errorLeftFoot, errorRightFoot, errorLeftKnee, errorRightKnee);
 
