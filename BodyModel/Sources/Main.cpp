@@ -33,7 +33,7 @@ using namespace Kore;
 using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
-int ikMode = 0;
+int ikMode = 2;
 //							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
 // Uncomment this to evaluate lambda
 float lambda[6] 			= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
