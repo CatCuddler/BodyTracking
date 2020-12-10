@@ -20,6 +20,7 @@ namespace {
 	
 	bool logRawData = false;
 
+	const int numTrackers = 3;
 	const bool simpleIK = true; // Simple IK uses only 6 sensors (ignoring forearms)
 
 	// Optimized IK Parameter
