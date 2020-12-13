@@ -34,7 +34,7 @@ using namespace Kore::Graphics4;
 
 // Dynamic IK parameters
 int ikMode = 2;
-//							JT = 0		JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
+//							JT = 0			JPI = 1		DLS = 2		SVD = 3		SVD_DLS = 4		SDLS = 5
 // Uncomment this to evaluate lambda
 float lambda[6] 			= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
 float evalInitValue[6]		= { 1.0f,		1.0f,		0.05f,		1.0f,		0.05f,			Kore::pi / 120.0f };
@@ -44,7 +44,7 @@ const float evalMaxValue[6] = { 1.0f,		1.0f,		1.5f,		1.0f,		1.5f,			Kore::pi / 4
 float maxIterations[6]		= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f };
 
 // Uncomment this to evaluate iterations
-/*float lambda[6] 			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+/*float lambda[6] 			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			1.0f / 12.0f * Kore::pi };
 float maxIterations[6] 		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
 float evalInitValue[6]		= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f };
 float* evalValue			= maxIterations;
@@ -52,11 +52,11 @@ const float evalMaxValue[6] = { 100.0f,		100.0f,		100.0f,		100.0f,		100.0f,			10
 const float evalStep[6] 	= { 1.0f,		1.0f,		1.0f,		1.0f,		1.0f,			1.0f	};*/
 
 // Uncomment this to evaluate accuracy
-/*float lambda[6]				= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
-float evalInitValue[6]		= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+/*float lambda[6]			= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			1.0f / 12.0f * Kore::pi };
+float evalInitValue[6]		= { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			1.0f / 12.0f * Kore::pi };
 float* evalValue			= lambda;
 const float evalStep[6]		= { 0.0f,		0.0f,		0.0f,		0.0f,		0.0f,			0.0f };
-const float evalMaxValue[6] = { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			7.0f / 120.0f * Kore::pi };
+const float evalMaxValue[6] = { 1.0f,		1.0f,		0.25f,		1.0f,		0.25f,			1.0f / 12.0f * Kore::pi };
 float maxIterations[6]		= { 200.0f,		200.0f,		200.0f,		200.0f,		200.0f,			200.0f };*/
 float errorMaxPos[6] 		= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
 float errorMaxRot[6] 		= { 0.0001f,	0.0001f,	0.0001f,	0.0001f,	0.0001f,		0.0001f	};
