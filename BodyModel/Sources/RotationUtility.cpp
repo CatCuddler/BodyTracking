@@ -22,11 +22,9 @@ void Kore::RotationUtility::eulerToQuat(const float roll, const float pitch, con
 }
 
 void Kore::RotationUtility::quatToEuler(const Kore::Quaternion* quat, float* roll, float* pitch, float* yaw) {
-	float ysqr = quat->y * quat->y;
-	
 	// roll (x-axis rotation)
 	float t0 = 2.0 * (quat->w * quat->x + quat->y * quat->z);
-	float t1 = 1.0 - 2.0 * (quat->x * quat->x + ysqr);
+	float t1 = 1.0 - 2.0 * (quat->x * quat->x + quat->y * quat->y);
 	*roll = Kore::atan2(t0, t1);
 	
 	// pitch (y-axis rotation)
@@ -37,7 +35,7 @@ void Kore::RotationUtility::quatToEuler(const Kore::Quaternion* quat, float* rol
 	
 	// yaw (z-axis rotation)
 	float t3 = 2.0 * (quat->w * quat->z + quat->x * quat->y);
-	float t4 = 1.0 - 2.0 * (ysqr + quat->z * quat->z);
+	float t4 = 1.0 - 2.0 * (quat->y * quat->y + quat->z * quat->z);
 	*yaw = Kore::atan2(t3, t4);
 }
 
