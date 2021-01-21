@@ -1,13 +1,8 @@
-/***********************************************************
- * file name: Markov.h
- * author: Markus Stabel, Shule Liu
- * last changes: 30.04.2019
- * content: contains the class representation of a Hidden 
- Markov Model, including function representations of the
- Baum-Welch and forward Algorithm. The naming convention
- follows "A Tutorial on Hidden Markov Models and Selected 
- Applications in Speech Recognition" by Rabiner, 1989.
- ***********************************************************/
+//
+// Markov.h
+// Author: Markus Stabel, Shule Liu
+// Last changes: 30.04.2019
+// Content: contains the class representation of a Hidden Markov Model, including function representations of the Baum-Welch and forward Algorithm. The naming convention follows "A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition" by Rabiner, 1989.
 
 #pragma once
 
@@ -16,11 +11,7 @@
 #include <iostream>
 #include <fstream>
 
-/***********************************************************
- * class: HMM
- * description: an object of the class HMM contains all
- parameters of a Hidden Markov Model.
- ***********************************************************/
+// Description: an object of the class HMM contains all parameters of a Hidden Markov Model.
 class HMMModel {
 	
 	// TODO public for now as throwing errors in BodyTracking otherwise

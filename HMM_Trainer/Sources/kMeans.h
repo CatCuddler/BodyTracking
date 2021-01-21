@@ -47,13 +47,13 @@ public:
 
 class KMeans {
 private:
-	int emissions; // number of clusters to be created
-	int totalValues; // dimension of the input points (x,y,z,rotx,roty,rotz,royw)
+	int emissions; // Number of clusters to be created
+	int totalValues; // Dimension of the input points (x,y,z,rotx,roty,rotz,royw)
 	int maxIterations, totalPoints;
-	int averagePoints; // average number of points per sequence
+	int averagePoints; // Average number of points per sequence
 	std::vector <Cluster> clusters; // vector of clusters
 	
-	// returns the id of the closest ClusterCenter of a given point, using the euclidean distance
+	// Returns the id of the closest ClusterCenter of a given point, using the euclidean distance
 	int getIDClosestCenter(Point point);
 public:
 	KMeans();
@@ -64,7 +64,7 @@ public:
 	void writeKMeans(std::string filePath, std::string fileName);
 	std::vector<Cluster> getClusters();
 	int getAveragePoints();
-    double getFinalDistance(std::vector<Point> & points);
+	double getFinalDistance(std::vector<Point> & points);
 };
 
 std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);

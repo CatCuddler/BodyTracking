@@ -1,10 +1,9 @@
-/********************************************************************************
- * file name: matrix.h
- * author: Yue Reuynil
- * last changes: 20.11.2016
- * content: contains a matrix template used for the Hidden Markov Model.
- Taken from https://github.com/Reuynil/hmm/blob/master/hmm/matrix.h
- ********************************************************************************/
+//
+// matrix.h
+// Author: Yue Reuynil
+// Last changes: 20.11.2016
+// Content: contains a matrix template used for the Hidden Markov Model.
+// Taken from https://github.com/Reuynil/hmm/blob/master/hmm/matrix.h
 
 #pragma once
 

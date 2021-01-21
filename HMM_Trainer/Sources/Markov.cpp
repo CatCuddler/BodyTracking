@@ -1,11 +1,8 @@
-/********************************************************************************
- * file name: Markov.cpp
- * author: Markus Stabel, Shule Liu
- * last changes: 30.04.2019
- * content: contains the function definitions of the HMM class from Markov.h. The
- naming convention follows "A Tutorial on Hidden Markov Models and Selected
- Applications in Speech Recognition" by Rabiner, 1989.
- ********************************************************************************/
+//
+// Markov.cpp
+// Author: Markus Stabel, Shule Liu
+// Last changes: 30.04.2019
+// Content: contains the function definitions of the HMM class from Markov.h. The naming convention follows "A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition" by Rabiner, 1989.
 
 #include "Markov.h"
 #include "Matrix.h"
@@ -18,16 +15,12 @@
 
 using namespace std;
 
-/********************************************************************************
- * method:		HMM construtor
- * description:	initializes a HMM with either fully random probabilities or a
- left-to-right model
- * parameters:	N is the number of states
- *				M is the number of possible emissions
- *				LRdepth is the number of possible transitions in a left-to-right
- model. Defaults to 0, in which case all probabilities are randomized
- * return value: Hidden Markov Model
- ********************************************************************************/
+// Method:			HMM construtor
+// Description:		initializes a HMM with either fully random probabilities or a left-to-right model
+// Parameters:		N is the number of states
+//					M is the number of possible emissions
+//					LRdepth is the number of possible transitions in a left-to-right model. Defaults to 0, in which case all probabilities are randomized
+// Return value: 	Hidden Markov Model
 HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(numStates, 0), probabilityThreshold(0) {
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
@@ -85,24 +78,19 @@ HMMModel::HMMModel(int N, int M, int LRdepth): numStates(N), sigmaSize(M), pi(nu
 	
 }
 
-/********************************************************************************
- * method:		default HMM construtor
- * description:	initializes a HMM
- * parameters:	none
- * return value:Hidden Markov Model
- ********************************************************************************/
+// Method:			default HMM construtor
+// Description:		initializes a HMM
+// Return value:	Hidden Markov Model
 HMMModel::HMMModel(): numStates(1), sigmaSize(1), pi(numStates, 0), probabilityThreshold(0) {
 	a = matrix<double>(0, numStates, numStates);
 	b = matrix<double>(0, numStates, sigmaSize);
 }
 
-/********************************************************************************
- * method:		HMM construtor
- * description:	reads a HMM from a file
- * parameters:	filePath is the path to the folder in which the HMM is saved
- *				fileName is the HMMs name without the _HMM.txt ending
- * return value: Hidden Markov Model
- ********************************************************************************/
+// Method:			HMM construtor
+// Description:		reads a HMM from a file
+// Parameters:		filePath is the path to the folder in which the HMM is saved
+//					fileName is the HMMs name without the _HMM.txt ending
+// Return value: 	Hidden Markov Model
 HMMModel::HMMModel(string filePath, string fileName) {
 	
 	string str;
@@ -120,7 +108,7 @@ HMMModel::HMMModel(string filePath, string fileName) {
 		b = matrix<double>(0, numStates, sigmaSize);
 		pi = vector<double>(numStates, 0);
 		
-		// read A
+		// Read A
 		for (int i = 0; i < numStates; i++) {
 			for (int j = 0; j < numStates; j++) {
 				getline(file, str, ';');
@@ -128,7 +116,7 @@ HMMModel::HMMModel(string filePath, string fileName) {
 			}
 		}
 		
-		// read B
+		// Read B
 		for (int i = 0; i < numStates; i++) {
 			for (int j = 0; j < sigmaSize; j++) {
 				getline(file, str, ';');
@@ -136,13 +124,13 @@ HMMModel::HMMModel(string filePath, string fileName) {
 			}
 		}
 		
-		// read Pi
+		// Read Pi
 		for (int i = 0; i < numStates; i++) {
 			getline(file, str, ';');
 			stringstream(str) >> pi.at(i);
 		}
 		
-		// read log probability threshold
+		// Read log probability threshold
 		getline(file, str, ';');
 		stringstream(str) >> probabilityThreshold;
 		
@@ -154,29 +142,24 @@ HMMModel::HMMModel(string filePath, string fileName) {
 	}
 }
 
-/********************************************************************************
- * method:		getProbabilityThreshold
- * description:	returns the HMMs log probability threshold
- * parameters:	none
- * return value: the log probability threshold
- ********************************************************************************/
-double HMMModel::getProbabilityThreshold() { return probabilityThreshold; }
+// Method:		getProbabilityThreshold
+// Description:	returns the HMMs log probability threshold
+// Return value: the log probability threshold
+double HMMModel::getProbabilityThreshold() {
+	return probabilityThreshold;
+}
 
-/********************************************************************************
- * method:		updateAlphaNormalized
- * description:	updates the forward probability matrix alpha using normalization
- and returns the normalization vector
- * parameters:	sequence is the observation   for which the forward
- probability is calculated
- *				alpha is the forward probability matrix to be updated
- * return value: the vector of normalization coefficients
- ********************************************************************************/
+// Method:			updateAlphaNormalized
+// Description:		updates the forward probability matrix alpha using normalization and returns the normalization vector
+// Parameters:		sequence is the observation for which the forward probability is calculated
+//					alpha is the forward probability matrix to be updated
+// Return value:	the vector of normalization coefficients
 vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** alpha) {
 	
 	const int N = numStates;
 	const int T = sequence.size();
 	vector<double> c(T, 0);
-
+	
 	// 1. Initialization
 	for (int i = 0; i < N; i++) {
 		alpha[i][0] = pi.at(i) * b[i][sequence.at(0)];
@@ -187,7 +170,7 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 	for (int i = 0; i < N; i++) {
 		alpha[i][0] *= c.at(0);
 	}
-
+	
 	// 2. Induction
 	for (int t = 1; t < T; t++) {
 		for (int j = 0; j < N; j++) {
@@ -203,19 +186,16 @@ vector<double> HMMModel::updateAlphaNormalized(vector<int>& sequence, double** a
 			alpha[j][t] *= c.at(t);
 		}
 	}
-
+	
 	return c;
 }
 
-/********************************************************************************
- * method:		updateBetaNormalized
- * description:	updates the backward probability matrix beta using normalization
- * parameters:	sequence is the observation sequence for which the backward
- probability is calculated
- *				c is the normalization vector taken from updateAlphaNormalized
- *				beta is the backward probability matrix to be updated
- * return value: the vector of normalization coefficients
- ********************************************************************************/
+// Method:			updateBetaNormalized
+// Description:		updates the backward probability matrix beta using normalization
+// Parameters:		sequence is the observation sequence for which the backward probability is calculated
+//					c is the normalization vector taken from updateAlphaNormalized
+//					beta is the backward probability matrix to be updated
+// Return value: 	the vector of normalization coefficients
 void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, double** beta) {
 	
 	const int N = numStates;
@@ -238,50 +218,41 @@ void HMMModel::updateBetaNormalized(vector<int>& sequence, vector<double>& c, do
 	}
 }
 
-/********************************************************************************
- * method:		updateBetaNormalized
- * description:	calculates the log probability of the given sequence
- being emitted by the HMM
- * parameters:	sequence is the observation sequence for which the probability is
- calculated
- * return value: the log of the sequence's probability being emitted by the  HMM
- ********************************************************************************/
+// Method:		updateBetaNormalized
+// Description:	calculates the log probability of the given sequence being emitted by the HMM
+// Parameters:	sequence is the observation sequence for which the probability is calculated
+// Return value: the log of the sequence's probability being emitted by the  HMM
 double HMMModel::calculateProbability(vector<int>& sequence) {
 	
 	const int N = numStates;
 	const int T = sequence.size();
-
-    double probability = 0;
+	
+	double probability = 0;
 	double** alpha = matrix<double>(0, N, T); // forward probability matrix
 	vector<double> c = updateAlphaNormalized(sequence, alpha); // run the forward algorithm
 	
 	// Calculate probability
 	for (int t = 0; t < sequence.size(); t++) {
 		probability -= log(c.at(t));
-
+		
 	}
-    
+	
 	freeMatrix<double>(alpha, N);
 	
 	return probability;
 }
 
-/********************************************************************************
- * method:		trainHMM
- * description:	uses the Baum-Welch algorithm to train the HMM for a set of
- observation	sequences
- * parameters:	sequence is a vector of observation sequences that are used to
- train the HMM
- *				maxIter is the maximum number of iterations. Defaults to 100
- *				delta is the log probability change per iteration at which the
- algorithm will stop. Defaults to 0.1
- * return value: none
- ********************************************************************************/
+// Method:			trainHMM
+// Description:		uses the Baum-Welch algorithm to train the HMM for a set of observation	sequences
+// Parameters:		sequence is a vector of observation sequences that are used to train the HMM
+// 					mxIter is the maximum number of iterations. Defaults to 100
+//					delta is the log probability change per iteration at which the algorithm will stop. Defaults to 0.1
+// Return value: 	none
 void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta) {
 	
 	const int N = numStates;
 	const int M = sigmaSize;
-    //sequenceSize:The number of training file
+	//sequenceSize:The number of training file
 	const int sequenceSize = (int)sequence.size();
 	double probability = 0.0;
 	double prevProbability = 5 * delta; // making sure that the algorithm doesn't stop on the first iteration
@@ -355,18 +326,18 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		
 		// Calculate log probabilit
 		prevProbability = probability;
-        vector<double> v(sequenceSize,0);
+		vector<double> v(sequenceSize,0);
 		for(int l = 0; l < sequenceSize; l++) {
-            probability = 0;
+			probability = 0;
 			for (int t = 0; t < sequence.at(l).size(); t++) {
 				probability -= log(c.at(l).at(t));
-            }
+			}
 			
-           v.at(l)= probability;
-        }
-        sort(v.begin(), v.end());
-        //the probabilitythreshold is now setted as the lowest probability,changable variable
-        probability = v.at(0);
+			v.at(l)= probability;
+		}
+		sort(v.begin(), v.end());
+		// The probabilitythreshold is now setted as the lowest probability,changable variable
+		probability = v.at(0);
 		// Save log probability threshold
 		probabilityThreshold = probability;
 	}
@@ -376,13 +347,12 @@ void HMMModel::trainHMM(vector<vector<int>> &sequence, int maxIter, double delta
 		freeMatrix<double>(beta.at(iter), N);
 	}
 }
-/********************************************************************************
- * method:		writeHMM
- * description:	writes the HMM to a file
- * parameters:	filePath is the path to the folder in which the HMM is saved
- *				fileName is the HMMs name without the _HMM.txt ending
- * return value: none
- ********************************************************************************/
+
+// Method:			writeHMM
+// Description:		writes the HMM to a file
+// Parameters:		filePath is the path to the folder in which the HMM is saved
+//					fileName is the HMMs name without the _HMM.txt ending
+// Return value:	none
 void HMMModel::writeHMM(string filePath, string fileName) {
 	
 	ofstream file;
@@ -392,7 +362,7 @@ void HMMModel::writeHMM(string filePath, string fileName) {
 		file << numStates << ";\n";
 		file << sigmaSize << ";\n";
 		
-		// write A
+		// Write A
 		for (int i = 0; i < numStates; i++) {
 			for (int j = 0; j < numStates; j++) {
 				file << a[i][j] << ";";
@@ -400,7 +370,7 @@ void HMMModel::writeHMM(string filePath, string fileName) {
 			file << "\n";
 		}
 		
-		// write B
+		// Write B
 		for (int i = 0; i < numStates; i++) {
 			for (int j = 0; j < sigmaSize; j++) {
 				file << b[i][j] << ";";
@@ -408,13 +378,13 @@ void HMMModel::writeHMM(string filePath, string fileName) {
 			file << "\n";
 		}
 		
-		// write Pi
+		// Write Pi
 		for (int i = 0; i < numStates; i++) {
 			file << pi.at(i) << ";";
 		}
 		file << "\n";
 		
-		// write threshold probability
+		// Write threshold probability
 		file << probabilityThreshold << ";";
 		
 		file.close();
