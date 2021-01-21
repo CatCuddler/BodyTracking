@@ -169,7 +169,8 @@ bool HMM::stopRecognitionAndIdentify(Yoga yogaPos) {
 	return recognized;
 }
 
-bool HMM::stopRecognitionAndIdentify() {
+int HMM::stopRecognitionAndIdentify() {
+	int recognizedPose = -1;
 	if (recognition) {
 		// Read clusters for all trackers from file
 		bool trackersPresent[numOfDataPoints];
@@ -246,33 +247,19 @@ bool HMM::stopRecognitionAndIdentify() {
 		Kore::log(Kore::LogLevel::Info, "Probability: (%d,%d,%d)", n0, n1, n2);
 		if (n0 > n1 && n0 > n2) {
 			log(Kore::Info, "Current movement is recognized as Pose 1.");
-			for (int ii = 0; ii < numOfDataPoints; ii++) {
-				trackerMovementRecognised.at(ii) = (probabilityModel0.at(ii) > probabilityStandardModel0.at(ii));
-			}
+			recognizedPose = 1;
 		}
 		else if (n1 > n0 && n1 > n2) {
 			log(Kore::Info, "Current movement is recognized as Pose 2.");
-			for (int ii = 0; ii < numOfDataPoints; ii++) {
-				trackerMovementRecognised.at(ii) = (probabilityModel1.at(ii) > probabilityStandardModel1.at(ii));
-			}
+			recognizedPose = 2;
 		} else if (n2 > n0 && n2 > n1) {
 			log(Kore::Info, "Current movement is recognized as Pose 3.");
-			for (int ii = 0; ii < numOfDataPoints; ii++) {
-				trackerMovementRecognised.at(ii) = (probabilityModel2.at(ii) > probabilityStandardModel2.at(ii));
-			}
+			recognizedPose = 3;
 		} else {
 			log(Kore::Info, "None movement is recognized");
 		}
-
-		// Ignore HMD (+1)
-		if (std::all_of(trackerMovementRecognised.begin() + 1, trackerMovementRecognised.end(), [](bool v) { return v; })) {
-			// All (present) trackers were recognised as correct
-			return true;
-		} else {
-			return false;
-		}
 	}
-	return false;
+	return recognizedPose;
 }
 
 void HMM::recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation) {

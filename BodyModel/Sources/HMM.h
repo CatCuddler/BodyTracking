@@ -21,7 +21,7 @@ class HMM {
 private:
 	// Either record or recognition can be true
 	const bool record = false;
-	const bool recognition = false;
+	const bool recognition = true;
 	
 	Logger& logger;
 	
@@ -40,7 +40,7 @@ public:
 	
 	void startRecognition(Kore::vec3 hmdPosition, Kore::Quaternion hmdRotation);
 	bool stopRecognitionAndIdentify(Yoga yogaPos);
-	bool stopRecognitionAndIdentify();
+	int stopRecognitionAndIdentify();
 	
 	void recordMovement(float lastTime, const char* name, Kore::vec3 position, Kore::Quaternion rotation);
 	

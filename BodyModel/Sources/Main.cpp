@@ -683,7 +683,7 @@ namespace {
 	
 	void record() {
 		// Machine learning with Weka
-		if (motionRecognizer->isActive()) {
+		/*if (motionRecognizer->isActive()) {
 			// Recognizing a movement (TODO: recording for Weka)
 			if (recording) {
 				showFeedback = false;
@@ -705,7 +705,7 @@ namespace {
 				// TODO
 				motionRecognizer->getFeedback(fb_head, fb_hip, fb_left_arm, fb_right_arm, fb_left_leg, fb_right_leg);
 			}
-		}
+		}*/
 
 		// HMM
 		if(hmm->isRecordingActive()) {
@@ -733,6 +733,7 @@ namespace {
 				getDesiredPose();
 			} else {
 				bool correct = hmm->stopRecognitionAndIdentify(yogaPose);
+				//int recognizedPose = hmm->stopRecognitionAndIdentify();
 				
 				++trials;
 				
@@ -1019,14 +1020,18 @@ namespace {
 #else
 		// Read line
 		float scaleFactor;
+		EndEffectorIndices indices[numOfEndEffectors];
 		Kore::vec3 desPosition[numOfEndEffectors];
 		Kore::Quaternion desRotation[numOfEndEffectors];
 		if (currentFile < numFiles) {
-			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, scaleFactor);
+			bool dataAvailable = logger->readData(numOfEndEffectors, files[currentFile], desPosition, desRotation, indices, scaleFactor);
 			
 			for (int i = 0; i < numOfEndEffectors; ++i) {
-				endEffector[i]->setDesPosition(desPosition[i]);
-				endEffector[i]->setDesRotation(desRotation[i]);
+				EndEffectorIndices index = indices[i];
+				if (index == head || index == hip || index == leftHand || index == leftForeArm || index == rightHand || index == rightForeArm || index == leftFoot || index == rightFoot) {
+					endEffector[index]->setDesPosition(desPosition[i]);
+					endEffector[index]->setDesRotation(desRotation[i]);
+				}
 			}
 			
 			if (!calibratedAvatar) {
