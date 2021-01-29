@@ -27,12 +27,15 @@ string writeFileNameKMeans;
 string validationFilePathKMeans;
 string validationFileNameKMeans;
 
+bool useRot;
+
 void setTrainingFilePath(string trainingFilePath) { trainingFilePathKMeans = trainingFilePath; }
 void setTrainingFileName(string trainingFileName) { trainingFileNameKMeans = trainingFileName; }
 void setWriteFilePath(string writeFilePath) { writeFilePathKMeans = writeFilePath; }
 void setWriteFileName(string writeFileName) { writeFileNameKMeans = writeFileName; }
-void setValidationFilePath(string validationFilePath){validationFilePathKMeans = validationFilePath;}
-void setValidationFileName(string validationFileName){validationFileNameKMeans = validationFileName;}
+void setValidationFilePath(string validationFilePath) { validationFilePathKMeans = validationFilePath; }
+void setValidationFileName(string validationFileName) { validationFileNameKMeans = validationFileName; }
+void setUseRotation(bool useRotation) { useRot = useRotation; }
 
 // Method:			calculateClusters
 // Description:		calculates clusters coordinates for multiple data points, trackers and files
@@ -42,7 +45,8 @@ void setValidationFileName(string validationFileName){validationFileNameKMeans =
 //					total_values is the dimension of the points used as input
 //					maxIteration is the maximum numbers of iterations of the algorithm
 // Return value: 	vector (trackers) of calculated clusters of given points
-vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations) {
+vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int maxIterations) {
+	int totalValues = useRot ? 7 : 3;
 	vector<KMeans> returnVector(6);
 	vector<vector<Point>> parsedPoints = readData(trainingFileNameKMeans, fileAmount);
 	for (int ii = 0; ii < 6; ii++) {
@@ -51,7 +55,7 @@ vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, i
 			cout << "Calculating clusters for " << trackerNames[ii] << "; ";
 			kmeans.runKMeans(parsedPoints.at(ii));
 			kmeans.writeKMeans(writeFilePathKMeans, writeFileNameKMeans + "_" + to_string(ii));
-			cout<<"The final distance is "<<kmeans.getFinalDistance(parsedPoints.at(ii))<<"."<<endl;
+			cout << "The final distance is " << kmeans.getFinalDistance(parsedPoints.at(ii)) << "." << endl;
 			returnVector.at(ii) = kmeans;
 		}
 	}
@@ -78,7 +82,7 @@ vector<vector<vector<int>>> sortDataToClusters(string fileName, int fileAmount, 
 			if (!currentDataSet.at(currentTracker).empty()) {
 				// normalises a given data set of one tracker, matches it to the clusters of the given kMeans and adds it to the returnVector at the tracker's postition
 				returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker), kmeans.at(currentTracker).getAveragePoints())));
-				//         returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker),30)));
+				//     returnVector.at(currentTracker).push_back(kmeans.at(currentTracker).matchPointsToClusters(normaliseMeasurements(currentDataSet.at(currentTracker),30)));
 			}
 		}
 	}
@@ -145,9 +149,12 @@ vector<vector<Point>> readData(string fileName, int fileAmount) {
 		int ii = 0;
 		for (;;) {
 			f >> tag >> time >> posX >> posY >> posZ >> rotX >> rotY >> rotZ >> rotW;
-			vector<double> values = { posX, posY, posZ, rotX, rotY, rotZ, rotW };
+			vector<double> values = { posX, posY, posZ };
+			if (useRot) {
+				values = { posX, posY, posZ, rotX, rotY, rotZ, rotW };
+			}
 			Point point = Point(ii, values);
-			// differentiate the parsed points and add them to the correct vectors
+			// Differentiate the parsed points and add them to the correct vectors
 			if (tag.compare("head") == 0)      	returnVector.at(0).push_back(point);
 			else if (tag.compare("lHand") == 0) returnVector.at(1).push_back(point);
 			else if (tag.compare("rHand") == 0) returnVector.at(2).push_back(point);
@@ -199,8 +206,14 @@ KMeans::KMeans(string filePath, string fileName) {
 	double x, y, z, rotx, roty, rotz, rotw;
 	
 	for (int ii = 0; ii < emissions; ii++) {
-		f >> x >> y >> z >>rotx>>roty>>rotz>>rotw;
-		vector<double> values = { x, y, z,rotx,roty,rotz,rotw };
+		vector<double> values;
+		if (useRot) {
+			f >> x >> y >> z >> rotx >> roty >> rotz >> rotw;
+			values = { x, y, z, rotx, roty, rotz, rotw };
+		} else {
+			f >> x >> y >> z;
+			values = { x, y, z };
+		}
 		Point point = Point(ii, values);
 		Cluster cluster(ii, point);
 		clusters.push_back(cluster);

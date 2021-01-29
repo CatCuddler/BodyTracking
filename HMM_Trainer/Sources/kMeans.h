@@ -11,6 +11,7 @@ void setWriteFilePath(std::string writeFilePath);
 void setWriteFileName(std::string writeFileName);
 void setValidationFilePath(std::string ValidationFilePath);
 void setValidationFileName(std::string ValidationFileName);
+void setUseRotation(bool useRot);
 
 class Point {
 private:
@@ -68,6 +69,6 @@ public:
 };
 
 std::vector<std::vector<Point>> readData(std::string fileName, int fileAmount);
-std::vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int totalValues, int maxIterations);
+std::vector<KMeans> calculateClusters(int startFile, int fileAmount, int emissions, int maxIterations);
 std::vector<std::vector<std::vector<int>>> sortDataToClusters(std::string fileNameToBeSorted, int fileAmount, std::vector<KMeans> kmeans);
 std::vector<Point> normaliseMeasurements(std::vector<Point>, int dataVolume);

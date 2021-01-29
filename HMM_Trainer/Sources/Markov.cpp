@@ -98,7 +98,7 @@ HMMModel::HMMModel(string filePath, string fileName) {
 	ifstream file(filePath + fileName + "_HMM.txt");
 	if (file.is_open()) {
 		
-		// read number of states and number of emissions
+		// Read number of states and number of emissions
 		getline(file, str);
 		stringstream(str) >> numStates;
 		getline(file, str);

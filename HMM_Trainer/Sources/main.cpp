@@ -23,35 +23,32 @@ using namespace std;
 // Declaration above main for function to be found instead of creating header file
 int getFullTrainingNumber(string trainingFilePath, string trainingFileName);
 void updateFilePaths();
+void setVariables();
 void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int hmmTries);
 void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int trainingNumber, vector<vector<vector<int>>> sequence, int threadNumber);
 vector<double> calculateProbability(HMMModel models[6]);
 
 // Settings to be changed by user
 // Choose operational mode
-
+const bool useRotation = true;
 // Create new HMM based on the all the training file
-bool createHMM = false;
-
-// Create HMMs using 4 threads and keep on calculating new HMMs and replacing the old ones if those are better,only end when hmmtries reach max.
-bool optimiseInfiniteHMM = false;
-
-// Try all the combination of parameters( include numStates,numEmissions,lrDepths,tracker files),outputting table of probabilities in overview file.
-bool optimiseMovementRecognition = false;
-
+const bool createHMM = false;
+// Calculate new HMMs and replace the old ones if those are better, only end when hmmtries reach max value
+const bool optimiseInfiniteHMM = false;
+// Try all the combination of parameters (include numStates, numEmissions, lrDepths, tracker files)
+// Outputting table of probabilities in overview file.
+const bool optimiseMovementRecognition = false;
 // Calculating the probability for a dataset based on an already existing HMM.
-bool recognitionTest = false;
-
+const bool recognitionTest = false;
 // Show debug messages on console
-bool debug = false;
-
+const bool debug = false;
 
 // Set paths and HMM parameters
 // File name of the data set to be used for single probability calculation
 string currentMovement;
 // Path for the source files
 // NOTE: change working directory if necessary
-string validationFileName = "Yoga_Krieger_";
+const string validationFileName = "Yoga_Krieger_";
 string validationFilePath = "../Validation/";
 string trainingFilePath = "../Training/";
 // Base file name in the format "<trainingFileName>_<number>.csv" (only trainingFileName required)
@@ -61,13 +58,13 @@ string writeFilePath = "../Tracking/";
 // Base file name for files to be created (ending either in _<number>_HMM or _<number>_cluster)
 string writeFileName = "Yoga_Krieger";
 // Number of hidden states used for calculating the HMM (standard is 6)
-int numStates = 6;
+const int numStates = 6;
 // Number of clusters used for the data set taken as input for the HMM (standard is 7)
-int numEmissions = 7;
+const int numEmissions = 7;
 // Number of times an HMM is created per tracker before using the one with the best threshold
-int hmmTries = 10000;
-// Left to right depth of HMM; 0 leaves the start points to be random(all connected topology)
-int lrDepth = 0;
+const int hmmTries = 10;
+// Left to right depth of HMM; 0 leaves the start points to be random (all connected topology)
+const int lrDepth = 0;
 
 // General variables used by system
 static const int num_threads = 4; // number of thread used for extensive calculations as well as amount of lrDepths to be tested; should under normal circumstances be left at 4
@@ -77,11 +74,12 @@ vector<KMeans> kmeans;
 vector<vector<vector<int>>> sequenceX;
 vector<KMeans> kmeansX;
 ofstream file;
-vector<double> probabilitiesGather(num_threads*6,0);
+vector<double> probabilitiesGather(num_threads * 6, 0);
 
 int main() {
 	// Set file paths in kMeans to input above
 	updateFilePaths();
+	setVariables();
 	srand((unsigned int)time(NULL)); // Randomises random numbers
 	
 	// Creating a new HMM
@@ -95,7 +93,7 @@ int main() {
 		
 		// Read data and use k-Means algorithm for clustering
 		cout << "Clustering data points using k-Means algorithm. \n";
-		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
+		vector<KMeans> kmeans = calculateClusters(0, trainingNumber, numEmissions, 1000);
 		cout << "Matching data points of current data sets to clusters. ";
 		vector<vector<vector<int>>> sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 		
@@ -141,7 +139,7 @@ int main() {
 		for (int ii = 0; ii < 6; ii++) {
 			if (sequence.at(ii).empty()) {
 				if (!emptyTracker) {
-					cout << "Some trackers were not found in the given data set: \n \n ";
+					cout << "Some trackers were not found in the given data set: \n\n";
 					emptyTracker = true;
 				} else {
 					cout << ", ";
@@ -174,27 +172,27 @@ int main() {
 				kmeanVector.at(ii) = kmeans;
 				cout << "Cluster coordinates for " << trackerNames[ii] << " found. \n";
 				trackersPresent[ii] = true;
-			}catch (invalid_argument) {
+			} catch (invalid_argument) {
 				trackersPresent[ii] = false;
 			}
 		}
 		cout << "\n";
 		int validationFileNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-		cout<< "Validation test for "<<validationFileNumber <<" Files."<< "\n";
+		cout << "Validation test for " << validationFileNumber << " Files." << "\n";
 		cout << "Sorting new data sets into clusters. ";
 		
 		vector<vector<Point>> currentDataSet;
 		file.open(writeFilePath + writeFileName + "_Analysis.txt", ios::out /*| ios::trunc*/);
 		// Traverse all the possible values of probabilityThreshold
 		double thresholdIndex [4] = {1, 1.5, 2, 3};
-		for (double &index : thresholdIndex){
-			count=0;
+		for (double &index : thresholdIndex) {
+			count = 0;
 			vector<int>singlePointCount(6,0);
 			vector<vector<double>>probabilityMean(6,vector<double>());
 			for (int currentFile = 0; currentFile < validationFileNumber; currentFile++) {
 				currentMovement = validationFileName + to_string(currentFile);
-				file << "\nValidation test of file:"<< currentMovement<<";\n";
-				vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement,1, kmeanVector);
+				file << "\nValidation test of file:" << currentMovement << ";\n";
+				vector<vector<vector<int>>> dataClusters = sortDataToClusters(currentMovement, 1, kmeanVector);
 				//        cout << "Normalised data sets clustered. \n";
 				
 				if (debug) {
@@ -214,16 +212,16 @@ int main() {
 				
 				for (int ii = 0; ii < 6; ii++) {
 					if (trackersPresent[ii]) {
-						//Calculating probability for "trackerNames" based on given HMM:
-						//                cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
+						// Calculating probability for "trackerNames" based on given HMM:
+						// cout << "Calculating probability for " << trackerNames[ii] << " based on given HMM: ";
 						HMMModel model(writeFilePath, writeFileName + "_" + to_string(ii));
-						//                cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
+						// cout << model.calculateProbability(dataClusters.at(ii).at(0)) << "\n";
 						trackerMovementRecognised.at(ii) = (model.calculateProbability(dataClusters.at(ii).at(0)) > (model.getProbabilityThreshold() * index));
-						if(!isnan(model.calculateProbability(dataClusters.at(ii).at(0)))&&model.calculateProbability(dataClusters.at(ii).at(0))>-3000)
+						if (!isnan(model.calculateProbability(dataClusters.at(ii).at(0)))&&model.calculateProbability(dataClusters.at(ii).at(0)) > -3000)
 							probabilityMean.at(ii).push_back(model.calculateProbability(dataClusters.at(ii).at(0)));
-						file << trackerNames[ii]<<";"<<model.calculateProbability(dataClusters.at(ii).at(0))<<";"<<model.getProbabilityThreshold() * index <<";"<<trackerMovementRecognised.at(ii)<<"\n";
+						file << trackerNames[ii] << ";" << model.calculateProbability(dataClusters.at(ii).at(0)) << ";" << model.getProbabilityThreshold() * index << ";" << trackerMovementRecognised.at(ii) << "\n";
 					}
-					if (trackerMovementRecognised.at(ii)==1)
+					if (trackerMovementRecognised.at(ii) == 1)
 						singlePointCount.at(ii)++;
 				}
 				bool result;
@@ -233,28 +231,27 @@ int main() {
 					count++;
 				} else {
 					result = false;
-					
 				}
 				
-				file<<"The result is "<<result<<".\n";
+				file << "The result is " << result << ".\n";
 			}
 			// Calculate the right percentage of recognition.
 			for (int ii = 0; ii < 6; ii++) {
 				double mean = accumulate( probabilityMean.at(ii).begin(), probabilityMean.at(ii).end(), 0.0)/probabilityMean.at(ii).size();
-				cout<<"Mean value of "<<trackerNames[ii]<<" is "<< mean<<".\n";
+				cout << "Mean value of " << trackerNames[ii] << " is " << mean << ".\n";
 			}
 			double probability = (double)count/validationFileNumber;
-			file<<"The recognition probability is "<<probability <<".\n";
+			file << "The recognition probability is " << probability  << ".\n";
 			
-			cout<<"Threshold index is "<< index <<";" <<"Probability: "<<probability <<".\n";
-			cout<<"The right percentage of each point are: ";
-			file<<"The right percentage of each point are: ";
+			cout << "Threshold index is " << index << ";"  << "Probability: " << probability << ".\n";
+			cout << "The right percentage of each point are: ";
+			file << "The right percentage of each point are: ";
 			for (const auto &element : singlePointCount) {
-				cout<<element<<",";
-				file<<element<<",";
+				cout << element << ",";
+				file << element << ",";
 			}
-			file<<";\n";
-			cout<<endl;
+			file << ";\n";
+			cout << endl;
 		}
 	}
 	// Optimise movement recognition manually by outputting table of probabilities (currently only debug functionality)
@@ -270,7 +267,7 @@ int main() {
 		thread t[num_threads];
 		// Creates file for data and writes first row giving information about the data to come
 		file.open(writeFilePath + writeFileName + "_Overview.txt", ios::out /*| ios::trunc*/);
-		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";"<<"Variance"<<";\n";
+		file << "Number of states" << "; " << "Number of emissions" << "; " << "LR Depth" << "; " << "Mean Probability" << ";" << "Variance" << ";\n";
 		
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
 		
@@ -285,38 +282,32 @@ int main() {
 		
 		// Reference code from http://www.cplusplus.com/forum/general/7784/
 		// Generate random numbers for Emission States without duplicates:
-		for (int i=0;i<numEmissionAmount;i++)
-		{
+		for (int i = 0; i < numEmissionAmount; i++) {
 			bool check; // Variable to check or number is already used
 			int n; // Variable to store the number in
-			do
-			{
+			do {
 				n = 1 + rand() % randomRangeEmission;
 				// Check or number is already used:
-				check=true;
+				check = true;
 				for (int j = 0; j < i; j++)
-					if (n == emissionIterations[j]) // If number is already used
-					{
-						check=false; // Set check to false
+					if (n == emissionIterations[j]) { // If number is already used
+						check = false; // Set check to false
 						break; // No need to check the other elements of value[]
 					}
 			} while (!check); // Loop until new, unique number is found
 			emissionIterations[i] = n; // Store the generated number in the array
 		}
 		// Generate random numbers for numStates without duplicates:
-		for (int i = 0; i < numStatesAmount; i++)
-		{
+		for (int i = 0; i < numStatesAmount; i++) {
 			bool check; // Variable to check or number is already used
 			int n; // Variable to store the number in
-			do
-			{
+			do {
 				n = 1 + rand() % randomRangeState;
 				// Check or number is already used:
-				check=true;
+				check = true;
 				for (int j = 0; j < i; j++)
-					if (n == numStatesIterations[j]) //if number is already used
-					{
-						check=false; // Set check to false
+					if (n == numStatesIterations[j]) { // If number is already used
+						check = false; // Set check to false
 						break; // No need to check the other elements of value[]
 					}
 			} while (!check); // Loop until new, unique number is found
@@ -325,14 +316,12 @@ int main() {
 		for (int i = 0; i < lrDepthAmount; i++) {
 			bool check; // Variable to check or number is already used
 			int n; // Variable to store the number in
-			do
-			{
+			do {
 				n = 1 + rand() % randomlrDepth;
 				// Check or number is already used:
 				check = true;
 				for (int j = 0; j < i; j++)
-					if (n == lrDepthIteration[j]) // If number is already used
-					{
+					if (n == lrDepthIteration[j]) { // If number is already used
 						check = false; // Set check to false
 						break; // No need to check the other elements of value[]
 					}
@@ -341,12 +330,12 @@ int main() {
 		}
 		
 		// Actual calculations
-		int EmissionIndex=0;
+		int EmissionIndex = 0;
 		int numStatesIndex = 0;
-		int lrDrpthIndex =0;
+		int lrDrpthIndex = 0;
 		for (int &numEmissions : emissionIterations) {
 			EmissionIndex++;
-			kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
+			kmeans = calculateClusters(0, trainingNumber, numEmissions, 1000);
 			sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 			for (int &numStates : numStatesIterations) {
 				cout << "Splitting threads**********************************************************************\n";
@@ -355,7 +344,7 @@ int main() {
 					lrDrpthIndex++;
 					// Uses threadIteration for lrDepth as well
 					cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
-					cout<<"EmissionIndex: "<<EmissionIndex<<","<<"numStatesIndex: "<<numStatesIndex<<","<<"lrDrpthIndex: "<<lrDrpthIndex<<"\n";
+					cout << "EmissionIndex: " << EmissionIndex << "," << "numStatesIndex: " << numStatesIndex << "," << "lrDrpthIndex: " << lrDrpthIndex << "\n";
 					for (int threadIteration = 0; threadIteration < num_threads; threadIteration++) {
 						cout << "Launched from thread " << threadIteration << "\n";
 						t[threadIteration] = thread(multiThreadOptimisation, lrDepth, numStates, numEmissions, trainingNumber, sequence, hmmTries);
@@ -376,7 +365,7 @@ int main() {
 		// Open threads
 		thread t[num_threads];
 		trainingNumber = getFullTrainingNumber(trainingFilePath, trainingFileName);
-		kmeans = calculateClusters(0, trainingNumber, numEmissions, 7, 1000);
+		kmeans = calculateClusters(0, trainingNumber, numEmissions, 1000);
 		sequence = sortDataToClusters(trainingFileName, trainingNumber, kmeans);
 		cout << "Training HMM with a left to right depth of " << lrDepth << ", " << numStates << " hidden states and " << numEmissions << " possible emissions using " << trainingNumber << " sets of training data. \n\n";
 		cout << "Splitting threads**********************************************************************\n";
@@ -390,19 +379,19 @@ int main() {
 		file.open(writeFilePath + writeFileName + "_MaxProbability.txt", ios::out /*| ios::trunc*/);
 		
 		for (int ii = 0; ii < 6; ii++) {
-			file<<"The Maximum Probability of " <<trackerNames[ii]<< " is ";
+			file << "The Maximum Probability of " << trackerNames[ii] << " is ";
 			double maxProbability = -10000000 ;
 			
-			for(int point=0+ii; point<24; point+=6){
-				if (maxProbability < probabilitiesGather.at(point)){
+			for (int point = 0 + ii; point < 24; point += 6) {
+				if (maxProbability < probabilitiesGather.at(point)) {
 					maxProbability = probabilitiesGather.at(point);
 				}
 			}
-			file<<maxProbability<<".\n";
+			file << maxProbability << ".\n";
 			
 		}
 	}
-	cout <<"\n"<<"OptimiseInfiniteHMM is finished.\n";
+	cout << "\n" << "OptimiseInfiniteHMM is finished.\n";
 	return 0;
 }
 
@@ -424,7 +413,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 				// Use Baum-Welch-Algorithm to train HMM and write it to a file
 				HMMModel model(numStates, numEmissions, lrDepth);
 				model.trainHMM(sequence.at(ii));
-				if (jj < hmmTries - 1)cout <<jj<< ", ";
+				if (jj < hmmTries - 1) cout << jj << ", ";
 				if (probabilities.at(ii) == 0 || model.getProbabilityThreshold() > probabilities.at(ii)) {
 					finalModels[ii] = model;
 					probabilities.at(ii) = (model.getProbabilityThreshold());
@@ -462,7 +451,7 @@ void multiThreadOptimisation(int lrDepth, int numStates, int numEmissions, int t
 	
 	double stdev = sqrt(accum/(probabilityTotal.size()-1));
 	
-	file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< mean<< "; "<<stdev << ";\n";
+	file << numStates << "; " << numEmissions << "; " << lrDepth << "; "<< mean << "; "<< stdev << ";\n";
 	
 }
 
@@ -480,7 +469,6 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 	probabilitiesGather.clear();
 	for (int jj = 0; jj < hmmTries; jj++) {
 		for (int ii = 0; ii < 6; ii++) {
-			
 			// Use Baum-Welch-Algorithm to train HMM and write it to a file
 			HMMModel model(numStates, numEmissions, lrDepth);
 			model.trainHMM(sequence.at(ii));
@@ -488,10 +476,10 @@ void multiThreadHMMCreation(int lrDepth, int numStates, int numEmissions, int tr
 				finalModels[ii] = model;
 				model.writeHMM(writeFilePath, writeFileName + "_" + to_string(ii) + "_t" + to_string(threadNumber));
 				probabilities.at(ii) = (model.getProbabilityThreshold());
-				//           cout << trackerNames[ii] + "_" << jj <<", "<<"_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. "  "The log probability threshold is " << probabilities.at(ii) << ".\n";
+				// cout << trackerNames[ii] + "_" << jj <<", " << "_HMM_" + to_string(ii) + "_t" + to_string(threadNumber)+ ".txt. "  "The log probability threshold is " << probabilities.at(ii) << ".\n";
 			}
 		}
-		cout << "HMM #" <<threadNumber<<"_"<< jj<< ";";
+		cout << "HMM #" << threadNumber << "_" << jj << ";";
 	}
 	probabilitiesGather.insert(probabilitiesGather.end(),probabilities.begin(),probabilities.end());
 	
@@ -535,4 +523,8 @@ void updateFilePaths() {
 	setWriteFileName(writeFileName);
 	setValidationFilePath(validationFilePath);
 	setValidationFileName(validationFileName);
+}
+
+void setVariables() {
+	setUseRotation(useRotation);
 }
