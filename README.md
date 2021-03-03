@@ -1,4 +1,4 @@
-# Real-time body reconstruction and recognition in virtual reality using Vive Trackers and Controllers
+# Real-Time Body Reconstruction and Recognition in Virtual Reality using HTC Vive Trackers and Controllers
 
 This project implements an Inverse Kinematics solver to animate the motions of the avatar as smoothly, rapidly, and as accurately as possible. Using a HTC Vive headset, two Vive Controllers, and five Vive Trackers, attached to the hands and feet, it is possible to create immersive VR experiences, where the user is able to perceive the avatar as her or his own body. The user can see her or his avatar from the first-person perspective and in a virtual mirror.
 
